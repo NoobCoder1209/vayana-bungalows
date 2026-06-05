@@ -49,7 +49,7 @@
   opacity: 0.75;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 960px) {
   .utility-strip {
     display: none;
   }
@@ -246,7 +246,7 @@
 }
 
 /* Header responsive */
-@media (max-width: 1024px) {
+@media (max-width: 960px) {
   .primary-nav__toggle {
     display: inline-flex;
   }
@@ -258,8 +258,8 @@
     color: var(--text-dark);
     flex-direction: column;
     align-items: flex-start;
-    padding: var(--space-6) var(--container-pad);
-    gap: var(--space-3);
+    padding: var(--space-4) var(--container-pad) var(--space-6);
+    gap: 0;
     transform: translateY(-110%);
     transition: transform var(--t-base);
     overflow-y: auto;
@@ -269,19 +269,25 @@
     transform: translateY(0);
   }
 
-  .mega-menu {
-    position: static;
-    transform: none;
-    opacity: 1;
-    pointer-events: auto;
-    box-shadow: none;
-    min-width: 0;
-    padding: var(--space-2) 0 0;
-    border-top: 0;
+  .primary-nav__list > li {
+    width: 100%;
+    border-bottom: 1px solid var(--border-soft);
   }
 
-  .mega-menu__inner {
-    grid-template-columns: repeat(2, 1fr);
+  .primary-nav__list > li > a {
+    display: block;
+    padding: 1.1rem 0;
+    font-size: 1rem;
+    letter-spacing: 0.18em;
+  }
+
+  .primary-nav__list > li > a::after {
+    display: none;
+  }
+
+  /* Hide the mega-menu inside the mobile drawer — it's a desktop affordance */
+  .mega-menu {
+    display: none;
   }
 
   .site-header__cta {

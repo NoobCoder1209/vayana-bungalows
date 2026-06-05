@@ -9,6 +9,14 @@ export function initReveal() {
     return;
   }
 
+  // Reveal anything that's already in view immediately (above-the-fold)
+  els.forEach((el) => {
+    const r = el.getBoundingClientRect();
+    if (r.top < window.innerHeight && r.bottom > 0) {
+      el.classList.add('is-visible');
+    }
+  });
+
   const io = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -20,5 +28,7 @@ export function initReveal() {
     },
     { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
   );
-  els.forEach((el) => io.observe(el));
+  els.forEach((el) => {
+    if (!el.classList.contains('is-visible')) io.observe(el);
+  });
 }
