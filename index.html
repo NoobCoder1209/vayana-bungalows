@@ -8,17 +8,405 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
+    <link rel="preload" as="image" href="/assets/img/hero-beach.jpg" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <link rel="stylesheet" href="/assets/css/tokens.css" />
     <link rel="stylesheet" href="/assets/css/base.css" />
     <link rel="stylesheet" href="/assets/css/layout.css" />
     <link rel="stylesheet" href="/assets/css/sections.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- 1. Top utility strip -->
+    <div class="utility-strip" role="region" aria-label="Announcement">
+      <div class="container utility-strip__inner">
+        <span>Welcome to Arapq Resort &mdash; reservations now open for the new season.</span>
+        <span class="utility-strip__meta">Call us &middot; +1 808 555 0119</span>
+      </div>
+    </div>
+
+    <!-- 2. Sticky header -->
+    <div id="header-sentinel" aria-hidden="true"></div>
+    <header class="site-header" id="site-header">
+      <div class="container site-header__inner">
+        <a href="#" class="site-logo" aria-label="Arapq Resort home">
+          <span class="site-logo__mark">A</span>
+          <span class="site-logo__word">arapq</span>
+        </a>
+
+        <nav class="primary-nav" aria-label="Primary">
+          <button class="primary-nav__toggle" type="button" aria-expanded="false" aria-controls="primary-nav-list" aria-label="Open menu">
+            <span></span><span></span><span></span>
+          </button>
+          <ul id="primary-nav-list" class="primary-nav__list">
+            <li class="has-mega"><a href="#">Home</a>
+              <div class="mega-menu" role="menu">
+                <div class="mega-menu__inner">
+                  <a class="mega-card" href="#"><img src="/assets/img/thumb-island.jpg" alt="" /><span>Island Resort</span></a>
+                  <a class="mega-card" href="#"><img src="/assets/img/thumb-mountain.jpg" alt="" /><span>Mountain Hotel</span></a>
+                  <a class="mega-card" href="#"><img src="/assets/img/thumb-city.jpg" alt="" /><span>City Aparthotel</span></a>
+                  <a class="mega-card" href="#"><img src="/assets/img/thumb-countryside.jpg" alt="" /><span>Countryside Lodge</span></a>
+                  <a class="mega-card" href="#"><img src="/assets/img/thumb-chalet.jpg" alt="" /><span>Mountain Chalet</span></a>
+                </div>
+              </div>
+            </li>
+            <li><a href="#rooms">Stay</a></li>
+            <li><a href="#about">Pages</a></li>
+            <li><a href="#">News</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </nav>
+
+        <a href="#booking" class="btn btn-primary site-header__cta">Book Now</a>
+      </div>
+    </header>
+
     <main id="main">
-      <p style="padding: 2rem; font-family: 'Jost', sans-serif;">Scaffold ready &mdash; sections coming next.</p>
+      <!-- 3. Hero -->
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero__media" style="background-image: url('/assets/img/hero-beach.jpg');"></div>
+        <div class="hero__overlay"></div>
+        <div class="container hero__content reveal">
+          <span class="eyebrow eyebrow--light">Welcome to paradise</span>
+          <h1 id="hero-title">Boutique Private<br />Island Resort</h1>
+          <p class="hero__sub">Where the horizon meets handcrafted hospitality.</p>
+        </div>
+        <div class="hero__scroll" aria-hidden="true">
+          <span></span>
+        </div>
+      </section>
+
+      <!-- 4. Booking widget -->
+      <section class="booking" id="booking" aria-labelledby="booking-title">
+        <div class="container">
+          <h2 id="booking-title" class="sr-only">Book your stay</h2>
+          <form class="booking__form" id="booking-form" novalidate>
+            <div class="booking__field">
+              <label for="bk-checkin">Check-in</label>
+              <input type="text" id="bk-checkin" name="checkin" placeholder="Add date" autocomplete="off" />
+            </div>
+            <div class="booking__field">
+              <label for="bk-checkout">Check-out</label>
+              <input type="text" id="bk-checkout" name="checkout" placeholder="Add date" autocomplete="off" />
+            </div>
+            <div class="booking__field">
+              <label for="bk-rooms">Rooms</label>
+              <select id="bk-rooms" name="rooms">
+                <option>1 room</option>
+                <option>2 rooms</option>
+                <option>3 rooms</option>
+                <option>4 rooms</option>
+              </select>
+            </div>
+            <div class="booking__field">
+              <label for="bk-guests">Guests</label>
+              <select id="bk-guests" name="guests">
+                <option>1 adult</option>
+                <option>2 adults</option>
+                <option>2 adults, 1 child</option>
+                <option>2 adults, 2 children</option>
+                <option>3 adults</option>
+                <option>4 adults</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary booking__submit">Book Now</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 5. Intro split -->
+      <section class="intro section" id="about" aria-labelledby="intro-title">
+        <div class="container intro__grid">
+          <div class="intro__copy reveal">
+            <span class="eyebrow">Welcome to Arapq Resort</span>
+            <h2 id="intro-title">In the heart of the South Pacific, outstanding views.</h2>
+            <p>Arapq Resort is a private-island sanctuary woven into a mile of unspoiled coastline. Twenty-eight villas, hand-built from local hardwoods, open to the trade winds and the Pacific beyond.</p>
+            <p>Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the boat ride back.</p>
+            <a href="#" class="btn btn-outline-dark">Discover the resort</a>
+          </div>
+          <div class="intro__media reveal">
+            <img src="/assets/img/intro-villa.jpg" alt="Wooden over-water villa at sunset" loading="lazy" />
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Gallery carousel -->
+      <section class="gallery section" aria-labelledby="gallery-title">
+        <div class="container gallery__head reveal">
+          <span class="eyebrow">A glimpse of the island</span>
+          <h3 id="gallery-title">Moments at Arapq</h3>
+        </div>
+        <div class="gallery__viewport">
+          <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous photos" data-slider-prev="gallery">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="gallery__track" data-slider="gallery">
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-1.jpg" alt="Beach at golden hour" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-2.jpg" alt="Open-air villa terrace" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-3.jpg" alt="Pool deck overlooking the sea" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-4.jpg" alt="Tropical fine-dining table" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-5.jpg" alt="Palms over a turquoise lagoon" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-6.jpg" alt="Spa pavilion at dusk" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-7.jpg" alt="Sailboat anchored offshore" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-8.jpg" alt="Cocktail at the beach bar" loading="lazy" /></a>
+          </div>
+          <button class="gallery__arrow gallery__arrow--next" aria-label="Next photos" data-slider-next="gallery">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 7. Parallax video band -->
+      <section class="video-band" aria-label="Resort video">
+        <div class="video-band__media" style="background-image: url('/assets/img/video-poster.jpg');" data-parallax="0.25"></div>
+        <div class="video-band__overlay"></div>
+        <button class="video-band__play" type="button" aria-label="Play resort video" data-video="https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=1">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+      </section>
+
+      <!-- 8 + 9. Rooms intro + grid -->
+      <section class="rooms section" id="rooms" aria-labelledby="rooms-title">
+        <div class="container rooms__head reveal">
+          <span class="eyebrow">Enjoy a world-class stay</span>
+          <h3 id="rooms-title">The accommodations</h3>
+        </div>
+        <div class="rooms__viewport">
+          <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous rooms" data-slider-prev="rooms">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="rooms__track" data-slider="rooms">
+            <article class="room-card">
+              <a href="#" class="room-card__img"><img src="/assets/img/room-1.jpg" alt="Premier oceanview villa" loading="lazy" /></a>
+              <div class="room-card__body">
+                <h4>Premier Oceanview Villa</h4>
+                <p class="room-card__price">From <strong>$960</strong> / night</p>
+                <a href="#" class="room-card__more">Discover more <span aria-hidden="true">&rarr;</span></a>
+              </div>
+            </article>
+            <article class="room-card">
+              <a href="#" class="room-card__img"><img src="/assets/img/room-2.jpg" alt="Deluxe hilltop residence" loading="lazy" /></a>
+              <div class="room-card__body">
+                <h4>Deluxe Hilltop Residence</h4>
+                <p class="room-card__price">From <strong>$1,240</strong> / night</p>
+                <a href="#" class="room-card__more">Discover more <span aria-hidden="true">&rarr;</span></a>
+              </div>
+            </article>
+            <article class="room-card">
+              <a href="#" class="room-card__img"><img src="/assets/img/room-3.jpg" alt="Premier beachfront suite" loading="lazy" /></a>
+              <div class="room-card__body">
+                <h4>Premier Beachfront Suite</h4>
+                <p class="room-card__price">From <strong>$1,480</strong> / night</p>
+                <a href="#" class="room-card__more">Discover more <span aria-hidden="true">&rarr;</span></a>
+              </div>
+            </article>
+            <article class="room-card">
+              <a href="#" class="room-card__img"><img src="/assets/img/room-4.jpg" alt="Grand oceanview residence" loading="lazy" /></a>
+              <div class="room-card__body">
+                <h4>Grand Oceanview Residence</h4>
+                <p class="room-card__price">From <strong>$1,920</strong> / night</p>
+                <a href="#" class="room-card__more">Discover more <span aria-hidden="true">&rarr;</span></a>
+              </div>
+            </article>
+          </div>
+          <button class="gallery__arrow gallery__arrow--next" aria-label="Next rooms" data-slider-next="rooms">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 10. Locations / experiences (dark parallax) -->
+      <section class="locations" aria-labelledby="locations-title">
+        <div class="locations__bg" style="background-image: url('/assets/img/locations-bg.jpg');" data-parallax="0.2"></div>
+        <div class="locations__overlay"></div>
+        <div class="container locations__content reveal">
+          <span class="eyebrow eyebrow--light">Unforgettable experience</span>
+          <h2 id="locations-title">One of the world's most desirable locations.</h2>
+          <div class="locations__cards">
+            <article class="exp-card">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3"/><circle cx="12" cy="12" r="3"/></svg>
+              <h5>Spa &amp; wellness</h5>
+              <p>Open-air pavilions, salt-water plunge pools, and treatments built around the island's botanicals.</p>
+            </article>
+            <article class="exp-card">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 18l4-8 4 5 3-7 7 10z"/><path d="M3 21h18"/></svg>
+              <h5>Island activities</h5>
+              <p>Reef snorkeling at first light, sunset paddleboards, guided hikes to the volcanic crater rim.</p>
+            </article>
+            <article class="exp-card">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2v8a4 4 0 008 0V2"/><path d="M10 14v8"/><path d="M18 2c2 0 3 2 3 5s-1 5-3 5v10"/></svg>
+              <h5>Gastronomic dine</h5>
+              <p>Three restaurants from a single kitchen garden. Pacific seafood, wood fire, no menu after seven.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. Image CTA -->
+      <section class="cta-block section" aria-labelledby="cta-title">
+        <div class="container cta-block__inner reveal">
+          <div class="cta-block__frame">
+            <img src="/assets/img/cta-pool.jpg" alt="Infinity pool overlooking the ocean" loading="lazy" />
+          </div>
+          <div class="cta-block__copy">
+            <span class="eyebrow">A retreat for two</span>
+            <h3 id="cta-title">Stay four nights, the fifth is on us.</h3>
+            <p>An invitation to slow down, between June and September, in any oceanview villa.</p>
+            <a href="#" class="btn btn-primary">View the offer</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12. Testimonials -->
+      <section class="testimonial section section-cream" aria-labelledby="testimonial-title">
+        <div class="container reveal">
+          <span class="eyebrow">Voice from our guests</span>
+          <h2 id="testimonial-title" class="testimonial__quote">&ldquo;The kind of place where the days run on tide and appetite, and the staff seem to know what you need before you do.&rdquo;</h2>
+          <p class="testimonial__cite">&mdash; Travel + Leisure</p>
+        </div>
+      </section>
+
+      <!-- 13. Services grid -->
+      <section class="services section" aria-labelledby="services-title">
+        <div class="container services__head reveal">
+          <span class="eyebrow">Discover the services we offer</span>
+          <h3 id="services-title">All the essentials for a cozy and comfortable stay.</h3>
+        </div>
+        <div class="container services__grid">
+          <article class="service-tile">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 16l-7-2V6.5a2.5 2.5 0 00-5 0V14l-7 2v2l7-1.5V21l-2 1v1l3.5-.5L14 23v-1l-2-1v-4.5L21 18z"/></svg>
+            <h5>Airport pick-up</h5>
+            <p>Boat transfer included with every stay.</p>
+          </article>
+          <article class="service-tile">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/></svg>
+            <h5>Housekeeper</h5>
+            <p>Twice-daily villa service, twenty-four-hour butler.</p>
+          </article>
+          <article class="service-tile">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M5 12.55a11 11 0 0114 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+            <h5>Wifi &amp; internet</h5>
+            <p>Fibre across the island, even on the beach.</p>
+          </article>
+          <article class="service-tile">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="14" r="6"/><path d="M9 4h6v3H9z"/></svg>
+            <h5>Laundry</h5>
+            <p>Same-day pressing, hand-care for delicate fabrics.</p>
+          </article>
+          <article class="service-tile">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 8h13a4 4 0 010 8H3z"/><path d="M16 8V6a2 2 0 012-2h0a2 2 0 012 2v2"/><path d="M3 19h18"/></svg>
+            <h5>Breakfast in bed</h5>
+            <p>Tropical fruit, pressed juice, and pastries before sunrise.</p>
+          </article>
+          <article class="service-tile">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 17c2 0 2-1.5 4-1.5S8 17 10 17s2-1.5 4-1.5S16 17 18 17s2-1.5 4-1.5"/><path d="M2 21c2 0 2-1.5 4-1.5S8 21 10 21s2-1.5 4-1.5S16 21 18 21s2-1.5 4-1.5"/><circle cx="17" cy="7" r="3"/></svg>
+            <h5>Swimming pool</h5>
+            <p>Three pools, including a fifty-metre lap at the beach club.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- 14. Newsletter band -->
+      <section class="newsletter" aria-labelledby="newsletter-title">
+        <div class="newsletter__bg" style="background-image: url('/assets/img/newsletter-bg.jpg');" data-parallax="0.15"></div>
+        <div class="newsletter__overlay"></div>
+        <div class="container newsletter__content reveal">
+          <span class="eyebrow eyebrow--light">Stay tuned with Arapq</span>
+          <h4 id="newsletter-title">Quiet news from the island, three or four times a year.</h4>
+          <form class="newsletter__form" onsubmit="event.preventDefault();">
+            <label class="sr-only" for="nl-email">Email address</label>
+            <input id="nl-email" type="email" placeholder="Your email address" />
+            <button type="submit" class="btn btn-primary">Subscribe</button>
+          </form>
+          <label class="newsletter__consent">
+            <input type="checkbox" />
+            <span>I agree to the privacy terms.</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- 15. Contact info row -->
+      <section class="contact section" id="contact" aria-labelledby="contact-title">
+        <h2 id="contact-title" class="sr-only">Contact</h2>
+        <div class="container contact__grid">
+          <div class="contact__col">
+            <span class="eyebrow">Address</span>
+            <p>Lot 14, Motu Lagoon<br />French Polynesia</p>
+          </div>
+          <div class="contact__col">
+            <span class="eyebrow">Phone</span>
+            <p>+1 808 555 0119</p>
+          </div>
+          <div class="contact__col">
+            <span class="eyebrow">Email</span>
+            <p>reservations@arapq.com</p>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <!-- 16. Footer -->
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <div class="site-footer__brand">
+          <a href="#" class="site-logo site-logo--light" aria-label="Arapq Resort home">
+            <span class="site-logo__mark">A</span>
+            <span class="site-logo__word">arapq</span>
+          </a>
+          <p>A private-island retreat. Reservations by inquiry.</p>
+        </div>
+        <div class="site-footer__col">
+          <span class="eyebrow eyebrow--light">Social</span>
+          <ul class="social-list">
+            <li><a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg></a></li>
+            <li><a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 5.8a8.5 8.5 0 01-2.4.7 4.2 4.2 0 001.8-2.3 8.4 8.4 0 01-2.6 1A4.2 4.2 0 0011.5 9a11.9 11.9 0 01-8.6-4.4 4.2 4.2 0 001.3 5.6 4.2 4.2 0 01-1.9-.5v.1a4.2 4.2 0 003.4 4.1 4.2 4.2 0 01-1.9.1 4.2 4.2 0 003.9 2.9A8.4 8.4 0 012 18.5 11.9 11.9 0 008.4 20c7.7 0 11.9-6.4 11.9-11.9v-.5A8.5 8.5 0 0022 5.8z"/></svg></a></li>
+            <li><a href="#" aria-label="Pinterest"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 00-3.6 19.3c-.1-.8-.2-2 0-2.9l1.3-5.4s-.3-.7-.3-1.6c0-1.5 1-2.7 2.1-2.7 1 0 1.5.7 1.5 1.6 0 1-.6 2.5-1 3.9-.3 1.2.6 2.2 1.7 2.2 2.1 0 3.7-2.2 3.7-5.4 0-2.8-2-4.8-4.9-4.8a5 5 0 00-5.2 5c0 1 .4 2.1.9 2.6.1.1.1.2.1.3l-.3 1.4c-.1.2-.2.3-.4.2-1.5-.7-2.4-2.9-2.4-4.6 0-3.7 2.7-7.1 7.8-7.1 4.1 0 7.3 2.9 7.3 6.8 0 4.1-2.6 7.4-6.2 7.4-1.2 0-2.4-.6-2.7-1.4l-.7 2.8c-.3 1-1 2.3-1.5 3A10 10 0 1012 2z"/></svg></a></li>
+            <li><a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23 7s-.2-1.6-.9-2.3c-.9-.9-1.8-.9-2.3-1C16.6 3.5 12 3.5 12 3.5s-4.6 0-7.8.2c-.4 0-1.4 0-2.3 1C1.2 5.4 1 7 1 7S.7 8.9.7 10.7v1.6C.7 14.1 1 16 1 16s.2 1.6.9 2.3c.9.9 2 .9 2.5 1 1.8.2 7.6.2 7.6.2s4.6 0 7.8-.2c.4 0 1.4 0 2.3-1 .7-.7.9-2.3.9-2.3s.3-1.9.3-3.7v-1.6C23.3 8.9 23 7 23 7zM9.7 14.5V8l6 3.2-6 3.3z"/></svg></a></li>
+            <li><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg></a></li>
+          </ul>
+        </div>
+        <nav class="site-footer__nav" aria-label="Footer">
+          <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#rooms">Rooms</a></li>
+            <li><a href="#">Restaurants</a></li>
+            <li><a href="#">Spa</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="site-footer__bar">
+        <div class="container site-footer__bar-inner">
+          <p>&copy; 2026 Arapq Resort &mdash; A boutique island hospitality brand.</p>
+          <ul>
+            <li><a href="#">Privacy</a></li>
+            <li><a href="#">Terms of use</a></li>
+            <li><a href="#">Policy</a></li>
+          </ul>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Booking confirmation modal -->
+    <div class="modal" id="booking-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal__backdrop" data-modal-close></div>
+      <div class="modal__panel">
+        <button class="modal__close" type="button" aria-label="Close" data-modal-close>&times;</button>
+        <span class="eyebrow">Reservation request received</span>
+        <h3 id="modal-title">Thank you &mdash; we'll be in touch.</h3>
+        <p>A reservations specialist will follow up within twenty-four hours to confirm availability and tailor your stay.</p>
+        <button type="button" class="btn btn-primary" data-modal-close>Close</button>
+      </div>
+    </div>
+
+    <!-- Video lightbox -->
+    <div class="video-modal" id="video-modal" hidden role="dialog" aria-modal="true" aria-label="Resort video">
+      <div class="video-modal__backdrop" data-video-close></div>
+      <button class="video-modal__close" type="button" aria-label="Close video" data-video-close>&times;</button>
+      <div class="video-modal__frame" id="video-modal-frame"></div>
+    </div>
+
     <script type="module" src="/assets/js/main.js"></script>
   </body>
 </html>
