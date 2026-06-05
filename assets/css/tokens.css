@@ -1,0 +1,73 @@
+/* tokens.css — design system tokens (palette, typography, spacing) */
+
+:root {
+  /* Palette — warm earth-tone luxury (matches reference) */
+  --primary: #b99d75;
+  --primary-soft: rgba(185, 157, 117, 0.3);
+  --primary-deep: #8a7551;
+  --secondary: #53624e;
+  --bg-dark: #0e0d0a;
+  --bg-light: #ffffff;
+  --bg-cream: #f7f4ee;
+  --text-dark: #333632;
+  --text-light: #eeeeee;
+  --text-muted: #6b6b66;
+  --border: #b5bbb3;
+  --border-soft: rgba(0, 0, 0, 0.08);
+
+  /* Typography */
+  --font-heading: 'Marcellus', 'Times New Roman', serif;
+  --font-body: 'Jost', system-ui, sans-serif;
+  --font-script: 'La Belle Aurore', cursive;
+
+  /* Type scale */
+  --fs-eyebrow: 0.75rem;
+  --fs-body: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-h6: 1.25rem;
+  --fs-h5: 1.5rem;
+  --fs-h4: 2rem;
+  --fs-h3: 2.5rem;
+  --fs-h2: 3.25rem;
+  --fs-h1: 4.5rem;
+
+  /* Spacing */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-6: 3rem;
+  --space-8: 4rem;
+  --space-12: 6rem;
+  --space-16: 8rem;
+
+  /* Layout */
+  --container-max: 1280px;
+  --container-pad: clamp(1rem, 4vw, 2rem);
+  --section-pad-y: clamp(4rem, 8vw, 7rem);
+
+  /* Shape */
+  --radius-button: 0px;
+  --radius-form: 0px;
+  --radius-card: 0px;
+
+  /* Motion */
+  --t-fast: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --t-base: 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  --t-slow: 600ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-index scale */
+  --z-base: 1;
+  --z-sticky: 50;
+  --z-modal: 100;
+  --z-toast: 200;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --fs-h1: 2.75rem;
+    --fs-h2: 2.25rem;
+    --fs-h3: 1.875rem;
+    --fs-h4: 1.5rem;
+  }
+}
