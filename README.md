@@ -1,6 +1,6 @@
 # Arapq Resort
 
-A boutique island resort marketing site. Single static homepage built with hand-written HTML, CSS, and vanilla JS, served locally by Vite.
+A boutique island resort marketing site. Single static homepage built with hand written HTML, CSS, and vanilla JS, served locally by Vite.
 
 ## Run locally
 
