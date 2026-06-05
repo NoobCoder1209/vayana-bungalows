@@ -4,12 +4,17 @@ A boutique island resort marketing site. Single static homepage built with hand-
 
 ## Run locally
 
+Prerequisites: [Node.js](https://nodejs.org) 18 or newer.
+
 ```bash
+git clone https://github.com/NoobCoder1209/arapq-website.git
+cd arapq-website
 npm install
 npm run dev
 ```
 
-Open the URL Vite prints (defaults to http://localhost:5173).
+Vite opens http://localhost:5173 automatically. First run needs internet
+for `npm install` and the Google Fonts loaded by `index.html`.
 
 ## Stack
 
