@@ -8,6 +8,45 @@ A bird's-eye view of every page in the [CozyStay Island Resort demo](https://coz
 
 ## Top-level structure
 
+```mermaid
+graph TD
+    Home["🏝️ Home<br/><i>landing page</i>"]:::built
+
+    Home --> Stay["Stay"]
+    Home --> Pages["Pages"]
+    Home --> News["News"]
+    Home --> Contact["Contact"]
+
+    Stay --> Rooms["Rooms<br/><i>index</i>"]
+    Stay --> SingleRoom["Single Room<br/><i>3 layout variants</i>"]
+    Stay --> Cart["Cart"]
+    Stay --> Checkout["Checkout"]
+    Stay --> Account["My Account"]
+
+    SingleRoom --> R1["Top Image"]
+    SingleRoom --> R2["Top Gallery"]
+    SingleRoom --> R3["Left Booking Form"]
+
+    Pages --> About["About the Hotel"]
+    Pages --> Restaurants["Restaurants & Bars"]
+    Pages --> Spa["Spa & Wellness"]
+    Pages --> Events["Events & Meetings"]
+    Pages --> Activities["Local Activities"]
+
+    Restaurants --> Restaurant1["The Restaurant"]
+    Restaurants --> Menu["Menu Page"]
+    Activities --> ActivityDetail["Activity Detail"]
+
+    News --> NewsIndex["Blog index"]
+    News --> NewsPost["Single post"]
+
+    classDef built fill:#b99d75,stroke:#8a7551,color:#fff,stroke-width:2px
+```
+
+> **Gold = built**, white = roadmap.
+
+The plain-text version, if Mermaid doesn't render for you:
+
 ```
 Island Resort
 │
@@ -43,10 +82,31 @@ Island Resort
 
 The two journeys most users follow:
 
+```mermaid
+flowchart LR
+    H["🏝️ Home"] --> R["Rooms"]
+    R --> SR["Single Room"]
+    SR --> C["Cart"]
+    C --> CO["Checkout"]
+    CO --> MA["My Account<br/><i>confirmation</i>"]
+
+    H2["🏝️ Home"] --> A["About"]
+    H2 --> RB["Restaurants"]
+    H2 --> SP["Spa"]
+    H2 --> AC["Activities"]
+    A --> CT["Contact"]
+    RB --> CT
+    SP --> CT
+    AC --> CT
+
+    classDef booking fill:#b99d75,stroke:#8a7551,color:#fff
+    classDef research fill:#53624e,stroke:#3a4738,color:#fff
+    class H,R,SR,C,CO,MA booking
+    class H2,A,RB,SP,AC,CT research
 ```
-Homepage → Rooms → Single Room → Cart → Checkout → My Account   (booking journey)
-Homepage → About / Restaurants / Spa / Activities → Contact     (research journey)
-```
+
+- **Gold path** — booking journey (intent to convert)
+- **Sage path** — research journey (intent to learn, ends in inquiry)
 
 ---
 
@@ -141,27 +201,46 @@ Linked from the footer but not the main nav:
 
 Most of the design language is captured by **six unique templates** — once those are built, every page in the site is a content-only variation:
 
-```
-Template            Used by
-──────────────      ────────────────────────────────────────────────────
-1. Marketing page   Home, About, Restaurants, Spa, Events, Activities,
-                    The Restaurant, Activity Detail
-2. Card index       Rooms, Restaurants & Bars, Local Activities, News
-3. Detail w/ form   Single Room (3 layouts share a base), Activity Detail
-4. Form-only        Cart, Checkout, Contact, My Account (logged-out)
-5. Long-form        Menu Page, single News post
-6. Account / table  My Account (logged-in)
+```mermaid
+graph LR
+    T1["📄 Marketing page"] --> P1["Home, About,<br/>Restaurants, Spa,<br/>Events, Activities,<br/>The Restaurant,<br/>Activity Detail"]
+    T2["🗂️ Card index"] --> P2["Rooms, Restaurants & Bars,<br/>Local Activities, News"]
+    T3["🛏️ Detail w/ form"] --> P3["Single Room (×3 layouts)"]
+    T4["📝 Form-only"] --> P4["Cart, Checkout,<br/>Contact, Login"]
+    T5["📖 Long-form"] --> P5["Menu Page,<br/>Single News Post"]
+    T6["👤 Account / table"] --> P6["My Account<br/>(logged-in)"]
+
+    classDef tpl fill:#0e0d0a,stroke:#b99d75,color:#fff,stroke-width:2px
+    classDef pages fill:#f7f4ee,stroke:#b5bbb3,color:#333
+    class T1,T2,T3,T4,T5,T6 tpl
+    class P1,P2,P3,P4,P5,P6 pages
 ```
 
 So the realistic build order from here is:
-1. Single Room (Top Image variant) — biggest visual lift, drives bookings
-2. Rooms index
-3. About / Restaurants / Spa (all the same Marketing page template)
-4. Cart + Checkout (same Form-only template)
-5. Contact
-6. News index + single post
-7. Account
-8. Footer pages (Privacy / Terms / Policy)
+
+```mermaid
+flowchart TD
+    Start(["🏝️ Homepage<br/><i>done</i>"]):::done
+    Start --> S1["1. Single Room<br/><i>Top Image variant</i>"]
+    S1 --> S2["2. Rooms index"]
+    S2 --> S3["3. About / Restaurants / Spa<br/><i>same template, 3 variations</i>"]
+    S3 --> S4["4. Cart + Checkout"]
+    S4 --> S5["5. Contact"]
+    S5 --> S6["6. News index + single post"]
+    S6 --> S7["7. Account"]
+    S7 --> S8["8. Privacy / Terms / Policy"]
+
+    classDef done fill:#b99d75,stroke:#8a7551,color:#fff,stroke-width:2px
+    classDef todo fill:#fff,stroke:#b5bbb3,color:#333
+    class S1,S2,S3,S4,S5,S6,S7,S8 todo
+```
+
+Why this order:
+- **Single Room first** — biggest visual lift after the homepage, drives bookings, room cards on the homepage already preview the design language
+- **Rooms index** is cheap once the room card style is locked in
+- **About/Restaurants/Spa** all share one template, so it's effectively one page of work for three deliverables
+- **Cart + Checkout** are forms — same template, fast
+- **News and Account** are the lowest priority for a marketing site
 
 ---
 
