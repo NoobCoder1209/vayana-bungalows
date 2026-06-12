@@ -272,16 +272,15 @@ async function main() {
         }
         info(`    r${String(r + 1).padStart(2, '0')}: ${cells.join('|')}`);
       }
-      info(`    --- recon: cols AE..AT (30..45) full height ---`);
-      for (let r = 0; r < grid.length; r++) {
+      info(`    --- recon: rows 10..end, cols AE..AP (30..41), unfiltered ---`);
+      // AE=30, AF=31, AG=32, AH=33, AI=34, AJ=35, AK=36, AL=37, AM=38, AN=39, AO=40, AP=41
+      for (let r = 9; r < grid.length; r++) {
         const row = grid[r] || [];
         const cells = [];
-        for (let c = 30; c < Math.min(46, Math.max(46, row.length)); c++) {
+        for (let c = 30; c <= 41; c++) {
           const v = row[c];
-          cells.push(v == null || v === '' ? '·' : String(v).slice(0, 12));
+          cells.push(v == null || v === '' ? '·' : String(v).slice(0, 14));
         }
-        // Skip rows where every cell is empty
-        if (cells.every((c) => c === '·')) continue;
         info(`    r${String(r + 1).padStart(2, '0')}: ${cells.join('|')}`);
       }
       info(`    --- end recon ---`);
