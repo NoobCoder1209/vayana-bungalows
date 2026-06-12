@@ -31,7 +31,17 @@ function loadBookings() {
   return bookingsPromise;
 }
 
-const toIso = (d) => d.toISOString().slice(0, 10);
+// Local-time YYYY-MM-DD. Using `.toISOString()` would shift the date back
+// for UTC+ users (the bulk of our likely audience): a Date constructed at
+// local midnight serialises as 22:00 UTC the previous day, so the slice(0,10)
+// would produce the wrong key. Reservations in bookings.json are also keyed
+// by local calendar date, so this stays in sync.
+const toIso = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 
 export function initBooking() {
   const checkin = document.getElementById('bk-checkin');
@@ -52,10 +62,33 @@ export function initBooking() {
   // whenever the picker's disable list is patched.
   let disabledSet = new Set();
 
+  // onDayCreate fires per-cell when flatpickr draws the calendar grid.
+  // We tag booked dates with `.is-booked` so the CSS can distinguish them
+  // from `minDate`-blocked past days (which are just `.flatpickr-disabled`
+  // and rendered as plain greyed-out cells). The class+aria mutation is
+  // guarded so a future flatpickr that re-fires the hook on existing
+  // elements can't stack the aria-label suffix.
+  const tagBookedDay = (_, __, ___, dayElem) => {
+    if (!dayElem?.dateObj) return;
+    if (dayElem.classList.contains('is-booked')) return;
+    const iso = toIso(dayElem.dateObj);
+    if (disabledSet.has(iso)) {
+      dayElem.classList.add('is-booked');
+      const base = dayElem.getAttribute('aria-label') || iso;
+      dayElem.setAttribute('aria-label', `${base} — already booked`);
+    }
+  };
+
   const fpIn = flatpickr(checkin, {
     minDate: 'today',
     dateFormat: 'M j, Y',
     disable: [],
+    // Force the flatpickr calendar grid even on mobile UAs. Without this,
+    // flatpickr falls back to a native <input type="date"> which doesn't
+    // honour our disable list, never fires onDayCreate (so .is-booked never
+    // lands), and makes the legend underneath misleading.
+    disableMobile: true,
+    onDayCreate: tagBookedDay,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -69,6 +102,8 @@ export function initBooking() {
     minDate: tomorrow,
     dateFormat: 'M j, Y',
     disable: [],
+    disableMobile: true,
+    onDayCreate: tagBookedDay,
   });
 
   // Pull the per-page bungalow key (B1 / B2 / B3) and patch in the
@@ -81,6 +116,9 @@ export function initBooking() {
         console.info(`[booking] no unavailable dates listed for ${bungalowKey}`);
       }
       disabledSet = new Set(dates);
+      // set('disable', ...) updates the date list AND calls redraw()
+      // internally, which re-fires onDayCreate per cell — that's what
+      // lands the .is-booked class on already-rendered cells.
       fpIn.set('disable', dates);
       fpOut.set('disable', dates);
 
