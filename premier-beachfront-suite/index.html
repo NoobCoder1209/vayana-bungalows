@@ -2,13 +2,13 @@
 <!--
   ⚠️  Bungalow detail pages — known duplication (tracked tech debt)
   
-  This page shares ~95% of its markup with its two sibling bungalow pages:
+  This is one of three bungalow detail pages that share ~95% of their markup:
     - premier-oceanview-villa/index.html
     - deluxe-hilltop-residence/index.html
     - premier-beachfront-suite/index.html
   
   The duplicated regions are:
-    - <head> (excluding <title>, <meta description>, hero preload)
+    - <head> (excluding <title>, <meta description>, hero preload, canonical/OG)
     - utility strip + sticky header + nav
     - booking widget (only the hidden bungalow input value differs)
     - amenities grid (8 SVG icons — currently identical across pages)
@@ -24,6 +24,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Premier Beachfront Suite &mdash; Arapq Resort</title>
     <meta name="description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
+    <link rel="canonical" href="https://noobcoder1209.github.io/arapq-website/premier-beachfront-suite/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Premier Beachfront Suite — Arapq Resort" />
+    <meta property="og:description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
+    <meta property="og:url" content="https://noobcoder1209.github.io/arapq-website/premier-beachfront-suite/" />
+    <meta property="og:image" content="https://noobcoder1209.github.io/arapq-website/assets/img/room-3.jpg" />
+    <meta property="og:site_name" content="Arapq Resort" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Premier Beachfront Suite — Arapq Resort" />
+    <meta name="twitter:description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
+    <meta name="twitter:image" content="https://noobcoder1209.github.io/arapq-website/assets/img/room-3.jpg" />
+
+    <meta name="theme-color" content="#0e0d0a" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />

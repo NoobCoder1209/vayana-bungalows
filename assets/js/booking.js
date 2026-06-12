@@ -61,7 +61,11 @@ export function initBooking() {
 function openModal(modal) {
   modal.hidden = false;
   document.body.style.overflow = 'hidden';
-  const focusable = modal.querySelector('.btn, [data-modal-close]');
+  // Focus the explicit close button (a real <button>); the first
+  // [data-modal-close] is the .modal__backdrop <div>, which is not focusable.
+  const focusable = modal.querySelector('.modal__close')
+    || modal.querySelector('button[data-modal-close]')
+    || modal.querySelector('.btn');
   focusable?.focus();
 }
 
