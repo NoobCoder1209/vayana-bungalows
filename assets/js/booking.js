@@ -29,9 +29,22 @@ export function initBooking() {
     dateFormat: 'M j, Y',
   });
 
+  // Hidden bungalow tag — set on per-bungalow pages so the modal copy can
+  // mention which bungalow the request is for. Falls back to the generic copy.
+  const bungalow = form.querySelector('input[name="bungalow"]')?.value?.trim();
+  const modalBody = modal.querySelector('#modal-body');
+  const modalTitle = modal.querySelector('#modal-title');
+
   // Open modal on submit
   form.addEventListener('submit', (e) => {
     e.preventDefault();
+    if (bungalow && modalBody) {
+      modalBody.textContent =
+        `A reservations specialist will follow up within twenty-four hours to confirm availability for the ${bungalow} and tailor your stay.`;
+    }
+    if (bungalow && modalTitle) {
+      modalTitle.textContent = `Thank you — your ${bungalow} request is in.`;
+    }
     openModal(modal);
   });
 

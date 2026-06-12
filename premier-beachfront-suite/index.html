@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Premier Beachfront Suite &mdash; Arapq Resort</title>
+    <meta name="description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
+    <link rel="preload" as="image" href="/assets/img/room-3.jpg" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="/assets/css/tokens.css" />
+    <link rel="stylesheet" href="/assets/css/base.css" />
+    <link rel="stylesheet" href="/assets/css/layout.css" />
+    <link rel="stylesheet" href="/assets/css/sections.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Top utility strip -->
+    <div class="utility-strip" role="region" aria-label="Announcement">
+      <div class="container utility-strip__inner">
+        <span>Welcome to Arapq Resort &mdash; reservations now open for the new season.</span>
+        <span class="utility-strip__meta">Call us &middot; +1 808 555 0119</span>
+      </div>
+    </div>
+
+    <!-- Sticky header -->
+    <div id="header-sentinel" aria-hidden="true"></div>
+    <header class="site-header is-scrolled" id="site-header">
+      <div class="container site-header__inner">
+        <a href="../" class="site-logo" aria-label="Arapq Resort home">
+          <span class="site-logo__mark">A</span>
+          <span class="site-logo__word">arapq</span>
+        </a>
+
+        <nav class="primary-nav" aria-label="Primary">
+          <button class="primary-nav__toggle" type="button" aria-expanded="false" aria-controls="primary-nav-list" aria-label="Open menu">
+            <span></span><span></span><span></span>
+          </button>
+          <ul id="primary-nav-list" class="primary-nav__list">
+            <li><a href="../">Home</a></li>
+            <li><a href="../#rooms">Stay</a></li>
+            <li><a href="../#about">Pages</a></li>
+            <li><a href="#">News</a></li>
+            <li><a href="../#contact">Contact</a></li>
+          </ul>
+        </nav>
+
+        <a href="#booking" class="btn btn-primary site-header__cta">Book Now</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- Hero -->
+      <section class="bungalow-hero" aria-labelledby="bungalow-title" style="background-image: url('/assets/img/room-3.jpg');">
+        <div class="container">
+          <span class="eyebrow eyebrow--light">From $1,480 / night</span>
+          <h1 id="bungalow-title">Premier Beachfront Suite</h1>
+          <p class="bungalow-hero__sub">Sand at your doorstep, the lagoon a few barefoot steps beyond.</p>
+        </div>
+      </section>
+
+      <!-- Booking widget -->
+      <section class="booking" id="booking" aria-labelledby="booking-title">
+        <div class="container">
+          <h2 id="booking-title" class="sr-only">Book your stay at Premier Beachfront Suite</h2>
+          <form class="booking__form" id="booking-form" novalidate>
+            <input type="hidden" name="bungalow" value="Premier Beachfront Suite" />
+            <div class="booking__field">
+              <label for="bk-checkin">Check-in</label>
+              <input type="text" id="bk-checkin" name="checkin" placeholder="Add date" autocomplete="off" />
+            </div>
+            <div class="booking__field">
+              <label for="bk-checkout">Check-out</label>
+              <input type="text" id="bk-checkout" name="checkout" placeholder="Add date" autocomplete="off" />
+            </div>
+            <div class="booking__field">
+              <label for="bk-rooms">Rooms</label>
+              <select id="bk-rooms" name="rooms">
+                <option>1 room</option>
+                <option>2 rooms</option>
+                <option>3 rooms</option>
+                <option>4 rooms</option>
+              </select>
+            </div>
+            <div class="booking__field">
+              <label for="bk-guests">Guests</label>
+              <select id="bk-guests" name="guests">
+                <option>1 adult</option>
+                <option>2 adults</option>
+                <option>2 adults, 1 child</option>
+                <option>2 adults, 2 children</option>
+                <option>3 adults</option>
+                <option>4 adults</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary booking__submit">Book Now</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Specs table -->
+      <section class="bungalow-specs section" aria-labelledby="specs-title">
+        <div class="container">
+          <h2 id="specs-title" class="sr-only">Villa specifications</h2>
+          <div class="bungalow-specs__grid">
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">Size</span>
+              <strong>140 m&sup2;</strong>
+            </div>
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">Occupancy</span>
+              <strong>2 adults, 1 child</strong>
+            </div>
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">Bed</span>
+              <strong>King</strong>
+            </div>
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">View</span>
+              <strong>Beach &amp; lagoon</strong>
+            </div>
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">Floor</span>
+              <strong>Single level</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Long-form description -->
+      <section class="bungalow-description" aria-labelledby="description-title">
+        <div class="container bungalow-description__inner">
+          <div class="bungalow-description__head reveal">
+            <span class="eyebrow">Inside the suite</span>
+            <h2 id="description-title">Right on the sand, just above the tide.</h2>
+          </div>
+          <div class="bungalow-description__body reveal">
+            <p>The Premier Beachfront Suite sits on the long shallow arc of the resort's main beach. The deck is the sand; a few steps from the bed and you're in the lagoon, where the water is calf-deep and warm for fifty metres out.</p>
+            <p>Inside, the suite is a single open volume with a king bed, a deep tub on the seaward wall, and a soft palette of bleached oak and natural linen. A separate outdoor shower under the palms is the way most guests start the day.</p>
+            <p>Every Premier Beachfront Suite includes a dedicated butler, twice-daily housekeeping, and a private cabana on the beach with a daybed for two and a service bell. The cabana is the kind of place that quietly redraws an afternoon.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Amenities -->
+      <section class="bungalow-amenities" aria-labelledby="amenities-title">
+        <div class="container">
+          <div class="bungalow-amenities__head reveal">
+            <span class="eyebrow">In every villa</span>
+            <h3 id="amenities-title">Amenities</h3>
+          </div>
+          <div class="bungalow-amenities__grid">
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 18v-6a4 4 0 014-4h10a4 4 0 014 4v6"/><path d="M3 22h18"/><path d="M3 14h18"/></svg><span>King-size bed</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 17c2 0 2-1.5 4-1.5S8 17 10 17s2-1.5 4-1.5S16 17 18 17s2-1.5 4-1.5"/><path d="M2 21c2 0 2-1.5 4-1.5S8 21 10 21s2-1.5 4-1.5S16 21 18 21s2-1.5 4-1.5"/></svg><span>Private plunge pool</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18"/><path d="M12 3a14 14 0 000 18"/></svg><span>Ocean view</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12.55a11 11 0 0114 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg><span>Fibre Wi-Fi</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg><span>24-hour butler</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h13a4 4 0 010 8H3z"/><path d="M16 8V6a2 2 0 012-2h0a2 2 0 012 2v2"/></svg><span>Breakfast in bed</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="6" width="16" height="12" rx="1"/><path d="M4 10h16"/></svg><span>Mini-bar</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 18l4-8 4 5 3-7 7 10z"/><path d="M3 21h18"/></svg><span>Private deck</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Image gallery -->
+      <section class="gallery section" aria-labelledby="gallery-title">
+        <div class="container gallery__head reveal">
+          <span class="eyebrow">A glimpse of the suite</span>
+          <h3 id="gallery-title">Gallery</h3>
+        </div>
+        <div class="gallery__viewport">
+          <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous photos" data-slider-prev="bungalow-gallery">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="gallery__track" data-slider="bungalow-gallery">
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-1.jpg" alt="Beach at golden hour" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-3.jpg" alt="Pool deck overlooking the sea" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-5.jpg" alt="Palms over a turquoise lagoon" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-7.jpg" alt="Sailboat anchored offshore" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-8.jpg" alt="Cocktail at the beach bar" loading="lazy" /></a>
+          </div>
+          <button class="gallery__arrow gallery__arrow--next" aria-label="Next photos" data-slider-next="bungalow-gallery">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <div class="site-footer__brand">
+          <a href="../" class="site-logo site-logo--light" aria-label="Arapq Resort home">
+            <span class="site-logo__mark">A</span>
+            <span class="site-logo__word">arapq</span>
+          </a>
+          <p>A private-island retreat. Reservations by inquiry.</p>
+        </div>
+        <div class="site-footer__col">
+          <span class="eyebrow eyebrow--light">Social</span>
+          <ul class="social-list">
+            <li><a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg></a></li>
+            <li><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg></a></li>
+          </ul>
+        </div>
+        <nav class="site-footer__nav" aria-label="Footer">
+          <ul>
+            <li><a href="../#about">About</a></li>
+            <li><a href="../#rooms">Rooms</a></li>
+            <li><a href="../#contact">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="site-footer__bar">
+        <div class="container site-footer__bar-inner">
+          <p>&copy; 2026 Arapq Resort &mdash; A boutique island hospitality brand.</p>
+          <ul>
+            <li><a href="#">Privacy</a></li>
+            <li><a href="#">Terms of use</a></li>
+            <li><a href="#">Policy</a></li>
+          </ul>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Booking confirmation modal -->
+    <div class="modal" id="booking-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal__backdrop" data-modal-close></div>
+      <div class="modal__panel">
+        <button class="modal__close" type="button" aria-label="Close" data-modal-close>&times;</button>
+        <span class="eyebrow">Reservation request received</span>
+        <h3 id="modal-title">Thank you &mdash; we'll be in touch.</h3>
+        <p id="modal-body">A reservations specialist will follow up within twenty-four hours to confirm availability and tailor your stay.</p>
+        <button type="button" class="btn btn-primary" data-modal-close>Close</button>
+      </div>
+    </div>
+
+    <script type="module" src="/assets/js/main.js"></script>
+  </body>
+</html>
