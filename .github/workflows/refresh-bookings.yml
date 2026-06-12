@@ -1,0 +1,86 @@
+name: Refresh bookings from Google Sheets
+
+# Pulls fresh booking data from the Google Sheet on a schedule (every 10 min),
+# rebuilds the static site with the new dates baked in, and deploys to GitHub
+# Pages directly. We don't commit bookings.json to main — it's generated at
+# deploy time and lives only in the deployed artifact. main stays clean of
+# bot commits, and we avoid the GITHUB_TOKEN-can't-trigger-other-workflows
+# problem of the commit-and-trigger pattern.
+
+on:
+  schedule:
+    # GitHub cron is best-effort and often runs 5-15 min late on shared
+    # runners; that's acceptable for our 10-minute target latency.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (log what would be written, do not deploy)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Both workflows publish to the same Pages environment, but they share that
+# environment via Pages' own server-side serialisation, NOT via this
+# concurrency group. We use a workflow-private group so that a cron
+# cancellation only ever cancels another cron — never a developer's
+# in-flight code deploy. (Sharing 'pages' across both with
+# cancel-in-progress: true would let a 10-min cron tick kill a human push.)
+concurrency:
+  group: pages-refresh
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Fetch bookings from Google Sheets
+        env:
+          SPREADSHEET_ID: ${{ vars.SPREADSHEET_ID }}
+          GOOGLE_SHEETS_KEY: ${{ secrets.GOOGLE_SHEETS_KEY }}
+        run: |
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            node scripts/fetch-bookings.mjs --dry-run
+          else
+            node scripts/fetch-bookings.mjs
+          fi
+
+      - run: npm run build
+        if: ${{ inputs.dry_run != true }}
+        env:
+          # Surfaced in booking.js as `?v=<run id>` on the bookings.json fetch
+          # URL so each deploy gets a fresh cache key at the Fastly edge.
+          VITE_BUILD_ID: ${{ github.run_id }}
+
+      - uses: actions/configure-pages@v5
+        if: ${{ inputs.dry_run != true }}
+
+      - uses: actions/upload-pages-artifact@v3
+        if: ${{ inputs.dry_run != true }}
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: ${{ inputs.dry_run != true }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

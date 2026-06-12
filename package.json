@@ -12,6 +12,7 @@
     "flatpickr": "^4.6.13"
   },
   "devDependencies": {
+    "googleapis": "^173.0.0",
     "vite": "^5.4.10"
   }
 }

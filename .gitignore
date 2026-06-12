@@ -4,3 +4,7 @@ dist/
 *.log
 .vite/
 .preview-screenshots/
+
+# Generated at deploy-time by scripts/fetch-bookings.mjs from Google Sheets;
+# never committed.
+public/assets/data/bookings.json

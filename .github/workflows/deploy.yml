@@ -11,7 +11,10 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  # Workflow-private group so a cron data-refresh in refresh-bookings.yml
+  # can never cancel a developer's in-flight code deploy. Pages itself
+  # serialises deployments to the github-pages environment.
+  group: pages-deploy
   cancel-in-progress: true
 
 jobs:
@@ -27,7 +30,34 @@ jobs:
 
       - run: npm ci
 
+      - name: Fetch bookings from Google Sheets
+        # Pull live booking data so a code-change deploy ships with fresh
+        # availability too. Behaviour:
+        #   - Secret unset (forks, PR previews on accounts without the
+        #     secret): build a clearly-marked empty bookings.json so the
+        #     site still deploys, just with no dates disabled.
+        #   - Secret set but malformed: the script's JSON.parse throws and
+        #     fail()s the build. We deliberately don't silently ship empty
+        #     here — that would un-block real reservations.
+        env:
+          SPREADSHEET_ID: ${{ vars.SPREADSHEET_ID }}
+          GOOGLE_SHEETS_KEY: ${{ secrets.GOOGLE_SHEETS_KEY }}
+        run: |
+          if [[ -z "$GOOGLE_SHEETS_KEY" ]]; then
+            echo "::warning::GOOGLE_SHEETS_KEY not set — building with empty bookings.json (fallback mode)"
+            mkdir -p public/assets/data
+            cat > public/assets/data/bookings.json <<EOF
+          {"generatedAt":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","fallback":true,"bungalows":{"B1":[],"B2":[],"B3":[]}}
+          EOF
+          else
+            node scripts/fetch-bookings.mjs
+          fi
+
       - run: npm run build
+        env:
+          # Surfaced in booking.js as `?v=<run id>` on the bookings.json fetch
+          # URL so each deploy gets a fresh cache key at the Fastly edge.
+          VITE_BUILD_ID: ${{ github.run_id }}
 
       - uses: actions/configure-pages@v5
 
