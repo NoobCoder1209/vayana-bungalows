@@ -1,4 +1,23 @@
 <!doctype html>
+<!--
+  ⚠️  Bungalow detail pages — known duplication (tracked tech debt)
+  
+  This page shares ~95% of its markup with its two sibling bungalow pages:
+    - premier-oceanview-villa/index.html
+    - deluxe-hilltop-residence/index.html
+    - premier-beachfront-suite/index.html
+  
+  The duplicated regions are:
+    - <head> (excluding <title>, <meta description>, hero preload)
+    - utility strip + sticky header + nav
+    - booking widget (only the hidden bungalow input value differs)
+    - amenities grid (8 SVG icons — currently identical across pages)
+    - footer + booking confirmation modal + script include
+  
+  When changing any of these, update ALL THREE files. If a 4th bungalow lands,
+  consider extracting to a templating step (Vite HTML plugin or build-time
+  partials) before duplicating again.
+-->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -28,7 +47,7 @@
 
     <!-- Sticky header -->
     <div id="header-sentinel" aria-hidden="true"></div>
-    <header class="site-header is-scrolled" id="site-header">
+    <header class="site-header" id="site-header">
       <div class="container site-header__inner">
         <a href="../" class="site-logo" aria-label="Arapq Resort home">
           <span class="site-logo__mark">A</span>
@@ -53,6 +72,7 @@
     </header>
 
     <main id="main">
+      <!-- Note: inline background-image url() IS rewritten by Vite (verified). If you move this URL into sections.css, Vite will resolve it relative to the CSS file location, not /assets — keep the path absolute and the rule will keep working. -->
       <!-- Hero -->
       <section class="bungalow-hero" aria-labelledby="bungalow-title" style="background-image: url('/assets/img/room-1.jpg');">
         <div class="container">
@@ -172,17 +192,17 @@
           <h3 id="gallery-title">Gallery</h3>
         </div>
         <div class="gallery__viewport">
-          <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous photos" data-slider-prev="bungalow-gallery">
+          <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous photos" data-slider-prev="oceanview-gallery">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
-          <div class="gallery__track" data-slider="bungalow-gallery">
+          <div class="gallery__track" data-slider="oceanview-gallery">
             <a class="gallery__item" href="#"><img src="/assets/img/gallery-1.jpg" alt="Beach at golden hour" loading="lazy" /></a>
             <a class="gallery__item" href="#"><img src="/assets/img/gallery-2.jpg" alt="Open-air villa terrace" loading="lazy" /></a>
             <a class="gallery__item" href="#"><img src="/assets/img/gallery-3.jpg" alt="Pool deck overlooking the sea" loading="lazy" /></a>
             <a class="gallery__item" href="#"><img src="/assets/img/gallery-5.jpg" alt="Palms over a turquoise lagoon" loading="lazy" /></a>
             <a class="gallery__item" href="#"><img src="/assets/img/gallery-6.jpg" alt="Spa pavilion at dusk" loading="lazy" /></a>
           </div>
-          <button class="gallery__arrow gallery__arrow--next" aria-label="Next photos" data-slider-next="bungalow-gallery">
+          <button class="gallery__arrow gallery__arrow--next" aria-label="Next photos" data-slider-next="oceanview-gallery">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
           </button>
         </div>

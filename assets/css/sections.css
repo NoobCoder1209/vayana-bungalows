@@ -60,7 +60,8 @@
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
 }
 
-.hero .eyebrow--light {
+.hero .eyebrow--light,
+.bungalow-hero .eyebrow--light {
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
   color: var(--primary);
 }
