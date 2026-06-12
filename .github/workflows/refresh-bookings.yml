@@ -16,10 +16,6 @@ on:
         description: 'Dry run (log what would be written, do not commit)'
         type: boolean
         default: false
-      recon:
-        description: 'Recon mode (dump tab structure, do not parse or write)'
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -52,16 +48,14 @@ jobs:
           SPREADSHEET_ID: ${{ vars.SPREADSHEET_ID }}
           GOOGLE_SHEETS_KEY: ${{ secrets.GOOGLE_SHEETS_KEY }}
         run: |
-          if [[ "${{ inputs.recon }}" == "true" ]]; then
-            node scripts/fetch-bookings.mjs --recon
-          elif [[ "${{ inputs.dry_run }}" == "true" ]]; then
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
             node scripts/fetch-bookings.mjs --dry-run
           else
             node scripts/fetch-bookings.mjs
           fi
 
       - name: Commit bookings.json if changed
-        if: ${{ inputs.dry_run != true && inputs.recon != true }}
+        if: ${{ inputs.dry_run != true }}
         env:
           # Use the github-actions[bot] identity so the commit doesn't look
           # like it came from a person's account.
