@@ -83,6 +83,11 @@ export function initBooking() {
     minDate: 'today',
     dateFormat: 'M j, Y',
     disable: [],
+    // Force the flatpickr calendar grid even on mobile UAs. Without this,
+    // flatpickr falls back to a native <input type="date"> which doesn't
+    // honour our disable list, never fires onDayCreate (so .is-booked never
+    // lands), and makes the legend underneath misleading.
+    disableMobile: true,
     onDayCreate: tagBookedDay,
     onChange: (selected) => {
       if (selected[0]) {
@@ -97,6 +102,7 @@ export function initBooking() {
     minDate: tomorrow,
     dateFormat: 'M j, Y',
     disable: [],
+    disableMobile: true,
     onDayCreate: tagBookedDay,
   });
 
@@ -110,17 +116,11 @@ export function initBooking() {
         console.info(`[booking] no unavailable dates listed for ${bungalowKey}`);
       }
       disabledSet = new Set(dates);
+      // set('disable', ...) updates the date list AND calls redraw()
+      // internally, which re-fires onDayCreate per cell — that's what
+      // lands the .is-booked class on already-rendered cells.
       fpIn.set('disable', dates);
       fpOut.set('disable', dates);
-      // `set('disable', ...)` updates the day cells' disabled state but does
-      // not re-run onDayCreate, so the .is-booked class wouldn't land on
-      // already-rendered cells. redraw() rebuilds the visible month and
-      // re-fires onDayCreate per cell. Skip when the list is empty —
-      // there's nothing to tag and redraw can briefly steal focus.
-      if (dates.length) {
-        fpIn.redraw();
-        fpOut.redraw();
-      }
 
       // If the user managed to pick a date in the brief window before
       // bookings.json loaded, and that date is now known-blocked, clear
