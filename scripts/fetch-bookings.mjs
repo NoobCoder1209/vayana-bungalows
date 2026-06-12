@@ -260,6 +260,8 @@ async function main() {
     info(`    grid is ${grid.length} rows × ${Math.max(0, ...grid.map((r) => r.length))} cols`);
 
     if (RECON) {
+      // Two parts: (1) first 30 rows × first 35 cols (the visual calendar)
+      //            (2) all rows × cols 30..50 (the AK/AL reservation table)
       info(`    --- recon dump for '${tab}' (first 30 rows, first 35 cols) ---`);
       for (let r = 0; r < Math.min(30, grid.length); r++) {
         const row = grid[r] || [];
@@ -268,6 +270,18 @@ async function main() {
           const v = row[c];
           cells.push(v == null || v === '' ? '·' : String(v).slice(0, 6));
         }
+        info(`    r${String(r + 1).padStart(2, '0')}: ${cells.join('|')}`);
+      }
+      info(`    --- recon: cols AE..AT (30..45) full height ---`);
+      for (let r = 0; r < grid.length; r++) {
+        const row = grid[r] || [];
+        const cells = [];
+        for (let c = 30; c < Math.min(46, Math.max(46, row.length)); c++) {
+          const v = row[c];
+          cells.push(v == null || v === '' ? '·' : String(v).slice(0, 12));
+        }
+        // Skip rows where every cell is empty
+        if (cells.every((c) => c === '·')) continue;
         info(`    r${String(r + 1).padStart(2, '0')}: ${cells.join('|')}`);
       }
       info(`    --- end recon ---`);
