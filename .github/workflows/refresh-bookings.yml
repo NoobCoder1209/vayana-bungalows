@@ -78,8 +78,6 @@ jobs:
           ")
 
           git add public/assets/data/bookings.json
-          git commit -m "chore: refresh bookings from Google Sheets
-
-Unavailable date counts: $summary"
+          git commit -m "chore: refresh bookings from Google Sheets ($summary)"
           git push
           echo "::notice::Committed bookings.json changes ($summary) and pushed to main."
