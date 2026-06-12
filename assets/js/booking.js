@@ -29,9 +29,23 @@ export function initBooking() {
     dateFormat: 'M j, Y',
   });
 
+  // Hidden bungalow tag — set on per-bungalow pages so the modal copy can
+  // mention which bungalow the request is for. Read at submit time so the
+  // modal reflects the current value if a future flow ever changes it.
+  const modalBody = modal.querySelector('#modal-body');
+  const modalTitle = modal.querySelector('#modal-title');
+
   // Open modal on submit
   form.addEventListener('submit', (e) => {
     e.preventDefault();
+    const bungalow = form.querySelector('input[name="bungalow"]')?.value?.trim();
+    if (bungalow && modalBody) {
+      modalBody.textContent =
+        `A reservations specialist will follow up within twenty-four hours to confirm availability for the ${bungalow} and tailor your stay.`;
+    }
+    if (bungalow && modalTitle) {
+      modalTitle.textContent = `Thank you — your ${bungalow} request is in.`;
+    }
     openModal(modal);
   });
 
@@ -47,7 +61,11 @@ export function initBooking() {
 function openModal(modal) {
   modal.hidden = false;
   document.body.style.overflow = 'hidden';
-  const focusable = modal.querySelector('.btn, [data-modal-close]');
+  // Focus the explicit close button (a real <button>); the first
+  // [data-modal-close] is the .modal__backdrop <div>, which is not focusable.
+  const focusable = modal.querySelector('.modal__close')
+    || modal.querySelector('button[data-modal-close]')
+    || modal.querySelector('.btn');
   focusable?.focus();
 }
 
