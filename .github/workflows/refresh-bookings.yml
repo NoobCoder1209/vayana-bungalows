@@ -1,9 +1,11 @@
 name: Refresh bookings from Google Sheets
 
-# Pulls fresh booking data from the Google Sheet on a schedule (every 10 min)
-# and commits the resulting assets/data/bookings.json to main if it changed.
-# A commit on main triggers the existing deploy.yml workflow, which republishes
-# the static site with the new dates baked in.
+# Pulls fresh booking data from the Google Sheet on a schedule (every 10 min),
+# rebuilds the static site with the new dates baked in, and deploys to GitHub
+# Pages directly. We don't commit bookings.json to main — it's generated at
+# deploy time and lives only in the deployed artifact. main stays clean of
+# bot commits, and we avoid the GITHUB_TOKEN-can't-trigger-other-workflows
+# problem of the commit-and-trigger pattern.
 
 on:
   schedule:
@@ -13,28 +15,29 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run (log what would be written, do not commit)'
+        description: 'Dry run (log what would be written, do not deploy)'
         type: boolean
         default: false
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
+# Newest sheet snapshot is the one we want, so cancel any in-flight refresh
+# when a new one is queued. Share the "pages" group with deploy.yml so a
+# code-change deploy and a data-refresh deploy don't fight for the same
+# environment.
 concurrency:
-  # Prevent two refresh runs racing (would happen if the workflow runs longer
-  # than 10 min for any reason). New runs cancel pending older ones.
-  group: refresh-bookings
-  cancel-in-progress: false
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  refresh:
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          # We need full history because we'll commit + push as the bot.
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
@@ -54,30 +57,24 @@ jobs:
             node scripts/fetch-bookings.mjs
           fi
 
-      - name: Commit bookings.json if changed
+      - run: npm run build
         if: ${{ inputs.dry_run != true }}
-        env:
-          # Use the github-actions[bot] identity so the commit doesn't look
-          # like it came from a person's account.
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-        run: |
-          if git diff --quiet -- public/assets/data/bookings.json; then
-            echo "No changes to bookings.json — skipping commit."
-            echo "::notice::No booking changes detected; skipped commit and deploy."
-            exit 0
-          fi
 
-          # Summarise what's about to land in the commit message
-          summary=$(node -e "
-            const j = JSON.parse(require('fs').readFileSync('public/assets/data/bookings.json'));
-            const parts = Object.entries(j.bungalows).map(([k, v]) => k + '=' + v.length);
-            console.log(parts.join(', '));
-          ")
+      - uses: actions/configure-pages@v5
+        if: ${{ inputs.dry_run != true }}
 
-          git add public/assets/data/bookings.json
-          git commit -m "chore: refresh bookings from Google Sheets ($summary)"
-          git push
-          echo "::notice::Committed bookings.json changes ($summary) and pushed to main."
+      - uses: actions/upload-pages-artifact@v3
+        if: ${{ inputs.dry_run != true }}
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: ${{ inputs.dry_run != true }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

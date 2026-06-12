@@ -9,7 +9,7 @@ const BOOKINGS_URL = `${import.meta.env.BASE_URL}assets/data/bookings.json`;
 // Cache the bookings load so multiple calls in one page reuse the same fetch.
 let bookingsPromise = null;
 
-async function loadBookings() {
+function loadBookings() {
   if (!bookingsPromise) {
     bookingsPromise = fetch(BOOKINGS_URL, { cache: 'no-cache' })
       .then((r) => {
@@ -27,7 +27,7 @@ async function loadBookings() {
   return bookingsPromise;
 }
 
-export async function initBooking() {
+export function initBooking() {
   const checkin = document.getElementById('bk-checkin');
   const checkout = document.getElementById('bk-checkout');
   const form = document.getElementById('booking-form');
@@ -35,25 +35,17 @@ export async function initBooking() {
 
   if (!checkin || !checkout || !form || !modal) return;
 
-  // Pull the per-page bungalow key (B1 / B2 / B3) and resolve its
-  // unavailable-date list. Falls through to no disabled dates if the file
-  // is missing or the page didn't tag the form.
-  const bungalowKey = form.dataset.bungalowKey;
-  const bookings = bungalowKey ? await loadBookings() : null;
-  const disable = bookings?.bungalows?.[bungalowKey] ?? [];
-
-  if (bungalowKey && bookings && disable.length === 0) {
-    console.info(`[booking] no unavailable dates listed for ${bungalowKey}`);
-  }
-
   const today = new Date();
   const tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
 
+  // Initialise flatpickr immediately with no disabled dates so the inputs
+  // are interactive from first paint. The disable list gets patched in
+  // asynchronously once bookings.json arrives.
   const fpIn = flatpickr(checkin, {
     minDate: 'today',
     dateFormat: 'M j, Y',
-    disable,
+    disable: [],
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -66,8 +58,22 @@ export async function initBooking() {
   const fpOut = flatpickr(checkout, {
     minDate: tomorrow,
     dateFormat: 'M j, Y',
-    disable,
+    disable: [],
   });
+
+  // Pull the per-page bungalow key (B1 / B2 / B3) and patch in the
+  // unavailable dates for that bungalow once they arrive.
+  const bungalowKey = form.dataset.bungalowKey;
+  if (bungalowKey) {
+    loadBookings().then((bookings) => {
+      const dates = bookings?.bungalows?.[bungalowKey] ?? [];
+      if (bookings && dates.length === 0) {
+        console.info(`[booking] no unavailable dates listed for ${bungalowKey}`);
+      }
+      fpIn.set('disable', dates);
+      fpOut.set('disable', dates);
+    });
+  }
 
   // Hidden bungalow tag — set on per-bungalow pages so the modal copy can
   // mention which bungalow the request is for. Read at submit time so the

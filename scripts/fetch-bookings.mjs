@@ -34,11 +34,16 @@ const KEY_JSON = process.env.GOOGLE_SHEETS_KEY;
 const DRY_RUN = process.argv.includes('--dry-run');
 const OUT_PATH = path.join(process.cwd(), 'public/assets/data/bookings.json');
 
-const TABS = [
-  { key: 'B1', tab: 'B1 2026' },
-  { key: 'B2', tab: 'B2 2026' },
-  { key: 'B3', tab: 'B3 2026' },
-];
+// Tab names use the current year, e.g. "B1 2026". Around year-end we also
+// look for next-year tabs (e.g. "B1 2027") so the rollover works without
+// manual intervention. If the current-year tab is missing the script fails
+// loudly — we never silently fall back to stale data.
+const CURRENT_YEAR = new Date().getUTCFullYear();
+const TAB_KEYS = ['B1', 'B2', 'B3'];
+
+function tabsForYear(y) {
+  return TAB_KEYS.map((key) => ({ key, tab: `${key} ${y}` }));
+}
 
 // Reservation table column indices (0-based)
 const COL_ID = 32;        // AG — №
@@ -67,8 +72,11 @@ if (!KEY_JSON) fail('GOOGLE_SHEETS_KEY env var is required (service-account JSON
 let credentials;
 try {
   credentials = JSON.parse(KEY_JSON);
-} catch (e) {
-  fail(`GOOGLE_SHEETS_KEY is not valid JSON: ${e.message}`);
+} catch {
+  // Don't echo e.message — Node may include offending input substrings
+  // ("Unexpected token X in JSON at position Y") which could leak private
+  // key fragments into the public Actions log if the secret is corrupted.
+  fail('GOOGLE_SHEETS_KEY is not valid JSON (rotate the secret and re-paste)');
 }
 
 const auth = new google.auth.GoogleAuth({
@@ -86,6 +94,16 @@ async function readTab(tabName) {
     dateTimeRenderOption: 'FORMATTED_STRING',
   });
   return res.data.values || [];
+}
+
+// List the tab names in the spreadsheet so we can probe for next-year tabs
+// without triggering a 400 if they don't exist yet.
+async function listTabs() {
+  const res = await sheets.spreadsheets.get({
+    spreadsheetId: SPREADSHEET_ID,
+    fields: 'sheets(properties(title))',
+  });
+  return (res.data.sheets || []).map((s) => s.properties?.title).filter(Boolean);
 }
 
 // Parse "DD-MM-YYYY" → { y, m (0-based), d } or throw with a useful message.
@@ -204,29 +222,46 @@ function parseReservationTable(grid, tabLabel) {
 
 async function main() {
   info(`▶ Reading spreadsheet ${SPREADSHEET_ID} as ${credentials.client_email}`);
+  info(`  current year is ${CURRENT_YEAR}`);
+
+  const allTabs = new Set(await listTabs());
+
+  // Always read current-year tabs. Read next-year tabs too if they exist,
+  // so December → January rolls over without operator intervention.
+  const yearsToRead = [CURRENT_YEAR];
+  if (TAB_KEYS.every((k) => allTabs.has(`${k} ${CURRENT_YEAR + 1}`))) {
+    yearsToRead.push(CURRENT_YEAR + 1);
+    info(`  found next-year tabs (${CURRENT_YEAR + 1}), will read both`);
+  }
+
+  const merged = Object.fromEntries(TAB_KEYS.map((k) => [k, new Set()]));
   const out = {
     generatedAt: new Date().toISOString(),
     bungalows: {},
   };
 
-  for (const { key, tab } of TABS) {
-    info(`  – fetching '${tab}'`);
-    let grid;
-    try {
-      grid = await readTab(tab);
-    } catch (e) {
-      throw new Error(`Failed to read tab '${tab}': ${e.message}`);
+  for (const year of yearsToRead) {
+    for (const { key, tab } of tabsForYear(year)) {
+      if (!allTabs.has(tab)) {
+        throw new Error(
+          `Tab '${tab}' is missing from the spreadsheet. ` +
+          `Available tabs: ${[...allTabs].slice(0, 20).join(', ')}${allTabs.size > 20 ? ', ...' : ''}`,
+        );
+      }
+      info(`  – fetching '${tab}'`);
+      const grid = await readTab(tab);
+      info(`    grid is ${grid.length} rows × ${Math.max(0, ...grid.map((r) => r.length))} cols`);
+      const r = parseReservationTable(grid, tab);
+      for (const d of r.unavailable) merged[key].add(d);
+      info(
+        `    parsed ${r.scanned} reservation(s), ${r.blocked} blocking, ` +
+        `${r.skippedCompleted} completed, ${r.skippedEmpty} empty — ` +
+        `${r.unavailable.length} unavailable date(s)`,
+      );
     }
-    info(`    grid is ${grid.length} rows × ${Math.max(0, ...grid.map((r) => r.length))} cols`);
-
-    const r = parseReservationTable(grid, tab);
-    out.bungalows[key] = r.unavailable;
-    info(
-      `    parsed ${r.scanned} reservation(s), ${r.blocked} blocking, ` +
-      `${r.skippedCompleted} completed, ${r.skippedEmpty} empty — ` +
-      `${r.unavailable.length} unavailable date(s)`,
-    );
   }
+
+  for (const k of TAB_KEYS) out.bungalows[k] = [...merged[k]].sort();
 
   const summary = Object.entries(out.bungalows).map(([k, v]) => `${k}=${v.length}`).join(', ');
   info(`✓ Loaded unavailable dates: ${summary}`);

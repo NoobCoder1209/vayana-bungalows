@@ -11,6 +11,8 @@ permissions:
   id-token: write
 
 concurrency:
+  # Shared with refresh-bookings.yml: data refreshes and code deploys
+  # both target the same Pages environment, so they take turns.
   group: pages
   cancel-in-progress: true
 
@@ -26,6 +28,22 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Fetch bookings from Google Sheets
+        # Pull live booking data so a code-change deploy ships with fresh
+        # availability too. Falls through with an empty bookings.json if the
+        # secret is missing — keeps PR previews and forks deployable.
+        env:
+          SPREADSHEET_ID: ${{ vars.SPREADSHEET_ID }}
+          GOOGLE_SHEETS_KEY: ${{ secrets.GOOGLE_SHEETS_KEY }}
+        run: |
+          if [[ -z "$GOOGLE_SHEETS_KEY" ]]; then
+            echo "::warning::GOOGLE_SHEETS_KEY not set — building with empty bookings.json"
+            mkdir -p public/assets/data
+            echo '{"generatedAt":"1970-01-01T00:00:00.000Z","bungalows":{"B1":[],"B2":[],"B3":[]}}' > public/assets/data/bookings.json
+          else
+            node scripts/fetch-bookings.mjs
+          fi
 
       - run: npm run build
 
