@@ -5,12 +5,12 @@
 // from bungalow tab key → array of unavailable ISO dates (YYYY-MM-DD).
 //
 // Source columns on each tab (1-based letters / 0-based indices):
-//   AF (31)  №                 reservation id (e.g. 26B-101)
-//   AG (32)  Агент             agent (ignored)
-//   AH (33)  Дата              booking date (ignored)
-//   AI (34)  Статус            status: Confirmed / Ongoing / Upcoming / Completed
-//   AJ (35)  CHECK IN          arrival date — DD-MM-YYYY
-//   AK (36)  CHECK OUT         departure date — DD-MM-YYYY
+//   AG (32)  №                 reservation id (e.g. 26B-101)
+//   AH (33)  Агент             agent (ignored)
+//   AI (34)  Дата              booking date (ignored)
+//   AJ (35)  Статус            status: Confirmed / Ongoing / Upcoming / Completed
+//   AK (36)  CHECK IN          arrival date — DD-MM-YYYY
+//   AL (37)  CHECK OUT         departure date — DD-MM-YYYY
 //   ...      Име, Фамилия, Телефон, Нощувки  (ignored)
 //
 // Header row is r10. Reservation rows start at r11. A row with no № or
@@ -41,10 +41,10 @@ const TABS = [
 ];
 
 // Reservation table column indices (0-based)
-const COL_ID = 31;        // AF — №
-const COL_STATUS = 34;    // AI — Статус
-const COL_CHECKIN = 35;   // AJ — CHECK IN
-const COL_CHECKOUT = 36;  // AK — CHECK OUT
+const COL_ID = 32;        // AG — №
+const COL_STATUS = 35;    // AJ — Статус
+const COL_CHECKIN = 36;   // AK — CHECK IN
+const COL_CHECKOUT = 37;  // AL — CHECK OUT
 
 // Statuses that block availability. Anything else (Completed, empty, unknown) is ignored.
 const BLOCKING_STATUSES = new Set(['confirmed', 'ongoing', 'upcoming']);
@@ -128,7 +128,7 @@ function validateHeader(grid, tabLabel) {
   const checkOut = String(headerRow[COL_CHECKOUT] ?? '').trim().toUpperCase();
   if (checkIn !== 'CHECK IN' || checkOut !== 'CHECK OUT') {
     throw new Error(
-      `[${tabLabel}] Header row ${HEADER_ROW} columns AJ/AK are ` +
+      `[${tabLabel}] Header row ${HEADER_ROW} columns AK/AL are ` +
       `"${headerRow[COL_CHECKIN] ?? ''}" / "${headerRow[COL_CHECKOUT] ?? ''}", ` +
       `expected "CHECK IN" / "CHECK OUT". The reservation table layout has changed.`,
     );
