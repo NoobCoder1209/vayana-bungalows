@@ -1041,3 +1041,73 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ========== Flatpickr — booked-date styling ==========
+   Booked dates (in our bookings.json disable list) get tagged with
+   .is-booked by booking.js's onDayCreate. They're styled differently
+   from default flatpickr-disabled (which also covers minDate-blocked
+   past dates) so users can tell at a glance which dates are reserved
+   versus simply in the past. */
+.flatpickr-day.is-booked,
+.flatpickr-day.is-booked:hover,
+.flatpickr-day.is-booked.flatpickr-disabled,
+.flatpickr-day.is-booked.flatpickr-disabled:hover {
+  background: var(--bg-cream);
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--text-muted);
+  border-color: var(--border-soft);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* ========== Booking widget legend ========== */
+.booking-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--container-pad);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: var(--bg-light);
+  border-top: 1px solid var(--border-soft);
+}
+
+.booking-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: 0.04em;
+}
+
+.booking-legend__swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+
+.booking-legend__swatch--available {
+  background: var(--bg-light);
+}
+
+.booking-legend__swatch--booked {
+  background: var(--bg-cream);
+  position: relative;
+}
+
+.booking-legend__swatch--booked::after {
+  content: '';
+  position: absolute;
+  inset: 50% 2px auto 2px;
+  height: 1px;
+  background: var(--text-muted);
+}
+
+.booking-legend__swatch--past {
+  background: rgba(57, 57, 57, 0.08);
+}

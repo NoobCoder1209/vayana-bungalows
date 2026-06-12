@@ -52,10 +52,25 @@ export function initBooking() {
   // whenever the picker's disable list is patched.
   let disabledSet = new Set();
 
+  // onDayCreate fires per-cell when flatpickr draws the calendar grid.
+  // We tag booked dates with `.is-booked` so the CSS can distinguish them
+  // from `minDate`-blocked past days (which are just `.flatpickr-disabled`
+  // and rendered as plain greyed-out cells).
+  const tagBookedDay = (_, __, ___, dayElem) => {
+    if (!dayElem?.dateObj) return;
+    const iso = toIso(dayElem.dateObj);
+    if (disabledSet.has(iso)) {
+      dayElem.classList.add('is-booked');
+      dayElem.setAttribute('aria-label',
+        `${dayElem.getAttribute('aria-label') || iso} — already booked`);
+    }
+  };
+
   const fpIn = flatpickr(checkin, {
     minDate: 'today',
     dateFormat: 'M j, Y',
     disable: [],
+    onDayCreate: tagBookedDay,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -69,6 +84,7 @@ export function initBooking() {
     minDate: tomorrow,
     dateFormat: 'M j, Y',
     disable: [],
+    onDayCreate: tagBookedDay,
   });
 
   // Pull the per-page bungalow key (B1 / B2 / B3) and patch in the
@@ -83,6 +99,12 @@ export function initBooking() {
       disabledSet = new Set(dates);
       fpIn.set('disable', dates);
       fpOut.set('disable', dates);
+      // `set('disable', ...)` updates the day cells' disabled state but does
+      // not re-run onDayCreate, so the .is-booked class wouldn't land on
+      // already-rendered cells. redraw() rebuilds the visible month and
+      // re-fires onDayCreate per cell.
+      fpIn.redraw();
+      fpOut.redraw();
 
       // If the user managed to pick a date in the brief window before
       // bookings.json loaded, and that date is now known-blocked, clear
