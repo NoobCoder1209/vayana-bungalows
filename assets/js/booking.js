@@ -80,19 +80,35 @@ export function initBooking() {
   let checkInSet = new Set();
 
   // onDayCreate fires per-cell when flatpickr draws the calendar grid.
-  // We tag dates that are visually "booked" (in unavailableSet) with
-  // `.is-booked` so the CSS can distinguish them from `minDate`-blocked
-  // past days. Note: even on the check-out picker, a check-in day visually
-  // belongs to the "booked" set — it's just selectable as a check-out.
-  const tagBookedDay = (_, __, ___, dayElem) => {
+  // We tag dates that are visually "booked" so the CSS can distinguish
+  // them from `minDate`-blocked past days. Two factory variants:
+  //   - 'in':  every unavailable date gets `.is-booked` (cream + strike,
+  //            cursor: not-allowed; matches the legend's "Already booked")
+  //   - 'out': unavailable AND not a check-in day → `.is-booked`. A check-in
+  //            day is selectable as a turnover checkout, so it gets a
+  //            different class `.is-checkout-only` with its own styling
+  //            (selectable, distinct visual) and its own aria label so
+  //            screen readers don't claim the cell is unavailable.
+  const tagBookedDay = (picker) => (_, __, ___, dayElem) => {
     if (!dayElem?.dateObj) return;
-    if (dayElem.classList.contains('is-booked')) return;
     const iso = toIso(dayElem.dateObj);
-    if (unavailableSet.has(iso)) {
-      dayElem.classList.add('is-booked');
+    if (!unavailableSet.has(iso)) return;
+
+    if (picker === 'out' && checkInSet.has(iso)) {
+      if (dayElem.classList.contains('is-checkout-only')) return;
+      dayElem.classList.add('is-checkout-only');
       const base = dayElem.getAttribute('aria-label') || iso;
-      dayElem.setAttribute('aria-label', `${base} — already booked`);
+      dayElem.setAttribute(
+        'aria-label',
+        `${base} — turnover day, available as a check-out`,
+      );
+      return;
     }
+
+    if (dayElem.classList.contains('is-booked')) return;
+    dayElem.classList.add('is-booked');
+    const base = dayElem.getAttribute('aria-label') || iso;
+    dayElem.setAttribute('aria-label', `${base} — already booked`);
   };
 
   const fpIn = flatpickr(checkin, {
@@ -104,7 +120,7 @@ export function initBooking() {
     // honour our disable list, never fires onDayCreate (so .is-booked never
     // lands), and makes the legend underneath misleading.
     disableMobile: true,
-    onDayCreate: tagBookedDay,
+    onDayCreate: tagBookedDay('in'),
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -119,7 +135,7 @@ export function initBooking() {
     dateFormat: 'M j, Y',
     disable: [],
     disableMobile: true,
-    onDayCreate: tagBookedDay,
+    onDayCreate: tagBookedDay('out'),
   });
 
   // Pull the per-page bungalow key (B1 / B2 / B3) and patch in the
@@ -207,6 +223,24 @@ export function initBooking() {
         fpOut.clear();
         checkout.focus();
         return;
+      }
+    }
+
+    // Interior-range validation: even if both endpoints are valid, the
+    // chosen interval might cross another reservation's nights. Walk the
+    // strict interior (checkin+1 .. checkout-1) and reject if any of
+    // those days is unavailable. Cheap: typical stay length is < 30 days.
+    if (checkinDate && checkoutDate) {
+      const cursor = new Date(checkinDate);
+      cursor.setDate(cursor.getDate() + 1);
+      const stop = new Date(checkoutDate);
+      while (cursor < stop) {
+        if (unavailableSet.has(toIso(cursor))) {
+          fpOut.clear();
+          checkout.focus();
+          return;
+        }
+        cursor.setDate(cursor.getDate() + 1);
       }
     }
 
