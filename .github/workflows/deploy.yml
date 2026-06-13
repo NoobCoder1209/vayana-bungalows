@@ -47,7 +47,7 @@ jobs:
             echo "::warning::GOOGLE_SHEETS_KEY not set — building with empty bookings.json (fallback mode)"
             mkdir -p public/assets/data
             cat > public/assets/data/bookings.json <<EOF
-          {"generatedAt":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","fallback":true,"bungalows":{"B1":[],"B2":[],"B3":[]}}
+          {"generatedAt":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","fallback":true,"bungalows":{"B1":{"unavailable":[],"checkIn":[]},"B2":{"unavailable":[],"checkIn":[]},"B3":{"unavailable":[],"checkIn":[]}}}
           EOF
           else
             node scripts/fetch-bookings.mjs

@@ -43,6 +43,16 @@ const toIso = (d) => {
   return `${y}-${m}-${day}`;
 };
 
+// Convert a YYYY-MM-DD ISO string to a Date at local midnight. We pass these
+// to flatpickr's `disable` array because flatpickr's string parsing depends
+// on the picker's `dateFormat` (here 'M j, Y'), and it can silently fail to
+// match an ISO string against that format — leaving the disable list empty
+// and letting users select booked dates. Date objects are unambiguous.
+const parseIso = (iso) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
 export function initBooking() {
   const checkin = document.getElementById('bk-checkin');
   const checkout = document.getElementById('bk-checkout');
@@ -56,23 +66,29 @@ export function initBooking() {
   tomorrow.setDate(today.getDate() + 1);
 
   // Initialise flatpickr immediately with no disabled dates so the inputs
-  // are interactive from first paint. The disable list gets patched in
-  // asynchronously once bookings.json arrives. `disabledSet` is the
-  // single source of truth for the submit-time validation, updated
-  // whenever the picker's disable list is patched.
-  let disabledSet = new Set();
+  // are interactive from first paint. The disable lists get patched in
+  // asynchronously once bookings.json arrives. Two separate sets:
+  //   - unavailableSet: anywhere a guest is in residence overnight; blocks
+  //                     the check-in picker entirely and is also used for
+  //                     submit-time validation
+  //   - checkInSet:     days when a *new* guest arrives. The check-out
+  //                     picker treats these as available (the previous
+  //                     guest checks out at 11am, the new guest arrives
+  //                     at 3pm), so they're subtracted from fpOut's
+  //                     disable list.
+  let unavailableSet = new Set();
+  let checkInSet = new Set();
 
   // onDayCreate fires per-cell when flatpickr draws the calendar grid.
-  // We tag booked dates with `.is-booked` so the CSS can distinguish them
-  // from `minDate`-blocked past days (which are just `.flatpickr-disabled`
-  // and rendered as plain greyed-out cells). The class+aria mutation is
-  // guarded so a future flatpickr that re-fires the hook on existing
-  // elements can't stack the aria-label suffix.
+  // We tag dates that are visually "booked" (in unavailableSet) with
+  // `.is-booked` so the CSS can distinguish them from `minDate`-blocked
+  // past days. Note: even on the check-out picker, a check-in day visually
+  // belongs to the "booked" set — it's just selectable as a check-out.
   const tagBookedDay = (_, __, ___, dayElem) => {
     if (!dayElem?.dateObj) return;
     if (dayElem.classList.contains('is-booked')) return;
     const iso = toIso(dayElem.dateObj);
-    if (disabledSet.has(iso)) {
+    if (unavailableSet.has(iso)) {
       dayElem.classList.add('is-booked');
       const base = dayElem.getAttribute('aria-label') || iso;
       dayElem.setAttribute('aria-label', `${base} — already booked`);
@@ -111,28 +127,42 @@ export function initBooking() {
   const bungalowKey = form.dataset.bungalowKey;
   if (bungalowKey) {
     loadBookings().then((bookings) => {
-      const dates = bookings?.bungalows?.[bungalowKey] ?? [];
-      if (bookings && dates.length === 0) {
+      const entry = bookings?.bungalows?.[bungalowKey];
+      const unavailable = entry?.unavailable ?? [];
+      const checkInDays = entry?.checkIn ?? [];
+
+      if (bookings && unavailable.length === 0) {
         console.info(`[booking] no unavailable dates listed for ${bungalowKey}`);
       }
-      disabledSet = new Set(dates);
-      // set('disable', ...) updates the date list AND calls redraw()
-      // internally, which re-fires onDayCreate per cell — that's what
-      // lands the .is-booked class on already-rendered cells.
-      fpIn.set('disable', dates);
-      fpOut.set('disable', dates);
+
+      unavailableSet = new Set(unavailable);
+      checkInSet = new Set(checkInDays);
+
+      // Check-out is allowed on a check-in day (turnover day), so subtract
+      // the check-in days from fpOut's disable list.
+      const checkoutDisable = unavailable.filter((d) => !checkInSet.has(d));
+
+      // Pass Date objects rather than ISO strings: flatpickr's string parser
+      // is bound to the picker's dateFormat ('M j, Y'), and an ISO string
+      // can silently fail to match — leaving the disable list effectively
+      // empty. Date objects are unambiguous.
+      fpIn.set('disable', unavailable.map(parseIso));
+      fpOut.set('disable', checkoutDisable.map(parseIso));
 
       // If the user managed to pick a date in the brief window before
       // bookings.json loaded, and that date is now known-blocked, clear
       // the selection rather than letting them submit a request for it.
-      // flatpickr's `set('disable', ...)` updates the picker UI but does
-      // NOT clear the already-selected date itself.
-      if (fpIn.selectedDates[0] && disabledSet.has(toIso(fpIn.selectedDates[0]))) {
+      if (fpIn.selectedDates[0] && unavailableSet.has(toIso(fpIn.selectedDates[0]))) {
         fpIn.clear();
         console.info('[booking] cleared check-in: date became unavailable');
       }
-      if (fpOut.selectedDates[0] && disabledSet.has(toIso(fpOut.selectedDates[0]))) {
-        fpOut.clear();
+      if (fpOut.selectedDates[0]) {
+        const out = toIso(fpOut.selectedDates[0]);
+        // A picked check-out is invalid if it's unavailable AND not a check-in
+        // day (since check-in days are valid as previous-guest checkouts).
+        if (unavailableSet.has(out) && !checkInSet.has(out)) {
+          fpOut.clear();
+        }
       }
     });
   }
@@ -147,21 +177,24 @@ export function initBooking() {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    // Re-validate against the latest disable list. Catches the rare case
+    // Re-validate against the latest disable lists. Catches the rare case
     // where bookings.json refreshed (or a date-of-arrival booking was
     // committed elsewhere) between picker open and submit.
     const checkinDate = fpIn.selectedDates[0];
     const checkoutDate = fpOut.selectedDates[0];
 
-    if (checkinDate && disabledSet.has(toIso(checkinDate))) {
+    if (checkinDate && unavailableSet.has(toIso(checkinDate))) {
       fpIn.clear();
       checkin.focus();
       return;
     }
-    if (checkoutDate && disabledSet.has(toIso(checkoutDate))) {
-      fpOut.clear();
-      checkout.focus();
-      return;
+    if (checkoutDate) {
+      const out = toIso(checkoutDate);
+      if (unavailableSet.has(out) && !checkInSet.has(out)) {
+        fpOut.clear();
+        checkout.focus();
+        return;
+      }
     }
 
     const bungalow = form.querySelector('input[name="bungalow"]')?.value?.trim();
