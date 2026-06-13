@@ -2,7 +2,15 @@
 //
 // Reads the reservation table on the right side of the B1 2026 / B2 2026 /
 // B3 2026 tabs and writes public/assets/data/bookings.json — a JSON map
-// from bungalow tab key → array of unavailable ISO dates (YYYY-MM-DD).
+// from bungalow tab key → `{ unavailable: ISO[], checkIn: ISO[] }`.
+//
+//   unavailable — every overnight-occupied date (used by the front-end's
+//                 check-in picker AND for visual .is-booked tagging on
+//                 both pickers)
+//   checkIn     — just the arrival days. Subtracted from `unavailable`
+//                 by the front-end to produce the check-out picker's
+//                 disable list, since the previous guest can leave on
+//                 the day the next guest arrives (11am vs 3pm turnover).
 //
 // Source columns on each tab (1-based letters / 0-based indices):
 //   AG (32)  №                 reservation id (e.g. 26B-101)

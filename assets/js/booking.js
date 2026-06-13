@@ -128,6 +128,16 @@ export function initBooking() {
   if (bungalowKey) {
     loadBookings().then((bookings) => {
       const entry = bookings?.bungalows?.[bungalowKey];
+      // Defensive: if bookings.json is the OLD array shape (cached from a
+      // previous deploy by a stale worker, or because somebody downgraded
+      // fetch-bookings.mjs), treat it as empty. ?v=BUILD_ID + cache:no-cache
+      // already cover this in practice, but a console.warn surfaces any
+      // schema regression that does slip through.
+      if (Array.isArray(entry)) {
+        console.warn(
+          `[booking] ${bungalowKey}: bookings.json is in the legacy array shape; treating as empty.`,
+        );
+      }
       const unavailable = entry?.unavailable ?? [];
       const checkInDays = entry?.checkIn ?? [];
 
@@ -152,6 +162,8 @@ export function initBooking() {
       // If the user managed to pick a date in the brief window before
       // bookings.json loaded, and that date is now known-blocked, clear
       // the selection rather than letting them submit a request for it.
+      // flatpickr's `set('disable', ...)` updates the picker UI but does
+      // NOT clear the already-selected date itself.
       if (fpIn.selectedDates[0] && unavailableSet.has(toIso(fpIn.selectedDates[0]))) {
         fpIn.clear();
         console.info('[booking] cleared check-in: date became unavailable');
@@ -162,6 +174,7 @@ export function initBooking() {
         // day (since check-in days are valid as previous-guest checkouts).
         if (unavailableSet.has(out) && !checkInSet.has(out)) {
           fpOut.clear();
+          console.info('[booking] cleared check-out: date became unavailable');
         }
       }
     });
