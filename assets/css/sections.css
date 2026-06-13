@@ -1049,6 +1049,11 @@
    past dates) so users can tell at a glance which dates are reserved
    versus simply in the past.
 
+   On the check-out picker only, days when a NEW guest arrives get
+   .is-checkout-only instead — selectable as the previous guest's
+   checkout (11am vs 3pm turnover) but visually distinct so users
+   can tell why this nominally-booked-looking day is clickable.
+
    Specificity note: pairing `.is-booked` with `.flatpickr-disabled`
    (and covering hover/focus states explicitly) ensures we win against
    the flatpickr CDN sheet without depending on source order, and that
@@ -1067,6 +1072,35 @@
   border-color: var(--border-soft);
   cursor: not-allowed;
   opacity: 1;
+}
+
+/* Turnover day (fpOut only): cream tinted, NO strikethrough, normal
+   cursor, plus a small primary-color triangle in the top-right corner
+   that reads as "this is a special, selectable day". */
+.flatpickr-day.is-checkout-only,
+.flatpickr-day.is-checkout-only:hover,
+.flatpickr-day.is-checkout-only:focus {
+  background: var(--bg-cream);
+  color: var(--text-dark);
+  border-color: var(--primary-soft);
+  cursor: pointer;
+  opacity: 1;
+  position: relative;
+}
+
+.flatpickr-day.is-checkout-only::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-style: solid;
+  border-width: 0 7px 7px 0;
+  border-color: transparent var(--primary) transparent transparent;
+}
+
+.flatpickr-day.is-checkout-only:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
 }
 
 /* ========== Booking widget legend ========== */
@@ -1118,4 +1152,19 @@
 
 .booking-legend__swatch--past {
   background: rgba(57, 57, 57, 0.08);
+}
+
+.booking-legend__swatch--turnover {
+  background: var(--bg-cream);
+  position: relative;
+}
+
+.booking-legend__swatch--turnover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-style: solid;
+  border-width: 0 6px 6px 0;
+  border-color: transparent var(--primary) transparent transparent;
 }

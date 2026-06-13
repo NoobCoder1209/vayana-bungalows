@@ -2,7 +2,15 @@
 //
 // Reads the reservation table on the right side of the B1 2026 / B2 2026 /
 // B3 2026 tabs and writes public/assets/data/bookings.json — a JSON map
-// from bungalow tab key → array of unavailable ISO dates (YYYY-MM-DD).
+// from bungalow tab key → `{ unavailable: ISO[], checkIn: ISO[] }`.
+//
+//   unavailable — every overnight-occupied date (used by the front-end's
+//                 check-in picker AND for visual .is-booked tagging on
+//                 both pickers)
+//   checkIn     — just the arrival days. Subtracted from `unavailable`
+//                 by the front-end to produce the check-out picker's
+//                 disable list, since the previous guest can leave on
+//                 the day the next guest arrives (11am vs 3pm turnover).
 //
 // Source columns on each tab (1-based letters / 0-based indices):
 //   AG (32)  №                 reservation id (e.g. 26B-101)
@@ -160,6 +168,13 @@ function parseReservationTable(grid, tabLabel) {
   const todayUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
 
   const unavailable = new Set();
+  // Check-in days are days when a *new* guest arrives. They're occupied
+  // (we put them in `unavailable` so the check-in picker blocks them) but
+  // they're also valid CHECK OUT days for the *previous* guest, since the
+  // old guest leaves by 11am and the new guest arrives around 3pm. We
+  // export them separately so the front-end can subtract them from the
+  // check-out picker's disable list.
+  const checkInDays = new Set();
   let scanned = 0;
   let blocked = 0;
   let skippedCompleted = 0;
@@ -201,6 +216,11 @@ function parseReservationTable(grid, tabLabel) {
     if (end.dt <= todayUtc) continue;
 
     blocked++;
+    // Mark the check-in day separately so the front-end can allow it as a
+    // valid check-out for the previous guest. (Only if it's not in the past.)
+    if (start.dt >= todayUtc) {
+      checkInDays.add(isoDate(start));
+    }
     for (const day of datesInRange(start, end)) {
       const iso = isoDate(day);
       // Drop past dates within an in-progress reservation
@@ -212,6 +232,7 @@ function parseReservationTable(grid, tabLabel) {
 
   return {
     unavailable: [...unavailable].sort(),
+    checkIn: [...checkInDays].sort(),
     scanned,
     blocked,
     skippedCompleted,
@@ -242,7 +263,13 @@ async function main() {
     info(`  found next-year tabs (${CURRENT_YEAR + 1}), will read both`);
   }
 
-  const merged = Object.fromEntries(TAB_KEYS.map((k) => [k, new Set()]));
+  // Two sets per bungalow — full unavailable (for the check-in picker)
+  // and check-in-only days (which the front-end subtracts from the
+  // check-out picker's disable list so the previous guest can check out
+  // on the day the next guest arrives).
+  const merged = Object.fromEntries(
+    TAB_KEYS.map((k) => [k, { unavailable: new Set(), checkIn: new Set() }]),
+  );
   const out = {
     generatedAt: new Date().toISOString(),
     bungalows: {},
@@ -260,24 +287,33 @@ async function main() {
       const grid = await readTab(tab);
       info(`    grid is ${grid.length} rows × ${Math.max(0, ...grid.map((r) => r.length))} cols`);
       const r = parseReservationTable(grid, tab);
-      for (const d of r.unavailable) merged[key].add(d);
+      for (const d of r.unavailable) merged[key].unavailable.add(d);
+      for (const d of r.checkIn) merged[key].checkIn.add(d);
       info(
         `    parsed ${r.scanned} reservation(s), ${r.blocked} blocking, ` +
         `${r.skippedCompleted} completed, ${r.skippedEmpty} empty — ` +
-        `${r.unavailable.length} unavailable date(s)`,
+        `${r.unavailable.length} unavailable date(s), ${r.checkIn.length} check-in day(s)`,
       );
     }
   }
 
-  for (const k of TAB_KEYS) out.bungalows[k] = [...merged[k]].sort();
+  for (const k of TAB_KEYS) {
+    out.bungalows[k] = {
+      unavailable: [...merged[k].unavailable].sort(),
+      checkIn: [...merged[k].checkIn].sort(),
+    };
+  }
 
-  const summary = Object.entries(out.bungalows).map(([k, v]) => `${k}=${v.length}`).join(', ');
-  info(`✓ Loaded unavailable dates: ${summary}`);
+  const summary = Object.entries(out.bungalows)
+    .map(([k, v]) => `${k}=${v.unavailable.length}u/${v.checkIn.length}ci`)
+    .join(', ');
+  info(`✓ Loaded: ${summary}`);
 
   if (DRY_RUN) {
-    info('— DRY RUN — first 8 dates per bungalow:');
+    info('— DRY RUN — first 5 unavailable + 5 checkIn per bungalow:');
     for (const [k, v] of Object.entries(out.bungalows)) {
-      info(`  ${k}: ${v.slice(0, 8).join(', ')}${v.length > 8 ? ', ...' : ''}`);
+      info(`  ${k}.unavailable: ${v.unavailable.slice(0, 5).join(', ')}${v.unavailable.length > 5 ? ', ...' : ''}`);
+      info(`  ${k}.checkIn:    ${v.checkIn.slice(0, 5).join(', ')}${v.checkIn.length > 5 ? ', ...' : ''}`);
     }
     info('— DRY RUN — would write ' + OUT_PATH);
     return;
