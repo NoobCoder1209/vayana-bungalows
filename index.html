@@ -350,22 +350,37 @@
         </div>
       </section>
 
-      <!-- 15. Contact info row -->
+      <!-- 15. Contact info row.
+           Phone / email / address all hydrate from assets/js/site-config.js
+           via [data-site-config*] attributes (#9). The phone and email are
+           shared with the footer + header / drawer; the street address is
+           a fuller version of the footer's line1/line2 (added to config as
+           address.street + address.country). -->
       <section class="contact section" id="contact" aria-labelledby="contact-title">
         <h2 id="contact-title" class="sr-only">Contact</h2>
         <div class="container contact__grid">
           <div class="contact__col">
             <span class="eyebrow">Address</span>
-            <p>ul. Kraybrezhna 1, Tsarevo<br />Bulgaria</p>
+            <p>
+              <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span><br />
+              <span data-site-config="address.country">Bulgaria</span>
+            </p>
           </div>
           <div class="contact__col">
             <span class="eyebrow">Phone</span>
-            <!-- TODO: replace with the real number once available -->
-            <p>+359 590 00000</p>
+            <p>
+              <a data-site-config-href="phone.href" href="tel:+359888888888">
+                <span data-site-config="phone.display">+359 88 888 8888</span>
+              </a>
+            </p>
           </div>
           <div class="contact__col">
             <span class="eyebrow">Email</span>
-            <p>reservations@vayana-bungalows.com</p>
+            <p>
+              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">
+                <span data-site-config="email.display">contact@vayanabungalows.com</span>
+              </a>
+            </p>
           </div>
         </div>
       </section>

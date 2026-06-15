@@ -13,7 +13,18 @@ export const SITE_CONFIG = {
   license: '1327673',
   phone: { display: '+359 88 888 8888', href: 'tel:+359888888888' },
   email: { display: 'contact@vayanabungalows.com', href: 'mailto:contact@vayanabungalows.com' },
-  address: { line1: 'Tsarevo', line2: 'Bulgaria' },
+  // Address has two display levels:
+  //   - short:  used in the compact footer column ("Tsarevo, Bulgaria")
+  //   - full:   used in the dedicated #contact section (street + city + country)
+  // Splitting them up front so the contact section can show the street
+  // line without bloating the footer copy. If ops need a second
+  // street-and-city line, add address.line3 here and reference it in HTML.
+  address: {
+    line1: 'Tsarevo',
+    line2: 'Bulgaria',
+    street: 'ul. Kraybrezhna 1, Tsarevo',
+    country: 'Bulgaria',
+  },
   social: {
     facebook: 'https://www.youtube.com/',
     instagram: 'https://www.youtube.com/',
