@@ -1,7 +1,12 @@
 /* tokens.css — design system tokens (palette, typography, spacing) */
 
 :root {
-  /* Palette — warm earth-tone luxury (matches reference) */
+  /* Palette — warm earth-tone luxury (matches reference)
+     TODO(brand-tokens): --primary (#b99d75) measures ~3:1 against white and
+     fails WCAG AA; --primary-deep (#8a7551) measures ~4.51:1, just barely
+     passing. The header pill in layout.css overrides locally with a deeper
+     hue (#6f5e40) for AA headroom. Retune these tokens at source so all
+     btn-primary instances clear AA without per-component overrides. */
   --primary: #b99d75;
   --primary-soft: rgba(185, 157, 117, 0.3);
   --primary-deep: #8a7551;

@@ -22,21 +22,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bungalow 3 &mdash; Arapq Resort</title>
+    <title>Bungalow 3 &mdash; Vayana Bungalows</title>
     <meta name="description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
     <link rel="canonical" href="https://noobcoder1209.github.io/arapq-website/premier-beachfront-suite/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Bungalow 3 — Arapq Resort" />
+    <meta property="og:title" content="Bungalow 3 — Vayana Bungalows" />
     <meta property="og:description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
     <meta property="og:url" content="https://noobcoder1209.github.io/arapq-website/premier-beachfront-suite/" />
     <meta property="og:image" content="https://noobcoder1209.github.io/arapq-website/assets/img/room-3.jpg" />
-    <meta property="og:site_name" content="Arapq Resort" />
+    <meta property="og:site_name" content="Vayana Bungalows" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Bungalow 3 — Arapq Resort" />
+    <meta name="twitter:title" content="Bungalow 3 — Vayana Bungalows" />
     <meta name="twitter:description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
     <meta name="twitter:image" content="https://noobcoder1209.github.io/arapq-website/assets/img/room-3.jpg" />
 
@@ -54,37 +54,28 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- Top utility strip -->
-    <div class="utility-strip" role="region" aria-label="Announcement">
-      <div class="container utility-strip__inner">
-        <span>Welcome to Arapq Resort &mdash; reservations now open for the new season.</span>
-        <span class="utility-strip__meta">Call us &middot; +1 808 555 0119</span>
-      </div>
-    </div>
-
     <!-- Sticky header -->
     <div id="header-sentinel" aria-hidden="true"></div>
     <header class="site-header" id="site-header">
       <div class="container site-header__inner">
-        <a href="../" class="site-logo" aria-label="Arapq Resort home">
-          <span class="site-logo__mark">A</span>
-          <span class="site-logo__word">arapq</span>
+        <!-- Left slot: hamburger (visual placeholder; drawer behaviour in #3) -->
+        <button class="site-header__menu" type="button" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+
+        <!-- Center slot: brand -->
+        <a href="../" class="site-logo">
+          <span class="site-logo__mark" aria-hidden="true">V</span>
+          <span class="site-logo__word">Vayana Bungalows</span>
         </a>
 
-        <nav class="primary-nav" aria-label="Primary">
-          <button class="primary-nav__toggle" type="button" aria-expanded="false" aria-controls="primary-nav-list" aria-label="Open menu">
-            <span></span><span></span><span></span>
+        <!-- Right slot: phone + Enquiries (visual placeholders; behaviour in #2) -->
+        <div class="site-header__cta">
+          <button type="button" class="site-header__phone" aria-label="Call me back">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
           </button>
-          <ul id="primary-nav-list" class="primary-nav__list">
-            <li><a href="../">Home</a></li>
-            <li><a href="../#rooms">Stay</a></li>
-            <li><a href="../#about">Pages</a></li>
-            <li><a href="#">News</a></li>
-            <li><a href="../#contact">Contact</a></li>
-          </ul>
-        </nav>
-
-        <a href="#booking" class="btn btn-primary site-header__cta">Book Now</a>
+          <a href="../#contact" class="btn btn-primary site-header__enquiries">Enquiries</a>
+        </div>
       </div>
     </header>
 
@@ -248,11 +239,11 @@
     <footer class="site-footer">
       <div class="container site-footer__inner">
         <div class="site-footer__brand">
-          <a href="../" class="site-logo site-logo--light" aria-label="Arapq Resort home">
-            <span class="site-logo__mark">A</span>
-            <span class="site-logo__word">arapq</span>
+          <a href="../" class="site-logo site-logo--light">
+            <span class="site-logo__mark" aria-hidden="true">V</span>
+            <span class="site-logo__word">Vayana Bungalows</span>
           </a>
-          <p>A private-island retreat. Reservations by inquiry.</p>
+          <p>A boutique bungalow retreat on the Bulgarian Black Sea coast. Reservations by inquiry.</p>
         </div>
         <div class="site-footer__col">
           <span class="eyebrow eyebrow--light">Social</span>
@@ -271,7 +262,7 @@
       </div>
       <div class="site-footer__bar">
         <div class="container site-footer__bar-inner">
-          <p>&copy; 2026 Arapq Resort &mdash; A boutique island hospitality brand.</p>
+          <p>&copy; 2026 Vayana Bungalows &mdash; A boutique Bulgarian hospitality brand.</p>
           <ul>
             <li><a href="#">Privacy</a></li>
             <li><a href="#">Terms of use</a></li>

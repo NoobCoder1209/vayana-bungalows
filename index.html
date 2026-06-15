@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Arapq Resort &mdash; Boutique Private Island Resort</title>
-    <meta name="description" content="A boutique private island resort: villas, fine dining, and the world's most desirable views." />
+    <title>Vayana Bungalows &mdash; Boutique Bungalows in Tsarevo, Bulgaria</title>
+    <meta name="description" content="Vayana Bungalows: a boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
@@ -18,47 +18,28 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <!-- 1. Top utility strip -->
-    <div class="utility-strip" role="region" aria-label="Announcement">
-      <div class="container utility-strip__inner">
-        <span>Welcome to Arapq Resort &mdash; reservations now open for the new season.</span>
-        <span class="utility-strip__meta">Call us &middot; +1 808 555 0119</span>
-      </div>
-    </div>
-
-    <!-- 2. Sticky header -->
+    <!-- Sticky header -->
     <div id="header-sentinel" aria-hidden="true"></div>
     <header class="site-header" id="site-header">
       <div class="container site-header__inner">
-        <a href="#" class="site-logo" aria-label="Arapq Resort home">
-          <span class="site-logo__mark">A</span>
-          <span class="site-logo__word">arapq</span>
+        <!-- Left slot: hamburger (visual placeholder; drawer behaviour in #3) -->
+        <button class="site-header__menu" type="button" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+
+        <!-- Center slot: brand -->
+        <a href="#" class="site-logo">
+          <span class="site-logo__mark" aria-hidden="true">V</span>
+          <span class="site-logo__word">Vayana Bungalows</span>
         </a>
 
-        <nav class="primary-nav" aria-label="Primary">
-          <button class="primary-nav__toggle" type="button" aria-expanded="false" aria-controls="primary-nav-list" aria-label="Open menu">
-            <span></span><span></span><span></span>
+        <!-- Right slot: phone + Enquiries (visual placeholders; behaviour in #2) -->
+        <div class="site-header__cta">
+          <button type="button" class="site-header__phone" aria-label="Call me back">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
           </button>
-          <ul id="primary-nav-list" class="primary-nav__list">
-            <li class="has-mega"><a href="#">Home</a>
-              <div class="mega-menu" role="menu">
-                <div class="mega-menu__inner">
-                  <a class="mega-card" href="#"><img src="/assets/img/thumb-island.jpg" alt="" /><span>Island Resort</span></a>
-                  <a class="mega-card" href="#"><img src="/assets/img/thumb-mountain.jpg" alt="" /><span>Mountain Hotel</span></a>
-                  <a class="mega-card" href="#"><img src="/assets/img/thumb-city.jpg" alt="" /><span>City Aparthotel</span></a>
-                  <a class="mega-card" href="#"><img src="/assets/img/thumb-countryside.jpg" alt="" /><span>Countryside Lodge</span></a>
-                  <a class="mega-card" href="#"><img src="/assets/img/thumb-chalet.jpg" alt="" /><span>Mountain Chalet</span></a>
-                </div>
-              </div>
-            </li>
-            <li><a href="#rooms">Stay</a></li>
-            <li><a href="#about">Pages</a></li>
-            <li><a href="#">News</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-        </nav>
-
-        <a href="#rooms" class="btn btn-primary site-header__cta">Book Now</a>
+          <a href="#contact" class="btn btn-primary site-header__enquiries">Enquiries</a>
+        </div>
       </div>
     </header>
 
@@ -68,9 +49,9 @@
         <div class="hero__media"></div>
         <div class="hero__overlay"></div>
         <div class="container hero__content">
-          <span class="eyebrow eyebrow--light">Welcome to paradise</span>
-          <h1 id="hero-title">Boutique Private<br />Island Resort</h1>
-          <p class="hero__sub">Where the horizon meets handcrafted hospitality.</p>
+          <span class="eyebrow eyebrow--light">Welcome to Vayana Bungalows</span>
+          <h1 id="hero-title">Boutique Black Sea<br />Bungalows</h1>
+          <p class="hero__sub">Where the pines meet the coast and the days run on tide and appetite.</p>
         </div>
         <div class="hero__scroll" aria-hidden="true">
           <span></span>
@@ -93,10 +74,10 @@
       <section class="intro section" id="about" aria-labelledby="intro-title">
         <div class="container intro__grid">
           <div class="intro__copy reveal">
-            <span class="eyebrow">Welcome to Arapq Resort</span>
-            <h2 id="intro-title">In the heart of the South Pacific, outstanding views.</h2>
-            <p>Arapq Resort is a private-island sanctuary woven into a mile of unspoiled coastline. Twenty-eight villas, hand-built from local hardwoods, open to the trade winds and the Pacific beyond.</p>
-            <p>Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the boat ride back.</p>
+            <span class="eyebrow">Welcome to Vayana Bungalows</span>
+            <h2 id="intro-title">On the Black Sea coast, at the edge of the Strandzha forest.</h2>
+            <p>Vayana Bungalows is a small family-run retreat in Tsarevo, Bulgaria — a handful of hardwood bungalows tucked between the pines and the sea, hand-built and run with the same care we'd put into our own home.</p>
+            <p>Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the drive back.</p>
             <a href="#" class="btn btn-outline-dark">Discover the resort</a>
           </div>
           <div class="intro__media reveal">
@@ -109,7 +90,7 @@
       <section class="gallery section" aria-labelledby="gallery-title">
         <div class="container gallery__head reveal">
           <span class="eyebrow">A glimpse of the island</span>
-          <h3 id="gallery-title">Moments at Arapq</h3>
+          <h3 id="gallery-title">Moments at Vayana Bungalows</h3>
         </div>
         <div class="gallery__viewport">
           <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous photos" data-slider-prev="gallery">
@@ -203,7 +184,7 @@
             <article class="exp-card">
               <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2v8a4 4 0 008 0V2"/><path d="M10 14v8"/><path d="M18 2c2 0 3 2 3 5s-1 5-3 5v10"/></svg>
               <h5>Gastronomic dine</h5>
-              <p>Three restaurants from a single kitchen garden. Pacific seafood, wood fire, no menu after seven.</p>
+              <p>Three restaurants from a single kitchen garden. Black Sea seafood, wood fire, no menu after seven.</p>
             </article>
           </div>
         </div>
@@ -278,7 +259,7 @@
         <div class="newsletter__bg" data-parallax="0.15"></div>
         <div class="newsletter__overlay"></div>
         <div class="container newsletter__content reveal">
-          <span class="eyebrow eyebrow--light">Stay tuned with Arapq</span>
+          <span class="eyebrow eyebrow--light">Stay tuned with Vayana Bungalows</span>
           <h4 id="newsletter-title">Quiet news from the island, three or four times a year.</h4>
           <form class="newsletter__form" onsubmit="event.preventDefault();">
             <label class="sr-only" for="nl-email">Email address</label>
@@ -298,15 +279,16 @@
         <div class="container contact__grid">
           <div class="contact__col">
             <span class="eyebrow">Address</span>
-            <p>Lot 14, Motu Lagoon<br />French Polynesia</p>
+            <p>ul. Kraybrezhna 1, Tsarevo<br />Bulgaria</p>
           </div>
           <div class="contact__col">
             <span class="eyebrow">Phone</span>
-            <p>+1 808 555 0119</p>
+            <!-- TODO: replace with the real number once available -->
+            <p>+359 590 00000</p>
           </div>
           <div class="contact__col">
             <span class="eyebrow">Email</span>
-            <p>reservations@arapq.com</p>
+            <p>reservations@vayana-bungalows.com</p>
           </div>
         </div>
       </section>
@@ -316,11 +298,11 @@
     <footer class="site-footer">
       <div class="container site-footer__inner">
         <div class="site-footer__brand">
-          <a href="#" class="site-logo site-logo--light" aria-label="Arapq Resort home">
-            <span class="site-logo__mark">A</span>
-            <span class="site-logo__word">arapq</span>
+          <a href="#" class="site-logo site-logo--light">
+            <span class="site-logo__mark" aria-hidden="true">V</span>
+            <span class="site-logo__word">Vayana Bungalows</span>
           </a>
-          <p>A private-island retreat. Reservations by inquiry.</p>
+          <p>A boutique bungalow retreat on the Bulgarian Black Sea coast. Reservations by inquiry.</p>
         </div>
         <div class="site-footer__col">
           <span class="eyebrow eyebrow--light">Social</span>
@@ -344,7 +326,7 @@
       </div>
       <div class="site-footer__bar">
         <div class="container site-footer__bar-inner">
-          <p>&copy; 2026 Arapq Resort &mdash; A boutique island hospitality brand.</p>
+          <p>&copy; 2026 Vayana Bungalows &mdash; A boutique Bulgarian hospitality brand.</p>
           <ul>
             <li><a href="#">Privacy</a></li>
             <li><a href="#">Terms of use</a></li>

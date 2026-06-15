@@ -26,35 +26,6 @@
   color: var(--primary);
 }
 
-/* ========== Top utility strip ========== */
-.utility-strip {
-  background: var(--bg-dark);
-  color: var(--text-light);
-  font-size: 0.8125rem;
-  letter-spacing: 0.04em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.utility-strip__inner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 36px;
-  padding-top: 0.4rem;
-  padding-bottom: 0.4rem;
-}
-
-.utility-strip__meta {
-  color: var(--text-light);
-  opacity: 0.75;
-}
-
-@media (max-width: 960px) {
-  .utility-strip {
-    display: none;
-  }
-}
-
 /* ========== Sticky site header ========== */
 #header-sentinel {
   position: absolute;
@@ -86,15 +57,40 @@
   min-height: 88px;
 }
 
-/* Logo */
+/* Left slot — hamburger toggle (always visible, drawer behaviour lands in #3) */
+.site-header__menu {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.site-header__menu span {
+  display: block;
+  width: 22px;
+  height: 1.5px;
+  background: currentColor;
+  transition: transform var(--t-base), opacity var(--t-base);
+}
+
+/* Center slot — brand */
 .site-logo {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
   font-family: var(--font-heading);
-  font-size: 1.625rem;
+  font-size: 1.375rem;
   letter-spacing: 0.04em;
   color: inherit;
+  white-space: nowrap;
 }
 
 .site-logo:hover {
@@ -110,188 +106,87 @@
   border: 1px solid currentColor;
   font-size: 1.05rem;
   letter-spacing: 0;
-}
-
-.site-logo__word {
-  text-transform: lowercase;
+  flex-shrink: 0;
 }
 
 .site-logo--light {
   color: var(--bg-light);
 }
 
-/* Primary nav */
-.primary-nav {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-}
-
-.primary-nav__list {
-  display: flex;
-  gap: clamp(1rem, 2vw, 2.25rem);
-  align-items: center;
-}
-
-.primary-nav__list > li > a {
-  font-family: var(--font-body);
-  font-size: 0.875rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: inherit;
-  padding: 1rem 0;
-  position: relative;
-  white-space: nowrap;
-}
-
-.primary-nav__list > li > a::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0.5rem;
-  width: 0;
-  height: 1px;
-  background: var(--primary);
-  transition: width var(--t-base);
-}
-
-.primary-nav__list > li > a:hover::after {
-  width: 100%;
-}
-
-.primary-nav__list > li > a:hover {
-  color: var(--primary);
-}
-
-.primary-nav__toggle {
-  display: none;
-  width: 44px;
-  height: 44px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-
-.primary-nav__toggle span {
-  display: block;
-  width: 22px;
-  height: 1.5px;
-  background: currentColor;
-  transition: transform var(--t-base), opacity var(--t-base);
-}
-
-/* Mega menu */
-.has-mega {
-  position: relative;
-}
-
-.mega-menu {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translate(-50%, 8px);
-  min-width: 880px;
-  background: var(--bg-light);
-  color: var(--text-dark);
-  padding: var(--space-4);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
-  border-top: 2px solid var(--primary);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--t-base), transform var(--t-base);
-  z-index: var(--z-sticky);
-}
-
-.has-mega:hover .mega-menu,
-.has-mega:focus-within .mega-menu {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translate(-50%, 0);
-}
-
-.mega-menu__inner {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-3);
-}
-
-.mega-card {
-  display: block;
-  text-align: center;
-  font-family: var(--font-heading);
-  font-size: 0.95rem;
-  letter-spacing: 0.04em;
-  color: var(--text-dark);
-}
-
-.mega-card img {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  margin-bottom: 0.6rem;
-  transition: transform var(--t-base);
-}
-
-.mega-card:hover img {
-  transform: translateY(-4px);
-}
-
-.mega-card:hover {
-  color: var(--primary);
-}
-
+/* Right slot — phone + Enquiries (visual placeholders; behaviour lands in #2) */
 .site-header__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   flex-shrink: 0;
 }
 
-/* Header responsive */
-@media (max-width: 960px) {
-  .primary-nav__toggle {
-    display: inline-flex;
+.site-header__phone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: inherit;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+
+.site-header__phone:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--bg-dark);
+}
+
+.site-header__enquiries {
+  border-radius: 999px;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  /* The site-wide --primary (#b99d75) measures ~3:1 against white — fails AA.
+     --primary-deep (#8a7551) measures ~4.51:1 — passes by a hair. We pin a
+     touch deeper here (~6.4:1) so the pill has comfortable headroom and the
+     value reads as deliberate, not borderline. Eventually --primary-deep
+     should be retuned in tokens.css and this override removed. */
+  background: #6f5e40;
+  border-color: #6f5e40;
+}
+
+.site-header__enquiries:hover {
+  /* Stay in the warm-brown family on hover — same colour ramp as btn-primary
+     (warm → deeper warm), not a jump to near-black. */
+  background: #5a4c34;
+  border-color: #5a4c34;
+}
+
+@media (max-width: 540px) {
+  .site-logo__word {
+    font-size: 1.125rem;
   }
 
-  .primary-nav__list {
-    position: fixed;
-    inset: 88px 0 0 0;
-    background: var(--bg-light);
-    color: var(--text-dark);
-    flex-direction: column;
-    align-items: flex-start;
-    padding: var(--space-4) var(--container-pad) var(--space-6);
-    gap: 0;
-    transform: translateY(-110%);
-    transition: transform var(--t-base);
-    overflow-y: auto;
-  }
-
-  .primary-nav__list.is-open {
-    transform: translateY(0);
-  }
-
-  .primary-nav__list > li {
-    width: 100%;
-    border-bottom: 1px solid var(--border-soft);
-  }
-
-  .primary-nav__list > li > a {
-    display: block;
-    padding: 1.1rem 0;
-    font-size: 1rem;
-    letter-spacing: 0.18em;
-  }
-
-  .primary-nav__list > li > a::after {
+  .site-header__enquiries {
     display: none;
   }
+}
 
-  /* Hide the mega-menu inside the mobile drawer — it's a desktop affordance */
-  .mega-menu {
-    display: none;
+@media (max-width: 380px) {
+  .site-logo {
+    /* Drop the gap so the V mark sits flush against the wordmark and the row fits at 320px. */
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
   }
 
-  .site-header__cta {
-    display: none;
+  .site-logo__mark {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+  }
+
+  .site-logo__word {
+    font-size: 0.9rem;
   }
 }
 

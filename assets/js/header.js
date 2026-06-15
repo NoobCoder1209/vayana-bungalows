@@ -1,4 +1,6 @@
-// Sticky header — toggle .is-scrolled when sentinel leaves the viewport
+// Sticky header — toggle .is-scrolled when the sentinel leaves the viewport.
+// The hamburger drawer (panel + click handler + aria-expanded wiring) ships
+// in #3 — this file only owns the transparent->solid background flip.
 export function initHeader() {
   const header = document.getElementById('site-header');
   const sentinel = document.getElementById('header-sentinel');
@@ -11,15 +13,4 @@ export function initHeader() {
     { threshold: 0 }
   );
   io.observe(sentinel);
-
-  // Mobile menu toggle
-  const toggle = header.querySelector('.primary-nav__toggle');
-  const list = header.querySelector('#primary-nav-list');
-  if (toggle && list) {
-    toggle.addEventListener('click', () => {
-      const open = list.classList.toggle('is-open');
-      toggle.setAttribute('aria-expanded', String(open));
-      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-    });
-  }
 }
