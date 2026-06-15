@@ -178,7 +178,11 @@
 
 /* Number is collapsed by default (max-width + opacity, not display:none, so
    the transition can animate). aria-hidden on the span keeps SR users from
-   hearing the placeholder twice — the accessible name lives on the <a>. */
+   hearing the placeholder twice — the accessible name lives on the <a>.
+   line-height: 1 collapses the inherited body line-height (~1.7) which
+   would otherwise make the glyph sit near the top of an oversized line
+   box; the small translateY then nudges down to optical centre against
+   the icon, which has more visual weight on its lower half. */
 .site-header__call-number {
   display: inline-block;
   max-width: 0;
@@ -187,19 +191,25 @@
   font-size: 0.95rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+  line-height: 1;
+  transform: translateY(1px);
   transition: max-width var(--t-fast), opacity var(--t-fast),
     padding-left var(--t-fast), padding-right var(--t-fast);
   padding-left: 0;
   padding-right: 0;
 }
 
+/* Padding is biased slightly toward the icon (more on the right) so the
+   number sits visually centred between the icon and the trailing edge of
+   the pill — a symmetric 0.75/0.75 reads too far right because the icon
+   slot already provides its own breathing room on the left. */
 .site-header__call:hover .site-header__call-number,
 .site-header__call:focus-visible .site-header__call-number,
 .site-header__call.is-revealed .site-header__call-number {
   max-width: 14ch;
   opacity: 1;
-  padding-left: 0.5rem;
-  padding-right: 1rem;
+  padding-left: 0.25rem;
+  padding-right: 0.85rem;
 }
 
 /* Pin the same deeper warm-brown the Enquiries pill uses (#6f5e40, ~6.4:1
