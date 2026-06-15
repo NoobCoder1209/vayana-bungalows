@@ -372,41 +372,61 @@
     <!-- 16. Footer -->
     <footer class="site-footer">
       <div class="container site-footer__inner">
-        <div class="site-footer__brand">
-          <a href="#" class="site-logo site-logo--light">
-            <span class="site-logo__mark" aria-hidden="true">V</span>
-            <span class="site-logo__word">Vayana Bungalows</span>
-          </a>
-          <p>A boutique bungalow retreat on the Bulgarian Black Sea coast. Reservations by inquiry.</p>
-        </div>
-        <div class="site-footer__col">
-          <span class="eyebrow eyebrow--light">Social</span>
-          <ul class="social-list">
-            <li><a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg></a></li>
-            <li><a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 5.8a8.5 8.5 0 01-2.4.7 4.2 4.2 0 001.8-2.3 8.4 8.4 0 01-2.6 1A4.2 4.2 0 0011.5 9a11.9 11.9 0 01-8.6-4.4 4.2 4.2 0 001.3 5.6 4.2 4.2 0 01-1.9-.5v.1a4.2 4.2 0 003.4 4.1 4.2 4.2 0 01-1.9.1 4.2 4.2 0 003.9 2.9A8.4 8.4 0 012 18.5 11.9 11.9 0 008.4 20c7.7 0 11.9-6.4 11.9-11.9v-.5A8.5 8.5 0 0022 5.8z"/></svg></a></li>
-            <li><a href="#" aria-label="Pinterest"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 00-3.6 19.3c-.1-.8-.2-2 0-2.9l1.3-5.4s-.3-.7-.3-1.6c0-1.5 1-2.7 2.1-2.7 1 0 1.5.7 1.5 1.6 0 1-.6 2.5-1 3.9-.3 1.2.6 2.2 1.7 2.2 2.1 0 3.7-2.2 3.7-5.4 0-2.8-2-4.8-4.9-4.8a5 5 0 00-5.2 5c0 1 .4 2.1.9 2.6.1.1.1.2.1.3l-.3 1.4c-.1.2-.2.3-.4.2-1.5-.7-2.4-2.9-2.4-4.6 0-3.7 2.7-7.1 7.8-7.1 4.1 0 7.3 2.9 7.3 6.8 0 4.1-2.6 7.4-6.2 7.4-1.2 0-2.4-.6-2.7-1.4l-.7 2.8c-.3 1-1 2.3-1.5 3A10 10 0 1012 2z"/></svg></a></li>
-            <li><a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23 7s-.2-1.6-.9-2.3c-.9-.9-1.8-.9-2.3-1C16.6 3.5 12 3.5 12 3.5s-4.6 0-7.8.2c-.4 0-1.4 0-2.3 1C1.2 5.4 1 7 1 7S.7 8.9.7 10.7v1.6C.7 14.1 1 16 1 16s.2 1.6.9 2.3c.9.9 2 .9 2.5 1 1.8.2 7.6.2 7.6.2s4.6 0 7.8-.2c.4 0 1.4 0 2.3-1 .7-.7.9-2.3.9-2.3s.3-1.9.3-3.7v-1.6C23.3 8.9 23 7 23 7zM9.7 14.5V8l6 3.2-6 3.3z"/></svg></a></li>
-            <li><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg></a></li>
+        <!-- Column 1 — Contact -->
+        <div class="site-footer__col site-footer__col--contact">
+          <span class="eyebrow eyebrow--light" data-site-config="brand">Vayana Bungalows</span>
+          <ul class="site-footer__contact">
+            <li>
+              <a data-site-config-href="phone.href" href="tel:+359888888888">
+                <span data-site-config="phone.display">+359 88 888 8888</span>
+              </a>
+            </li>
+            <li>
+              <a href="mailto:contact@vayanabungalows.com">
+                <span data-site-config="email">contact@vayanabungalows.com</span>
+              </a>
+            </li>
+            <li>
+              <span data-site-config="address.line1">Tsarevo</span>,
+              <span data-site-config="address.line2">Bulgaria</span>
+            </li>
           </ul>
         </div>
-        <nav class="site-footer__nav" aria-label="Footer">
+        <!-- Column 2 — Follow us -->
+        <div class="site-footer__col site-footer__col--social">
+          <span class="eyebrow eyebrow--light">Follow us</span>
+          <ul class="social-list">
+            <li>
+              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.linkedin" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4 4h4v16H4zM6 2.5A1.5 1.5 0 116 5.5 1.5 1.5 0 016 2.5zM10 8h3.8v2h.05A4.16 4.16 0 0117.6 8C21.4 8 22 10.4 22 13.6V20h-4v-5.7c0-1.4 0-3.1-1.9-3.1S14 12.6 14 14.2V20h-4z"/></svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <!-- Column 3 — Policies -->
+        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies">
+          <span class="eyebrow eyebrow--light">Policies</span>
           <ul>
-            <li><a href="#about">About</a></li>
-            <li><a href="#rooms">Rooms</a></li>
-            <li><a href="#">Restaurants</a></li>
-            <li><a href="#">Spa</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="/terms/">Terms &amp; Conditions</a></li>
+            <li><a href="/cancellation/">Cancellation Policy</a></li>
+            <li><a href="/privacy/">Privacy Policy</a></li>
           </ul>
         </nav>
       </div>
       <div class="site-footer__bar">
         <div class="container site-footer__bar-inner">
-          <p>&copy; 2026 Vayana Bungalows &mdash; A boutique Bulgarian hospitality brand.</p>
-          <ul>
-            <li><a href="#">Privacy</a></li>
-            <li><a href="#">Terms of use</a></li>
-            <li><a href="#">Policy</a></li>
-          </ul>
+          <p data-site-config="copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
+          <p class="site-footer__license">License number: <span data-site-config="license">1327673</span></p>
         </div>
       </div>
     </footer>
