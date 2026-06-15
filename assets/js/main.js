@@ -5,10 +5,10 @@ import { initSliders } from './slider.js';
 import { initBooking } from './booking.js';
 import { initVideo } from './video.js';
 
-// Mark the document as JS-enabled. CSS uses `html:not(.js-on) ...` to hide
-// the hamburger toggle (which would be a dead button without JS) and show
-// the <noscript> fallback nav strip instead.
-document.documentElement.classList.add('js-on');
+// The JS-on / JS-off CSS gate is set by an inline <head> script before any
+// stylesheet loads (each HTML page renders class="no-js" on <html> and the
+// inline script swaps it to "js-on"). Don't repeat the swap here — by the
+// time this module runs, it's already done.
 
 const run = () => {
   initHeader();

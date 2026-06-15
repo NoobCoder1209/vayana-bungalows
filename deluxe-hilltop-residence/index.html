@@ -18,10 +18,14 @@
   consider extracting to a templating step (Vite HTML plugin or build-time
   partials) before duplicating again.
 -->
-<html lang="en">
+<html lang="en" class="no-js">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Swap no-js → js-on synchronously, before any stylesheet loads, so
+         the JS-on hamburger doesn't flash invisible during the deferred
+         module's load window. CSS uses html.no-js for the no-JS fallback. -->
+    <script>document.documentElement.classList.replace('no-js','js-on');</script>
     <title>Bungalow 2 &mdash; Vayana Bungalows</title>
     <meta name="description" content="A two-level hilltop residence with infinity pool, private chef's table, and panoramic views. From $1,240 per night." />
     <link rel="canonical" href="https://noobcoder1209.github.io/arapq-website/deluxe-hilltop-residence/" />
@@ -100,10 +104,12 @@
          data-state="open" and the .body--scroll-locked class on <body>.
          Ordered backdrop-then-panel so a click on backdrop never bubbles
          from inside the panel. Tabindex on the panel makes it focus-trap-
-         able as a fallback container if the close button is removed. -->
+         able as a fallback container if the close button is removed.
+         aria-modal is added by JS only while the drawer is open — some
+         screen readers special-case the attribute on closed dialogs. -->
     <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
     <nav id="primary-nav" class="primary-nav__panel" aria-label="Primary"
-         role="dialog" aria-modal="true"
+         role="dialog"
          aria-hidden="true" tabindex="-1" hidden>
       <button class="primary-nav__close" type="button"
               aria-label="Close menu" data-nav-close>

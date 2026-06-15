@@ -118,7 +118,10 @@ const DRAWER_TRANSITION_FALLBACK_MS = DRAWER_TRANSITION_MS + 150;
 // Note: we inert .site-logo and .site-header__cta (the two non-toggle
 // slots) rather than the whole #site-header — the hamburger toggle MUST
 // remain interactive so close-path #4 (second-click) keeps working.
-const INERT_SELECTORS = ['.site-logo', '.site-header__cta', 'main', '.site-footer', '.primary-nav__noscript'];
+// .primary-nav__noscript intentionally NOT included: <noscript> children
+// aren't part of the queryable DOM when JS is enabled, which is the only
+// branch that runs initDrawer().
+const INERT_SELECTORS = ['.site-logo', '.site-header__cta', 'main', '.site-footer'];
 
 function initDrawer() {
   const toggle = document.querySelector('[data-nav-toggle]');
@@ -141,10 +144,11 @@ function initDrawer() {
   let lastFocusBeforeOpen = null;
   // Saved scroll position so position:fixed body-lock doesn't jump the page.
   let lockedScrollY = 0;
-  // Increments on every close. The `transitionend` / safety-timeout cleanup
-  // closure captures the token at schedule time and bails if it's stale —
-  // so a rapid open-close-open can't have the prior close's cleanup hide
-  // the panel mid-second-slide.
+  // Increments on every close. Layered with the `isOpen` check, this
+  // protects against two distinct races: closeToken catches a stale
+  // close→close→re-open cleanup, and the `isOpen` check catches the
+  // open→close path where a prior close's safety timeout fires after a
+  // re-open. Both are cheap; both are belts.
   let closeToken = 0;
   // Stash the scrollbar gutter measured at open-time so close() can clear
   // exactly the padding it added (multiple resizes mid-open can't leave
@@ -152,6 +156,10 @@ function initDrawer() {
   let lockedGutter = 0;
   // Elements we marked [inert] so we know exactly which ones to clear.
   let inertedEls = [];
+  // rAF handle from open(), so close() can cancel a pending state-flip.
+  // Without this, an open→close in the same frame lets the rAF callback
+  // run AFTER close has set state=closed, re-flipping it to open.
+  let openRafHandle = 0;
 
   // ── Open ──────────────────────────────────────────────────────────────
   function open() {
@@ -160,14 +168,14 @@ function initDrawer() {
     lastFocusBeforeOpen = document.activeElement;
 
     // Compensate for the disappearing scrollbar BEFORE flipping body to
-    // position:fixed — measuring after the swap reads 0. Apply matching
-    // padding-right to <body> AND the sticky <header> (otherwise the
-    // header's right-anchored CTA pill jumps when the body widens).
+    // position:fixed — measuring after the swap reads 0. The header is
+    // position:sticky inside body's content flow, so body's padding-right
+    // already constrains the header's width too. (An earlier round-1 fix
+    // also padded the header, but that double-counted the gutter and
+    // shifted the right CTA pill ~8.5px to the left on open.)
     lockedGutter = window.innerWidth - document.documentElement.clientWidth;
     if (lockedGutter > 0) {
       document.body.style.paddingRight = `${lockedGutter}px`;
-      const header = document.getElementById('site-header');
-      if (header) header.style.paddingRight = `${lockedGutter}px`;
     }
 
     // Body scroll lock. position:fixed leaks the current scroll position,
@@ -194,21 +202,36 @@ function initDrawer() {
     // [data-state] attribute so the CSS transition actually animates from
     // the hidden→visible starting state. Without the rAF, browsers
     // collapse the two state changes and the slide skips.
+    //
+    // The rAF callback re-checks isOpen — if a close() ran in between
+    // (rapid open→close), the late callback would otherwise re-write
+    // state='open' AFTER close set it to 'closed', leaving the drawer
+    // visible-then-snapped-shut.
     panel.hidden = false;
     backdrop.hidden = false;
-    requestAnimationFrame(() => {
+    openRafHandle = requestAnimationFrame(() => {
+      openRafHandle = 0;
+      if (!isOpen) return;
       panel.dataset.state = 'open';
       backdrop.dataset.state = 'open';
     });
 
     panel.setAttribute('aria-hidden', 'false');
+    panel.setAttribute('aria-modal', 'true');
     toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close menu');
+
+    // Snapshot the breakpoint side at open-time; onResize closes the
+    // drawer if the width crosses to the other side mid-open.
+    openWidthBucket = window.innerWidth <= 480;
 
     // Move focus into the panel — close button first, falling back to the
     // panel itself (tabindex=-1 makes it programmatically focusable).
     (closeBtn || panel).focus({ preventScroll: true });
 
     document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onOrientationChange);
   }
 
   // ── Close ─────────────────────────────────────────────────────────────
@@ -218,17 +241,25 @@ function initDrawer() {
     closeToken += 1;
     const myToken = closeToken;
 
+    // Cancel any open()-pending rAF that hasn't fired yet. Without this,
+    // a same-frame open→close lets the rAF callback run AFTER close()
+    // and re-flip data-state to 'open'.
+    if (openRafHandle) {
+      cancelAnimationFrame(openRafHandle);
+      openRafHandle = 0;
+    }
+
     panel.dataset.state = 'closed';
     backdrop.dataset.state = 'closed';
+    panel.removeAttribute('aria-modal');
     toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open menu');
 
     // Restore body scroll BEFORE setting the page back to its prior Y.
     document.body.classList.remove('body--scroll-locked');
     document.body.style.top = '';
     if (lockedGutter > 0) {
       document.body.style.paddingRight = '';
-      const header = document.getElementById('site-header');
-      if (header) header.style.paddingRight = '';
       lockedGutter = 0;
     }
     window.scrollTo(0, lockedScrollY);
@@ -243,6 +274,12 @@ function initDrawer() {
     inertedEls = [];
 
     document.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('resize', onResize);
+    window.removeEventListener('orientationchange', onOrientationChange);
+    if (resizeTimer) {
+      clearTimeout(resizeTimer);
+      resizeTimer = null;
+    }
 
     // Restore focus to the hamburger BEFORE setting aria-hidden on the
     // panel. Setting aria-hidden=true on an element while a descendant
@@ -260,11 +297,11 @@ function initDrawer() {
     panel.setAttribute('aria-hidden', 'true');
 
     // Wait for the transition to finish before re-applying [hidden] so the
-    // panel doesn't disappear mid-slide. Two safeguards:
-    //   1. filter `transitionend` by propertyName === 'transform' so a
-    //      future second transitioned property doesn't fire cleanup early
-    //   2. closeToken guard — if a re-open beat us, the captured token is
-    //      stale and we skip
+    // panel doesn't disappear mid-slide. Three safeguards on the cleanup
+    // closure: filter `transitionend` by propertyName === 'transform'
+    // (a future second transitioned property doesn't fire cleanup early),
+    // skip if closeToken is stale (a re-open after this close), and skip
+    // if isOpen is true (an open() ran after this close in the same tick).
     const cleanup = (e) => {
       if (e && e.propertyName && e.propertyName !== 'transform') return;
       panel.removeEventListener('transitionend', cleanup);
@@ -281,7 +318,12 @@ function initDrawer() {
     panel.dataset.state = 'closed';
     backdrop.dataset.state = 'closed';
     panel.setAttribute('aria-hidden', 'true');
+    // aria-modal is added on open() and removed on close(); its presence
+    // signals "modal is currently active" to AT, so don't pin it on a
+    // closed dialog (some screen readers special-case the attribute).
+    panel.removeAttribute('aria-modal');
     toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open menu');
     panel.hidden = true;
     backdrop.hidden = true;
   }
@@ -318,23 +360,23 @@ function initDrawer() {
   // (480px). iOS in particular has long-standing bugs where position:fixed
   // body-lock + an orientation change can paint the page offscreen — the
   // safest mitigation is to close the drawer on orientationchange and
-  // let the user reopen it cleanly.
+  // let the user reopen it cleanly. Both listeners are scoped to the
+  // open-window so we don't leak listeners across HMR / repeat init.
   let resizeTimer = null;
-  let lastWasNarrow = window.innerWidth <= 480;
-  window.addEventListener('resize', () => {
+  let openWidthBucket = false; // true = narrow (≤480) when open() snapshotted
+  function onResize() {
     if (!isOpen) return;
     if (resizeTimer) clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
+      resizeTimer = null;
+      if (!isOpen) return;
       const isNarrow = window.innerWidth <= 480;
-      if (isNarrow !== lastWasNarrow) {
-        lastWasNarrow = isNarrow;
-        close();
-      }
+      if (isNarrow !== openWidthBucket) close();
     }, 100);
-  });
-  window.addEventListener('orientationchange', () => {
+  }
+  function onOrientationChange() {
     if (isOpen) close();
-  });
+  }
 
   // Esc + Tab focus trap (close path #2 + spec focus trap requirement).
   function onKeyDown(e) {

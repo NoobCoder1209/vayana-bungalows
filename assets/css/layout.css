@@ -393,8 +393,11 @@
 /* JS-disabled fallback nav. Lives directly after </header> via <noscript>.
    Plain inline strip so the site stays navigable. The hamburger toggle is
    hidden when JS is off (it would be a dead button), so the noscript strip
-   is the only nav surface. */
-html:not(.js-on) .site-header__menu {
+   is the only nav surface. The .no-js class is set inline on <html> at
+   page render and swapped to .js-on by an inline head-script (see the 4
+   HTML pages); doing the swap before any stylesheet loads avoids a
+   hamburger-flash during the deferred module's load window. */
+html.no-js .site-header__menu {
   display: none;
 }
 
