@@ -164,21 +164,7 @@
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
-  /* When closed, no padding-right (icon's wrapper provides its own
-     centering inside the 44×44 pill). When revealed, padding-right grows
-     to 13px so the trailing digit ends the same distance from the pill's
-     right edge as the icon starts from its left edge. */
-  padding-right: 0;
-  transition: background var(--t-fast), color var(--t-fast),
-    border-color var(--t-fast), padding-right var(--t-fast);
-}
-
-.site-header__call:hover,
-.site-header__call:focus-visible,
-.site-header__call.is-revealed {
-  /* Existing background/colour overrides live below; this rule adds the
-     symmetric trailing gap. */
-  padding-right: 13px;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
 
 .site-header__call-icon {
@@ -213,16 +199,19 @@
   padding-right: 0;
 }
 
-/* Padding inside the number itself stays minimal — the pill's own
-   padding-right (set above) provides the trailing gap. Tiny left pad
-   gives the digits ~4px of breathing room from the icon. */
+/* Padding mirrors the icon's visible-glyph inset on the left (~13px from
+   the pill edge) so the number's last digit ends the same distance from
+   the right edge as the icon starts from the left — symmetric breathing
+   room. max-width is sized to fit the full text + padding-right; the
+   pill's overflow:hidden was clipping the trailing pad at the previous
+   14ch, so the last digit ended up flush with the pill border. */
 .site-header__call:hover .site-header__call-number,
 .site-header__call:focus-visible .site-header__call-number,
 .site-header__call.is-revealed .site-header__call-number {
-  max-width: 14ch;
+  max-width: 16ch;
   opacity: 1;
-  padding-left: 0.25rem;
-  padding-right: 0;
+  padding-left: 0;
+  padding-right: 0.85rem;
 }
 
 /* Pin the same deeper warm-brown the Enquiries pill uses (#6f5e40, ~6.4:1
