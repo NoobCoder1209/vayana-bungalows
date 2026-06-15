@@ -102,9 +102,8 @@
 
     <!-- Backdrop + side drawer. Both start hidden; JS toggles
          data-state="open" and the .body--scroll-locked class on <body>.
-         Ordered backdrop-then-panel so a click on backdrop never bubbles
-         from inside the panel. Tabindex on the panel makes it focus-trap-
-         able as a fallback container if the close button is removed.
+         The drawer is now a full-viewport overlay that drops from the
+         top with a 3-column layout: nav-left, brand-centre, nav-right.
          aria-modal is added by JS only while the drawer is open — some
          screen readers special-case the attribute on closed dialogs. -->
     <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
@@ -115,12 +114,29 @@
               aria-label="Close menu" data-nav-close>
         <span aria-hidden="true">&times;</span>
       </button>
-      <ul class="primary-nav__list">
-        <li><a href="../" data-nav-link>Home</a></li>
-        <li><a href="../stay/" data-nav-link>Stay</a></li>
-        <li><a href="../destination/" data-nav-link>Destination</a></li>
-        <li><a href="../contacts/" data-nav-link>Contacts</a></li>
-      </ul>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Your bespoke stay</span>
+        <ul class="primary-nav__list">
+          <li><a href="../" data-nav-link>Home</a></li>
+          <li><a href="../stay/" data-nav-link>Stay</a></li>
+          <li><a href="../destination/" data-nav-link>Destination</a></li>
+          <li><a href="../contacts/" data-nav-link>Contacts</a></li>
+        </ul>
+      </div>
+
+      <a href="../" class="primary-nav__brand" data-nav-link>
+        <span class="primary-nav__brand-mark" aria-hidden="true">V</span>
+        <span class="primary-nav__brand-word">Vayana Bungalows</span>
+      </a>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Get in touch</span>
+        <ul class="primary-nav__list">
+          <li><a href="../enquiries/" data-nav-link>Enquiries</a></li>
+          <li><a href="tel:+359888888888" data-nav-link>+359 88 888 8888</a></li>
+        </ul>
+      </div>
     </nav>
 
     <!-- JS-disabled fallback. The drawer above never opens without JS, so

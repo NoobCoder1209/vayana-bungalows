@@ -104,11 +104,11 @@ function initCallTwoTap() {
 // repeat initHeader() calls. The drawer itself remains closed-by-default —
 // page reload always starts collapsed (no localStorage of state).
 
-// Length of the slide+fade. Matches the inline 250ms in layout.css for
+// Length of the slide+fade. Matches the inline 450ms in layout.css for
 // .primary-nav__panel / .primary-nav__backdrop; the safety timeout that
 // re-applies [hidden] post-close uses this + buffer.
-const DRAWER_TRANSITION_MS = 250;
-const DRAWER_TRANSITION_FALLBACK_MS = DRAWER_TRANSITION_MS + 150;
+const DRAWER_TRANSITION_MS = 450;
+const DRAWER_TRANSITION_FALLBACK_MS = DRAWER_TRANSITION_MS + 200;
 
 // Background regions taken out of the focus order while the drawer is open.
 // Using inert (and a stale-attribute cleanup on close) is the one-line
