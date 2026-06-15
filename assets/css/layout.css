@@ -67,10 +67,36 @@
   width: 44px;
   height: 44px;
   background: transparent;
-  border: 0;
+  border: 1px solid transparent; /* reserved for the hover outline so it doesn't shift layout */
   color: inherit;
   cursor: pointer;
   flex-shrink: 0;
+  padding: 4px; /* the spec calls for 4px padding inside the hover box */
+  transition: border-color var(--t-fast);
+}
+
+.site-header__menu:hover,
+.site-header__menu:focus-visible {
+  /* Soft outlined box on hover/focus — no layout shift because the border
+     is reserved (transparent) at rest. Keeps colour/weight unchanged. */
+  border-color: currentColor;
+  outline: none;
+}
+
+/* While the drawer is open, the toggle has to sit ABOVE the panel so the
+   user can click it a second time to close (close path #4 in #8). The
+   header creates its own stacking context at --z-sticky (50), so simply
+   bumping the toggle's z-index inside that context isn't enough — we lift
+   the whole header above --z-modal while the drawer holds focus. To keep
+   the rest of the header from stealing clicks (the × button sits
+   underneath it visually), we make the lifted header pointer-transparent
+   and re-enable pointer events on the toggle alone. */
+.body--scroll-locked .site-header {
+  z-index: calc(var(--z-modal) + 1);
+  pointer-events: none;
+}
+.body--scroll-locked .site-header__menu {
+  pointer-events: auto;
 }
 
 .site-header__menu span {
@@ -235,6 +261,159 @@
 
   .site-logo__word {
     font-size: 0.9rem;
+  }
+}
+
+/* ========== Primary nav drawer (slide-in side panel) ========== */
+/* Rendered as siblings of <header>, sitting at z-modal. JS owns the
+   open/close state via the [data-state="open"] attribute on both the panel
+   and the backdrop, and the .body--scroll-locked helper on <body>. The
+   `hidden` HTML attribute on both elements is the closed default; JS clears
+   it on open and re-applies it after the transition ends, so the panel
+   never sits in the keyboard-tab order while closed. */
+
+.primary-nav__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  z-index: var(--z-modal);
+  /* JS removes [hidden] before the transition, then we fade in; on close
+     the opacity transitions to 0 and JS re-applies [hidden] after transitionend. */
+  transition: opacity var(--t-base);
+}
+
+.primary-nav__backdrop[data-state='open'] {
+  opacity: 1;
+}
+
+/* The panel itself. position: fixed sits it above the rest of the page; the
+   transform: translateX(-100%) is the closed state. Keeping it transformed
+   (not display:none) is what lets the slide animate. */
+.primary-nav__panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 360px;
+  max-width: 100vw;
+  background: var(--bg-light);
+  color: var(--text-dark);
+  box-shadow: 2px 0 24px rgba(0, 0, 0, 0.18);
+  z-index: var(--z-modal);
+  transform: translateX(-100%);
+  transition: transform var(--t-base);
+  /* Internal layout: close button top-right, then the nav list. */
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-5);
+  /* The panel is itself the scroll container if the link list ever grows
+     past viewport height. Body stays locked. */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.primary-nav__panel[data-state='open'] {
+  transform: translateX(0);
+}
+
+/* On the smallest viewports the panel takes the full width. */
+@media (max-width: 480px) {
+  .primary-nav__panel {
+    width: 100vw;
+  }
+}
+
+.primary-nav__close {
+  align-self: flex-end;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: inherit;
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: var(--space-4);
+  transition: border-color var(--t-fast);
+}
+
+.primary-nav__close:hover,
+.primary-nav__close:focus-visible {
+  border-color: currentColor;
+  outline: none;
+}
+
+.primary-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.primary-nav__list a {
+  display: block;
+  padding: var(--space-2) 0;
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  transition: color var(--t-fast);
+}
+
+.primary-nav__list a:hover,
+.primary-nav__list a:focus-visible {
+  color: var(--primary);
+  outline: none;
+}
+
+/* Body scroll lock helper. Used while the drawer is open. position: fixed
+   on <body> is the most cross-browser-correct lock — overflow:hidden alone
+   leaks scroll on iOS Safari. JS pairs this with a top:-Npx so the page
+   doesn't jump to the top on lock, and restores scrollY on unlock. */
+.body--scroll-locked {
+  position: fixed;
+  inset-inline: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* JS-disabled fallback nav. Lives directly after </header> via <noscript>.
+   Plain inline strip so the site stays navigable. */
+.primary-nav__noscript {
+  background: var(--bg-cream);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.primary-nav__noscript ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: var(--space-3) var(--container-pad);
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+.primary-nav__noscript a {
+  color: var(--text-dark);
+  font-family: var(--font-heading);
+  letter-spacing: 0.02em;
+}
+
+/* Honour reduced-motion: collapse the slide+fade to an instant snap.
+   This matches the rest of the site (base.css applies a global
+   transition-shortcut for prefers-reduced-motion). */
+@media (prefers-reduced-motion: reduce) {
+  .primary-nav__panel,
+  .primary-nav__backdrop {
+    transition-duration: 0.01ms;
   }
 }
 
