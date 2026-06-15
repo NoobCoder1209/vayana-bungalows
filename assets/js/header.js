@@ -24,15 +24,25 @@ export function initHeader() {
 }
 
 // Two-tap state machine for .site-header__call on touch devices.
-// Window between taps: 5s (resets on blur, outside-tap, or timeout).
+// Window between taps: 5s (resets on outside-tap or timeout — `blur` doesn't
+// reliably fire on `<a>` taps in mobile Safari, so we don't lean on it).
 function initCallTwoTap() {
   const call = document.querySelector('[data-call-cta]');
   if (!call) return;
+  // Idempotency guard — a second initHeader() (HMR, re-init, future SPA-style
+  // route change) must not stack a second click handler / document listener.
+  if (call.dataset.twoTapInit === '1') return;
+  call.dataset.twoTapInit = '1';
 
   // Hover-capable pointers (desktop mouse) get the CSS :hover reveal — no JS
-  // intercept. Coarse pointers (touch) need the two-tap gate.
-  // matchMedia covers iPad-with-mouse / Surface where coarse may also be true;
-  // we treat "any-hover: none" + "any-pointer: coarse" as the touch case.
+  // intercept. We gate on the PRIMARY pointer being coarse + non-hovering so
+  // that hybrid devices (iPad with trackpad, Surface, a Windows laptop with a
+  // touchscreen) keep the desktop CSS-hover path: their primary pointer is
+  // fine, the first mouse-click dials directly, and CSS :hover handles the
+  // reveal. The trade-off is that on those hybrids, if the user reaches up
+  // and taps the screen, the very first tap will dial (no two-tap gate).
+  // That's a minor wart on a niche platform; preventing the regression on
+  // mouse-driven hybrids matters more.
   const isTouch =
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(hover: none) and (pointer: coarse)').matches;
@@ -62,12 +72,10 @@ function initCallTwoTap() {
     resetTimer = setTimeout(reset, REVEAL_TIMEOUT_MS);
   });
 
-  // Tap anywhere else, or focus moves away → collapse.
+  // Tap anywhere else → collapse.
   document.addEventListener('click', (e) => {
     if (!call.classList.contains('is-revealed')) return;
     if (call.contains(e.target)) return;
     reset();
   });
-
-  call.addEventListener('blur', reset);
 }

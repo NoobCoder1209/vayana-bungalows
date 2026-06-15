@@ -117,7 +117,9 @@
    Markup: <a href="tel:..."> styled as a pill that contains a fixed-width icon
    and a number that's collapsed by default. Hover (desktop) — or .is-revealed
    from the mobile two-tap state machine — expands the number inline using
-   max-width + opacity for a smooth ~200ms transition. */
+   max-width + opacity, transitioned at --t-fast (~180ms) to land near the
+   spec's "~200ms" target. (prefers-reduced-motion: reduce is handled globally
+   in base.css, which collapses these to an instant snap.) */
 .site-header__cta {
   display: inline-flex;
   align-items: center;
@@ -128,14 +130,12 @@
 .site-header__call {
   display: inline-flex;
   align-items: center;
-  gap: 0;
   height: 44px;
   padding: 0;
   background: transparent;
   border: 1px solid currentColor;
   border-radius: 999px;
   color: inherit;
-  cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
@@ -162,7 +162,9 @@
   font-size: 0.95rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
-  transition: max-width var(--t-base), opacity var(--t-base), padding-right var(--t-base);
+  transition: max-width var(--t-fast), opacity var(--t-fast),
+    padding-left var(--t-fast), padding-right var(--t-fast);
+  padding-left: 0;
   padding-right: 0;
 }
 
@@ -171,15 +173,20 @@
 .site-header__call.is-revealed .site-header__call-number {
   max-width: 14ch;
   opacity: 1;
+  padding-left: 0.5rem;
   padding-right: 1rem;
 }
 
+/* Pin the same deeper warm-brown the Enquiries pill uses (#6f5e40, ~6.4:1
+   against white) so the revealed call pill keeps AA contrast headroom in
+   the scrolled (light-bg) header. Without this it would flip to --primary
+   (#b99d75, ~3:1) and fail AA the moment a user hovers. */
 .site-header__call:hover,
 .site-header__call:focus-visible,
 .site-header__call.is-revealed {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--bg-dark);
+  background: #6f5e40;
+  border-color: #6f5e40;
+  color: var(--bg-light);
 }
 
 .site-header__enquiries {
