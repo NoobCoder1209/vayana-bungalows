@@ -145,16 +145,20 @@
   border-radius: 999px;
   padding-top: 0.6rem;
   padding-bottom: 0.6rem;
-  /* Slightly darker than --primary-deep so the pill clears WCAG AA contrast (4.5:1)
-     against white text. Site-wide btn-primary uses --primary which is too light;
-     the header pill needs a tighter local override. */
+  /* The site-wide --primary (#b99d75) measures ~3:1 against white — fails AA.
+     --primary-deep (#8a7551) measures ~4.51:1 — passes by a hair. We pin a
+     touch deeper here (~6.4:1) so the pill has comfortable headroom and the
+     value reads as deliberate, not borderline. Eventually --primary-deep
+     should be retuned in tokens.css and this override removed. */
   background: #6f5e40;
   border-color: #6f5e40;
 }
 
 .site-header__enquiries:hover {
-  background: var(--text-dark);
-  border-color: var(--text-dark);
+  /* Stay in the warm-brown family on hover — same colour ramp as btn-primary
+     (warm → deeper warm), not a jump to near-black. */
+  background: #5a4c34;
+  border-color: #5a4c34;
 }
 
 /* Primary nav lives in the DOM for #3 (drawer wiring) but is visually hidden
@@ -174,8 +178,21 @@
 }
 
 @media (max-width: 380px) {
+  .site-logo {
+    /* Drop the gap so the V mark sits flush against the wordmark and the row fits at 320px. */
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+  }
+
+  .site-logo__mark {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+  }
+
   .site-logo__word {
-    display: none;
+    font-size: 0.9rem;
   }
 }
 

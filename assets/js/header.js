@@ -12,8 +12,9 @@ export function initHeader() {
   );
   io.observe(sentinel);
 
-  // Mobile menu toggle
-  const toggle = header.querySelector('.primary-nav__toggle');
+  // Hamburger menu toggle. The drawer panel itself lands in #3; this just
+  // mirrors aria-expanded so AT users get a meaningful state until then.
+  const toggle = header.querySelector('.site-header__menu');
   const list = header.querySelector('#primary-nav-list');
   if (toggle && list) {
     toggle.addEventListener('click', () => {
