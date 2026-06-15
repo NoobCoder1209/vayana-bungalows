@@ -60,6 +60,15 @@ function initCallTwoTap() {
   };
 
   call.addEventListener('click', (e) => {
+    // Treat keyboard activation (Enter / Space on a focused link, which the
+    // browser also dispatches as a click) as a direct dial — the user can
+    // already see the number via :focus-visible's reveal, so the "first
+    // press shows the number" half of the two-tap gate would just be an
+    // extra keystroke they don't need.
+    if (call.matches(':focus-visible')) {
+      reset();
+      return;
+    }
     if (call.classList.contains('is-revealed')) {
       // Second tap — let the browser follow the tel: href.
       reset();
