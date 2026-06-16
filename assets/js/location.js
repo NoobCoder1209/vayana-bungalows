@@ -1,23 +1,26 @@
 // Location section — map iframe load detection (#10).
 //
 // The HTML ships the iframe with opacity:0 and a fallback paragraph
-// rendered by default. This module:
-//   1. Hydrates the iframe src + the get-directions href + the plus-code
-//      text from SITE_CONFIG, keeping the same SSOT pattern the rest of
-//      the site uses (data-site-config-* attributes are unsafe to use for
-//      <iframe src=> because the SAFE_HREF allowlist is intentionally
-//      restrictive — handle src here in a scoped, audited way).
+// rendered behind it. This module:
+//   1. Hydrates the iframe src from SITE_CONFIG. The src needs a tighter
+//      allowlist than the generic site-config-inject helper (which accepts
+//      any https URL via SAFE_HREF), so we run a maps.google.com /
+//      www.google.com hostname check here before assigning. Plus code +
+//      directions URL hydrate via the generic helper in HTML — they
+//      already fit the existing data-site-config / data-site-config-href
+//      contracts.
 //   2. Listens for the iframe's `load` event and adds .is-loaded to the
-//      .location__map wrapper. CSS fades the iframe in at that point, so
-//      until the load fires the fallback paragraph is what the user sees.
-//   3. If load doesn't fire within MAP_LOAD_TIMEOUT_MS (e.g. *.google.com
-//      blocked, ad-blocker abort, network drop), the fallback stays
-//      visible — that's negative test #4 in the issue.
+//      .location__map wrapper. CSS fades the iframe in at that point and
+//      enables pointer events; until then the fallback is what the user
+//      sees and clicks land on the fallback paragraph (not on a hidden
+//      iframe). If the load never fires (extension-blocked, network drop,
+//      etc.), .is-loaded never flips and the fallback stays the only
+//      thing visible — that's negative test #4.
 //
 // Note on the load event: the iframe's `load` event fires for cross-origin
 // frames as long as the response was received and a document was committed,
-// even if the document body itself is empty or 4xx/5xx. This means the
-// "blocked by extension" path (fetch fully aborted) reliably leaves the
+// even if the document body itself is empty or 4xx/5xx. The
+// "blocked by extension" path (request fully aborted) reliably leaves the
 // iframe blank → fallback visible. The "DNS / connection refused / 5xx"
 // path may fire `load` against a browser-rendered error page in some
 // browsers — in those cases the user sees the browser's chrome instead
@@ -27,17 +30,33 @@
 
 import { SITE_CONFIG } from './site-config.js';
 
-const MAP_LOAD_TIMEOUT_MS = 5000;
+// Allowlist for iframe src — must be HTTPS and host must be one of the
+// Google Maps embed hosts. This is a defense-in-depth check on top of
+// SITE_CONFIG being dev-controlled: if a future config edit fat-fingers
+// the URL, we don't end up loading e.g. a `javascript:` or `data:` URL,
+// and we don't load any *other* google.com subdomain (script.google.com,
+// docs.google.com, etc. — which can serve user-controlled HTML via Apps
+// Script and would run in google.com-cookie context inside the iframe's
+// sandboxed-but-allow-same-origin scope).
+//
+// Hostname check is leading-dot suffix-safe: 'maps.google.com.evil.com'
+// is correctly rejected (host is the whole thing, not a suffix match).
+const SAFE_MAP_EMBED_HOSTS = new Set(['maps.google.com', 'www.google.com']);
 
-// Allowlist for iframe src — must be HTTPS and host must end in
-// google.com. This is a defense-in-depth check on top of SITE_CONFIG
-// being dev-controlled: if a future config edit fat-fingers the URL,
-// we don't end up loading e.g. a `javascript:` or `data:` URL into the
-// iframe. The check runs against the parsed URL, not a regex, so things
-// like `https://google.com.evil.com` are correctly rejected (host is
-// `google.com.evil.com`, not endsWith `google.com` after the suffix
-// match — we check exact suffix with leading dot).
-function isSafeMapEmbed(value) {
+// Allowlist for the "Get directions" external link. `maps.app.goo.gl` is
+// Google's own URL shortener for sharing Maps links — that's where the
+// share-link in the issue spec lives. `maps.google.com` is the canonical
+// Maps host. We could lean on the generic SAFE_HREF allowlist in
+// site-config-inject.js, but that accepts any https:// URL — too loose
+// for a customer-visible CTA that lands users off-site. Tighter local
+// allowlist gives defense-in-depth against a future config typo.
+const SAFE_DIRECTIONS_HOSTS = new Set([
+  'maps.google.com',
+  'maps.app.goo.gl',
+  'goo.gl',
+]);
+
+function isAllowedHost(value, allowlist) {
   let url;
   try {
     url = new URL(value);
@@ -45,8 +64,15 @@ function isSafeMapEmbed(value) {
     return false;
   }
   if (url.protocol !== 'https:') return false;
-  // host must equal "google.com" or end in ".google.com" (subdomain)
-  return url.hostname === 'google.com' || url.hostname.endsWith('.google.com');
+  return allowlist.has(url.hostname);
+}
+
+function isSafeMapEmbed(value) {
+  return isAllowedHost(value, SAFE_MAP_EMBED_HOSTS);
+}
+
+function isSafeDirectionsUrl(value) {
+  return isAllowedHost(value, SAFE_DIRECTIONS_HOSTS);
 }
 
 export function initLocation() {
@@ -58,61 +84,45 @@ export function initLocation() {
   // SSOT hydrate: if SITE_CONFIG.address.mapEmbed differs from the inline
   // iframe src, override (so `site-config.js` is the single edit point).
   // The HTML still ships a canonical inline src so the page works without
-  // JS — same pattern as the rest of the site-config wiring.
+  // JS. Compare against the raw attribute (not the resolved property)
+  // because `iframe.src` getter normalizes the URL — case-folds the
+  // scheme, decodes percent-escapes, etc. — and a logically-identical
+  // config string can string-mismatch the resolved property and trigger
+  // an unnecessary reload (which would re-fire the load event and reset
+  // any pan/zoom state the user had).
   const cfgSrc = SITE_CONFIG?.address?.mapEmbed;
-  if (typeof cfgSrc === 'string' && isSafeMapEmbed(cfgSrc) && iframe.src !== cfgSrc) {
+  if (typeof cfgSrc === 'string' && isSafeMapEmbed(cfgSrc)
+      && iframe.getAttribute('src') !== cfgSrc) {
     iframe.src = cfgSrc;
   } else if (typeof cfgSrc === 'string' && !isSafeMapEmbed(cfgSrc)) {
-    console.warn('[location] SITE_CONFIG.address.mapEmbed rejected: not an https://*.google.com URL');
+    console.warn('[location] SITE_CONFIG.address.mapEmbed rejected: not an https://maps.google.com or https://www.google.com URL');
   }
 
-  let settled = false;
-  const markLoaded = () => {
-    if (settled) return;
-    settled = true;
+  // Add .is-loaded once the iframe successfully fires `load`. The fallback
+  // stays visible (and pointer-events on the iframe stay disabled by CSS)
+  // until then. There's intentionally no setTimeout fallback here: the
+  // iframe is `loading="lazy"`, so it only starts fetching when scrolled
+  // near the viewport — well after this init runs at DOMContentLoaded.
+  // Any timer started here would fire before the first byte is even
+  // requested, making the timeout meaningless. The "absent .is-loaded"
+  // state IS the failure-detection mechanism.
+  iframe.addEventListener('load', () => {
     wrap.classList.add('is-loaded');
-  };
+  }, { once: true });
 
-  // The iframe might already have fired `load` before this script ran
-  // (race: lazy-load triggers on scroll, this script is a deferred module
-  // imported by main.js → DOMContentLoaded). The `complete`-style probe
-  // doesn't exist for iframes, but `contentDocument`-readyState check is
-  // blocked cross-origin, so we just attach the listener and ALSO start
-  // the timeout immediately. If load already fired, the listener won't
-  // fire again — we'll fall back to the timeout to leave the fallback
-  // visible. That's the correct safe-default.
-  iframe.addEventListener('load', markLoaded, { once: true });
-
-  // No `error` listener: cross-origin iframes don't fire `error` reliably
-  // when the URL is blocked by an extension (Firefox/Chrome both stay
-  // silent), so we rely on the timeout instead of a positive failure
-  // signal.
-
-  // Belt-and-braces: if neither load nor error fires within the window,
-  // do nothing — the fallback stays visible (which is what we want).
-  setTimeout(() => {
-    if (!settled) {
-      // Optional dev hint; harmless in prod.
-      console.debug('[location] iframe did not fire load within', MAP_LOAD_TIMEOUT_MS, 'ms — keeping fallback visible');
-    }
-  }, MAP_LOAD_TIMEOUT_MS);
-
-  // Hydrate plus code + directions URL — keeping these here with the rest
-  // of the location-section SSOT instead of stretching the generic
-  // site-config-inject contract to a third attribute kind.
-  const plusEl = document.querySelector('[data-location-plus-code]');
-  if (plusEl && typeof SITE_CONFIG?.address?.plusCode === 'string') {
-    if (plusEl.textContent !== SITE_CONFIG.address.plusCode) {
-      plusEl.textContent = SITE_CONFIG.address.plusCode;
-    }
-  }
+  // Hydrate the directions link from SITE_CONFIG with the tight Maps-only
+  // host allowlist defined above. We can't use the generic
+  // data-site-config-href because SAFE_HREF in site-config-inject.js
+  // accepts any https:// URL, which is too loose for an outbound CTA.
   const dirEl = document.querySelector('[data-location-directions]');
-  if (dirEl && typeof SITE_CONFIG?.address?.directionsUrl === 'string') {
-    const v = SITE_CONFIG.address.directionsUrl;
-    // Same allowlist tier as SAFE_HREF for https links — keep it tight here
-    // since this is also a cross-origin nav surface.
-    if (/^https:\/\//i.test(v) && dirEl.getAttribute('href') !== v) {
-      dirEl.setAttribute('href', v);
+  const cfgDir = SITE_CONFIG?.address?.directionsUrl;
+  if (dirEl && typeof cfgDir === 'string') {
+    if (isSafeDirectionsUrl(cfgDir)) {
+      if (dirEl.getAttribute('href') !== cfgDir) {
+        dirEl.setAttribute('href', cfgDir);
+      }
+    } else {
+      console.warn('[location] SITE_CONFIG.address.directionsUrl rejected: not an https://maps.google.com / maps.app.goo.gl / goo.gl URL');
     }
   }
 }

@@ -37,9 +37,11 @@ export function initNewsletter() {
 
   // Idempotency guard: re-running initNewsletter() (HMR, future SPA nav,
   // double-import) would stack a second `keydown` listener on document.
-  // Mark the form on first init so subsequent calls bail early.
+  // The mark is set AFTER the missing-elements check below — otherwise a
+  // partial first-init (against incomplete markup) would set the flag,
+  // and a subsequent call against complete markup would short-circuit
+  // here and never wire the form.
   if (form.dataset.newsletterInit === '1') return;
-  form.dataset.newsletterInit = '1';
 
   const email = form.querySelector('[data-newsletter-email]');
   const honeypot = form.querySelector('[data-newsletter-honeypot]');
@@ -56,6 +58,8 @@ export function initNewsletter() {
   // Hard requirements: bail and warn on any missing element so future pages
   // that try to reuse this module without the full markup get a clear hint
   // in the console (rather than a half-wired form that silently misbehaves).
+  // Bail BEFORE setting the idempotency flag — a partial first init must
+  // not poison a future complete-markup re-init.
   const missing = [];
   if (!email) missing.push('[data-newsletter-email]');
   if (!submit) missing.push('[data-newsletter-submit]');
@@ -67,6 +71,9 @@ export function initNewsletter() {
     console.warn('[newsletter] missing required elements:', missing.join(', '));
     return;
   }
+
+  // Markup check passed — claim the form so a re-init bails out early.
+  form.dataset.newsletterInit = '1';
 
   // Enable the submit button only once JS has wired up validation.
   // The HTML ships it disabled (negative test #7 fallback).
