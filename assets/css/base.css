@@ -8,9 +8,10 @@
 
 html {
   scroll-behavior: smooth;
-  /* Account for the 88px sticky header so anchor jumps don't end up
-     hidden underneath it. Matches .site-header__inner min-height. */
-  scroll-padding-top: 88px;
+  /* Account for the sticky header so anchor jumps don't end up hidden
+     underneath it. Matches .site-header__inner min-height (the token
+     is the single source of truth — defined in tokens.css). */
+  scroll-padding-top: var(--header-height);
   -webkit-text-size-adjust: 100%;
 }
 

@@ -54,7 +54,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  min-height: 88px;
+  min-height: var(--header-height);
 }
 
 /* Left slot — hamburger toggle (always visible, drawer behaviour lands in #3) */

@@ -55,6 +55,11 @@
   --container-max: 1280px;
   --container-pad: clamp(1rem, 4vw, 2rem);
   --section-pad-y: clamp(4rem, 8vw, 7rem);
+  /* Sticky header height — referenced by .site-header__inner min-height
+     and by every hero section that needs to extend its background under
+     the header (.hero, .stay-hero, .bungalow-hero). Kept as a token so
+     the value doesn't drift across files. */
+  --header-height: 88px;
 
   /* Shape */
   --radius-button: 0px;
