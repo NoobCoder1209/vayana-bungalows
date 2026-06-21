@@ -309,6 +309,21 @@
           </button>
         </div>
       </section>
+
+      <!-- Per-bungalow Enquire CTA (#11). Links to /enquiries/ with a
+           ?villa=<slug> query param so enquiry.js can pre-fill the message
+           textarea with a villa-specific opener. The slug is validated
+           against an allowlist in enquiry.js — anything else is silently
+           ignored, so this href is the only entry point that hydrates the
+           message field. -->
+      <section class="bungalow-cta" aria-labelledby="bungalow-cta-title">
+        <div class="container bungalow-cta__inner">
+          <span class="eyebrow">Reserve your stay</span>
+          <h2 id="bungalow-cta-title">Ready to book this villa?</h2>
+          <p class="bungalow-cta__lede">Send us your dates and we'll reply within 24-48 hours with availability and a tailored proposal.</p>
+          <a class="btn btn-primary" href="../enquiries/?villa=premier-beachfront-suite">Send an enquiry</a>
+        </div>
+      </section>
     </main>
 
     <!-- Footer -->
@@ -355,10 +370,17 @@
             </li>
           </ul>
         </div>
-        <!-- Column 3 — Policies -->
-        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies">
+        <!-- Column 3 — Policies + Enquire (Enquire link is the new entry
+             point added under #11. We park it at the TOP of the policies
+             list and style it as the prominent item — semantically not a
+             policy, but the column's aria-label is broadened to
+             "Policies and enquiries" to acknowledge it without splitting
+             the visual rhythm of the footer with a separate nav landmark.
+             KEEP IN SYNC across all pages. -->
+        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies and enquiries">
           <span class="eyebrow eyebrow--light">Policies</span>
           <ul>
+            <li><a href="../enquiries/" class="site-footer__enquire">Enquire</a></li>
             <li><a data-site-config-path="policies.terms" href="/terms/">Terms &amp; Conditions</a></li>
             <li><a data-site-config-path="policies.cancellation" href="/cancellation/">Cancellation Policy</a></li>
             <li><a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a></li>
