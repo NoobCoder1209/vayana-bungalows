@@ -19,17 +19,36 @@ import flatpickr from 'flatpickr';
 // The form ships with `novalidate` so HTML5 enforcement is disabled by
 // design — this regex IS the validation, not belt-and-braces.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+// RFC 5321's hard limit on a deliverable email address. Anything longer
+// is either pasted nonsense or an attack — reject before regex evaluation.
 const MAX_EMAIL_LEN = 254;
 
-// Loose phone validation per user spec: allow leading `+`, digits,
-// spaces, dashes, and parens; require at least 7 characters total.
-// The Worker (#15) will do strict E.164 normalisation server-side;
-// here we only filter out the obvious junk so we don't burn server
-// cycles on "asdfasdf" submissions.
-const PHONE_RE = /^\+?[\d\s\-()]{7,}$/;
+// Loose phone validation per user spec: allow leading `+`, digits, spaces,
+// dashes, and parens; require at least 7 characters total AND at least one
+// digit (the lookahead). Without the digit requirement, "-------" or
+// "+      " would pass — round-1 review finding MED-3. The Worker (#15)
+// will do strict E.164 normalisation server-side; here we only filter
+// out the obvious junk so we don't burn server cycles on "asdfasdf"
+// submissions. The lookahead is one-shot and the rest of the pattern
+// has disjoint character classes — no backtracking risk.
+const PHONE_RE = /^\+?(?=[\d\s\-()]*\d)[\d\s\-()]{7,}$/;
+
+// 40 chars is generous for an international number (E.164 caps at 15
+// digits + a few separators; longest plausible formatted display is
+// ~25 chars). Higher cap lets users paste with country names attached
+// e.g. "Bulgaria +359 88 888 8888"; the Worker will strip and reformat.
 const MAX_PHONE_LEN = 40;
 
+// 120 chars covers the longest realistic full-name (compound surnames,
+// honorifics) without inviting payload-sized inputs. Cross-checked
+// against IATA passenger-name limits (which are typically 35 per
+// component) — 120 is roughly 3× that, enough for any composition.
 const MAX_NAME_LEN = 120;
+
+// Per spec — issue #11 §"Fields" item 9. The Worker (#15) will
+// re-enforce this cap before persistence; the client cap stops obvious
+// payload abuse and gives the user immediate feedback.
 const MAX_MESSAGE_LEN = 2000;
 
 // One generic message for any email-shape failure — empty / too long /
@@ -42,6 +61,9 @@ const DATE_ERROR_MSG = 'Please pick check-in and check-out dates.';
 const DATE_ORDER_ERROR_MSG = 'Check-out must be after check-in.';
 const PAST_DATE_ERROR_MSG = 'Check-in cannot be in the past.';
 const MESSAGE_TOO_LONG_MSG = 'Your message is too long (max 2000 characters).';
+// "Privacy Policy" wording is intentional even though /privacy/ 404s
+// today (page itself ships in #16). The consent label points at the
+// same URL — when the policy lands, no wording change here is needed.
 const CONSENT_ERROR_MSG = 'Please accept the Privacy Policy to continue.';
 
 // Bungalow allowlist for `?villa=<slug>` pre-fill. Anything not in this
@@ -60,9 +82,12 @@ export function initEnquiry() {
   const form = document.querySelector('[data-enquiry-form]');
   if (!form) return;
 
-  // Idempotency guard. Set AFTER the missing-elements check below so a
-  // partial first init (against incomplete markup) doesn't poison a
-  // future complete-markup re-init. Same pattern as newsletter.js.
+  // Idempotency guard. The missing-elements check below happens AFTER
+  // this short-circuit, so a re-init against the same form bails out
+  // here without retrying. The flag is set further down (line ~131)
+  // only AFTER the missing-elements check passes — that way a partial
+  // first init (against incomplete markup) doesn't claim the form and
+  // block a later complete-markup re-init from wiring it.
   if (form.dataset.enquiryInit === '1') return;
 
   const name = form.querySelector('[data-enquiry-name]');
@@ -116,6 +141,13 @@ export function initEnquiry() {
   // Wire flatpickr on both date inputs. Same pattern as booking.js but
   // with d/m/Y format per user decision (Bulgarian audience reads it
   // faster than the US M j, Y default).
+  //
+  // We INTENTIONALLY do NOT pass `disableMobile: true` here (booking.js
+  // does, but for a different reason — booking has booked-day disable
+  // lists that the native iOS/Android picker can't honour). On the
+  // enquiry form there's no booked-day list; the native mobile date
+  // wheel is faster and more familiar than flatpickr's JS calendar.
+  // Round-1 review finding I6.
   const today = new Date();
   const tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
@@ -123,7 +155,6 @@ export function initEnquiry() {
   const fpCheckin = flatpickr(checkinEl, {
     minDate: 'today',
     dateFormat: 'd/m/Y',
-    disableMobile: true,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -142,7 +173,6 @@ export function initEnquiry() {
   const fpCheckout = flatpickr(checkoutEl, {
     minDate: tomorrow,
     dateFormat: 'd/m/Y',
-    disableMobile: true,
   });
 
   // URL-param pre-fill: `?villa=<slug>` populates the message textarea
@@ -152,28 +182,36 @@ export function initEnquiry() {
   // who manages to slip a value past the allowlist still can't inject
   // text. We also leave the textarea blank if the user has already
   // typed something into it (e.g. opened the URL twice, then typed).
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const villaSlug = params.get('villa');
-    if (villaSlug && Object.prototype.hasOwnProperty.call(BUNGALOW_SLUGS, villaSlug)) {
-      const villaName = BUNGALOW_SLUGS[villaSlug];
-      if (!message.value.trim()) {
-        message.value = `Hello, I'd like to enquire about the ${villaName}.`;
-      }
+  // URLSearchParams + window.location are universally supported; no
+  // try/catch needed here (round-1 review finding N4).
+  // TODO i18n: when Bulgarian copy lands, source the opener template
+  // from site-config.js / an i18n table rather than inline English
+  // (round-1 review finding N1).
+  const params = new URLSearchParams(window.location.search);
+  const villaSlug = params.get('villa');
+  if (villaSlug && Object.prototype.hasOwnProperty.call(BUNGALOW_SLUGS, villaSlug)) {
+    const villaName = BUNGALOW_SLUGS[villaSlug];
+    if (!message.value.trim()) {
+      message.value = `Hello, I'd like to enquire about the ${villaName}.`;
     }
-  } catch (err) {
-    // URLSearchParams + window.location are universally supported, but
-    // belt-and-braces: never let a pre-fill error break the form.
-    console.warn('[enquiry] could not parse ?villa= query param:', err);
   }
 
-  const showError = (msg) => {
+  // Show an inline error and (optionally) mark a specific field as
+  // aria-invalid so screen readers announce it. Round-1 review finding
+  // I3 — without aria-invalid, AT users only hear the polite live
+  // region but get no per-field cue. clearError() below clears both
+  // the message and every aria-invalid marker, so the form returns to
+  // a clean state as soon as the user starts fixing things.
+  const allFields = [name, checkinEl, checkoutEl, email, phone, message, consentInput];
+  const showError = (msg, field) => {
     errorEl.textContent = msg;
     errorEl.hidden = false;
+    if (field) field.setAttribute('aria-invalid', 'true');
   };
   const clearError = () => {
     errorEl.textContent = '';
     errorEl.hidden = true;
+    allFields.forEach((el) => el && el.removeAttribute('aria-invalid'));
   };
   const flagConsent = (flag) => {
     consentLabel?.classList.toggle('is-error', flag);
@@ -181,7 +219,8 @@ export function initEnquiry() {
 
   // Clear errors as soon as the user starts fixing things. Bound to
   // every editable input so the form doesn't keep yelling after the
-  // problem's gone.
+  // problem's gone. (clearError also removes aria-invalid on all
+  // fields — round-1 review finding I3.)
   [name, email, phone, message].forEach((el) => {
     el.addEventListener('input', clearError);
   });
@@ -199,7 +238,7 @@ export function initEnquiry() {
   let lastFocusBeforeModal = null;
 
   const successPath = () => {
-    openModal(modal, () => lastFocusBeforeModal);
+    openModal(modal);
     // form.reset() resets fields INSIDE the <form> element. The consent
     // checkbox IS inside this form (unlike newsletter), but reset
     // doesn't always update the .is-error class — call flagConsent(false)
@@ -223,32 +262,29 @@ export function initEnquiry() {
   };
 
   form.addEventListener('submit', (e) => {
-    // ALWAYS preventDefault first — even on bot/honeypot trips. Default
-    // submit would attempt a same-origin GET with the form values in
-    // the query string, leaking the email/phone into the URL bar /
-    // referer chain on GitHub Pages and navigating the page away. We
-    // never want either, regardless of which validation branch we end
-    // up in. Same reasoning as newsletter.js.
+    // ALWAYS preventDefault first. Default submit would attempt a
+    // same-origin GET with the form values in the query string, leaking
+    // the email/phone into the URL bar / referer chain on GitHub Pages
+    // and navigating the page away. We never want either, regardless
+    // of which validation branch we end up in. Same reasoning as
+    // newsletter.js — do not remove when wiring #15's fetch.
     e.preventDefault();
 
-    // Capture the trigger BEFORE any DOM mutation that might steal focus.
-    lastFocusBeforeModal = document.activeElement;
-
-    // Honeypot: any non-empty value = bot. SIMULATE the success path so
-    // a bot DOM-diffing the page can't tell honeypot-trip from a valid
-    // submit. No Worker request goes out either way in v1; in v2 (#15)
-    // the success path will fire the request and the honeypot path
-    // won't — that's the only divergence, invisible from the bot's
-    // vantage. Same pattern as newsletter.js.
-    if (honeypot.value.trim() !== '') {
-      successPath();
-      return;
-    }
+    // Run the full validation gauntlet BEFORE checking the honeypot.
+    // The honeypot field is the LAST validation step on a successful
+    // submit (round-1 review findings B1/B2). The original ordering
+    // (honeypot first) leaked a signal: a bot could submit
+    // honeypot=X + invalid email, observe modal-opens-with-no-error,
+    // and conclude the honeypot fired (vs a legitimate user with the
+    // same invalid email who'd see the error pill). With this
+    // ordering, a bot has to submit a fully valid form to reach the
+    // honeypot trip — at which point the trip is indistinguishable
+    // from a normal success.
 
     // Name — required, must not be empty, length-capped.
     const nameVal = (name.value || '').trim();
     if (nameVal.length === 0 || nameVal.length > MAX_NAME_LEN) {
-      showError(NAME_ERROR_MSG);
+      showError(NAME_ERROR_MSG, name);
       name.focus();
       return;
     }
@@ -259,8 +295,9 @@ export function initEnquiry() {
     const checkinDate = fpCheckin.selectedDates[0];
     const checkoutDate = fpCheckout.selectedDates[0];
     if (!checkinDate || !checkoutDate) {
-      showError(DATE_ERROR_MSG);
-      (checkinDate ? checkoutEl : checkinEl).focus();
+      const target = checkinDate ? checkoutEl : checkinEl;
+      showError(DATE_ERROR_MSG, target);
+      target.focus();
       return;
     }
     // Check-in not in the past. minDate: 'today' already enforces this
@@ -271,12 +308,12 @@ export function initEnquiry() {
     const todayMidnight = new Date();
     todayMidnight.setHours(0, 0, 0, 0);
     if (checkinDate < todayMidnight) {
-      showError(PAST_DATE_ERROR_MSG);
+      showError(PAST_DATE_ERROR_MSG, checkinEl);
       checkinEl.focus();
       return;
     }
     if (checkoutDate <= checkinDate) {
-      showError(DATE_ORDER_ERROR_MSG);
+      showError(DATE_ORDER_ERROR_MSG, checkoutEl);
       checkoutEl.focus();
       return;
     }
@@ -286,19 +323,19 @@ export function initEnquiry() {
     if (emailVal.length === 0
         || emailVal.length > MAX_EMAIL_LEN
         || !EMAIL_RE.test(emailVal)) {
-      showError(EMAIL_ERROR_MSG);
+      showError(EMAIL_ERROR_MSG, email);
       email.focus();
       return;
     }
 
-    // Phone — loose regex (digits + symbols, 7+ chars). Worker will
-    // strictly normalise to E.164 server-side; this only filters out
-    // obvious junk like "abcdef".
+    // Phone — loose regex (digits + symbols, 7+ chars, ≥1 digit).
+    // Worker (#15) will strictly normalise to E.164 server-side; this
+    // only filters out obvious junk like "abcdef" or "-------".
     const phoneVal = (phone.value || '').trim();
     if (phoneVal.length === 0
         || phoneVal.length > MAX_PHONE_LEN
         || !PHONE_RE.test(phoneVal)) {
-      showError(PHONE_ERROR_MSG);
+      showError(PHONE_ERROR_MSG, phone);
       phone.focus();
       return;
     }
@@ -308,16 +345,32 @@ export function initEnquiry() {
     // that attribute, so we re-check at submit time.
     const messageVal = (message.value || '');
     if (messageVal.length > MAX_MESSAGE_LEN) {
-      showError(MESSAGE_TOO_LONG_MSG);
+      showError(MESSAGE_TOO_LONG_MSG, message);
       message.focus();
       return;
     }
 
     // Consent — required.
     if (!consentInput.checked) {
-      showError(CONSENT_ERROR_MSG);
+      showError(CONSENT_ERROR_MSG, consentInput);
       flagConsent(true);
       consentInput.focus();
+      return;
+    }
+
+    // All fields valid — NOW check the honeypot. Trip silently routes
+    // to the same success path (modal open + form reset). In v1 there's
+    // no network call, so the trip is fully indistinguishable from a
+    // valid submit. In v2 (#15) the success path will fire the Worker
+    // fetch and the honeypot trip won't — that's the only divergence.
+    // Capture lastFocusBeforeModal to the submit button (round-1 review
+    // finding I1) so on modal close, focus returns to a stable anchor,
+    // not the empty last-typed field.
+    lastFocusBeforeModal = submit;
+
+    if (honeypot.value.trim() !== '') {
+      // Silent bot trip — do exactly what a valid submit does.
+      successPath();
       return;
     }
 
@@ -335,9 +388,37 @@ export function initEnquiry() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !modal.hidden) closeModal(modal, lastFocusBeforeModal);
   });
+
+  // Focus trap for the modal (round-1 review finding I4). Without this,
+  // Tab from the close button would walk focus to elements behind the
+  // modal (which are visually obscured by the backdrop) — a violation
+  // of the role="dialog" contract. The trap is light: intercept Tab /
+  // Shift-Tab inside the panel and loop between the first and last
+  // focusable elements. We add the listener at the panel level (not
+  // the document) so it only fires when focus is genuinely inside the
+  // modal — no global keyboard cost when the modal is closed.
+  const panel = modal.querySelector('.modal__panel');
+  if (panel) {
+    panel.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab' || modal.hidden) return;
+      const focusables = panel.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  }
 }
 
-function openModal(modal, _getReturnFocusEl) {
+function openModal(modal) {
   modal.hidden = false;
   document.body.style.overflow = 'hidden';
   // Focus the close button — same convention as the booking modal: the
@@ -352,9 +433,9 @@ function openModal(modal, _getReturnFocusEl) {
 function closeModal(modal, returnFocusTo) {
   modal.hidden = true;
   document.body.style.overflow = '';
-  // Restore focus to whatever the user was on before the modal opened.
-  // Guard against the element having been removed from the DOM, or
-  // being a non-focusable node (e.g. <body>).
+  // Restore focus to whatever was captured before the modal opened
+  // (the submit button on success path). Guard against the element
+  // having been removed from the DOM, or being a non-focusable node.
   if (returnFocusTo && typeof returnFocusTo.focus === 'function'
       && document.contains(returnFocusTo)) {
     returnFocusTo.focus();

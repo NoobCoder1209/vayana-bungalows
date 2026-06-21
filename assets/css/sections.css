@@ -1395,6 +1395,11 @@
 
 .enquiry-page__form-wrap {
   max-width: 720px;
+  /* Center the form under the centered intro above it. Without auto
+     margins the form sat left-aligned inside the .container while the
+     intro stayed centered, producing a visible misalignment at
+     viewports wider than 720px. Round-1 review finding I2. */
+  margin: 0 auto;
 }
 
 /* Two-column grid. .enquiry-form__field--full spans both columns and is

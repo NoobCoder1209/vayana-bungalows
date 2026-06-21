@@ -97,7 +97,7 @@
       <div class="primary-nav__col">
         <span class="primary-nav__eyebrow">Get in touch</span>
         <ul class="primary-nav__list">
-          <li><a href="./" data-nav-link aria-current="page">Enquiries</a></li>
+          <li><a href="./" data-nav-link>Enquiries</a></li>
           <li><a data-site-config-href="phone.href" href="tel:+359888888888" data-nav-link><span data-site-config="phone.display">+359 88 888 8888</span></a></li>
         </ul>
       </div>
@@ -153,7 +153,7 @@
             <div class="enquiry-form__field">
               <label for="eq-checkin">Check-in</label>
               <input id="eq-checkin" name="checkin" type="text"
-                     placeholder="Add date" autocomplete="off" required
+                     placeholder="dd/mm/yyyy" autocomplete="off" required
                      data-enquiry-checkin />
             </div>
 
@@ -162,7 +162,7 @@
             <div class="enquiry-form__field">
               <label for="eq-checkout">Check-out</label>
               <input id="eq-checkout" name="checkout" type="text"
-                     placeholder="Add date" autocomplete="off" required
+                     placeholder="dd/mm/yyyy" autocomplete="off" required
                      data-enquiry-checkout />
             </div>
 
@@ -231,29 +231,46 @@
             </div>
 
             <!-- Honeypot: bots that auto-fill every field will trip this.
-                 Hidden via CSS (off-screen, tabindex -1, aria-hidden) rather
-                 than display:none so a real keyboard user can't reach it but
-                 a naive form-filler still sees a "website" field worth
-                 filling. The submit handler simulates the success path on
-                 trip — same DOM mutations as a valid submit, but no Worker
-                 request — so a bot diffing the page can't tell whether it
-                 was honeypotted. Same pattern as the newsletter form. -->
-            <div class="enquiry-form__hp" aria-hidden="true">
-              <label for="eq-website">Website</label>
-              <input id="eq-website" name="website" type="text"
+                 Hidden via CSS (off-screen, tabindex -1) rather than
+                 display:none so a real keyboard user can't reach it but
+                 a naive form-filler still sees a field worth filling.
+                 The submit handler simulates the success path on trip —
+                 same DOM mutations as a valid submit, but no Worker
+                 request — so a bot diffing the page can't tell whether
+                 it was honeypotted. Same pattern as the newsletter form.
+
+                 Round-1 review fixes:
+                   - MED-2: field name is `alt_url` (not the canonical
+                     `website` which sits on every bot framework's
+                     skip-list).
+                   - I5: `aria-hidden` lives on the input itself with an
+                     `aria-label` (NOT on the wrapper — wrapping a
+                     focusable input with aria-hidden trips axe's
+                     `aria-hidden-focus` rule). -->
+            <div class="enquiry-form__hp">
+              <label for="eq-alt-url">Website</label>
+              <input id="eq-alt-url" name="alt_url" type="text"
                      tabindex="-1" autocomplete="off"
+                     aria-hidden="true"
+                     aria-label="Leave this field empty"
                      data-enquiry-honeypot />
             </div>
 
-            <!-- 10. Privacy consent — checkbox lives OUTSIDE the <form>
-                 visually below, but inside the same form element so
-                 form.reset() catches it on success. The "Privacy Policy"
-                 link 404s today — policy page itself ships in #16. -->
+            <!-- 10. Privacy consent — checkbox sits inside the <form> so
+                 form.reset() catches it on success.
+
+                 Round-1 review fix MED-1: until the /privacy/ page ships
+                 (issue #16), we don't link to it from the consent label —
+                 GDPR Art. 7(2)/13 requires consent to be informed, and
+                 a link that 404s isn't informing anyone. The wording
+                 below is the interim text; restore the linked version
+                 ("I accept the [Privacy Policy](/privacy/)") when #16
+                 lands. The CONSENT_ERROR_MSG string in enquiry.js still
+                 references "Privacy Policy" — same idea, no change
+                 needed there. -->
             <label class="enquiry-form__consent">
               <input type="checkbox" required data-enquiry-consent />
-              <span>By checking this box, I accept the
-                <a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a>.
-              </span>
+              <span>By checking this box, I consent to being contacted by Vayana Bungalows regarding my enquiry.</span>
             </label>
 
             <!-- 11. Submit. Rendered disabled at HTML level; enquiry.js
@@ -273,9 +290,11 @@
                aria-live="polite" hidden></p>
           </form>
 
-          <!-- JS-disabled fallback. With JS off, the Subscribe button stays
-               disabled (HTML default) and validation can't run. Surface a
-               working mailto: instead so the page still has an answer. -->
+          <!-- JS-disabled fallback. With JS off, the Send enquiry button
+               stays disabled (HTML default) and validation can't run.
+               Surface a working mailto: instead so the page still has
+               an answer. (Round-1 review finding N6 — copy was
+               accidentally "Subscribe button" from the newsletter.) -->
           <noscript>
             <p class="enquiry-form__noscript">
               JavaScript is disabled in your browser. To send an enquiry,
@@ -350,14 +369,17 @@
         <!-- Column 3 — Policies + Enquire (Enquire link is the new entry
              point added under #11. We park it at the TOP of the policies
              list and style it as the prominent item — semantically not a
-             policy, but the column's aria-label remains "Policies" for
-             continuity; a dedicated nav landmark would split the visual
-             rhythm of the footer for marginal screen-reader gain. The
-             current page itself gets aria-current="page" on it. -->
+             policy, but the column's aria-label is broadened to
+             "Policies and enquiries" to acknowledge it without splitting
+             the visual rhythm of the footer with a separate nav landmark.
+             Note: only the header pill carries aria-current="page" on
+             this page — keeping the drawer + footer Enquire links
+             plain avoids three "current page" announcements per screen
+             reader pass (round-1 review finding LOW-2). -->
         <nav class="site-footer__col site-footer__col--policies" aria-label="Policies and enquiries">
           <span class="eyebrow eyebrow--light">Policies</span>
           <ul>
-            <li><a href="../enquiries/" class="site-footer__enquire" aria-current="page">Enquire</a></li>
+            <li><a href="../enquiries/" class="site-footer__enquire">Enquire</a></li>
             <li><a data-site-config-path="policies.terms" href="/terms/">Terms &amp; Conditions</a></li>
             <li><a data-site-config-path="policies.cancellation" href="/cancellation/">Cancellation Policy</a></li>
             <li><a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a></li>
