@@ -61,10 +61,13 @@ const DATE_ERROR_MSG = 'Please pick check-in and check-out dates.';
 const DATE_ORDER_ERROR_MSG = 'Check-out must be after check-in.';
 const PAST_DATE_ERROR_MSG = 'Check-in cannot be in the past.';
 const MESSAGE_TOO_LONG_MSG = 'Your message is too long (max 2000 characters).';
-// "Privacy Policy" wording is intentional even though /privacy/ 404s
-// today (page itself ships in #16). The consent label points at the
-// same URL — when the policy lands, no wording change here is needed.
-const CONSENT_ERROR_MSG = 'Please accept the Privacy Policy to continue.';
+// "Privacy Policy" link is currently NOT shown on the consent label
+// because /privacy/ 404s today (page itself ships in #16). The error
+// message therefore must NOT reference "Privacy Policy" either — that
+// would mention something the user can't see. Round-2 review finding
+// I-R2-1: keep the wording aligned with the visible label. When #16
+// lands and the label gets the link back, this string changes too.
+const CONSENT_ERROR_MSG = 'Please tick the consent box to continue.';
 
 // Bungalow allowlist for `?villa=<slug>` pre-fill. Anything not in this
 // set is silently ignored so an attacker can't craft a link that injects
@@ -148,9 +151,13 @@ export function initEnquiry() {
   // enquiry form there's no booked-day list; the native mobile date
   // wheel is faster and more familiar than flatpickr's JS calendar.
   // Round-1 review finding I6.
-  const today = new Date();
+  //
+  // Round-2 review N-R2-5: collapsed the separate `today` constant —
+  // `tomorrow.setDate(tomorrow.getDate() + 1)` handles month/year
+  // rollover the same way, so the extra binding wasn't earning its
+  // keep.
   const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
   const fpCheckin = flatpickr(checkinEl, {
     minDate: 'today',
@@ -198,10 +205,15 @@ export function initEnquiry() {
 
   // Show an inline error and (optionally) mark a specific field as
   // aria-invalid so screen readers announce it. Round-1 review finding
-  // I3 — without aria-invalid, AT users only hear the polite live
-  // region but get no per-field cue. clearError() below clears both
-  // the message and every aria-invalid marker, so the form returns to
-  // a clean state as soon as the user starts fixing things.
+  // I3 — without aria-invalid, AT users only hear the live region but
+  // get no per-field cue. clearError() below clears both the message
+  // and every aria-invalid marker, so the form returns to a clean
+  // state as soon as the user starts fixing things.
+  //
+  // The 3 select fields (adults / children / infants) are intentionally
+  // omitted from `allFields` — they have defaults (2/0/0), every option
+  // is valid, and there is no validation branch that could fail on them.
+  // Round-2 review finding N-R2-2 (explicit comment requested).
   const allFields = [name, checkinEl, checkoutEl, email, phone, message, consentInput];
   const showError = (msg, field) => {
     errorEl.textContent = msg;
@@ -383,9 +395,14 @@ export function initEnquiry() {
   modal.querySelectorAll('[data-modal-close]').forEach((el) => {
     el.addEventListener('click', () => closeModal(modal, lastFocusBeforeModal));
   });
-  // Single document-level Escape handler — guarded by the idempotency
-  // check at the top of initEnquiry(), so we never stack two of them.
-  document.addEventListener('keydown', (e) => {
+  // Escape handler — scoped to the modal subtree (not document) so a
+  // re-init against fresh markup (e.g. jsdom unit tests, bfcache
+  // restore) doesn't leak listeners pointing at detached modals.
+  // Round-2 review finding B-R2-3 — was previously `document.addEventListener`
+  // which leaked across page lifecycles. Focus during modal-open is
+  // inside the panel (close button), so the keydown bubbles to the
+  // modal element and the listener fires from there.
+  modal.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !modal.hidden) closeModal(modal, lastFocusBeforeModal);
   });
 
@@ -397,6 +414,13 @@ export function initEnquiry() {
   // focusable elements. We add the listener at the panel level (not
   // the document) so it only fires when focus is genuinely inside the
   // modal — no global keyboard cost when the modal is closed.
+  //
+  // Round-2 review finding B-R2-2: if `focusables` is ever empty (no
+  // tabbable elements rendered — could happen if a future Worker-state
+  // spinner briefly replaces the close button), the trap MUST NOT
+  // silently disengage and let Tab escape the modal. Fall back to
+  // focusing the panel itself; the markup gives `.modal__panel` a
+  // `tabindex="-1"` so it can accept programmatic focus.
   const panel = modal.querySelector('.modal__panel');
   if (panel) {
     panel.addEventListener('keydown', (e) => {
@@ -404,7 +428,13 @@ export function initEnquiry() {
       const focusables = panel.querySelectorAll(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
       );
-      if (!focusables.length) return;
+      if (!focusables.length) {
+        // No focusables inside — keep focus on the panel so Tab can't
+        // escape (round-2 B-R2-2).
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
       if (e.shiftKey && document.activeElement === first) {

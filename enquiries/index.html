@@ -239,19 +239,24 @@
                  request — so a bot diffing the page can't tell whether
                  it was honeypotted. Same pattern as the newsletter form.
 
-                 Round-1 review fixes:
+                 Round-2 review fixes (after round 1 introduced a regression):
                    - MED-2: field name is `alt_url` (not the canonical
                      `website` which sits on every bot framework's
                      skip-list).
-                   - I5: `aria-hidden` lives on the input itself with an
-                     `aria-label` (NOT on the wrapper — wrapping a
-                     focusable input with aria-hidden trips axe's
-                     `aria-hidden-focus` rule). -->
-            <div class="enquiry-form__hp">
+                   - I5 (round 1) put `aria-hidden` on the input only —
+                     B-R2-1 (round 2) re-adds it on the WRAPPER too. Why
+                     both: the input is `tabindex="-1"` so it can't be
+                     focused, which means axe's `aria-hidden-focus` rule
+                     does NOT trigger on the wrapper. The `<label>Website</label>`
+                     would otherwise be announced from the off-screen
+                     position because off-screen positioning is visual-
+                     only — screen readers still read it. Wrapping with
+                     aria-hidden removes the whole subtree from the
+                     accessibility tree. -->
+            <div class="enquiry-form__hp" aria-hidden="true">
               <label for="eq-alt-url">Website</label>
               <input id="eq-alt-url" name="alt_url" type="text"
                      tabindex="-1" autocomplete="off"
-                     aria-hidden="true"
                      aria-label="Leave this field empty"
                      data-enquiry-honeypot />
             </div>
@@ -265,9 +270,12 @@
                  a link that 404s isn't informing anyone. The wording
                  below is the interim text; restore the linked version
                  ("I accept the [Privacy Policy](/privacy/)") when #16
-                 lands. The CONSENT_ERROR_MSG string in enquiry.js still
-                 references "Privacy Policy" — same idea, no change
-                 needed there. -->
+                 lands.
+                 Round-2 review fix I-R2-1: the CONSENT_ERROR_MSG in
+                 enquiry.js was updated to match this label too — the
+                 error and the label MUST reference the same concept,
+                 otherwise the failure message names something the user
+                 can't see. -->
             <label class="enquiry-form__consent">
               <input type="checkbox" required data-enquiry-consent />
               <span>By checking this box, I consent to being contacted by Vayana Bungalows regarding my enquiry.</span>
@@ -282,12 +290,20 @@
                     class="btn btn-primary enquiry-form__submit"
                     data-enquiry-submit disabled>Send enquiry</button>
 
-            <!-- Error pill — aria-live polite + hidden by default. The JS
-                 module writes a single generic message here on any
-                 client-side failure. Same red-tinted style as the newsletter
-                 error pill (see sections.css). -->
+            <!-- Error pill — aria-live assertive + hidden by default.
+                 The JS module writes a single generic message here on
+                 any client-side failure. Same red-tinted style as the
+                 newsletter error pill (see sections.css).
+
+                 Round-2 review fix I-R2-2: was `aria-live="polite"`,
+                 but the submit handler immediately follows showError()
+                 with field.focus(), and the focus event takes priority
+                 over polite live regions in NVDA — the user heard
+                 "Full name, invalid entry" but missed the actual error
+                 text. `assertive` ensures the message reads even when
+                 focus moves. The pill stays visually identical. -->
             <p class="enquiry-form__error" data-enquiry-error
-               aria-live="polite" hidden></p>
+               aria-live="assertive" hidden></p>
           </form>
 
           <!-- JS-disabled fallback. With JS off, the Send enquiry button
@@ -312,7 +328,7 @@
            trigger on close. Same shape as #newsletter-modal in index.html. -->
       <div class="modal" id="enquiry-modal" hidden role="dialog" aria-modal="true" aria-labelledby="enquiry-modal-title">
         <div class="modal__backdrop" data-modal-close></div>
-        <div class="modal__panel">
+        <div class="modal__panel" tabindex="-1">
           <button class="modal__close" type="button" aria-label="Close" data-modal-close>&times;</button>
           <span class="eyebrow">Enquiry received</span>
           <h3 id="enquiry-modal-title">Thank you &mdash; we'll be in touch.</h3>
