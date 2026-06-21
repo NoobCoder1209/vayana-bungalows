@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Swap no-js → js-on synchronously, before any stylesheet loads, so
+         the JS-on hamburger doesn't flash invisible during the deferred
+         module's load window. CSS uses html.no-js for the no-JS fallback. -->
+    <script>document.documentElement.classList.replace('no-js','js-on');</script>
+    <title>Enquiries &mdash; Vayana Bungalows</title>
+    <meta name="description" content="Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests — we reply within 24-48 hours." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="/assets/css/tokens.css" />
+    <link rel="stylesheet" href="/assets/css/base.css" />
+    <link rel="stylesheet" href="/assets/css/layout.css" />
+    <link rel="stylesheet" href="/assets/css/sections.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Sticky header -->
+    <div id="header-sentinel" aria-hidden="true"></div>
+    <header class="site-header" id="site-header">
+      <div class="container site-header__inner">
+        <!-- Left slot: hamburger toggle. aria-controls/aria-expanded wire it
+             to the side-drawer below; the JS in assets/js/header.js owns the
+             open/close, focus trap, scroll-lock and Esc/backdrop/link/× wiring.
+             KEEP IN SYNC with the same block in:
+               - index.html
+               - premier-beachfront-suite/index.html
+               - premier-oceanview-villa/index.html
+               - deluxe-hilltop-residence/index.html
+             (Vite multi-page build, no shared layout primitive yet.) -->
+        <button class="site-header__menu" type="button" aria-label="Open menu"
+                aria-controls="primary-nav" aria-expanded="false"
+                aria-haspopup="dialog" data-nav-toggle>
+          <span></span><span></span><span></span>
+        </button>
+
+        <!-- Center slot: brand. Logo links back to the homepage. -->
+        <a href="../" class="site-logo">
+          <span class="site-logo__mark" aria-hidden="true">V</span>
+          <span class="site-logo__word">Vayana Bungalows</span>
+        </a>
+
+        <!-- Right slot: Call-me-back + Enquiries.
+             Both are real <a> elements so they keep working with JS disabled.
+             Hrefs are relative — Vite rewrites root-absolute paths only for
+             assets, not <a href>, so on GitHub Pages (base /arapq-website/)
+             /enquiries/ would 404. On this page itself "Enquiries" already
+             points at the current URL, so the pill carries aria-current to
+             signal that to AT and gets a visual "is-current" hook in CSS.
+             Phone is hydrated from assets/js/site-config.js (#9). -->
+        <div class="site-header__cta">
+          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call" aria-label="Call us at +359 88 888 8888" data-call-cta>
+            <span class="site-header__call-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+            </span>
+            <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
+          </a>
+          <a href="./" class="btn btn-primary site-header__enquiries" aria-current="page">Enquiries</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Backdrop + side drawer. Both start hidden; JS toggles
+         data-state="open" and the .body--scroll-locked class on <body>.
+         aria-modal is added by JS only while the drawer is open — some
+         screen readers special-case the attribute on closed dialogs. -->
+    <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
+    <nav id="primary-nav" class="primary-nav__panel" aria-label="Primary"
+         role="dialog"
+         aria-hidden="true" tabindex="-1" hidden>
+      <button class="primary-nav__close" type="button"
+              aria-label="Close menu" data-nav-close>
+        <span aria-hidden="true">&times;</span>
+      </button>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Your bespoke stay</span>
+        <ul class="primary-nav__list">
+          <li><a href="../" data-nav-link>Home</a></li>
+          <li><a href="../stay/" data-nav-link>Stay</a></li>
+          <li><a href="../destination/" data-nav-link>Destination</a></li>
+          <li><a href="../contacts/" data-nav-link>Contacts</a></li>
+        </ul>
+      </div>
+
+      <a href="../" class="primary-nav__brand" data-nav-link>
+        <span class="primary-nav__brand-mark" aria-hidden="true">V</span>
+        <span class="primary-nav__brand-word">Vayana Bungalows</span>
+      </a>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Get in touch</span>
+        <ul class="primary-nav__list">
+          <li><a href="./" data-nav-link>Enquiries</a></li>
+          <li><a data-site-config-href="phone.href" href="tel:+359888888888" data-nav-link><span data-site-config="phone.display">+359 88 888 8888</span></a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- JS-disabled fallback. The drawer above never opens without JS, so
+         we surface the same 4 links inline here. Negative test #5 demands
+         the site stays navigable when JS is off. -->
+    <noscript>
+      <nav class="primary-nav__noscript" aria-label="Primary (no JavaScript)">
+        <ul>
+          <li><a href="../">Home</a></li>
+          <li><a href="../stay/">Stay</a></li>
+          <li><a href="../destination/">Destination</a></li>
+          <li><a href="../contacts/">Contacts</a></li>
+        </ul>
+      </nav>
+    </noscript>
+
+    <main id="main">
+      <!-- Enquiry page hero — restrained intro on section-cream background
+           so the form below sits comfortably. No big hero image: this is a
+           utility page, not a marketing page. -->
+      <section class="enquiry-page" aria-labelledby="enquiry-title">
+        <div class="container enquiry-page__intro">
+          <span class="eyebrow">Plan your stay</span>
+          <h1 id="enquiry-title">Send us an enquiry</h1>
+          <p class="enquiry-page__lede">
+            Tell us your dates and a little about your party &mdash;
+            we'll reply within 24-48 hours with availability and a
+            tailored proposal.
+          </p>
+        </div>
+
+        <!-- The form itself.
+             v1 STUB: full client-side validation + honeypot + flatpickr
+             dates, but submit just opens a "Thank you" .modal — NO network
+             request goes anywhere. Real Cloudflare Worker wiring is tracked
+             in #15, captcha decision in #20.
+             Markup contracts (data-* attributes) are the JS module's hooks
+             — keep them in sync with assets/js/enquiry.js. -->
+        <div class="container enquiry-page__form-wrap">
+          <form class="enquiry-form" data-enquiry-form novalidate>
+            <!-- 1. Full name — full-row width (extended per spec) -->
+            <div class="enquiry-form__field enquiry-form__field--full">
+              <label for="eq-name">Full name</label>
+              <input id="eq-name" name="name" type="text" required
+                     autocomplete="name" maxlength="120"
+                     data-enquiry-name />
+            </div>
+
+            <!-- 2. Check-in date — flatpickr (d/m/Y, minDate today) -->
+            <div class="enquiry-form__field">
+              <label for="eq-checkin">Check-in</label>
+              <input id="eq-checkin" name="checkin" type="text"
+                     placeholder="dd/mm/yyyy" autocomplete="off" required
+                     data-enquiry-checkin />
+            </div>
+
+            <!-- 3. Check-out date — flatpickr, minDate re-anchors when
+                 check-in changes (set in enquiry.js's onChange callback). -->
+            <div class="enquiry-form__field">
+              <label for="eq-checkout">Check-out</label>
+              <input id="eq-checkout" name="checkout" type="text"
+                     placeholder="dd/mm/yyyy" autocomplete="off" required
+                     data-enquiry-checkout />
+            </div>
+
+            <!-- 4. Adults — 1..4, default 2 -->
+            <div class="enquiry-form__field">
+              <label for="eq-adults">Adults</label>
+              <select id="eq-adults" name="adults" required data-enquiry-adults>
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+
+            <!-- 5. Children — 0..4, default 0 -->
+            <div class="enquiry-form__field">
+              <label for="eq-children">Children</label>
+              <select id="eq-children" name="children" required data-enquiry-children>
+                <option value="0" selected>0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+
+            <!-- 6. Infants — 0..4, default 0 -->
+            <div class="enquiry-form__field">
+              <label for="eq-infants">Infants</label>
+              <select id="eq-infants" name="infants" required data-enquiry-infants>
+                <option value="0" selected>0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+
+            <!-- 7. Email -->
+            <div class="enquiry-form__field">
+              <label for="eq-email">Email</label>
+              <input id="eq-email" name="email" type="email" required
+                     autocomplete="email" maxlength="254"
+                     data-enquiry-email />
+            </div>
+
+            <!-- 8. Telephone — type=tel + loose regex (digits + symbols, 7+ chars).
+                 No country selector / library — server (#15) will reformat. -->
+            <div class="enquiry-form__field">
+              <label for="eq-phone">Telephone</label>
+              <input id="eq-phone" name="phone" type="tel" required
+                     autocomplete="tel" maxlength="40"
+                     data-enquiry-phone />
+            </div>
+
+            <!-- 9. Message — optional, capped at 2000 chars (per spec).
+                 Pre-fill text is written by enquiry.js when ?villa=<slug> is
+                 in the URL and <slug> is on the allowlist; otherwise empty.
+                 The textarea label says "(optional)" inline so the user
+                 knows they can leave it blank. -->
+            <div class="enquiry-form__field enquiry-form__field--full">
+              <label for="eq-message">Message <span class="enquiry-form__optional">(optional)</span></label>
+              <textarea id="eq-message" name="message"
+                        maxlength="2000" rows="5"
+                        data-enquiry-message></textarea>
+            </div>
+
+            <!-- Honeypot: bots that auto-fill every field will trip this.
+                 Hidden via CSS (off-screen, tabindex -1) rather than
+                 display:none so a real keyboard user can't reach it but
+                 a naive form-filler still sees a field worth filling.
+                 The submit handler simulates the success path on trip —
+                 same DOM mutations as a valid submit, but no Worker
+                 request — so a bot diffing the page can't tell whether
+                 it was honeypotted. Same pattern as the newsletter form.
+
+                 Round-2 review fixes (after round 1 introduced a regression):
+                   - MED-2: field name is `alt_url` (not the canonical
+                     `website` which sits on every bot framework's
+                     skip-list).
+                   - I5 (round 1) put `aria-hidden` on the input only —
+                     B-R2-1 (round 2) re-adds it on the WRAPPER too. Why
+                     both: the input is `tabindex="-1"` so it can't be
+                     focused, which means axe's `aria-hidden-focus` rule
+                     does NOT trigger on the wrapper. The `<label>Website</label>`
+                     would otherwise be announced from the off-screen
+                     position because off-screen positioning is visual-
+                     only — screen readers still read it. Wrapping with
+                     aria-hidden removes the whole subtree from the
+                     accessibility tree. -->
+            <div class="enquiry-form__hp" aria-hidden="true">
+              <label for="eq-alt-url">Website</label>
+              <input id="eq-alt-url" name="alt_url" type="text"
+                     tabindex="-1" autocomplete="off"
+                     aria-label="Leave this field empty"
+                     data-enquiry-honeypot />
+            </div>
+
+            <!-- 10. Privacy consent — checkbox sits inside the <form> so
+                 form.reset() catches it on success.
+
+                 Round-1 review fix MED-1: until the /privacy/ page ships
+                 (issue #16), we don't link to it from the consent label —
+                 GDPR Art. 7(2)/13 requires consent to be informed, and
+                 a link that 404s isn't informing anyone. The wording
+                 below is the interim text; restore the linked version
+                 ("I accept the [Privacy Policy](/privacy/)") when #16
+                 lands.
+                 Round-2 review fix I-R2-1: the CONSENT_ERROR_MSG in
+                 enquiry.js was updated to match this label too — the
+                 error and the label MUST reference the same concept,
+                 otherwise the failure message names something the user
+                 can't see. -->
+            <label class="enquiry-form__consent">
+              <input type="checkbox" required data-enquiry-consent />
+              <span>By checking this box, I consent to being contacted by Vayana Bungalows regarding my enquiry.</span>
+            </label>
+
+            <!-- 11. Submit. Rendered disabled at HTML level; enquiry.js
+                 enables it on init. Without JS we can't validate, so the
+                 button stays disabled and the <noscript> mailto block is
+                 the call-to-action instead (same fallback pattern as the
+                 newsletter form). -->
+            <button type="submit"
+                    class="btn btn-primary enquiry-form__submit"
+                    data-enquiry-submit disabled>Send enquiry</button>
+
+            <!-- Error pill — aria-live assertive + hidden by default.
+                 The JS module writes a single generic message here on
+                 any client-side failure. Same red-tinted style as the
+                 newsletter error pill (see sections.css).
+
+                 Round-2 review fix I-R2-2: was `aria-live="polite"`,
+                 but the submit handler immediately follows showError()
+                 with field.focus(), and the focus event takes priority
+                 over polite live regions in NVDA — the user heard
+                 "Full name, invalid entry" but missed the actual error
+                 text. `assertive` ensures the message reads even when
+                 focus moves. The pill stays visually identical. -->
+            <p class="enquiry-form__error" data-enquiry-error
+               aria-live="assertive" hidden></p>
+          </form>
+
+          <!-- JS-disabled fallback. With JS off, the Send enquiry button
+               stays disabled (HTML default) and validation can't run.
+               Surface a working mailto: instead so the page still has
+               an answer. (Round-1 review finding N6 — copy was
+               accidentally "Subscribe button" from the newsletter.) -->
+          <noscript>
+            <p class="enquiry-form__noscript">
+              JavaScript is disabled in your browser. To send an enquiry,
+              email us at
+              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">contact@vayanabungalows.com</a>
+              with your dates and a short note.
+            </p>
+          </noscript>
+        </div>
+      </section>
+
+      <!-- "Thank you" modal for the enquiry stub. Reuses the .modal pattern
+           from sections.css. Hidden by default; enquiry.js flips `hidden`,
+           focuses the close button, and restores focus to the original
+           trigger on close. Same shape as #newsletter-modal in index.html. -->
+      <div class="modal" id="enquiry-modal" hidden role="dialog" aria-modal="true" aria-labelledby="enquiry-modal-title">
+        <div class="modal__backdrop" data-modal-close></div>
+        <div class="modal__panel" tabindex="-1">
+          <button class="modal__close" type="button" aria-label="Close" data-modal-close>&times;</button>
+          <span class="eyebrow">Enquiry received</span>
+          <h3 id="enquiry-modal-title">Thank you &mdash; we'll be in touch.</h3>
+          <p>A member of the Vayana team will reply within 24-48 hours with availability and a tailored proposal for your stay.</p>
+          <button type="button" class="btn btn-primary" data-modal-close>Close</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer (KEEP IN SYNC across all pages) -->
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <!-- Column 1 — Contact -->
+        <div class="site-footer__col site-footer__col--contact">
+          <span class="eyebrow eyebrow--light" data-site-config="brand">Vayana Bungalows</span>
+          <ul class="site-footer__contact">
+            <li>
+              <a data-site-config-href="phone.href" href="tel:+359888888888">
+                <span data-site-config="phone.display">+359 88 888 8888</span>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">
+                <span data-site-config="email.display">contact@vayanabungalows.com</span>
+              </a>
+            </li>
+            <li>
+              <span data-site-config="address.line1">Tsarevo</span>,
+              <span data-site-config="address.line2">Bulgaria</span>
+            </li>
+          </ul>
+        </div>
+        <!-- Column 2 — Follow us -->
+        <div class="site-footer__col site-footer__col--social">
+          <span class="eyebrow eyebrow--light">Follow us</span>
+          <ul class="social-list">
+            <li>
+              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.linkedin" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4 4h4v16H4zM6 2.5A1.5 1.5 0 116 5.5 1.5 1.5 0 016 2.5zM10 8h3.8v2h.05A4.16 4.16 0 0117.6 8C21.4 8 22 10.4 22 13.6V20h-4v-5.7c0-1.4 0-3.1-1.9-3.1S14 12.6 14 14.2V20h-4z"/></svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <!-- Column 3 — Policies + Enquire (Enquire link is the new entry
+             point added under #11. We park it at the TOP of the policies
+             list and style it as the prominent item — semantically not a
+             policy, but the column's aria-label is broadened to
+             "Policies and enquiries" to acknowledge it without splitting
+             the visual rhythm of the footer with a separate nav landmark.
+             Note: only the header pill carries aria-current="page" on
+             this page — keeping the drawer + footer Enquire links
+             plain avoids three "current page" announcements per screen
+             reader pass (round-1 review finding LOW-2). -->
+        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies and enquiries">
+          <span class="eyebrow eyebrow--light">Policies</span>
+          <ul>
+            <li><a href="../enquiries/" class="site-footer__enquire">Enquire</a></li>
+            <li><a data-site-config-path="policies.terms" href="/terms/">Terms &amp; Conditions</a></li>
+            <li><a data-site-config-path="policies.cancellation" href="/cancellation/">Cancellation Policy</a></li>
+            <li><a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="site-footer__bar">
+        <div class="container site-footer__bar-inner">
+          <p data-site-config="copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
+          <p class="site-footer__license">License number: <span data-site-config="license">1327673</span></p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/assets/js/main.js"></script>
+  </body>
+</html>

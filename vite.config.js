@@ -22,6 +22,7 @@ export default defineConfig(({ command }) => ({
         premierOceanviewVilla: resolve(__dirname, 'premier-oceanview-villa/index.html'),
         deluxeHilltopResidence: resolve(__dirname, 'deluxe-hilltop-residence/index.html'),
         premierBeachfrontSuite: resolve(__dirname, 'premier-beachfront-suite/index.html'),
+        enquiries: resolve(__dirname, 'enquiries/index.html'),
       },
     },
   },

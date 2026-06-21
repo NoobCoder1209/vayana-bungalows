@@ -1362,3 +1362,240 @@
   border-width: 0 6px 6px 0;
   border-color: transparent var(--primary) transparent transparent;
 }
+
+/* ========== Enquiry page (#11) ==========
+   Standalone page at /enquiries/. Section-cream background to match the
+   rest of the brand palette (the cream is --bg-cream); two-column form
+   grid on desktop, single column on mobile. The full-name + message
+   textarea fields span both columns via .enquiry-form__field--full.
+   Form-control styling intentionally matches the rest of the site
+   (square corners via --radius-form: 0) instead of the spec's
+   "pill-shaped" suggestion — keeps visual continuity with the booking
+   form and footer fields. */
+.enquiry-page {
+  background: var(--bg-cream);
+  padding: var(--section-pad-y) 0;
+  color: var(--text-dark);
+}
+
+.enquiry-page__intro {
+  max-width: 720px;
+  text-align: center;
+  margin: 0 auto var(--space-6);
+}
+
+.enquiry-page__intro h1 {
+  margin-bottom: var(--space-3);
+}
+
+.enquiry-page__lede {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+}
+
+.enquiry-page__form-wrap {
+  max-width: 720px;
+  /* Center the form under the centered intro above it. Without auto
+     margins the form sat left-aligned inside the .container while the
+     intro stayed centered, producing a visible misalignment at
+     viewports wider than 720px. Round-1 review finding I2. */
+  margin: 0 auto;
+}
+
+/* Two-column grid. .enquiry-form__field--full spans both columns and is
+   used for full-name + message. Other fields auto-place in either column.
+   Order in the HTML is: name (full), check-in, check-out, adults,
+   children, infants, email, phone, message (full). */
+.enquiry-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-4);
+}
+
+.enquiry-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.enquiry-form__field--full {
+  grid-column: 1 / -1;
+}
+
+.enquiry-form__field label {
+  font-size: var(--fs-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.enquiry-form__field input[type="text"],
+.enquiry-form__field input[type="email"],
+.enquiry-form__field input[type="tel"],
+.enquiry-form__field select,
+.enquiry-form__field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--bg-light);
+  color: var(--text-dark);
+  padding: 0.75rem 1rem;
+  min-height: 48px;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  border-radius: var(--radius-form);
+}
+
+.enquiry-form__field textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.enquiry-form__field input:focus,
+.enquiry-form__field select:focus,
+.enquiry-form__field textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+/* Inline "(optional)" hint inside the Message label. Lighter weight,
+   normal case, so it visually steps back from the uppercase eyebrow. */
+.enquiry-form__optional {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-left: 0.35rem;
+}
+
+/* Honeypot — copied verbatim from .newsletter__hp. Hidden via off-screen
+   positioning + zero size + tabindex=-1 in markup. */
+.enquiry-form__hp {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Submit button spans the whole row on every viewport. */
+.enquiry-form__submit {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  min-height: 56px;
+  margin-top: var(--space-2);
+}
+
+/* Error pill — same red-tinted style as the newsletter error pill, but
+   adapted to the cream background (darker text since we're on light bg). */
+.enquiry-form__error {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  background: rgba(192, 57, 43, 0.08);
+  color: var(--danger);
+  font-size: 0.9rem;
+  border-left: 2px solid var(--danger);
+}
+
+/* Consent checkbox row — spans full width, sits below the message
+   textarea visually but above the submit button in the source. Same
+   visual treatment as .newsletter__consent but on cream background. */
+.enquiry-form__consent {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  margin-top: var(--space-2);
+}
+
+.enquiry-form__consent input {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  margin-top: 0.2em;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.enquiry-form__consent a {
+  color: var(--primary-deep);
+  text-decoration: underline;
+}
+
+/* Highlighted state when the user tries to submit without consent.
+   Set + cleared by enquiry.js on the consent <label>. */
+.enquiry-form__consent.is-error {
+  color: var(--danger);
+}
+
+.enquiry-form__consent.is-error input {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
+}
+
+.enquiry-form__noscript {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  background: var(--bg-light);
+  border-left: 2px solid var(--primary);
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+.enquiry-form__noscript a {
+  color: var(--primary-deep);
+  text-decoration: underline;
+}
+
+/* Footer "Enquire" link — bolder than the other policies links so it
+   reads as the primary action in the column. Inherits the column's
+   light-on-dark colour from .site-footer; primary-soft underline pulls
+   the eye without shouting. */
+.site-footer__enquire {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--primary);
+}
+
+/* Per-bungalow CTA block — sits between gallery and </main> on each
+   bungalow page. Wraps a heading + lede + CTA button. */
+.bungalow-cta {
+  background: var(--bg-cream);
+  padding: var(--section-pad-y) 0;
+  text-align: center;
+}
+
+.bungalow-cta__inner {
+  max-width: 640px;
+}
+
+.bungalow-cta h2 {
+  margin-bottom: var(--space-2);
+}
+
+.bungalow-cta__lede {
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+  font-size: 1.05rem;
+}
+
+@media (max-width: 600px) {
+  .enquiry-form {
+    grid-template-columns: 1fr;
+  }
+  .enquiry-form__field--full,
+  .enquiry-form__submit,
+  .enquiry-form__error,
+  .enquiry-form__consent {
+    grid-column: 1;
+  }
+}
