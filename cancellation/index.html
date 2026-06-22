@@ -204,11 +204,10 @@
             </p>
             <p class="legal-page__lede">
               <strong>This page is a draft.</strong> Every figure
-              rendered in a yellow
-              <span class="placeholder">highlight</span> is a working
-              assumption (lead-time threshold, refund percentage, SLA,
-              currency) and MUST be reviewed and replaced before this
-              site goes live to paying guests.
+              rendered in a yellow highlight (lead-time threshold,
+              refund percentage, SLA, currency) is a working
+              assumption and MUST be reviewed and replaced before
+              this site goes live to paying guests.
             </p>
           </header>
 
@@ -237,23 +236,23 @@
             </p>
             <ul>
               <li>
-                More than <span class="placeholder">30 days</span>
+                More than <span class="placeholder"><span class="sr-only">placeholder: </span>30 days</span>
                 before check-in &mdash; we refund
-                <span class="placeholder">100%</span> of any amount you
-                have paid. <em>Free cancellation tier.</em>
+                <span class="placeholder"><span class="sr-only">placeholder: </span>100%</span> of any amount you
+                have paid. <strong>Free cancellation tier.</strong>
               </li>
               <li>
-                Between <span class="placeholder">30</span> and
-                <span class="placeholder">14 days</span> before
+                Between <span class="placeholder"><span class="sr-only">placeholder: </span>30</span> and
+                <span class="placeholder"><span class="sr-only">placeholder: </span>14 days</span> before
                 check-in &mdash; we refund
-                <span class="placeholder">50%</span> of any amount you
-                have paid. <em>Partial-refund tier.</em>
+                <span class="placeholder"><span class="sr-only">placeholder: </span>50%</span> of any amount you
+                have paid. <strong>Partial-refund tier.</strong>
               </li>
               <li>
-                Less than <span class="placeholder">14 days</span>
+                Less than <span class="placeholder"><span class="sr-only">placeholder: </span>14 days</span>
                 before check-in &mdash; we refund
-                <span class="placeholder">0%</span>.
-                <em>No-refund tier.</em>
+                <span class="placeholder"><span class="sr-only">placeholder: </span>0%</span>.
+                <strong>No-refund tier.</strong>
               </li>
             </ul>
             <p>
@@ -263,7 +262,7 @@
               you have paid us toward the reservation, including any
               deposit described in §5 of the
               <a data-site-config-path="policies.terms" href="../terms/">Terms &amp; Conditions</a>.
-              <span class="placeholder">Whether the deposit is
+              <span class="placeholder"><span class="sr-only">placeholder: </span>Whether the deposit is
               refundable on the same schedule, or is non-refundable
               regardless of tier, is to be confirmed before launch.</span>
             </p>
@@ -281,7 +280,7 @@
             </p>
             <p>
               We will acknowledge your cancellation in writing within
-              <span class="placeholder">48 hours on working days</span>,
+              <span class="placeholder"><span class="sr-only">placeholder: </span>48 hours on working days</span>,
               confirm the applicable refund tier per §2, and let you
               know the timeline for the refund per §7. Until you have
               received that written acknowledgement from us, please
@@ -301,13 +300,13 @@
             <ul>
               <li>
                 <strong>Date changes.</strong> Requests received more
-                than <span class="placeholder">14 days</span> before
+                than <span class="placeholder"><span class="sr-only">placeholder: </span>14 days</span> before
                 the original check-in date, for new dates of equal
                 length and the same bungalow, are free of charge
                 subject to availability. Closer to check-in, or for
                 longer stays / different bungalows, a price difference
                 or fee may apply.
-                <span class="placeholder">Exact change-fee schedule
+                <span class="placeholder"><span class="sr-only">placeholder: </span>Exact change-fee schedule
                 to be confirmed before launch.</span>
               </li>
               <li>
@@ -334,7 +333,7 @@
               If you do not arrive on your check-in date and have not
               cancelled in writing before the check-in time, the
               reservation is treated as a no-show. The default refund
-              for a no-show is <span class="placeholder">0%</span>.
+              for a no-show is <span class="placeholder"><span class="sr-only">placeholder: </span>0%</span>.
             </p>
             <p>
               If circumstances beyond your control prevent you from
@@ -344,7 +343,12 @@
           </section>
 
           <!-- 6 — Force majeure. Short summary + cross-link to /terms/#force-majeure.
-               Per planning round answer: cross-link the legal basis. -->
+               Per planning round answer: cross-link the legal basis.
+               Uses data-site-config-path normally; the hydrator now
+               preserves any inline #fragment (round-1 MED-5 fix in
+               assets/js/site-config-inject.js), so the cross-link
+               resolves to /vayana-bungalows/terms/#force-majeure in
+               production and /terms/#force-majeure in dev. -->
           <section id="force-majeure" aria-labelledby="force-majeure-title">
             <h2 id="force-majeure-title">6. Force majeure</h2>
             <p>
@@ -361,16 +365,9 @@
               The legal basis for force majeure (what qualifies, who
               bears which costs, and how the refund is calculated) is
               set out in §10 of the
-              <!-- Intentionally NOT using data-site-config-path here:
-                   the hydrator rewrites the href to BASE_URL + value
-                   and drops any inline #fragment. We need the
-                   #force-majeure anchor to survive both dev and prod,
-                   so we use a relative inline href instead. Same
-                   pattern as the /terms/ round-1 M2 fix for in-body
-                   cross-links to other policy pages. -->
-              <a href="../terms/#force-majeure">Terms &amp; Conditions</a>.
+              <a data-site-config-path="policies.terms" href="../terms/#force-majeure">Terms &amp; Conditions</a>.
               This Policy and those Terms should be read together.
-              <span class="placeholder">Exact list of qualifying
+              <span class="placeholder"><span class="sr-only">placeholder: </span>Exact list of qualifying
               events and standard outcome to be finalised with legal
               review.</span>
             </p>
@@ -382,16 +379,16 @@
             <p>
               Once the refund tier is confirmed under §2 (or under §6
               for force majeure), refunds are issued within
-              <span class="placeholder">10 working days</span> of our
+              <span class="placeholder"><span class="sr-only">placeholder: </span>10 working days</span> of our
               written cancellation acknowledgement.
             </p>
             <p>
               Refunds are issued in
-              <span class="placeholder">EUR</span> to the same payment
+              <span class="placeholder"><span class="sr-only">placeholder: </span>EUR</span> to the same payment
               method you used to pay the original deposit and balance.
               If that is not possible (for example, the card has
               expired), we will contact you to agree an alternative
-              method. <span class="placeholder">Whether bank or
+              method. <span class="placeholder"><span class="sr-only">placeholder: </span>Whether bank or
               card-processing fees are deducted from the refund is to
               be confirmed before launch.</span>
             </p>
@@ -406,7 +403,7 @@
               in §3 and describe what you would like us to reconsider.
               We will respond in writing and try to find a resolution
               within
-              <span class="placeholder">10 working days</span>.
+              <span class="placeholder"><span class="sr-only">placeholder: </span>10 working days</span>.
             </p>
             <p>
               If we cannot reach an agreement, the dispute-resolution

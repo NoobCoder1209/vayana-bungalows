@@ -2354,6 +2354,13 @@ a.contacts-card__value:focus-visible {
    policy. The yellow-on-dark-text scheme matches a paper "highlighter
    pen" mark and keeps WCAG contrast against the body background.
 
+   The parallel accessibility cue for non-sighted users is a real
+   <span class="sr-only">placeholder: </span> child element placed
+   INSIDE every .placeholder span in the HTML — not a ::before
+   pseudo-element. CSS-generated content has inconsistent screen-
+   reader support (WCAG 1.3.1 best-practice avoid), so we use a
+   visible-only-to-AT DOM child instead. Round-1 review MED-1 fix.
+
    Used by terms/cancellation/privacy stub pages while content is
    being finalised. Remove the .placeholder wrappers (not the rule)
    once the underlying value is signed off by legal — the rule itself
@@ -2367,25 +2374,8 @@ a.contacts-card__value:focus-visible {
   border: 1px dashed #c9a300;
   font-style: normal;
   font-weight: 500;
-  /* Slight bottom-margin nudge keeps inline-flow tidy when the span
-     wraps across a line break inside a paragraph. */
-  box-decoration-break: clone;
+  /* Clone background/border across line breaks so the highlight
+     remains contiguous when the span wraps inside a paragraph. */
   -webkit-box-decoration-break: clone;
-}
-
-.placeholder::before {
-  /* Hidden screen-reader prefix so a non-sighted user understands the
-     yellow highlight isn't decorative — it flags an unfinalised value
-     they should treat as draft. The visual highlight is still the
-     primary cue; this is the parallel accessibility cue. */
-  content: "placeholder: ";
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  box-decoration-break: clone;
 }
