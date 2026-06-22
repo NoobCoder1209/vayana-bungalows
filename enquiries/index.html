@@ -267,21 +267,16 @@
             <!-- 10. Privacy consent — checkbox sits inside the <form> so
                  form.reset() catches it on success.
 
-                 Round-1 review fix MED-1: until the /privacy/ page ships
-                 (issue #16), we don't link to it from the consent label —
-                 GDPR Art. 7(2)/13 requires consent to be informed, and
-                 a link that 404s isn't informing anyone. The wording
-                 below is the interim text; restore the linked version
-                 ("I accept the [Privacy Policy](/privacy/)") when #16
-                 lands.
-                 Round-2 review fix I-R2-1: the CONSENT_ERROR_MSG in
-                 enquiry.js was updated to match this label too — the
-                 error and the label MUST reference the same concept,
-                 otherwise the failure message names something the user
-                 can't see. -->
+                 The label links to /privacy/ (shipped in #16). GDPR
+                 Art. 7(2)/13 requires consent to be informed; the link
+                 is what makes "informed" true here. Keep this label
+                 wording and CONSENT_ERROR_MSG in assets/js/enquiry.js
+                 aligned — round-2 review finding I-R2-1 is
+                 bidirectional. If you reword the visible label, reword
+                 the error message in the same commit. -->
             <label class="enquiry-form__consent">
               <input type="checkbox" required data-enquiry-consent />
-              <span>By checking this box, I consent to being contacted by Vayana Bungalows regarding my enquiry.</span>
+              <span>I accept the <a href="/privacy/" data-site-config-path="policies.privacy">Privacy Policy</a> and consent to being contacted by Vayana Bungalows regarding my enquiry.</span>
             </label>
 
             <!-- 11. Submit. Rendered disabled at HTML level; enquiry.js
