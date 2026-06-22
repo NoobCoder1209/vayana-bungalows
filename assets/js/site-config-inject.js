@@ -71,7 +71,7 @@ function hydrate(root = document) {
     if (el.getAttribute('href') !== value) el.setAttribute('href', value);
   }
   // Site-relative path that needs the build-time base prefix
-  // (e.g. policies.terms = "terms/" → "/arapq-website/terms/" in prod, "/terms/" in dev)
+  // (e.g. policies.terms = "terms/" → "/vayana-bungalows/terms/" in prod, "/terms/" in dev)
   for (const el of root.querySelectorAll('[data-site-config-path]')) {
     const path = el.getAttribute('data-site-config-path');
     const value = readPath(SITE_CONFIG, path);

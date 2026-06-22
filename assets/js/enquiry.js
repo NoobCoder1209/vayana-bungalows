@@ -5,8 +5,8 @@
 // NO network request goes anywhere.
 //
 // TODO: wire to Cloudflare Worker — see follow-up issues
-//   https://github.com/NoobCoder1209/arapq-website/issues/15 (Worker + Sheets)
-//   https://github.com/NoobCoder1209/arapq-website/issues/20 (captcha decision)
+//   https://github.com/NoobCoder1209/vayana-bungalows/issues/15 (Worker + Sheets)
+//   https://github.com/NoobCoder1209/vayana-bungalows/issues/20 (captcha decision)
 //
 // Same shape as assets/js/newsletter.js — error handling, idempotency
 // guard, honeypot-mimics-success, generic email error, focus restore,

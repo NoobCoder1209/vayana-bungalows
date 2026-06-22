@@ -1,14 +1,14 @@
-# Arapq Resort
+# Vayana Bungalows
 
-A boutique island resort marketing site. Single static homepage built with hand written HTML, CSS, and vanilla JS, served locally by Vite.
+A boutique resort marketing site. Multi-page static site built with hand-written HTML, CSS, and vanilla JS, bundled by Vite.
 
 ## Run locally
 
 Prerequisites: [Node.js](https://nodejs.org) 18 or newer.
 
 ```bash
-git clone https://github.com/NoobCoder1209/arapq-website.git
-cd arapq-website
+git clone https://github.com/NoobCoder1209/vayana-bungalows.git
+cd vayana-bungalows
 npm install
 npm run dev
 ```
@@ -26,7 +26,14 @@ for `npm install` and the Google Fonts loaded by `index.html`.
 ## Structure
 
 ```
-index.html              # the only page
+index.html                          # home
+stay/                               # bungalows index
+destination/                        # area guide + map
+contacts/                           # contact details
+enquiries/                          # enquiry form
+premier-oceanview-villa/            # bungalow 1
+deluxe-hilltop-residence/           # bungalow 2
+premier-beachfront-suite/           # bungalow 3
 assets/
   css/                  # tokens, base, layout, sections
   js/                   # header, parallax, slider, booking, reveal

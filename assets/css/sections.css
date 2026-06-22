@@ -1642,7 +1642,7 @@
   color: var(--text-light);
   /* Inline background-image url() on the section is rewritten by Vite
      at build time, so the dev path stays /assets/img/intro-villa.jpg
-     and the prod path picks up the /arapq-website/ base prefix. */
+     and the prod path picks up the /vayana-bungalows/ base prefix. */
 }
 
 .stay-hero::before {
@@ -1794,7 +1794,7 @@
    .bungalow-hero (see tokens.css `--header-height` for the single
    source of truth). Image: hero-beach.jpg, set inline on the section
    via `style="background-image: url(...)"` so Vite rewrites the URL
-   at build time for the GH Pages `/arapq-website/` base prefix. */
+   at build time for the GH Pages `/vayana-bungalows/` base prefix. */
 .destination-hero {
   position: relative;
   min-height: clamp(360px, 50vh, 520px);
@@ -2018,7 +2018,7 @@
    .stay-hero / .hero / .bungalow-hero (see tokens.css `--header-height`
    for the single source of truth). Image set inline on the section
    via style="background-image: url(...)" so Vite rewrites the URL at
-   build time for the GH Pages /arapq-website/ base prefix. */
+   build time for the GH Pages /vayana-bungalows/ base prefix. */
 .contacts-hero {
   position: relative;
   /* min-height matches .destination-hero / .stay-hero exactly so the

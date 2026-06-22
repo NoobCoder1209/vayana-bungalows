@@ -4,7 +4,7 @@
 // "Thank you" .modal. NO network request goes anywhere.
 //
 // TODO: wire to real ESP — see follow-up issue
-//   https://github.com/NoobCoder1209/arapq-website/issues/19
+//   https://github.com/NoobCoder1209/vayana-bungalows/issues/19
 //
 // The submit button is rendered `disabled` in HTML and only enabled by
 // this module on init. That's the JS-disabled fallback (negative test #7):

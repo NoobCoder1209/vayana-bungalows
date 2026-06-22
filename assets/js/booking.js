@@ -2,7 +2,7 @@ import flatpickr from 'flatpickr';
 
 // Where bookings.json lives once Vite has applied the production base path.
 // In dev: /assets/data/bookings.json
-// In prod: /arapq-website/assets/data/bookings.json
+// In prod: /vayana-bungalows/assets/data/bookings.json
 // The `?v=<build-id>` query is set at build time from VITE_BUILD_ID and
 // rotates every deploy so Fastly's edge cache picks up the new file
 // immediately instead of serving the previous deploy's bookings.json

@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 
-// On GitHub Pages the site is served from /arapq-website/, so we set the base
-// to that subpath only when building for production. In dev (npm run dev)
+// On GitHub Pages the site is served from /vayana-bungalows/, so we set the
+// base to that subpath only when building for production. In dev (npm run dev)
 // it stays at /, so localhost works without prefixing every URL.
 export default defineConfig(({ command }) => ({
   root: '.',
-  base: command === 'build' ? '/arapq-website/' : '/',
+  base: command === 'build' ? '/vayana-bungalows/' : '/',
   server: {
     port: 5173,
     open: true,
