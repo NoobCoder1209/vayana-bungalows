@@ -2238,7 +2238,7 @@ a.contacts-card__value:focus-visible {
 .legal-page__head {
   margin-bottom: var(--space-8);
   padding-bottom: var(--space-6);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .legal-page__head .eyebrow {
@@ -2322,7 +2322,7 @@ a.contacts-card__value:focus-visible {
 
 .legal-page a:hover,
 .legal-page a:focus-visible {
-  color: var(--ink, #0e0d0a);
+  color: var(--text-dark);
 }
 
 .legal-page code {

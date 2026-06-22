@@ -72,6 +72,8 @@
        Cross-references: this page is linked from every site footer (column
        "Policies", hydrated via [data-site-config-path="policies.privacy"])
        and from the enquiry consent checkbox label on /enquiries/.
+
+       Reference: github.com/NoobCoder1209/vayana-bungalows/issues/16
        ========================================================================== -->
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -257,9 +259,10 @@
             <p>
               The form currently does <strong>not</strong> submit data
               anywhere — version 1 of the page opens a "thank you"
-              modal and discards what you typed (see the v1 stub note
-              in the source). When the submission endpoint ships, this
-              section will be updated in the same release.
+              modal and discards what you typed. When the submission
+              endpoint ships, this section will be updated in the
+              same release — see <a href="#changes">§12 Changes to
+              this policy</a>.
             </p>
 
             <h3>3.2 Technical data via anti-spam (reCAPTCHA / Turnstile)</h3>
@@ -286,21 +289,24 @@
               The map on the <a href="../">homepage</a> and on
               <a href="../contacts/">Contacts</a> /
               <a href="../destination/">Destination</a> embeds a
-              Google Maps iframe. When you scroll that iframe into
-              view, Google may set cookies in your browser and
-              receive your IP address. We have no control over what
-              Google collects in that context — please see Google's
-              own privacy policy.
+              Google Maps iframe. When the page loads the iframe,
+              Google may set cookies in your browser and receive your
+              IP address — this happens automatically as soon as the
+              page is rendered, whether or not you interact with the
+              map. We have no control over what Google collects in
+              that context — please see Google's own privacy policy.
             </p>
 
             <h3>3.4 Newsletter signup</h3>
             <p>
-              The newsletter signup form on the homepage currently
-              opens a "thank you" modal and does <strong>not</strong>
-              submit your email anywhere. No data leaves your browser
-              in version 1. When a real email-service-provider
-              integration ships, this section will be updated in the
-              same release to list the provider and what they receive.
+              The newsletter signup form on the homepage accepts an
+              email address into an input field but, in version 1,
+              that email is <strong>not stored anywhere and is not
+              transmitted off your device</strong> — submitting the
+              form opens a "thank you" modal and discards what you
+              typed. When a real email-service-provider integration
+              ships, this section will be updated in the same release
+              to list the provider and what they receive.
             </p>
           </section>
 
@@ -359,7 +365,7 @@
                 Maps iframe (§3.3) and, if we choose it as the
                 captcha, Google reCAPTCHA v3 (§3.2). Google's
                 processing is governed by its own
-                <a href="https://policies.google.com/privacy" rel="noopener">privacy policy</a>.
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>.
               </li>
               <li>
                 <strong>Cloudflare, Inc.</strong> — for hosting the
@@ -367,7 +373,7 @@
                 if we choose it as the captcha, Cloudflare Turnstile
                 (§3.2). Cloudflare's processing is governed by its
                 own
-                <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">privacy policy</a>.
+                <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">privacy policy</a>.
               </li>
               <li>
                 <strong>GitHub, Inc.</strong> — this website is
@@ -375,7 +381,7 @@
                 receives your IP address and basic request metadata
                 in the course of serving the page. GitHub's
                 processing is governed by its own
-                <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">privacy statement</a>.
+                <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">privacy statement</a>.
               </li>
             </ul>
           </section>
@@ -436,13 +442,13 @@
               <li><strong>Portability</strong> (Art. 20) — ask us to send you (or another controller) a machine-readable copy</li>
               <li><strong>Object</strong> (Art. 21) — object to processing carried out on the basis of legitimate interest (§4)</li>
               <li>
-                <strong>Withdraw consent</strong> (Art. 7(3)) — withdraw the consent you gave on the enquiry form at any time, by emailing us. Withdrawing consent does not affect the lawfulness of any processing carried out before the withdrawal
+                <strong>Withdraw consent</strong> (Art. 7(3)) — withdraw the consent you gave on the enquiry form at any time, by emailing us. Withdrawing consent does not affect the lawfulness of any processing carried out before the withdrawal.
               </li>
             </ul>
             <p>
               You also have the right to lodge a complaint with the
               Bulgarian Commission for Personal Data Protection
-              (<a href="https://www.cpdp.bg/en/" rel="noopener">CPDP</a>)
+              (<a href="https://www.cpdp.bg/en/" target="_blank" rel="noopener noreferrer">CPDP</a>)
               if you believe we have mishandled your data.
             </p>
           </section>
@@ -455,7 +461,7 @@
               Cookies are only set by embedded third-party content:
             </p>
             <ul>
-              <li><strong>Google Maps</strong> — sets cookies when you load the embedded map iframe; see Google's own cookie disclosures</li>
+              <li><strong>Google Maps</strong> — sets cookies and receives your IP address when the embedded map iframe loads on the homepage, the <a href="../contacts/">Contacts</a> page, and the <a href="../destination/">Destination</a> page; see Google's own cookie disclosures</li>
               <li><strong>Captcha provider</strong> — once the captcha ships (#20), it will set strictly necessary cookies to prevent spam; the specific cookies depend on whether we choose Google reCAPTCHA or Cloudflare Turnstile</li>
             </ul>
             <p>
