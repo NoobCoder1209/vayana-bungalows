@@ -2011,3 +2011,177 @@
     gap: var(--space-1);
   }
 }
+
+/* ========== Contacts page (issue #14) ========== */
+
+/* Hero — same pull-under-the-header pattern as .destination-hero /
+   .stay-hero / .hero / .bungalow-hero (see tokens.css `--header-height`
+   for the single source of truth). Image set inline on the section
+   via style="background-image: url(...)" so Vite rewrites the URL at
+   build time for the GH Pages /arapq-website/ base prefix. */
+.contacts-hero {
+  position: relative;
+  min-height: clamp(320px, 40vh, 440px);
+  display: flex;
+  align-items: flex-end;
+  margin-top: calc(var(--header-height) * -1);
+  padding: calc(var(--section-pad-y) + var(--header-height)) 0 var(--section-pad-y);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  color: var(--text-light);
+}
+
+.contacts-hero::before {
+  /* Dark overlay for legibility — matches .destination-hero and
+     .stay-hero gradient stops so heros across pages feel like a set. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(14, 13, 10, 0.85) 0%, rgba(14, 13, 10, 0.35) 60%, rgba(14, 13, 10, 0.2) 100%);
+  pointer-events: none;
+}
+
+.contacts-hero > .container {
+  position: relative; /* sit above the overlay */
+  z-index: 1;
+}
+
+.contacts-hero h1 {
+  margin-bottom: var(--space-2);
+  font-size: clamp(2.5rem, 6vw, var(--fs-h1));
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+
+.contacts-hero__sub {
+  font-size: var(--fs-lg);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  max-width: 640px;
+  margin: 0;
+  opacity: 0.94;
+}
+
+/* Contact details — section sits on the page's body background (light)
+   between the dark hero and the cream map. The standard --section-pad-y
+   token gives this section the same vertical rhythm as every other
+   section on the site. */
+.contacts-details {
+  padding-top: var(--section-pad-y);
+  padding-bottom: var(--section-pad-y);
+  background: var(--bg-light);
+}
+
+/* Cards grid: 3-up on desktop, 2-up on tablet, 1-up on mobile.
+   max-width caps the row so the three cards don't drift apart on
+   ultra-wide screens. */
+.contacts-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .contacts-cards {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
+/* Single card. Light-bordered, square corners (matches --radius-card: 0
+   in tokens.css), centred contents. Hover lifts the card subtly with a
+   bottom border darken — same affordance as other actionable cards on
+   the site. */
+.contacts-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  background: var(--bg-cream);
+  border: 1px solid var(--border-soft);
+  transition: border-color var(--t-fast), transform var(--t-fast);
+}
+
+.contacts-card:hover {
+  /* Whole-card hover even though only the value is interactive — the
+     visible affordance reads "this is one unit". */
+  border-color: var(--primary);
+}
+
+.contacts-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  color: var(--primary);
+  /* Thin ring around the icon mirrors the V mark in .site-logo —
+     small visual echo without being heavy. */
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  margin-bottom: var(--space-1);
+}
+
+.contacts-card__label {
+  /* The eyebrow class supplies color/letter-spacing/uppercase, but we
+     want the label tighter to the value and a tone less assertive than
+     section-eyebrow usage. */
+  margin-bottom: 0;
+  color: var(--text-muted);
+}
+
+.contacts-card__value {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h5);
+  color: var(--text-dark);
+  letter-spacing: 0.01em;
+  /* Long values (especially the email address) sit in a ~210px wide
+     card on desktop and would either overflow or wrap awkwardly mid-
+     word. overflow-wrap: anywhere lets the email break at any glyph
+     so it stays inside the card, while word-break: break-word keeps
+     "+359 88 888 8888" from being split at unfortunate spaces. */
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: none;
+  /* Email + phone are <a> elements with no inherited underline; we want
+     them readable as values, not "a link". The whole-card border darken
+     on hover is the only affordance. */
+  text-decoration: none;
+  transition: color var(--t-fast);
+}
+
+/* Email value runs longer than the others — drop a notch in font size
+   so it fits the narrow desktop card without breaking the design's
+   typographic rhythm. */
+.contacts-card__value--email {
+  font-size: var(--fs-h6);
+}
+
+a.contacts-card__value:hover,
+a.contacts-card__value:focus-visible {
+  color: var(--primary);
+}
+
+/* The address card uses a <p> instead of an <a> so reset the paragraph
+   defaults the heading-styled rule would otherwise inherit awkwardly. */
+.contacts-card__value--text {
+  margin: 0;
+}
+
+/* Response-time note. One short italic line below the cards.
+   Centred against the contacts-cards row above; doubles as a soft
+   transition between the cards and the map below. */
+.contacts-reply-note {
+  margin: var(--space-6) auto 0;
+  text-align: center;
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  max-width: 540px;
+}
