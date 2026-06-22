@@ -24,6 +24,7 @@ export default defineConfig(({ command }) => ({
         premierBeachfrontSuite: resolve(__dirname, 'premier-beachfront-suite/index.html'),
         enquiries: resolve(__dirname, 'enquiries/index.html'),
         stay: resolve(__dirname, 'stay/index.html'),
+        destination: resolve(__dirname, 'destination/index.html'),
       },
     },
   },

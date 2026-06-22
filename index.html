@@ -30,6 +30,9 @@
              to the side-drawer below; the JS in assets/js/header.js owns the
              open/close, focus trap, scroll-lock and Esc/backdrop/link/× wiring.
              KEEP IN SYNC with the same block in:
+               - enquiries/index.html
+               - stay/index.html
+               - destination/index.html
                - premier-beachfront-suite/index.html
                - premier-oceanview-villa/index.html
                - deluxe-hilltop-residence/index.html
@@ -382,10 +385,11 @@
               <span class="location__plus-code">Plus Code: <span class="location__plus-code-value" data-site-config="address.plusCode">5RQP+C2 Tsarevo</span></span>
             </p>
             <a class="btn btn-outline-dark location__directions"
+               data-site-config-href="address.directionsUrl"
                href="https://maps.app.goo.gl/szcFXV6f5Pgx2iFt5"
                target="_blank" rel="noopener noreferrer"
                data-location-directions>
-              Get directions
+              Open in Google Maps
               <span class="sr-only">(opens Google Maps in a new tab)</span>
             </a>
           </div>
