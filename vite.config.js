@@ -25,6 +25,7 @@ export default defineConfig(({ command }) => ({
         enquiries: resolve(__dirname, 'enquiries/index.html'),
         stay: resolve(__dirname, 'stay/index.html'),
         destination: resolve(__dirname, 'destination/index.html'),
+        contacts: resolve(__dirname, 'contacts/index.html'),
       },
     },
   },
