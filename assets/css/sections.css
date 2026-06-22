@@ -2109,7 +2109,10 @@
   padding: var(--space-6) var(--space-4);
   background: var(--bg-cream);
   border: 1px solid var(--border-soft);
-  transition: border-color var(--t-fast), transform var(--t-fast);
+  /* Only border-color animates on hover/focus-within — `transform` was
+     in this transition list initially but never animated. Round-2
+     review finding N-C. */
+  transition: border-color var(--t-fast);
 }
 
 .contacts-card:hover,
@@ -2150,14 +2153,7 @@
 
 .contacts-card__value {
   font-family: var(--font-heading);
-  /* clamp() lets long values (e.g. the 29-character email address)
-     shrink gracefully in the narrow ~210px desktop card without an
-     awkward fixed-size step. Floor is h6 so the smallest value stays
-     readable; ceiling is h5 so on 1-up mobile (full-width card) the
-     values match the rest of the design's typographic scale. The
-     2.6vw scaling target is calibrated to the desktop card width.
-     Round-1 review finding I5. */
-  font-size: clamp(var(--fs-h6), 2.6vw, var(--fs-h5));
+  font-size: var(--fs-h5);
   color: var(--text-dark);
   letter-spacing: 0.01em;
   /* Long values (especially the email address) sit in a narrow card
@@ -2174,6 +2170,16 @@
   transition: color var(--t-fast);
 }
 
+/* Email values are always the longest of the three — drop a size step
+   so the address fits the narrow desktop card without breaking the
+   design's typographic rhythm. Round-2 review I-A: the earlier clamp()
+   approach scaled with viewport (not card) and was effectively a no-op
+   at desktop while regressing mobile. Per-field modifier is the right
+   semantic carrier — every value of this field is an email. */
+.contacts-card__value--email {
+  font-size: var(--fs-h6);
+}
+
 a.contacts-card__value:hover,
 a.contacts-card__value:focus-visible {
   color: var(--primary);
@@ -2181,13 +2187,13 @@ a.contacts-card__value:focus-visible {
 
 /* The address card uses a <p> instead of an <a> so reset the paragraph
    defaults the heading-styled rule would otherwise inherit awkwardly.
-   Also drop a notch in font-weight so the (non-interactive) address
-   reads as info rather than a tap target — phone/email values inherit
-   the heading font's regular weight and have hover affordance; the
-   address is intentionally lighter. Round-1 review finding N2. */
+   No font-weight de-emphasis here: Marcellus is loaded as a single 400
+   face (see family=Marcellus in the Google Fonts URL — no :wght@ axis)
+   so font-weight: 300 would silently fall back to 400. Round-2 review
+   finding I-B. The <p>-vs-<a> distinction (no underline-on-hover,
+   no link role for AT) already signals "info, not a tap target". */
 .contacts-card__value--text {
   margin: 0;
-  font-weight: 300;
 }
 
 /* Response-time note. One short italic line below the cards.

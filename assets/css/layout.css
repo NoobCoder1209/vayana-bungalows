@@ -445,10 +445,18 @@
   transition: color var(--t-fast);
 }
 
-.primary-nav__list a:hover,
-.primary-nav__list a:focus-visible {
+.primary-nav__list a:hover {
   color: var(--primary);
-  outline: none;
+}
+
+.primary-nav__list a:focus-visible {
+  /* Keep the focus outline (was `outline: none` here — that was a
+     WCAG 2.4.7 violation surfaced in PR #36 round-2 review N-A).
+     The 2px primary outline matches the global :focus-visible style
+     from base.css and now reads cleanly inside the white drawer panel. */
+  color: var(--primary);
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
 }
 
 .primary-nav__list a[aria-current="page"] {
