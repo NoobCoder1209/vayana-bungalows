@@ -2021,7 +2021,11 @@
    build time for the GH Pages /arapq-website/ base prefix. */
 .contacts-hero {
   position: relative;
-  min-height: clamp(320px, 40vh, 440px);
+  /* min-height matches .destination-hero / .stay-hero exactly so the
+     three photo heros across the site feel like a set. Round-1 review
+     finding I6 — the previous shorter (320/40vh/440) clamp was
+     intentional but read as inconsistent. */
+  min-height: clamp(360px, 50vh, 520px);
   display: flex;
   align-items: flex-end;
   margin-top: calc(var(--header-height) * -1);
@@ -2108,9 +2112,13 @@
   transition: border-color var(--t-fast), transform var(--t-fast);
 }
 
-.contacts-card:hover {
-  /* Whole-card hover even though only the value is interactive — the
-     visible affordance reads "this is one unit". */
+.contacts-card:hover,
+.contacts-card:focus-within {
+  /* Whole-card hover (pointer) and focus-within (keyboard) — even
+     though only the value link inside is actually interactive, the
+     visible affordance reads "this is one unit". focus-within keeps
+     the same cue for keyboard users tabbing onto the phone/email
+     link. Round-1 review finding I3. */
   border-color: var(--primary);
 }
 
@@ -2129,23 +2137,33 @@
 }
 
 .contacts-card__label {
-  /* The eyebrow class supplies color/letter-spacing/uppercase, but we
-     want the label tighter to the value and a tone less assertive than
-     section-eyebrow usage. */
+  /* The base .eyebrow class sets color: var(--primary) and a wider
+     letter-spacing — both designed for a section-level eyebrow above
+     an h2. We override to muted because the card label sits TIGHTLY
+     against the value (uppercase warm-brown "PHONE" with a warm-brown
+     icon above and a warm-brown value link below would all read the
+     same colour, with no visual hierarchy). Muted label + accent icon
+     + dark value gives three distinct weights. Round-1 review I4. */
   margin-bottom: 0;
   color: var(--text-muted);
 }
 
 .contacts-card__value {
   font-family: var(--font-heading);
-  font-size: var(--fs-h5);
+  /* clamp() lets long values (e.g. the 29-character email address)
+     shrink gracefully in the narrow ~210px desktop card without an
+     awkward fixed-size step. Floor is h6 so the smallest value stays
+     readable; ceiling is h5 so on 1-up mobile (full-width card) the
+     values match the rest of the design's typographic scale. The
+     2.6vw scaling target is calibrated to the desktop card width.
+     Round-1 review finding I5. */
+  font-size: clamp(var(--fs-h6), 2.6vw, var(--fs-h5));
   color: var(--text-dark);
   letter-spacing: 0.01em;
-  /* Long values (especially the email address) sit in a ~210px wide
-     card on desktop and would either overflow or wrap awkwardly mid-
+  /* Long values (especially the email address) sit in a narrow card
+     on desktop and would otherwise overflow or wrap awkwardly mid-
      word. overflow-wrap: anywhere lets the email break at any glyph
-     so it stays inside the card, while word-break: break-word keeps
-     "+359 88 888 8888" from being split at unfortunate spaces. */
+     so it stays inside the card. */
   overflow-wrap: anywhere;
   word-break: normal;
   hyphens: none;
@@ -2156,22 +2174,20 @@
   transition: color var(--t-fast);
 }
 
-/* Email value runs longer than the others — drop a notch in font size
-   so it fits the narrow desktop card without breaking the design's
-   typographic rhythm. */
-.contacts-card__value--email {
-  font-size: var(--fs-h6);
-}
-
 a.contacts-card__value:hover,
 a.contacts-card__value:focus-visible {
   color: var(--primary);
 }
 
 /* The address card uses a <p> instead of an <a> so reset the paragraph
-   defaults the heading-styled rule would otherwise inherit awkwardly. */
+   defaults the heading-styled rule would otherwise inherit awkwardly.
+   Also drop a notch in font-weight so the (non-interactive) address
+   reads as info rather than a tap target — phone/email values inherit
+   the heading font's regular weight and have hover affordance; the
+   address is intentionally lighter. Round-1 review finding N2. */
 .contacts-card__value--text {
   margin: 0;
+  font-weight: 300;
 }
 
 /* Response-time note. One short italic line below the cards.

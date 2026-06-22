@@ -451,6 +451,19 @@
   outline: none;
 }
 
+.primary-nav__list a[aria-current="page"] {
+  /* Visual cue for the current page in the drawer. Pre-existing site
+     gap surfaced during PR #36 review (round-1 finding N3) — the
+     attribute was set on /stay/, /destination/, /enquiries/, /contacts/,
+     and the 3 bungalow pages, but had no style applied. Use the same
+     warm-brown the hover state uses, plus a thin underline so it reads
+     as "this is where you are" rather than "this is hoverable". */
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
 @media (max-width: 540px) {
   .primary-nav__list a {
     font-size: 1.925rem; /* 1.75rem × 1.10 */
