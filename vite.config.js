@@ -28,6 +28,7 @@ export default defineConfig(({ command }) => ({
         contacts: resolve(__dirname, 'contacts/index.html'),
         privacy: resolve(__dirname, 'privacy/index.html'),
         terms: resolve(__dirname, 'terms/index.html'),
+        cancellation: resolve(__dirname, 'cancellation/index.html'),
       },
     },
   },

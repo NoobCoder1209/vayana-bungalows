@@ -2344,3 +2344,48 @@ a.contacts-card__value:focus-visible {
 .legal-page__contact li {
   margin-bottom: var(--space-1);
 }
+
+/* ------------------------------------------------------------------
+   Inline placeholder cue (issue #18, /cancellation/ page).
+
+   Wraps any not-yet-finalised value in legal copy (cancellation
+   tier %, lead-time threshold, refund SLA, currency, etc.) so a
+   launch reviewer cannot mistake a working assumption for final
+   policy. The yellow-on-dark-text scheme matches a paper "highlighter
+   pen" mark and keeps WCAG contrast against the body background.
+
+   Used by terms/cancellation/privacy stub pages while content is
+   being finalised. Remove the .placeholder wrappers (not the rule)
+   once the underlying value is signed off by legal — the rule itself
+   can stay in place to support future stub work.
+   ------------------------------------------------------------------ */
+.placeholder {
+  background-color: #fff3a3;
+  color: var(--text-dark, #0e0d0a);
+  padding: 0 0.25em;
+  border-radius: 2px;
+  border: 1px dashed #c9a300;
+  font-style: normal;
+  font-weight: 500;
+  /* Slight bottom-margin nudge keeps inline-flow tidy when the span
+     wraps across a line break inside a paragraph. */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.placeholder::before {
+  /* Hidden screen-reader prefix so a non-sighted user understands the
+     yellow highlight isn't decorative — it flags an unfinalised value
+     they should treat as draft. The visual highlight is still the
+     primary cue; this is the parallel accessibility cue. */
+  content: "placeholder: ";
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
