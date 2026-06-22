@@ -1787,3 +1787,227 @@
     gap: var(--space-4);
   }
 }
+
+/* ========== Destination page (issue #13) ========== */
+
+/* Hero — same pull-under-the-header pattern as .stay-hero / .hero /
+   .bungalow-hero (see tokens.css `--header-height` for the single
+   source of truth). Image: hero-beach.jpg, set inline on the section
+   via `style="background-image: url(...)"` so Vite rewrites the URL
+   at build time for the GH Pages `/arapq-website/` base prefix. */
+.destination-hero {
+  position: relative;
+  min-height: clamp(360px, 50vh, 520px);
+  display: flex;
+  align-items: flex-end;
+  margin-top: calc(var(--header-height) * -1);
+  padding: calc(var(--section-pad-y) + var(--header-height)) 0 var(--section-pad-y);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  color: var(--text-light);
+}
+
+.destination-hero::before {
+  /* Dark overlay for legibility, matching .stay-hero — same gradient
+     stops so the two heroes feel like a pair when navigated between. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(14, 13, 10, 0.85) 0%, rgba(14, 13, 10, 0.35) 60%, rgba(14, 13, 10, 0.2) 100%);
+  pointer-events: none;
+}
+
+.destination-hero > .container {
+  position: relative; /* sit above the overlay */
+  z-index: 1;
+}
+
+.destination-hero h1 {
+  margin-bottom: var(--space-2);
+  font-size: clamp(2.5rem, 6vw, var(--fs-h1));
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+
+.destination-hero__sub {
+  font-size: var(--fs-lg);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  max-width: 640px;
+  margin: 0;
+  opacity: 0.94;
+}
+
+/* Area guide — Section 1.
+   The intro block is centred prose; the four rows below it alternate
+   sides (photo left → photo right → photo left → ...) via the
+   `--flip` modifier on every other row. */
+.destination-guide {
+  padding-top: var(--section-pad-y);
+  padding-bottom: var(--section-pad-y);
+  background: var(--bg-light);
+}
+
+.destination-guide__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.destination-guide__intro {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.destination-guide__lede {
+  font-size: var(--fs-lg);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--text-dark);
+  margin-bottom: var(--space-4);
+}
+
+.destination-guide__intro p:last-child {
+  margin-bottom: 0;
+}
+
+/* Row layout — photo+text side by side on desktop, stacked on mobile.
+   The default order is photo left / text right; `--flip` reverses it.
+   Using row-reverse (instead of swapping source order) keeps the DOM
+   in a consistent reading order for screen readers and lets the same
+   markup render either way. */
+.destination-guide__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.destination-guide__row--flip {
+  /* Place the photo column on the right by setting its order; the text
+     column reads in source order, which is what SRs hear, but visually
+     lands on the left. */
+  direction: rtl;
+}
+
+.destination-guide__row--flip > * {
+  /* Reset child direction so text inside doesn't render right-to-left. */
+  direction: ltr;
+}
+
+.destination-guide__photo {
+  /* The image inside is the row's visual anchor; keep it tall enough
+     that it doesn't look incidental next to the text column. */
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.destination-guide__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Subtle zoom on hover, mirroring .room-card__img — keeps the page
+     feeling alive without being intrusive on a guide page. */
+  transition: transform var(--t-slow);
+}
+
+.destination-guide__photo:hover img {
+  transform: scale(1.03);
+}
+
+.destination-guide__text h3 {
+  margin-top: 0;
+  margin-bottom: var(--space-2);
+  font-size: var(--fs-h3);
+}
+
+.destination-guide__text p {
+  margin-bottom: 0;
+  color: var(--text-dark);
+}
+
+@media (max-width: 768px) {
+  .destination-guide__row,
+  .destination-guide__row--flip {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    /* On mobile we want photo-then-text every time — flip becomes a
+       no-op so the rhythm stays consistent and the eye doesn't have
+       to track sides on a narrow column. */
+    direction: ltr;
+  }
+}
+
+/* Directions sub-block under the map (Section 2).
+   Sits inside the same .location__inner container, below the address
+   block. Uses a <dl> for semantic key/value pairs: each <dt> is the
+   origin (BOJ / SOF / "Parking"), each <dd> is the route note.
+   The parent (.location__inner) is text-align: center, which we keep
+   for the "Getting here" heading but override on the rows so the
+   key/value pair reads as a left-aligned editorial table. */
+.destination-directions {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-soft);
+  text-align: left;
+}
+
+.destination-directions__heading {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+  font-size: var(--fs-h4);
+  /* Centre this one heading against the section, then everything below
+     reads left-aligned. */
+  text-align: center;
+}
+
+.destination-directions__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.destination-directions__row {
+  display: grid;
+  grid-template-columns: 14rem 1fr;
+  gap: var(--space-4);
+  align-items: baseline;
+}
+
+.destination-directions__row dt {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h5);
+  color: var(--text-dark);
+  letter-spacing: 0.01em;
+  /* Keep the heading on one line where possible — these are short
+     labels and the BOJ/SOF parentheticals were wrapping awkwardly
+     in the previous 16rem column. */
+  white-space: normal;
+}
+
+.destination-directions__row dt abbr {
+  /* The default user-agent dotted underline reads as noise next to
+     the serif heading — strip it; the title attribute still carries
+     the expansion for hover + AT. */
+  text-decoration: none;
+  color: inherit;
+}
+
+.destination-directions__row dd {
+  margin: 0;
+  color: var(--text-dark);
+}
+
+@media (max-width: 768px) {
+  .destination-directions__row {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+}

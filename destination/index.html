@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Swap no-js → js-on synchronously, before any stylesheet loads, so
+         the JS-on hamburger doesn't flash invisible during the deferred
+         module's load window. CSS uses html.no-js for the no-JS fallback. -->
+    <script>document.documentElement.classList.replace('no-js','js-on');</script>
+    <title>Destination &mdash; Vayana Bungalows</title>
+    <meta name="description" content="Tsarevo on the Black Sea coast of Bulgaria — what to do, what to eat, where to walk, and how to find us. The home base of the Vayana bungalows." />
+    <link rel="canonical" href="https://noobcoder1209.github.io/arapq-website/destination/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Destination — Vayana Bungalows" />
+    <meta property="og:description" content="Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows — beach, food, hiking, nearby villages, and directions." />
+    <meta property="og:url" content="https://noobcoder1209.github.io/arapq-website/destination/" />
+    <meta property="og:image" content="https://noobcoder1209.github.io/arapq-website/assets/img/hero-beach.jpg" />
+    <meta property="og:site_name" content="Vayana Bungalows" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Destination — Vayana Bungalows" />
+    <meta name="twitter:description" content="Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows." />
+    <meta name="twitter:image" content="https://noobcoder1209.github.io/arapq-website/assets/img/hero-beach.jpg" />
+
+    <meta name="theme-color" content="#0e0d0a" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
+    <link rel="preload" as="image" href="/assets/img/hero-beach.jpg" />
+    <link rel="stylesheet" href="/assets/css/tokens.css" />
+    <link rel="stylesheet" href="/assets/css/base.css" />
+    <link rel="stylesheet" href="/assets/css/layout.css" />
+    <link rel="stylesheet" href="/assets/css/sections.css" />
+  </head>
+  <!--
+    ==========================================================================
+    REVIEW & FINALIZE BEFORE LAUNCH
+    --------------------------------------------------------------------------
+    This page ships with placeholder prose for everything that isn't a
+    verifiable fact. Before launch, replace the text inside each section
+    listed below with real brand-voice copy. Layout will not shift — the
+    block sizes are sized to roughly match real content.
+
+    Placeholders to finalise (search the file for "TODO(content)"):
+
+      1. .destination-hero  → real lede about the setting
+      2. .destination-guide__intro  → 2-3 real paragraphs on Tsarevo,
+         its history, climate, character, and any distance/access facts
+         we want to surface above the fold (BOJ/SOF are in §2).
+      3. .destination-guide__row (×4) — Beach / Food / Hiking / Culture:
+         each row's paragraph needs a real 2-3 sentence write-up. The
+         photo alt text should also be updated to describe the real
+         photo once final assets land (see §5).
+      4. .destination-directions  → confirm parking note (current text
+         is a placeholder pending confirmation from ops).
+      5. /assets/img/  → source 4 Tsarevo-specific photos (beach,
+         food/restaurant, Strandzha hiking, nearby village) and swap
+         the existing room/gallery photos currently in use.
+
+    Verified facts left in place (do NOT replace blindly):
+      - Tsarevo is on the Bulgarian Black Sea coast (yes)
+      - BOJ ≈ 85 km, ≈ 1h15 drive (from issue #13 spec)
+      - SOF ≈ 410 km, ≈ 5h drive (from issue #13 spec)
+      - Plus Code: 5RQP+C2 Tsarevo (site-config.js SSOT)
+      - Address: ul. Kraybrezhna 1, Tsarevo, Bulgaria (site-config.js)
+
+    Reference: github.com/NoobCoder1209/arapq-website/issues/13
+    ==========================================================================
+  -->
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Sticky header -->
+    <div id="header-sentinel" aria-hidden="true"></div>
+    <header class="site-header" id="site-header">
+      <div class="container site-header__inner">
+        <!-- Left slot: hamburger toggle. aria-controls/aria-expanded wire it
+             to the side-drawer below; the JS in assets/js/header.js owns the
+             open/close, focus trap, scroll-lock and Esc/backdrop/link/× wiring.
+             KEEP IN SYNC with the same block in:
+               - ../index.html
+               - ../enquiries/index.html
+               - ../stay/index.html
+               - ../premier-beachfront-suite/index.html
+               - ../premier-oceanview-villa/index.html
+               - ../deluxe-hilltop-residence/index.html
+             (Vite multi-page build, no shared layout primitive yet.) -->
+        <button class="site-header__menu" type="button" aria-label="Open menu"
+                aria-controls="primary-nav" aria-expanded="false"
+                aria-haspopup="dialog" data-nav-toggle>
+          <span></span><span></span><span></span>
+        </button>
+
+        <!-- Center slot: brand. Logo links back to the homepage. -->
+        <a href="../" class="site-logo">
+          <span class="site-logo__mark" aria-hidden="true">V</span>
+          <span class="site-logo__word">Vayana Bungalows</span>
+        </a>
+
+        <!-- Right slot: Call-me-back + Enquiries.
+             Both are real <a> elements so they keep working with JS disabled.
+             Hrefs are relative — Vite rewrites root-absolute paths only for
+             assets, not <a href>, so on GitHub Pages (base /arapq-website/)
+             /enquiries/ would 404. From a sub-page: ../enquiries/.
+             Phone is hydrated from assets/js/site-config.js (#9). -->
+        <div class="site-header__cta">
+          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call" aria-label="Call us at +359 88 888 8888" data-call-cta>
+            <span class="site-header__call-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+            </span>
+            <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
+          </a>
+          <a href="../enquiries/" class="btn btn-primary site-header__enquiries">Enquiries</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Backdrop + side drawer. Both start hidden; JS toggles
+         data-state="open" and the .body--scroll-locked class on <body>.
+         aria-modal is added by JS only while the drawer is open — some
+         screen readers special-case the attribute on closed dialogs. -->
+    <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
+    <nav id="primary-nav" class="primary-nav__panel" aria-label="Primary"
+         role="dialog"
+         aria-hidden="true" tabindex="-1" hidden>
+      <button class="primary-nav__close" type="button"
+              aria-label="Close menu" data-nav-close>
+        <span aria-hidden="true">&times;</span>
+      </button>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Your bespoke stay</span>
+        <ul class="primary-nav__list">
+          <li><a href="../" data-nav-link>Home</a></li>
+          <li><a href="../stay/" data-nav-link>Stay</a></li>
+          <li><a href="./" data-nav-link aria-current="page">Destination</a></li>
+          <li><a href="../contacts/" data-nav-link>Contacts</a></li>
+        </ul>
+      </div>
+
+      <a href="../" class="primary-nav__brand" data-nav-link>
+        <span class="primary-nav__brand-mark" aria-hidden="true">V</span>
+        <span class="primary-nav__brand-word">Vayana Bungalows</span>
+      </a>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Get in touch</span>
+        <ul class="primary-nav__list">
+          <li><a href="../enquiries/" data-nav-link>Enquiries</a></li>
+          <li><a data-site-config-href="phone.href" href="tel:+359888888888" data-nav-link><span data-site-config="phone.display">+359 88 888 8888</span></a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- JS-disabled fallback. The drawer above never opens without JS, so
+         we surface the same 4 links inline here. -->
+    <noscript>
+      <nav class="primary-nav__noscript" aria-label="Primary (no JavaScript)">
+        <ul>
+          <li><a href="../">Home</a></li>
+          <li><a href="../stay/">Stay</a></li>
+          <li><a href="./">Destination</a></li>
+          <li><a href="../contacts/">Contacts</a></li>
+        </ul>
+      </nav>
+    </noscript>
+
+    <main id="main">
+      <!-- Hero — uses hero-beach.jpg (the existing site hero, already in
+           assets, preloaded above) for visual continuity with the homepage.
+           Negative-margin / padding-top pattern pulls the photo behind the
+           sticky header — see tokens.css `--header-height` and the
+           .destination-hero rule in sections.css for context. -->
+      <section class="destination-hero" aria-labelledby="destination-title" style="background-image: url('/assets/img/hero-beach.jpg');">
+        <div class="container">
+          <span class="eyebrow eyebrow--light">Tsarevo, Bulgaria</span>
+          <h1 id="destination-title">On the Black Sea coast</h1>
+          <!-- TODO(content): replace with real one-line lede that introduces
+               the region in the brand's voice. -->
+          <p class="destination-hero__sub">A small port town on Bulgaria's southern Black Sea coast, framed by the Strandzha pine forest and a long ribbon of quiet beaches.</p>
+        </div>
+      </section>
+
+      <!-- Section 1 — Area & things to do.
+           Intro prose, then 4 stacked rows (Beach / Food / Hiking / Culture).
+           Each row is a flex container with image on one side and text on
+           the other; the .destination-guide__row--flip modifier swaps sides
+           on alternating rows. The grid collapses to a single column on
+           mobile (see sections.css). -->
+      <section class="destination-guide" aria-labelledby="destination-guide-title">
+        <div class="container destination-guide__inner">
+          <header class="destination-guide__intro reveal">
+            <h2 id="destination-guide-title" class="sr-only">About Tsarevo</h2>
+            <!-- TODO(content): replace these 3 paragraphs with real
+                 brand-voice copy. Suggested beats:
+                   1. Geography + setting (southern Black Sea, where Strandzha
+                      meets the sea, why it's quieter than the northern
+                      resorts).
+                   2. Character (small port, fishing roots, slow pace,
+                      seasonality).
+                   3. Access (anchor the BOJ / SOF distances — full table is
+                      in §2 below, but a hand-wave here helps orient).
+                 Keep "Tsarevo" / "Black Sea" / "Bulgaria" / the distances
+                 left as-is — they're factual anchors. -->
+            <p class="destination-guide__lede">Tsarevo sits at the southern end of the Bulgarian Black Sea coast, where the Strandzha National Park's pine ridges run all the way down to the water.</p>
+            <p>It's an old fishing port that grew slowly &mdash; small harbour, a single ridge, a tight grid of low-rise streets &mdash; and the seasonality is gentle. The beaches stretch in both directions: Veleka and Sinemorets to the south, the sweep of Tsarevo bay to the north, and a string of unnamed coves in between.</p>
+            <p>It's reachable by car in a little over an hour from Burgas Airport (BOJ, ~85 km) and by a long drive from Sofia (SOF, ~410 km). Most guests fly into BOJ; the route hugs the coast from Burgas south, with the sea on the left almost all the way down.</p>
+          </header>
+
+          <!-- Row 1 — Beach -->
+          <article class="destination-guide__row reveal">
+            <div class="destination-guide__photo">
+              <img src="/assets/img/hero-beach.jpg" alt="A wide stretch of soft sand running into the Black Sea — characteristic of the long, quiet beaches around Tsarevo" loading="lazy" />
+            </div>
+            <div class="destination-guide__text">
+              <span class="eyebrow">The shoreline</span>
+              <h3>Beaches and coves</h3>
+              <!-- TODO(content): real Tsarevo-specific beach write-up.
+                   Mention Veleka, the secluded coves between Tsarevo and
+                   Sinemorets, water clarity, southern-facing aspect. -->
+              <p>Long open beaches give way to small, half-hidden coves the further south you walk. Veleka, just down the coast, is one of the cleanest river-mouth beaches in the country; the smaller bays north of town are reachable only on foot or by water and rarely crowded, even in August.</p>
+            </div>
+          </article>
+
+          <!-- Row 2 — Food (flipped) -->
+          <article class="destination-guide__row destination-guide__row--flip reveal">
+            <div class="destination-guide__photo">
+              <img src="/assets/img/gallery-4.jpg" alt="A spread of Black Sea seafood — illustrative; replace with real Tsarevo restaurant or market photo before launch" loading="lazy" />
+            </div>
+            <div class="destination-guide__text">
+              <span class="eyebrow">On the table</span>
+              <h3>Restaurants and local food</h3>
+              <!-- TODO(content): real picks — name two or three actual
+                   restaurants, mention the morning fish market, the
+                   Strandzha agritourism wineries nearby. -->
+              <p>Most of what's good is within walking distance of the harbour: fresh Black Sea catch, mussels and rapana from the bay, and a handful of small family kitchens that serve mezze under grapevines. A few inland wineries in the Strandzha foothills run tasting days through the warm months.</p>
+            </div>
+          </article>
+
+          <!-- Row 3 — Hiking & nature -->
+          <article class="destination-guide__row reveal">
+            <div class="destination-guide__photo">
+              <img src="/assets/img/gallery-6.jpg" alt="Pine-forested ridges of the Strandzha range running down to the coast — illustrative; replace with a real Strandzha hiking photo before launch" loading="lazy" />
+            </div>
+            <div class="destination-guide__text">
+              <span class="eyebrow">Inland</span>
+              <h3>Hiking and nature</h3>
+              <!-- TODO(content): name a couple of marked trails, mention
+                   bird species worth knowing for the birders, and the
+                   shoulder seasons when the park is at its best. -->
+              <p>Strandzha National Park &mdash; the largest protected area in Bulgaria &mdash; begins at the edge of town and runs inland for tens of kilometres. Marked trails follow the river valleys; the migratory bird routes overhead in spring and autumn are reason enough for a long walk, even if you don't normally count yourself a birder.</p>
+            </div>
+          </article>
+
+          <!-- Row 4 — Nearby villages & culture (flipped) -->
+          <article class="destination-guide__row destination-guide__row--flip reveal">
+            <div class="destination-guide__photo">
+              <img src="/assets/img/gallery-2.jpg" alt="A coastal village of low whitewashed houses — illustrative; replace with a real Sinemorets or Ahtopol photo before launch" loading="lazy" />
+            </div>
+            <div class="destination-guide__text">
+              <span class="eyebrow">Around the coast</span>
+              <h3>Nearby villages and culture</h3>
+              <!-- TODO(content): real description of Sinemorets, Ahtopol,
+                   and any cultural anchors (festivals, museums, the
+                   fire-dancing tradition further inland). -->
+              <p>Sinemorets and Ahtopol are short drives down the coast, each with its own character &mdash; Sinemorets quieter and built around its river-mouth beach, Ahtopol with a working harbour and a small old town on a headland. Inland, Strandzha villages keep older traditions alive, including the fire-dancing rituals that the region is known for.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Section 2 — Map & directions.
+           Reuses the homepage `.location` section verbatim (same iframe
+           src, same sandbox, same data-site-config hooks), plus a new
+           `.destination-directions` sub-block underneath with route notes
+           from BOJ and SOF and a parking note.
+           assets/js/location.js owns the iframe load + `.is-loaded` flip.
+           If the iframe never loads (CSP block, network failure, etc.),
+           `.location__fallback` stays visible — negative test #1. -->
+      <section id="location" class="section section-cream" aria-labelledby="destination-map-title">
+        <div class="container location__inner reveal">
+          <span class="eyebrow">Find us</span>
+          <h2 id="destination-map-title">Map &amp; directions</h2>
+          <div class="location__map">
+            <p class="location__fallback">Map unavailable &mdash; see address below.</p>
+            <iframe
+              src="https://maps.google.com/maps?q=42.1885867,27.8350773&amp;z=17&amp;output=embed"
+              title="Map showing Vayana Bungalows in Tsarevo, Bulgaria"
+              loading="lazy"
+              width="800" height="450"
+              referrerpolicy="strict-origin-when-cross-origin"
+              sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+          </div>
+          <div class="location__details">
+            <p class="location__address">
+              <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span><br />
+              <span data-site-config="address.country">Bulgaria</span><br />
+              <span class="location__plus-code">Plus Code: <span class="location__plus-code-value" data-site-config="address.plusCode">5RQP+C2 Tsarevo</span></span>
+            </p>
+            <a class="btn btn-outline-dark location__directions"
+               data-site-config-href="address.directionsUrl"
+               href="https://maps.app.goo.gl/szcFXV6f5Pgx2iFt5"
+               target="_blank" rel="noopener noreferrer"
+               data-location-directions>
+              Open in Google Maps
+              <span class="sr-only">(opens Google Maps in a new tab)</span>
+            </a>
+          </div>
+
+          <!-- Directions sub-block. The three rows (BOJ, SOF, parking)
+               give a one-line route summary each. Distances and times are
+               verified facts from the issue spec; the route notes
+               themselves are short placeholders pending real on-the-ground
+               directions. -->
+          <div class="destination-directions">
+            <h3 class="destination-directions__heading">Getting here</h3>
+            <dl class="destination-directions__list">
+              <div class="destination-directions__row">
+                <dt>From Burgas Airport <abbr title="Burgas Airport IATA code">(BOJ)</abbr></dt>
+                <!-- TODO(content): replace route note with real driving
+                     directions once confirmed (coastal road numbers,
+                     exit details). Distance/time stay as-is. -->
+                <dd>~85 km &mdash; about 1h15 by car. Head south on the coast road; the route stays close to the sea most of the way down.</dd>
+              </div>
+              <div class="destination-directions__row">
+                <dt>From Sofia Airport <abbr title="Sofia Airport IATA code">(SOF)</abbr></dt>
+                <!-- TODO(content): real driving directions from Sofia. -->
+                <dd>~410 km &mdash; about 5 hours by car. The straightforward route is via the Trakia motorway to Burgas, then south on the coast road.</dd>
+              </div>
+              <div class="destination-directions__row">
+                <dt>Parking</dt>
+                <!-- TODO(content): confirm parking note with ops. -->
+                <dd>On-site parking is available for guests; please let us know your arrival window in advance and we'll keep a space.</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA strip — same pattern as the /stay/ page. -->
+      <section class="bungalow-cta" aria-labelledby="destination-cta-title">
+        <div class="container bungalow-cta__inner">
+          <span class="eyebrow">Plan your stay</span>
+          <h2 id="destination-cta-title">Ready to visit?</h2>
+          <p class="bungalow-cta__lede">Tell us your dates and we'll reply within 24-48 hours with availability and a tailored proposal for your stay in Tsarevo.</p>
+          <a class="btn btn-primary" href="../enquiries/">Send an enquiry</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer (KEEP IN SYNC across all pages) -->
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <!-- Column 1 — Contact -->
+        <div class="site-footer__col site-footer__col--contact">
+          <span class="eyebrow eyebrow--light" data-site-config="brand">Vayana Bungalows</span>
+          <ul class="site-footer__contact">
+            <li>
+              <a data-site-config-href="phone.href" href="tel:+359888888888">
+                <span data-site-config="phone.display">+359 88 888 8888</span>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">
+                <span data-site-config="email.display">contact@vayanabungalows.com</span>
+              </a>
+            </li>
+            <li>
+              <span data-site-config="address.line1">Tsarevo</span>,
+              <span data-site-config="address.line2">Bulgaria</span>
+            </li>
+          </ul>
+        </div>
+        <!-- Column 2 — Follow us -->
+        <div class="site-footer__col site-footer__col--social">
+          <span class="eyebrow eyebrow--light">Follow us</span>
+          <ul class="social-list">
+            <li>
+              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.linkedin" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4 4h4v16H4zM6 2.5A1.5 1.5 0 116 5.5 1.5 1.5 0 016 2.5zM10 8h3.8v2h.05A4.16 4.16 0 0117.6 8C21.4 8 22 10.4 22 13.6V20h-4v-5.7c0-1.4 0-3.1-1.9-3.1S14 12.6 14 14.2V20h-4z"/></svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <!-- Column 3 — Policies + Enquire (KEEP IN SYNC across all pages,
+             cf. #11). -->
+        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies and enquiries">
+          <span class="eyebrow eyebrow--light">Policies</span>
+          <ul>
+            <li><a href="../enquiries/" class="site-footer__enquire">Enquire</a></li>
+            <li><a data-site-config-path="policies.terms" href="/terms/">Terms &amp; Conditions</a></li>
+            <li><a data-site-config-path="policies.cancellation" href="/cancellation/">Cancellation Policy</a></li>
+            <li><a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="site-footer__bar">
+        <div class="container site-footer__bar-inner">
+          <p data-site-config="copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
+          <p class="site-footer__license">License number: <span data-site-config="license">1327673</span></p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/assets/js/main.js"></script>
+  </body>
+</html>
