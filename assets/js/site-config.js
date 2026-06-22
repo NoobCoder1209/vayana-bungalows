@@ -44,7 +44,7 @@ export const SITE_CONFIG = {
   },
   // Policy paths are RELATIVE TO THE SITE BASE. The inject helper prepends
   // import.meta.env.BASE_URL via [data-site-config-path] so that these resolve
-  // correctly under the GitHub Pages /arapq-website/ prefix in prod and at /
+  // correctly under the GitHub Pages /vayana-bungalows/ prefix in prod and at /
   // in dev. Don't include the leading slash here.
   policies: {
     terms: 'terms/',
