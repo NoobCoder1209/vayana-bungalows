@@ -11,6 +11,11 @@ import { SITE_CONFIG } from './site-config.js';
 //   <span data-site-config="phone.display">…</span>     -> textContent
 //   <a data-site-config-href="phone.href">…</a>         -> href attribute (scheme-allowlisted)
 //   <a data-site-config-path="policies.terms">…</a>     -> import.meta.env.BASE_URL + value (href attribute)
+//   <a data-site-config-path="policies.terms"
+//      href="…/#frag">…</a>                              -> import.meta.env.BASE_URL + value + inline #fragment
+//                                                            (the hydrator preserves any '#…' the author
+//                                                            put on the inline href so cross-page anchors
+//                                                            survive — e.g. /cancellation/ §6 → /terms/#force-majeure)
 //
 // "<path>" is dot-separated (phone.display, address.line1, social.facebook).
 
@@ -89,7 +94,18 @@ function hydrate(root = document) {
       continue;
     }
     const href = `${import.meta.env.BASE_URL}${value}`;
-    if (el.getAttribute('href') !== href) el.setAttribute('href', href);
+    // Preserve any inline #fragment the author wrote (e.g. <a
+    // data-site-config-path="policies.terms" href="../terms/#force-majeure">
+    // — cross-link to /terms/ §10 from /cancellation/ §6). Without this
+    // the hydrator would overwrite the href with BASE_URL+value and
+    // silently drop the fragment, leaving the cross-link pointing at
+    // the page root. Authors who want a fragment put it on the inline
+    // href; the hydrator concatenates value + that fragment. (Round-1
+    // review finding MED-5 from PR #40.)
+    const existingHref = el.getAttribute('href') || '';
+    const hashIdx = existingHref.indexOf('#');
+    const finalHref = hashIdx >= 0 ? href + existingHref.slice(hashIdx) : href;
+    if (el.getAttribute('href') !== finalHref) el.setAttribute('href', finalHref);
   }
 }
 

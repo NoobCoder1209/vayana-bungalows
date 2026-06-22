@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Swap no-js → js-on synchronously, before any stylesheet loads, so
+         the JS-on hamburger doesn't flash invisible during the deferred
+         module's load window. CSS uses html.no-js for the no-JS fallback. -->
+    <script>document.documentElement.classList.replace('no-js','js-on');</script>
+    <title>Cancellation Policy &mdash; Vayana Bungalows</title>
+    <meta name="description" content="Cancellation Policy for Vayana Bungalows — refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes." />
+    <link rel="canonical" href="https://noobcoder1209.github.io/vayana-bungalows/cancellation/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Cancellation Policy — Vayana Bungalows" />
+    <meta property="og:description" content="Refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes." />
+    <meta property="og:url" content="https://noobcoder1209.github.io/vayana-bungalows/cancellation/" />
+    <meta property="og:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
+    <meta property="og:site_name" content="Vayana Bungalows" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cancellation Policy — Vayana Bungalows" />
+    <meta name="twitter:description" content="Refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes." />
+    <meta name="twitter:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
+
+    <meta name="theme-color" content="#0e0d0a" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/css/tokens.css" />
+    <link rel="stylesheet" href="/assets/css/base.css" />
+    <link rel="stylesheet" href="/assets/css/layout.css" />
+    <link rel="stylesheet" href="/assets/css/sections.css" />
+  </head>
+  <!-- ==========================================================================
+       ⚠️  REVIEW & FINALIZE BEFORE LAUNCH  ⚠️
+       ------------------------------------------------------------------------
+       This is a placeholder Cancellation Policy stub (issue #18). Every
+       value wrapped in <span class="placeholder"> is a working assumption
+       and MUST be reviewed and replaced by Vayana di Mare operations and a
+       Bulgarian lawyer before this site goes live to paying guests. The
+       yellow-highlight visual treatment exists specifically so the
+       launch reviewer cannot accidentally ship placeholder values as real
+       policy. Confirm at minimum:
+
+         1. §2 Cancellation tiers — three placeholder thresholds and
+            three placeholder refund percentages. The current scaffold is
+            "≥30 days = 100%, 14–30 days = 50%, <14 days = 0%" purely as
+            a starting point. Replace ALL of:
+              - "30 days" and "14 days" lead-time thresholds
+              - "100%", "50%", "0%" refund percentages
+              - whether the deposit (§5 of /terms/) is included in or
+                excluded from the refund
+              - whether refunds are net of bank/transfer fees
+         2. §3 How to cancel — placeholder response-time SLA ("48 hours
+            on working days"). Confirm with operations.
+         3. §4 Modifications — placeholder fee/grace-period language.
+            Confirm date-change and guest-count change policies.
+         4. §5 No-shows — currently "0% refund". Re-confirm; some venues
+            give partial refund if the guest cancels day-of in writing
+            before the original check-in time.
+         5. §6 Force majeure — keeps a short summary here and points at
+            /terms/#force-majeure for the legal basis. When the /terms/
+            §10 placeholder is finalised by the lawyer, re-check that
+            this summary is consistent.
+         6. §7 Refund processing — placeholder timeline ("10 working
+            days") and currency ("EUR"). Confirm with operations and
+            payment provider once #15 Worker / payment integration is
+            decided.
+         7. §8 Disputes — placeholder escalation path. Confirm against
+            §11 Governing law on /terms/ (Tsarevo Regional Court).
+         8. §9 Contact — email/phone/address all hydrate from
+            site-config.js — no action needed unless those values
+            change.
+
+       Cross-references: this page is linked from every site footer
+       (column "Policies", hydrated via
+       [data-site-config-path="policies.cancellation"]). It is ALSO
+       referenced from /terms/ §6 (booking-summary) and §10 (force
+       majeure) via the same SSOT path. When you change the tier
+       schedule below, re-read /terms/ §6 to make sure the summary
+       sentence there does not contradict the schedule here.
+
+       Reference: github.com/NoobCoder1209/vayana-bungalows/issues/18
+       ========================================================================== -->
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Sticky header (KEEP IN SYNC across all pages, cf. #11 /
+         contacts/index.html for the canonical block). Same as elsewhere:
+           - ../index.html
+           - ../stay/index.html
+           - ../destination/index.html
+           - ../contacts/index.html
+           - ../enquiries/index.html
+           - ../privacy/index.html
+           - ../terms/index.html
+           - ../premier-beachfront-suite/index.html
+           - ../premier-oceanview-villa/index.html
+           - ../deluxe-hilltop-residence/index.html
+         (Vite multi-page build, no shared layout primitive yet.) -->
+    <div id="header-sentinel" aria-hidden="true"></div>
+    <header class="site-header" id="site-header">
+      <div class="container site-header__inner">
+        <button class="site-header__menu" type="button" aria-label="Open menu"
+                aria-controls="primary-nav" aria-expanded="false"
+                aria-haspopup="dialog" data-nav-toggle>
+          <span></span><span></span><span></span>
+        </button>
+
+        <a href="../" class="site-logo">
+          <span class="site-logo__mark" aria-hidden="true">V</span>
+          <span class="site-logo__word">Vayana Bungalows</span>
+        </a>
+
+        <div class="site-header__cta">
+          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call" aria-label="Call us at +359 88 888 8888" data-call-cta>
+            <span class="site-header__call-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+            </span>
+            <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
+          </a>
+          <a href="../enquiries/" class="btn btn-primary site-header__enquiries">Enquiries</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Backdrop + side drawer. -->
+    <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
+    <nav id="primary-nav" class="primary-nav__panel" aria-label="Primary"
+         role="dialog"
+         aria-hidden="true" tabindex="-1" hidden>
+      <button class="primary-nav__close" type="button"
+              aria-label="Close menu" data-nav-close>
+        <span aria-hidden="true">&times;</span>
+      </button>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Your bespoke stay</span>
+        <ul class="primary-nav__list">
+          <li><a href="../" data-nav-link>Home</a></li>
+          <li><a href="../stay/" data-nav-link>Stay</a></li>
+          <li><a href="../destination/" data-nav-link>Destination</a></li>
+          <li><a href="../contacts/" data-nav-link>Contacts</a></li>
+        </ul>
+      </div>
+
+      <a href="../" class="primary-nav__brand" data-nav-link>
+        <span class="primary-nav__brand-mark" aria-hidden="true">V</span>
+        <span class="primary-nav__brand-word">Vayana Bungalows</span>
+      </a>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Get in touch</span>
+        <ul class="primary-nav__list">
+          <li><a href="../enquiries/" data-nav-link>Enquiries</a></li>
+          <li><a data-site-config-href="phone.href" href="tel:+359888888888" data-nav-link><span data-site-config="phone.display">+359 88 888 8888</span></a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- JS-disabled fallback. -->
+    <noscript>
+      <nav class="primary-nav__noscript" aria-label="Primary (no JavaScript)">
+        <ul>
+          <li><a href="../">Home</a></li>
+          <li><a href="../stay/">Stay</a></li>
+          <li><a href="../destination/">Destination</a></li>
+          <li><a href="../contacts/">Contacts</a></li>
+        </ul>
+      </nav>
+    </noscript>
+
+    <main id="main">
+      <!-- Cancellation Policy article. Reuses the .legal-page wrapper
+           class introduced in #16 for typography (readable max-width
+           column, paragraph rhythm). Each numbered section is a
+           <section> with an anchorable id, so inbound links can
+           target a specific clause (e.g. /cancellation/#tiers).
+
+           Placeholder values use <span class="placeholder">…</span>,
+           which renders with a yellow highlight (see
+           assets/css/sections.css .placeholder rule). This is a
+           DELIBERATE visual cue, per issue #18 negative-test #2:
+           a launch reviewer cannot accidentally ship a yellow-
+           highlighted "30 days" / "100%" as real policy. -->
+      <article class="legal-page">
+        <div class="container legal-page__inner">
+          <header class="legal-page__head">
+            <span class="eyebrow">Vayana Bungalows</span>
+            <h1>Cancellation Policy</h1>
+            <p class="legal-page__updated">
+              Last updated:
+              <time datetime="2026-06-22">22 June 2026</time>
+            </p>
+            <p class="legal-page__lede">
+              This Cancellation Policy explains what happens if you need
+              to cancel or modify a reservation at
+              <strong data-site-config="brand">Vayana Bungalows</strong>.
+              It is part of, and should be read together with, our
+              <a data-site-config-path="policies.terms" href="../terms/">Terms &amp; Conditions</a>.
+            </p>
+            <p class="legal-page__lede">
+              <strong>This page is a draft.</strong> Every figure
+              rendered in a yellow highlight (lead-time threshold,
+              refund percentage, SLA, currency) is a working
+              assumption and MUST be reviewed and replaced before
+              this site goes live to paying guests.
+            </p>
+          </header>
+
+          <!-- 1 — Last updated. Date already shown above; we keep a
+               short pointer here so the numbering stays 1 → 9. -->
+          <section id="updated" aria-labelledby="updated-title">
+            <h2 id="updated-title">1. Last updated</h2>
+            <p>
+              This Policy was last updated on
+              <time datetime="2026-06-22">22 June 2026</time>. See
+              <a href="#contact">§9 Contact</a> for who to
+              email if anything below is unclear.
+            </p>
+          </section>
+
+          <!-- 2 — Cancellation tiers. Three placeholder thresholds,
+               three placeholder percentages. Each in span.placeholder
+               so the yellow-highlight cue makes it impossible to read
+               them as final policy. -->
+          <section id="tiers" aria-labelledby="tiers-title">
+            <h2 id="tiers-title">2. Cancellation tiers</h2>
+            <p>
+              If you need to cancel a confirmed reservation, the refund
+              you receive depends on how many days before your check-in
+              date we receive the written cancellation request:
+            </p>
+            <ul>
+              <li>
+                More than <span class="placeholder"><span class="sr-only">placeholder: </span>30 days</span>
+                before check-in &mdash; we refund
+                <span class="placeholder"><span class="sr-only">placeholder: </span>100%</span> of any amount you
+                have paid. <strong>Free cancellation tier.</strong>
+              </li>
+              <li>
+                Between <span class="placeholder"><span class="sr-only">placeholder: </span>30</span> and
+                <span class="placeholder"><span class="sr-only">placeholder: </span>14 days</span> before
+                check-in &mdash; we refund
+                <span class="placeholder"><span class="sr-only">placeholder: </span>50%</span> of any amount you
+                have paid. <strong>Partial-refund tier.</strong>
+              </li>
+              <li>
+                Less than <span class="placeholder"><span class="sr-only">placeholder: </span>14 days</span>
+                before check-in &mdash; we refund
+                <span class="placeholder"><span class="sr-only">placeholder: </span>0%</span>.
+                <strong>No-refund tier.</strong>
+              </li>
+            </ul>
+            <p>
+              The lead time is counted from the date and time we
+              <em>receive</em> your written cancellation (see §3), not
+              the date you sent it. Tiers apply to the total amount
+              you have paid us toward the reservation, including any
+              deposit described in §5 of the
+              <a data-site-config-path="policies.terms" href="../terms/">Terms &amp; Conditions</a>.
+              <span class="placeholder"><span class="sr-only">placeholder: </span>Whether the deposit is
+              refundable on the same schedule, or is non-refundable
+              regardless of tier, is to be confirmed before launch.</span>
+            </p>
+          </section>
+
+          <!-- 3 — How to cancel. Channel + SLA. The SLA is a placeholder. -->
+          <section id="how-to-cancel" aria-labelledby="how-to-cancel-title">
+            <h2 id="how-to-cancel-title">3. How to cancel</h2>
+            <p>
+              To cancel a reservation, please email us at
+              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com"><span data-site-config="email.display">contact@vayanabungalows.com</span></a>
+              with your booking reference (sent in the confirmation
+              email), the dates of your reservation, and a short note
+              that you wish to cancel.
+            </p>
+            <p>
+              We will acknowledge your cancellation in writing within
+              <span class="placeholder"><span class="sr-only">placeholder: </span>48 hours on working days</span>,
+              confirm the applicable refund tier per §2, and let you
+              know the timeline for the refund per §7. Until you have
+              received that written acknowledgement from us, please
+              consider the cancellation as pending.
+            </p>
+          </section>
+
+          <!-- 4 — Modifications. Date and guest-count changes,
+               placeholder fee policy. -->
+          <section id="modifications" aria-labelledby="modifications-title">
+            <h2 id="modifications-title">4. Modifications</h2>
+            <p>
+              Date changes and guest-count changes are treated
+              differently from full cancellations and are usually
+              handled at no charge if requested far enough in advance:
+            </p>
+            <ul>
+              <li>
+                <strong>Date changes.</strong> Requests received more
+                than <span class="placeholder"><span class="sr-only">placeholder: </span>14 days</span> before
+                the original check-in date, for new dates of equal
+                length and the same bungalow, are free of charge
+                subject to availability. Closer to check-in, or for
+                longer stays / different bungalows, a price difference
+                or fee may apply.
+                <span class="placeholder"><span class="sr-only">placeholder: </span>Exact change-fee schedule
+                to be confirmed before launch.</span>
+              </li>
+              <li>
+                <strong>Guest-count changes.</strong> Adding or
+                removing guests within the bungalow's stated occupancy
+                limit is free of charge; we ask you to let us know in
+                advance so we can prepare the bungalow accordingly.
+                Exceeding the occupancy limit is not permitted; see
+                §8 House rules of the
+                <a data-site-config-path="policies.terms" href="../terms/">Terms &amp; Conditions</a>.
+              </li>
+            </ul>
+            <p>
+              If a modification cannot be accommodated and you choose
+              to cancel instead, the cancellation tier in §2 applies
+              based on the original check-in date.
+            </p>
+          </section>
+
+          <!-- 5 — No-shows. Default = 0% refund, placeholder. -->
+          <section id="no-shows" aria-labelledby="no-shows-title">
+            <h2 id="no-shows-title">5. No-shows</h2>
+            <p>
+              If you do not arrive on your check-in date and have not
+              cancelled in writing before the check-in time, the
+              reservation is treated as a no-show. The default refund
+              for a no-show is <span class="placeholder"><span class="sr-only">placeholder: </span>0%</span>.
+            </p>
+            <p>
+              If circumstances beyond your control prevent you from
+              arriving, please contact us as soon as you can &mdash;
+              see §6 Force majeure for how we handle exceptions.
+            </p>
+          </section>
+
+          <!-- 6 — Force majeure. Short summary + cross-link to /terms/#force-majeure.
+               Per planning round answer: cross-link the legal basis.
+               Uses data-site-config-path normally; the hydrator now
+               preserves any inline #fragment (round-1 MED-5 fix in
+               assets/js/site-config-inject.js), so the cross-link
+               resolves to /vayana-bungalows/terms/#force-majeure in
+               production and /terms/#force-majeure in dev. -->
+          <section id="force-majeure" aria-labelledby="force-majeure-title">
+            <h2 id="force-majeure-title">6. Force majeure</h2>
+            <p>
+              Sometimes events beyond either party's control &mdash;
+              natural disasters, sudden travel restrictions, or
+              regional emergencies &mdash; make a stay impossible.
+              In those cases we will work with you in good faith to
+              find a fair outcome, which may include moving the dates
+              free of charge, holding the amount you have paid as
+              credit toward a future stay, or issuing a refund outside
+              the standard tiers in §2.
+            </p>
+            <p>
+              The legal basis for force majeure (what qualifies, who
+              bears which costs, and how the refund is calculated) is
+              set out in §10 of the
+              <a data-site-config-path="policies.terms" href="../terms/#force-majeure">Terms &amp; Conditions</a>.
+              This Policy and those Terms should be read together.
+              <span class="placeholder"><span class="sr-only">placeholder: </span>Exact list of qualifying
+              events and standard outcome to be finalised with legal
+              review.</span>
+            </p>
+          </section>
+
+          <!-- 7 — Refund processing. Timeline, method, currency. -->
+          <section id="refund-processing" aria-labelledby="refund-processing-title">
+            <h2 id="refund-processing-title">7. Refund processing</h2>
+            <p>
+              Once the refund tier is confirmed under §2 (or under §6
+              for force majeure), refunds are issued within
+              <span class="placeholder"><span class="sr-only">placeholder: </span>10 working days</span> of our
+              written cancellation acknowledgement.
+            </p>
+            <p>
+              Refunds are issued in
+              <span class="placeholder"><span class="sr-only">placeholder: </span>EUR</span> to the same payment
+              method you used to pay the original deposit and balance.
+              If that is not possible (for example, the card has
+              expired), we will contact you to agree an alternative
+              method. <span class="placeholder"><span class="sr-only">placeholder: </span>Whether bank or
+              card-processing fees are deducted from the refund is to
+              be confirmed before launch.</span>
+            </p>
+          </section>
+
+          <!-- 8 — Disputes. Escalation path. Cross-link §11 of /terms/. -->
+          <section id="disputes" aria-labelledby="disputes-title">
+            <h2 id="disputes-title">8. Disputes</h2>
+            <p>
+              If you disagree with how this Policy has been applied to
+              your reservation, please first contact us at the email
+              in §3 and describe what you would like us to reconsider.
+              We will respond in writing and try to find a resolution
+              within
+              <span class="placeholder"><span class="sr-only">placeholder: </span>10 working days</span>.
+            </p>
+            <p>
+              If we cannot reach an agreement, the dispute-resolution
+              and governing-law provisions in §11 of the
+              <a data-site-config-path="policies.terms" href="../terms/">Terms &amp; Conditions</a>
+              apply, including the courts named there. Nothing in this
+              Policy limits any consumer rights you may have under
+              applicable mandatory law.
+            </p>
+          </section>
+
+          <!-- 9 — Contact. All from site-config.js SSOT. -->
+          <section id="contact" aria-labelledby="contact-title">
+            <h2 id="contact-title">9. Contact</h2>
+            <p>
+              For all questions about this Policy or about a specific
+              reservation, please contact:
+            </p>
+            <ul>
+              <li>
+                <strong>Email:</strong>
+                <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com"><span data-site-config="email.display">contact@vayanabungalows.com</span></a>
+              </li>
+              <li>
+                <strong>Phone:</strong>
+                <a data-site-config-href="phone.href" href="tel:+359888888888"><span data-site-config="phone.display">+359 88 888 8888</span></a>
+              </li>
+              <li>
+                <strong>Post:</strong>
+                <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span>,
+                <span data-site-config="address.country">Bulgaria</span>
+              </li>
+            </ul>
+            <p>
+              The brand and licence details for the operator are in
+              §2 of the
+              <a data-site-config-path="policies.terms" href="../terms/">Terms &amp; Conditions</a>.
+            </p>
+          </section>
+        </div>
+      </article>
+    </main>
+
+    <!-- Footer (KEEP IN SYNC across all pages). aria-current="page"
+         marks Cancellation Policy as the current page on this footer. -->
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <!-- Column 1 — Contact -->
+        <div class="site-footer__col site-footer__col--contact">
+          <span class="eyebrow eyebrow--light" data-site-config="brand">Vayana Bungalows</span>
+          <ul class="site-footer__contact">
+            <li>
+              <a data-site-config-href="phone.href" href="tel:+359888888888">
+                <span data-site-config="phone.display">+359 88 888 8888</span>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">
+                <span data-site-config="email.display">contact@vayanabungalows.com</span>
+              </a>
+            </li>
+            <li>
+              <span data-site-config="address.line1">Tsarevo</span>,
+              <span data-site-config="address.line2">Bulgaria</span>
+            </li>
+          </ul>
+        </div>
+        <!-- Column 2 — Follow us -->
+        <div class="site-footer__col site-footer__col--social">
+          <span class="eyebrow eyebrow--light">Follow us</span>
+          <ul class="social-list">
+            <li>
+              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.linkedin" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4 4h4v16H4zM6 2.5A1.5 1.5 0 116 5.5 1.5 1.5 0 016 2.5zM10 8h3.8v2h.05A4.16 4.16 0 0117.6 8C21.4 8 22 10.4 22 13.6V20h-4v-5.7c0-1.4 0-3.1-1.9-3.1S14 12.6 14 14.2V20h-4z"/></svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <!-- Column 3 — Policies + Enquire (KEEP IN SYNC across all pages,
+             cf. #11). aria-current="page" marks Cancellation Policy as
+             the current page on this footer. -->
+        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies and enquiries">
+          <span class="eyebrow eyebrow--light">Policies</span>
+          <ul>
+            <li><a href="../enquiries/" class="site-footer__enquire">Enquire</a></li>
+            <li><a data-site-config-path="policies.terms" href="/terms/">Terms &amp; Conditions</a></li>
+            <li><a data-site-config-path="policies.cancellation" href="/cancellation/" aria-current="page">Cancellation Policy</a></li>
+            <li><a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="site-footer__bar">
+        <div class="container site-footer__bar-inner">
+          <p data-site-config="copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
+          <p class="site-footer__license">License number: <span data-site-config="license">1327673</span></p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/assets/js/main.js"></script>
+  </body>
+</html>

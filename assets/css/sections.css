@@ -2344,3 +2344,38 @@ a.contacts-card__value:focus-visible {
 .legal-page__contact li {
   margin-bottom: var(--space-1);
 }
+
+/* ------------------------------------------------------------------
+   Inline placeholder cue (issue #18, /cancellation/ page).
+
+   Wraps any not-yet-finalised value in legal copy (cancellation
+   tier %, lead-time threshold, refund SLA, currency, etc.) so a
+   launch reviewer cannot mistake a working assumption for final
+   policy. The yellow-on-dark-text scheme matches a paper "highlighter
+   pen" mark and keeps WCAG contrast against the body background.
+
+   The parallel accessibility cue for non-sighted users is a real
+   <span class="sr-only">placeholder: </span> child element placed
+   INSIDE every .placeholder span in the HTML — not a ::before
+   pseudo-element. CSS-generated content has inconsistent screen-
+   reader support (WCAG 1.3.1 best-practice avoid), so we use a
+   visible-only-to-AT DOM child instead. Round-1 review MED-1 fix.
+
+   Used by terms/cancellation/privacy stub pages while content is
+   being finalised. Remove the .placeholder wrappers (not the rule)
+   once the underlying value is signed off by legal — the rule itself
+   can stay in place to support future stub work.
+   ------------------------------------------------------------------ */
+.placeholder {
+  background-color: #fff3a3;
+  color: var(--text-dark, #0e0d0a);
+  padding: 0 0.25em;
+  border-radius: 2px;
+  border: 1px dashed #c9a300;
+  font-style: normal;
+  font-weight: 500;
+  /* Clone background/border across line breaks so the highlight
+     remains contiguous when the span wraps inside a paragraph. */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
