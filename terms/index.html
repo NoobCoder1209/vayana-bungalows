@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Swap no-js → js-on synchronously, before any stylesheet loads, so
+         the JS-on hamburger doesn't flash invisible during the deferred
+         module's load window. CSS uses html.no-js for the no-JS fallback. -->
+    <script>document.documentElement.classList.replace('no-js','js-on');</script>
+    <title>Terms &amp; Conditions &mdash; Vayana Bungalows</title>
+    <meta name="description" content="Terms and Conditions for Vayana Bungalows — booking process, payment, cancellation, house rules, liability, and governing law." />
+    <link rel="canonical" href="https://noobcoder1209.github.io/vayana-bungalows/terms/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Terms &amp; Conditions — Vayana Bungalows" />
+    <meta property="og:description" content="Booking process, payment, cancellation, house rules, liability, and governing law." />
+    <meta property="og:url" content="https://noobcoder1209.github.io/vayana-bungalows/terms/" />
+    <meta property="og:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
+    <meta property="og:site_name" content="Vayana Bungalows" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Terms &amp; Conditions — Vayana Bungalows" />
+    <meta name="twitter:description" content="Booking process, payment, cancellation, house rules, liability, and governing law." />
+    <meta name="twitter:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
+
+    <meta name="theme-color" content="#0e0d0a" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/css/tokens.css" />
+    <link rel="stylesheet" href="/assets/css/base.css" />
+    <link rel="stylesheet" href="/assets/css/layout.css" />
+    <link rel="stylesheet" href="/assets/css/sections.css" />
+  </head>
+  <!-- ==========================================================================
+       ⚠️  REVIEW & FINALIZE BEFORE LAUNCH  ⚠️
+       ------------------------------------------------------------------------
+       This is a placeholder Terms & Conditions stub (issue #17). Every
+       claim in this page that is NOT bracketed "[placeholder: …]" is
+       still draft and MUST be reviewed by a Bulgarian lawyer before
+       this site goes live to paying guests. Confirm at minimum:
+
+         1. §4 Booking & reservation flow — confirm enquiry → confirmation
+            → deposit → final-payment sequence and timing matches the
+            actual operational workflow once #15 Worker + #10 newsletter
+            ESP ship.
+         2. §5 Payment — accepted methods (bank transfer / card / cash?),
+            currency (EUR vs BGN), when deposit is due, refundability of
+            deposit. All "[placeholder: …]" today.
+         3. §6 Cancellation — keeps a short summary here, full schedule
+            shipped in /cancellation/ (#18). When #18 lands, re-check that
+            the summary on this page does not contradict the schedule
+            there.
+         4. §7 Check-in / check-out times — currently "[placeholder:
+            15:00 / 11:00]". Confirm with operations.
+         5. §8 House rules — currently a [placeholder] list. Confirm the
+            full set (smoking, pets, noise hours, max occupancy, extra
+            guests, parking) with operations.
+         6. §9 Liability — DRAFT language only; ask a Bulgarian lawyer
+            whether the limitation-of-liability clause is enforceable
+            under Bulgarian consumer-protection law.
+         7. §11 Governing law — confirm Tsarevo Regional Court vs Burgas
+            District Court is the correct first-instance jurisdiction
+            for consumer disputes under Bulgarian CPC.
+         8. License number 1327673 — confirm this is the current
+            operating-licence number; it hydrates from site-config.js
+            and is also displayed in the footer.
+
+       This policy MUST stay aligned with /privacy/ (#16) and
+       /cancellation/ (#18 — not yet shipped). If you change anything in
+       this page that touches data handling, update /privacy/ in the
+       same commit. If you change the cancellation summary in §6,
+       update /cancellation/ in the same commit once it exists.
+
+       Cross-references: this page is linked from every site footer
+       (column "Policies", hydrated via
+       [data-site-config-path="policies.terms"]).
+
+       Reference: github.com/NoobCoder1209/vayana-bungalows/issues/17
+       ========================================================================== -->
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Sticky header (KEEP IN SYNC across all pages, cf. #11 /
+         contacts/index.html for the canonical block). Same as elsewhere:
+           - ../index.html
+           - ../stay/index.html
+           - ../destination/index.html
+           - ../contacts/index.html
+           - ../enquiries/index.html
+           - ../privacy/index.html
+           - ../premier-beachfront-suite/index.html
+           - ../premier-oceanview-villa/index.html
+           - ../deluxe-hilltop-residence/index.html
+         (Vite multi-page build, no shared layout primitive yet.) -->
+    <div id="header-sentinel" aria-hidden="true"></div>
+    <header class="site-header" id="site-header">
+      <div class="container site-header__inner">
+        <button class="site-header__menu" type="button" aria-label="Open menu"
+                aria-controls="primary-nav" aria-expanded="false"
+                aria-haspopup="dialog" data-nav-toggle>
+          <span></span><span></span><span></span>
+        </button>
+
+        <a href="../" class="site-logo">
+          <span class="site-logo__mark" aria-hidden="true">V</span>
+          <span class="site-logo__word">Vayana Bungalows</span>
+        </a>
+
+        <div class="site-header__cta">
+          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call" aria-label="Call us at +359 88 888 8888" data-call-cta>
+            <span class="site-header__call-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+            </span>
+            <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
+          </a>
+          <a href="../enquiries/" class="btn btn-primary site-header__enquiries">Enquiries</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Backdrop + side drawer. -->
+    <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
+    <nav id="primary-nav" class="primary-nav__panel" aria-label="Primary"
+         role="dialog"
+         aria-hidden="true" tabindex="-1" hidden>
+      <button class="primary-nav__close" type="button"
+              aria-label="Close menu" data-nav-close>
+        <span aria-hidden="true">&times;</span>
+      </button>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Your bespoke stay</span>
+        <ul class="primary-nav__list">
+          <li><a href="../" data-nav-link>Home</a></li>
+          <li><a href="../stay/" data-nav-link>Stay</a></li>
+          <li><a href="../destination/" data-nav-link>Destination</a></li>
+          <li><a href="../contacts/" data-nav-link>Contacts</a></li>
+        </ul>
+      </div>
+
+      <a href="../" class="primary-nav__brand" data-nav-link>
+        <span class="primary-nav__brand-mark" aria-hidden="true">V</span>
+        <span class="primary-nav__brand-word">Vayana Bungalows</span>
+      </a>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Get in touch</span>
+        <ul class="primary-nav__list">
+          <li><a href="../enquiries/" data-nav-link>Enquiries</a></li>
+          <li><a data-site-config-href="phone.href" href="tel:+359888888888" data-nav-link><span data-site-config="phone.display">+359 88 888 8888</span></a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- JS-disabled fallback. -->
+    <noscript>
+      <nav class="primary-nav__noscript" aria-label="Primary (no JavaScript)">
+        <ul>
+          <li><a href="../">Home</a></li>
+          <li><a href="../stay/">Stay</a></li>
+          <li><a href="../destination/">Destination</a></li>
+          <li><a href="../contacts/">Contacts</a></li>
+        </ul>
+      </nav>
+    </noscript>
+
+    <main id="main">
+      <!-- Terms & Conditions article. Reuses the .legal-page wrapper
+           class introduced in #16 for typography (readable max-width
+           column, paragraph rhythm). Each numbered section is a
+           <section> with an anchorable id, so future inbound links
+           can target a specific clause (e.g. /terms/#cancellation). -->
+      <article class="legal-page">
+        <div class="container legal-page__inner">
+          <header class="legal-page__head">
+            <span class="eyebrow">Vayana Bungalows</span>
+            <h1>Terms &amp; Conditions</h1>
+            <p class="legal-page__updated">
+              Last updated:
+              <time datetime="2026-06-22">22 June 2026</time>
+            </p>
+            <p class="legal-page__lede">
+              These Terms &amp; Conditions ("Terms") govern your use of the
+              <strong data-site-config="brand">Vayana Bungalows</strong>
+              website and the booking of any of our bungalows. By using
+              the site or making an enquiry you accept these Terms.
+            </p>
+            <p class="legal-page__lede">
+              <strong>This page is a draft.</strong> Every claim marked
+              <code>[placeholder: …]</code> is a working assumption and
+              MUST be reviewed and replaced by a Bulgarian lawyer before
+              this site goes live to paying guests.
+            </p>
+          </header>
+
+          <!-- 1 — Last updated. Date already shown above in the header,
+               but the spec calls for §1 to be the date; the head copy
+               above counts. We keep a short pointer here so the
+               numbering stays 1 → 12 in the body. -->
+          <section id="updated" aria-labelledby="updated-title">
+            <h2 id="updated-title">1. Last updated</h2>
+            <p>
+              These Terms were last updated on
+              <time datetime="2026-06-22">22 June 2026</time>. See
+              <a href="#contact">§12 Contact</a> for who to
+              email if anything below is unclear.
+            </p>
+          </section>
+
+          <!-- 2 — Who we are. Same SSOT as /privacy/: brand, license,
+               address, contact email all hydrate from site-config.js. -->
+          <section id="who-we-are" aria-labelledby="who-we-are-title">
+            <h2 id="who-we-are-title">2. Who we are</h2>
+            <p>
+              <strong data-site-config="brand">Vayana Bungalows</strong>
+              is operated by Vayana di Mare, a Bulgarian operator with
+              tourist-licence number
+              <span data-site-config="license">1327673</span>, located at
+              <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span>,
+              <span data-site-config="address.country">Bulgaria</span>.
+            </p>
+            <p>
+              In these Terms, <em>"we", "us"</em> and <em>"our"</em> refer
+              to Vayana di Mare; <em>"you"</em> and <em>"your"</em> refer
+              to the person visiting the site or making an enquiry.
+            </p>
+          </section>
+
+          <!-- 3 — Acceptance. By using the site, you accept these terms. -->
+          <section id="acceptance" aria-labelledby="acceptance-title">
+            <h2 id="acceptance-title">3. Acceptance of these Terms</h2>
+            <p>
+              By using this website, submitting an enquiry, or making a
+              reservation, you confirm that you have read these Terms
+              and that you agree to be bound by them. If you do not
+              agree with any part of these Terms, please do not use the
+              site or make a reservation.
+            </p>
+            <p>
+              We may update these Terms from time to time. The version
+              published on this page on the date you make a reservation
+              is the version that applies to that reservation.
+            </p>
+          </section>
+
+          <!-- 4 — Booking & reservation flow. Today the flow stops at
+               step 2 (enquiry) because /enquiries/ posts nowhere yet
+               (#15 Worker not shipped). Steps 3–4 describe the
+               intended end-state and are bracketed accordingly. -->
+          <section id="booking" aria-labelledby="booking-title">
+            <h2 id="booking-title">4. Booking &amp; reservation process</h2>
+            <p>
+              A reservation is made in four steps:
+            </p>
+            <ol>
+              <li>
+                <strong>Enquiry.</strong> You complete the form on the
+                <a href="../enquiries/">Enquiries</a> page with your
+                preferred dates, party size, and any questions you
+                have.
+              </li>
+              <li>
+                <strong>Reply.</strong> We get back to you by email,
+                normally within
+                <em>[placeholder: 24&ndash;48 hours on working days]</em>,
+                confirming availability, the nightly rate for your
+                dates, and the deposit required to hold the booking.
+              </li>
+              <li>
+                <strong>Deposit &amp; confirmation.</strong> The
+                reservation is confirmed once we receive the deposit
+                described in §5. The booking is provisional until the
+                deposit has cleared.
+                <em>[placeholder: deposit amount and method to be
+                confirmed]</em>
+              </li>
+              <li>
+                <strong>Final payment.</strong> The balance is due
+                <em>[placeholder: on arrival / X days before check-in]</em>
+                in the manner described in §5.
+              </li>
+            </ol>
+            <p>
+              No contract exists between you and us until step 3 is
+              complete (deposit cleared and confirmation email sent
+              from us).
+            </p>
+          </section>
+
+          <!-- 5 — Payment. All values bracketed — these are the
+               commercial terms that absolutely must be finalised before
+               launch. -->
+          <section id="payment" aria-labelledby="payment-title">
+            <h2 id="payment-title">5. Payment</h2>
+            <ul>
+              <li>
+                <strong>Currency.</strong>
+                <em>[placeholder: prices are quoted in EUR and BGN; payment
+                is taken in BGN at the rate quoted on the confirmation
+                email]</em>.
+              </li>
+              <li>
+                <strong>Accepted methods.</strong>
+                <em>[placeholder: bank transfer to the IBAN on the
+                confirmation email; card payments and cash on arrival are
+                not yet accepted]</em>.
+              </li>
+              <li>
+                <strong>When payment is due.</strong>
+                <em>[placeholder: deposit of 30% within 7 days of the
+                confirmation email; balance on arrival]</em>.
+              </li>
+              <li>
+                <strong>VAT &amp; tourist tax.</strong>
+                <em>[placeholder: prices include VAT at the prevailing
+                Bulgarian rate; the local tourist tax of [amount] per
+                guest per night is collected on arrival in cash]</em>.
+              </li>
+            </ul>
+            <p>
+              We do not store payment-card data on this site. Today the
+              site does not process card payments at all; payment is
+              arranged by email and bank transfer.
+            </p>
+          </section>
+
+          <!-- 6 — Cancellation. Short summary here, link out to the
+               dedicated /cancellation/ page. That page does NOT exist
+               yet (#18) — the link will 404 until then; this is
+               intentional and documented in the PR body and admin
+               comment. -->
+          <section id="cancellation" aria-labelledby="cancellation-title">
+            <h2 id="cancellation-title">6. Cancellation</h2>
+            <p>
+              In short:
+              <em>[placeholder: cancellations more than 30 days before
+              check-in receive a full refund of the deposit; cancellations
+              within 30 days forfeit the deposit; no-shows are charged the
+              full stay]</em>.
+            </p>
+            <p>
+              The full cancellation schedule, including how refunds are
+              processed and what happens in cases of force majeure (§10),
+              is on the dedicated
+              <a data-site-config-path="policies.cancellation" href="../cancellation/">Cancellation Policy</a>
+              page. If anything on that page conflicts with the summary
+              here, the dedicated page governs.
+            </p>
+          </section>
+
+          <!-- 7 — Check-in / check-out. Operational placeholder. -->
+          <section id="check-in-out" aria-labelledby="check-in-out-title">
+            <h2 id="check-in-out-title">7. Check-in and check-out</h2>
+            <ul>
+              <li>
+                <strong>Check-in:</strong>
+                <em>[placeholder: from 15:00 on the day of arrival]</em>.
+                Earlier check-in may be possible if the bungalow is
+                ready; please ask in advance.
+              </li>
+              <li>
+                <strong>Check-out:</strong>
+                <em>[placeholder: by 11:00 on the day of departure]</em>.
+                Later check-out may be available subject to the
+                next booking; please ask in advance.
+              </li>
+            </ul>
+            <p>
+              If you expect to arrive outside our normal reception
+              hours, please let us know on the
+              <a href="../enquiries/">Enquiries</a> form or by email so
+              that we can arrange key handover.
+            </p>
+          </section>
+
+          <!-- 8 — House rules. Operational placeholder list. -->
+          <section id="house-rules" aria-labelledby="house-rules-title">
+            <h2 id="house-rules-title">8. House rules</h2>
+            <p>
+              When you stay with us, we ask you to:
+            </p>
+            <ul>
+              <li>
+                <em>[placeholder: respect quiet hours between 22:00 and
+                08:00 — Tsarevo is a small coastal town and noise carries
+                between bungalows]</em>.
+              </li>
+              <li>
+                <em>[placeholder: not smoke indoors; smoking is allowed
+                only on the outdoor terrace away from the door]</em>.
+              </li>
+              <li>
+                <em>[placeholder: keep pets to the bungalows that allow
+                them; the policy per bungalow is shown on the Stay
+                page]</em> — see <a href="../stay/">Stay</a>.
+              </li>
+              <li>
+                <em>[placeholder: not exceed the maximum occupancy
+                printed on the bungalow listing; additional guests
+                require prior approval and an extra-bed fee]</em>.
+              </li>
+              <li>
+                <em>[placeholder: leave the bungalow in a reasonable
+                state on check-out — the cleaning fee is included in
+                the rate, but excessive damage may be charged
+                separately under §9]</em>.
+              </li>
+            </ul>
+          </section>
+
+          <!-- 9 — Liability. DRAFT — must be reviewed by Bulgarian
+               lawyer per admin comment §6. -->
+          <section id="liability" aria-labelledby="liability-title">
+            <h2 id="liability-title">9. Liability</h2>
+            <p>
+              <em>[placeholder: We take reasonable care of the bungalows
+              and the surrounding grounds. We are not liable for personal
+              injury or property loss except where caused by our
+              negligence or wilful misconduct, and except where Bulgarian
+              consumer-protection law makes such limitation
+              unenforceable.]</em>
+            </p>
+            <p>
+              <em>[placeholder: You are responsible for any damage to
+              the bungalow or its contents caused by you or your party
+              during the stay. We may charge the cost of repair or
+              replacement to the card or payment method on file,
+              against an itemised invoice.]</em>
+            </p>
+            <p>
+              <em>[placeholder: We strongly recommend that you take out
+              travel insurance covering cancellation, illness,
+              accidents, and loss of belongings.]</em>
+            </p>
+          </section>
+
+          <!-- 10 — Force majeure. Cross-links cancellation. The link
+               is pulled out of the [placeholder: …] em-span so the
+               bracketed text stays unbroken (round-1 review L1 fix). -->
+          <section id="force-majeure" aria-labelledby="force-majeure-title">
+            <h2 id="force-majeure-title">10. Force majeure</h2>
+            <p>
+              <em>[placeholder: Neither party is liable for failure to
+              perform these Terms where the failure is caused by events
+              outside that party's reasonable control — for example
+              natural disasters, war, civil unrest, pandemic-related
+              public-health measures, or government action. In such
+              cases we will work with you in good faith to reschedule
+              your booking or, where rescheduling is not practical,
+              issue a refund as set out in the cancellation policy]</em>.
+              When the dedicated
+              <a data-site-config-path="policies.cancellation" href="../cancellation/">Cancellation Policy</a>
+              is published (#18), it will set out the refund schedule
+              for force-majeure cancellations.
+            </p>
+          </section>
+
+          <!-- 11 — Governing law. -->
+          <section id="governing-law" aria-labelledby="governing-law-title">
+            <h2 id="governing-law-title">11. Governing law and jurisdiction</h2>
+            <p>
+              These Terms are governed by the laws of the
+              <em>[placeholder: Republic of Bulgaria]</em>. Any dispute
+              arising out of or in connection with these Terms or your
+              stay will be submitted to the exclusive jurisdiction of
+              the <em>[placeholder: Tsarevo Regional Court, or its
+              competent Bulgarian successor court for consumer
+              disputes]</em>.
+            </p>
+            <p>
+              Nothing in this section limits any non-waivable rights
+              you may have as a consumer under Bulgarian or EU
+              consumer-protection law.
+            </p>
+          </section>
+
+          <!-- 12 — Contact. Mirrors /privacy/ §11 layout. The
+               section id matches the visible "Contact" link text
+               from §1; both /terms/#contact and /privacy/#contact
+               can coexist because they live on different
+               documents (round-1 review M1 fix). -->
+          <section id="contact" aria-labelledby="contact-title">
+            <h2 id="contact-title">12. Contact</h2>
+            <p>
+              Questions about these Terms? Please email us:
+            </p>
+            <ul class="legal-page__contact">
+              <li>
+                <strong>Email:</strong>
+                <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com"><span data-site-config="email.display">contact@vayanabungalows.com</span></a>
+              </li>
+              <li>
+                <strong>Postal address:</strong>
+                <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span>,
+                <span data-site-config="address.country">Bulgaria</span>
+              </li>
+            </ul>
+            <p>
+              For data-protection matters (access requests, deletion,
+              consent withdrawal), please see the dedicated
+              <a data-site-config-path="policies.privacy" href="../privacy/">Privacy Policy</a>
+              instead.
+            </p>
+          </section>
+        </div>
+      </article>
+    </main>
+
+    <!-- Footer (KEEP IN SYNC across all pages). aria-current="page"
+         marks Terms & Conditions as the current page on this footer. -->
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <!-- Column 1 — Contact -->
+        <div class="site-footer__col site-footer__col--contact">
+          <span class="eyebrow eyebrow--light" data-site-config="brand">Vayana Bungalows</span>
+          <ul class="site-footer__contact">
+            <li>
+              <a data-site-config-href="phone.href" href="tel:+359888888888">
+                <span data-site-config="phone.display">+359 88 888 8888</span>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">
+                <span data-site-config="email.display">contact@vayanabungalows.com</span>
+              </a>
+            </li>
+            <li>
+              <span data-site-config="address.line1">Tsarevo</span>,
+              <span data-site-config="address.line2">Bulgaria</span>
+            </li>
+          </ul>
+        </div>
+        <!-- Column 2 — Follow us -->
+        <div class="site-footer__col site-footer__col--social">
+          <span class="eyebrow eyebrow--light">Follow us</span>
+          <ul class="social-list">
+            <li>
+              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.linkedin" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4 4h4v16H4zM6 2.5A1.5 1.5 0 116 5.5 1.5 1.5 0 016 2.5zM10 8h3.8v2h.05A4.16 4.16 0 0117.6 8C21.4 8 22 10.4 22 13.6V20h-4v-5.7c0-1.4 0-3.1-1.9-3.1S14 12.6 14 14.2V20h-4z"/></svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <!-- Column 3 — Policies + Enquire (KEEP IN SYNC across all pages,
+             cf. #11). aria-current="page" marks Terms & Conditions as
+             the current page on this footer. -->
+        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies and enquiries">
+          <span class="eyebrow eyebrow--light">Policies</span>
+          <ul>
+            <li><a href="../enquiries/" class="site-footer__enquire">Enquire</a></li>
+            <li><a data-site-config-path="policies.terms" href="/terms/" aria-current="page">Terms &amp; Conditions</a></li>
+            <li><a data-site-config-path="policies.cancellation" href="/cancellation/">Cancellation Policy</a></li>
+            <li><a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="site-footer__bar">
+        <div class="container site-footer__bar-inner">
+          <p data-site-config="copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
+          <p class="site-footer__license">License number: <span data-site-config="license">1327673</span></p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/assets/js/main.js"></script>
+  </body>
+</html>
