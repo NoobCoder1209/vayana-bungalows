@@ -26,6 +26,7 @@ export default defineConfig(({ command }) => ({
         stay: resolve(__dirname, 'stay/index.html'),
         destination: resolve(__dirname, 'destination/index.html'),
         contacts: resolve(__dirname, 'contacts/index.html'),
+        privacy: resolve(__dirname, 'privacy/index.html'),
       },
     },
   },

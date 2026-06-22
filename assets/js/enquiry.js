@@ -61,13 +61,13 @@ const DATE_ERROR_MSG = 'Please pick check-in and check-out dates.';
 const DATE_ORDER_ERROR_MSG = 'Check-out must be after check-in.';
 const PAST_DATE_ERROR_MSG = 'Check-in cannot be in the past.';
 const MESSAGE_TOO_LONG_MSG = 'Your message is too long (max 2000 characters).';
-// "Privacy Policy" link is currently NOT shown on the consent label
-// because /privacy/ 404s today (page itself ships in #16). The error
-// message therefore must NOT reference "Privacy Policy" either — that
-// would mention something the user can't see. Round-2 review finding
-// I-R2-1: keep the wording aligned with the visible label. When #16
-// lands and the label gets the link back, this string changes too.
-const CONSENT_ERROR_MSG = 'Please tick the consent box to continue.';
+// The consent label on /enquiries/ links to /privacy/ (shipped in #16)
+// and reads "I accept the Privacy Policy and consent to being contacted
+// by Vayana Bungalows regarding my enquiry." The error string therefore
+// MUST reference the same concept the user sees on screen — round-2
+// review finding I-R2-1 is bidirectional. If the visible label
+// wording changes, this string changes in the same commit.
+const CONSENT_ERROR_MSG = 'Please accept the Privacy Policy to continue.';
 
 // Bungalow allowlist for `?villa=<slug>` pre-fill. Anything not in this
 // set is silently ignored so an attacker can't craft a link that injects

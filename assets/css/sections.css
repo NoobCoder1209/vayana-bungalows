@@ -2207,3 +2207,140 @@ a.contacts-card__value:focus-visible {
   font-size: var(--fs-body);
   max-width: 540px;
 }
+
+/* =========================================================================
+   Legal pages (Privacy / Terms / Cancellation) — issue #16
+   -------------------------------------------------------------------------
+   Long-form static content. The page uses a single column constrained to
+   ~70ch for readable measure, generous paragraph rhythm, and the same
+   pull-under-the-header pattern as the contacts hero (--header-height
+   pad-top) so the first heading doesn't disappear under the sticky bar.
+   No hero photo — keeping legal pages plain by design.
+   ========================================================================= */
+
+.legal-page {
+  background-color: var(--bg-cream);
+  /* Pull main content below the sticky header. The header is position:
+     sticky with --header-height; without this padding the eyebrow + h1
+     would tuck under it on page load. */
+  padding-top: calc(var(--header-height) + var(--space-8));
+  padding-bottom: var(--space-12);
+}
+
+.legal-page__inner {
+  /* Constrain to a readable measure. 720px ≈ 70ch in our body font; the
+     container utility already caps at a wider value, so we override
+     here just for the inner article. */
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.legal-page__head {
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.legal-page__head .eyebrow {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.legal-page__head h1 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--fs-h2);
+  /* Marcellus, same as section headings elsewhere on the site. */
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.legal-page__updated {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  font-style: italic;
+}
+
+.legal-page__lede {
+  margin: 0;
+  font-size: var(--fs-lg);
+  line-height: 1.55;
+}
+
+/* Each numbered section is a <section> sibling under .legal-page__inner. */
+.legal-page section {
+  margin-top: var(--space-8);
+}
+
+.legal-page h2 {
+  margin: 0 0 var(--space-3);
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
+  font-size: var(--fs-h4);
+  line-height: 1.2;
+  /* Provide a stable anchor offset target so /privacy/#your-rights doesn't
+     land under the sticky header. */
+  scroll-margin-top: calc(var(--header-height) + var(--space-3));
+}
+
+.legal-page h3 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-family: 'Marcellus', serif;
+  font-weight: 400;
+  font-size: var(--fs-h6);
+  line-height: 1.25;
+}
+
+.legal-page p {
+  margin: 0 0 var(--space-3);
+  font-size: var(--fs-body);
+  line-height: 1.65;
+}
+
+.legal-page ul {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-3);
+  list-style-type: disc;
+}
+
+.legal-page li {
+  margin-bottom: var(--space-2);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+.legal-page li:last-child {
+  margin-bottom: 0;
+}
+
+.legal-page a {
+  color: var(--primary-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal-page a:hover,
+.legal-page a:focus-visible {
+  color: var(--text-dark);
+}
+
+.legal-page code {
+  /* Inline code (used for `/enquiries/`, `/24`, etc. — small markers).
+     Keep the visual weight low so a clause doesn't read as code-heavy. */
+  font-size: 0.9em;
+  padding: 0 0.25em;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+}
+
+.legal-page__contact {
+  /* Flatten the bullet list inside §11 so the email + postal address
+     read like a small contact block rather than a bullet list. */
+  list-style: none;
+  padding-left: 0;
+}
+
+.legal-page__contact li {
+  margin-bottom: var(--space-1);
+}
