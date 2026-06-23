@@ -1,0 +1,64 @@
+name: Deploy Worker to Cloudflare
+
+# Triggers on push to main when worker/** or this workflow file changes.
+# Routine site PRs (content tweaks, frontend wiring) do NOT trigger this
+# job — keep the Worker deploy decoupled from the GitHub Pages deploy
+# in deploy.yml. The two run on different concurrency groups so a
+# Pages deploy cannot cancel a Worker deploy mid-flight (the Worker
+# deploy takes seconds, so this matters mostly to prevent a
+# half-applied deploy).
+#
+# Secrets used:
+#   - CLOUDFLARE_API_TOKEN — repo Secret. Account/Workers scope, set up
+#     during planning. The wrangler-action reads it and uses it for
+#     `wrangler deploy`.
+#
+# Cloudflare Worker secrets (TURNSTILE_SECRET, GSHEETS_SA_JSON,
+# GSHEETS_SHEET_ID, GSHEETS_ENQUIRES_TAB, IP_HASH_SALT) are set ONCE
+# via `wrangler secret put <NAME>` on the local machine and persist
+# across deploys — they live in Cloudflare's secret store, NOT in
+# GitHub Secrets. See worker/README.md for the list and process.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'worker/**'
+      - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: worker-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+
+      - name: Install
+        run: npm ci
+        working-directory: worker
+
+      - name: Deploy via wrangler
+        # SHA-pinned to the commit currently at v3 (2026-06-24 verified).
+        # Refresh by re-resolving the tag with:
+        #   gh api repos/cloudflare/wrangler-action/git/refs/tags/v3
+        # and updating the SHA below. OpenSSF Scorecard hardened-runner
+        # recommends SHA pinning for any action with secret access.
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd  # v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: worker

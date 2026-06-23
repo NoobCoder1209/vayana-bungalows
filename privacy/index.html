@@ -42,24 +42,26 @@
        Confirm at minimum:
 
          1. Retention period in §8 (currently "12 months" — placeholder).
-         2. Whether Cloudflare's data-processing terms need to be quoted in
-            §6 / §7 once the submission Worker ships (#15). Today the
-            Worker does NOT exist, so §6's Cloudflare bullet and §7's
-            Cloudflare-storage bullet are forward-looking.
+         2. ✓ Cloudflare processor language in §6 / §7 — firmed up when the
+            enquiry submission Worker shipped (#15). The Worker and the
+            Cloudflare Turnstile captcha are both confirmed processors;
+            check Cloudflare's published data-processing terms still match
+            what's quoted in §6 at launch.
          3. Cookie banner requirement — likely yes for EU traffic. File a
             new issue once analytics, marketing cookies, or any non-strictly-
-            necessary cookies land. Today no cookies are set by us; the only
-            cookies on the site come from the Google Maps embed iframe
-            (third-party context).
+            necessary cookies land. Today the only cookies set on the
+            site come from the Google Maps embed iframe (third-party
+            context). Cloudflare Turnstile in managed mode does NOT set
+            cookies by default; if pre-clearance is ever needed it may
+            set `cf_clearance` — re-check before launch.
          4. Whether §3 needs an explicit reference to the newsletter form
             collecting an email address once #10 ships real submission. In
             v1 the newsletter form opens a "thank you" modal and sends NO
             data anywhere — see assets/js/newsletter.js. The policy
             currently says exactly that.
-         5. Whether Google reCAPTCHA actually ships as the captcha choice
-            for the enquiry Worker (#20). If Cloudflare Turnstile wins
-            instead, swap the named processor in §6 + the technical
-            bullet in §3 + the cookies row in §10.
+         5. ✓ Captcha choice — decided in #20: Cloudflare Turnstile. §6 +
+            §3.2 + §10 all reference Turnstile concretely (no reCAPTCHA
+            anywhere in this policy).
          6. Whether the enquiry-form data fields list in §3 still matches
             the actual form fields rendered by enquiries/index.html. Both
             sides should be cross-checked at launch (the source of truth
@@ -85,6 +87,7 @@
            - ../destination/index.html
            - ../contacts/index.html
            - ../enquiries/index.html
+           - ../enquiries/thanks/index.html
            - ../terms/index.html
            - ../cancellation/index.html
            - ../premier-beachfront-suite/index.html
@@ -176,7 +179,7 @@
             <h1>Privacy Policy</h1>
             <p class="legal-page__updated">
               Last updated:
-              <time datetime="2026-06-22">22 June 2026</time>
+              <time datetime="2026-06-23">23 June 2026</time>
             </p>
             <p class="legal-page__lede">
               This page explains what personal data Vayana Bungalows
@@ -194,7 +197,7 @@
             <h2 id="updated-title">1. Last updated</h2>
             <p>
               This Privacy Policy was last updated on
-              <time datetime="2026-06-22">22 June 2026</time>. See
+              <time datetime="2026-06-23">23 June 2026</time>. See
               <a href="#changes">§12 Changes to this policy</a> for how
               we handle future updates.
             </p>
@@ -259,31 +262,40 @@
               <li>A consent checkbox confirming you agree to be contacted (this is logged together with the submission, so we have a record of your consent — see <a href="#why">§4</a>)</li>
             </ul>
             <p>
-              The form currently does <strong>not</strong> submit data
-              anywhere — version 1 of the page opens a "thank you"
-              modal and discards what you typed. When the submission
-              endpoint ships, this section will be updated in the
-              same release — see <a href="#changes">§12 Changes to
-              this policy</a>.
+              When you submit the form, your data is sent to a
+              <strong>Cloudflare Worker</strong> running on Cloudflare's
+              global edge network, which validates the submission and
+              appends a row to a Google Sheet held in Google Workspace
+              (EU region). See <a href="#sharing">§6 Who we share data
+              with</a> and <a href="#storage">§7 Where data is
+              stored</a> for the processors involved, and
+              <a href="#retention">§8 How long we keep data</a> for the
+              retention period.
             </p>
 
-            <h3>3.2 Technical data via anti-spam (reCAPTCHA / Turnstile)</h3>
+            <h3>3.2 Technical data via Cloudflare Turnstile (anti-spam)</h3>
             <p>
-              When the enquiry submission endpoint ships, we plan to
-              add a captcha challenge (Google reCAPTCHA v3 or
-              Cloudflare Turnstile — decision pending). The captcha
-              provider will collect, on Google's or Cloudflare's
-              behalf:
+              The enquiry form is protected against bots by
+              <strong>Cloudflare Turnstile</strong> in managed mode.
+              When you submit the form, Turnstile collects, on
+              Cloudflare's behalf:
             </p>
             <ul>
-              <li>Your IP address (truncated to the first three octets, i.e. <code>/24</code>, before storage on our side)</li>
+              <li>Your IP address — sent by your browser directly to Cloudflare's <code>siteverify</code> endpoint together with the challenge token</li>
               <li>Browser characteristics (user agent, screen size, plug-in list)</li>
               <li>Interaction signals on the form page (mouse / keyboard movement timing)</li>
             </ul>
             <p>
-              This data does not pass through our servers in clear form
-              — it goes directly from your browser to the captcha
-              provider, which returns only a risk score to us.
+              The captcha data above does not pass through our servers
+              in clear form — it goes directly from your browser to
+              Cloudflare, which returns only a success / failure result
+              to our Worker. Our Worker logs only a salted SHA-256
+              <strong>hash</strong> of your IP address (not the raw
+              address) into the Google Sheet, as <code>source_ip_hash</code>,
+              so we can correlate repeat enquiries without storing
+              identifying data. We rotate the salt periodically;
+              rotation makes earlier hashes uncorrelatable with any
+              future submission, which is the intended privacy property.
             </p>
 
             <h3>3.3 Cookies and tracking from embedded Google Maps</h3>
@@ -364,18 +376,23 @@
             <ul>
               <li>
                 <strong>Google LLC</strong> — for the embedded Google
-                Maps iframe (§3.3) and, if we choose it as the
-                captcha, Google reCAPTCHA v3 (§3.2). Google's
-                processing is governed by its own
-                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>.
+                Maps iframe (§3.3) and for storing enquiry submissions
+                in a Google Sheet held in Google Workspace (EU region,
+                §7). Google's processing is governed by its own
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>
+                and the
+                <a href="https://workspace.google.com/terms/dpa_terms.html" target="_blank" rel="noopener noreferrer">Google Workspace Data Processing Addendum</a>.
               </li>
               <li>
                 <strong>Cloudflare, Inc.</strong> — for hosting the
-                form submission endpoint when it ships (#15), and,
-                if we choose it as the captcha, Cloudflare Turnstile
-                (§3.2). Cloudflare's processing is governed by its
-                own
-                <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">privacy policy</a>.
+                <strong>Cloudflare Worker</strong> that accepts your
+                enquiry submission (§3.1) and for the
+                <strong>Cloudflare Turnstile</strong> anti-spam check
+                that runs before submission (§3.2). Cloudflare's
+                processing is governed by its own
+                <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">privacy policy</a>
+                and its
+                <a href="https://www.cloudflare.com/cloudflare-customer-dpa/" target="_blank" rel="noopener noreferrer">customer Data Processing Addendum</a>.
               </li>
               <li>
                 <strong>GitHub, Inc.</strong> — this website is
@@ -393,16 +410,18 @@
             <h2 id="storage-title">7. Where data is stored</h2>
             <p>
               The static website itself contains no stored personal
-              data. Once the enquiry submission endpoint ships:
+              data. When you submit the enquiry form:
             </p>
             <ul>
-              <li>Enquiry submissions will pass through Cloudflare's globally distributed edge network</li>
-              <li>Persisted submissions will live in storage configured to keep data within the European Union where possible</li>
+              <li>Your submission passes through Cloudflare's globally distributed edge network — the Worker that processes it runs on Cloudflare's edge close to your location, then writes only to the destinations below.</li>
+              <li>The validated submission is appended as a row to a Google Sheet held in Google Workspace, with the storage region set to the European Union.</li>
+              <li>Only a salted SHA-256 hash of your IP address is written to the sheet (in the <code>source_ip_hash</code> column) — the raw IP is never stored at rest on our side.</li>
             </ul>
             <p>
-              The exact storage architecture is still being designed;
-              this section will be made more specific in the same
-              release that ships submission.
+              In-flight TLS encryption is provided by Cloudflare (between
+              your browser and the Worker) and by Google (between the
+              Worker and the Sheets API). At-rest encryption on Google
+              Workspace is provided by Google.
             </p>
           </section>
 
@@ -464,7 +483,7 @@
             </p>
             <ul>
               <li><strong>Google Maps</strong> — sets cookies and receives your IP address when the embedded map iframe loads on the <a href="../">homepage</a>, the <a href="../contacts/">Contacts</a> page, and the <a href="../destination/">Destination</a> page; see Google's own cookie disclosures</li>
-              <li><strong>Captcha provider</strong> — once the captcha ships (#20), it will set strictly necessary cookies to prevent spam; the specific cookies depend on whether we choose Google reCAPTCHA or Cloudflare Turnstile</li>
+              <li><strong>Cloudflare Turnstile</strong> — in managed mode, Turnstile does not set cookies for most visitors. If a visitor is challenged for pre-clearance (rare; happens for traffic that looks abusive), Cloudflare may set a <code>cf_clearance</code> cookie scoped to the Turnstile challenge domain. See <a href="https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" target="_blank" rel="noopener noreferrer">Cloudflare's cookie reference</a>.</li>
             </ul>
             <p>
               We do not run any analytics, advertising, or

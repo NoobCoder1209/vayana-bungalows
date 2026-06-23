@@ -51,6 +51,23 @@ export const SITE_CONFIG = {
     cancellation: 'cancellation/',
     privacy: 'privacy/',
   },
+  // Network endpoints called by the JS bundle. BOTH values are public:
+  //   - endpoints.enquiry is the form action URL — visible in view-source
+  //     of /enquiries/, hit from enquiry.js's fetch() call. When a custom
+  //     domain ships (e.g. enquiries.vayanabungalows.com), swap this
+  //     string only; nothing else moves.
+  //   - endpoints.turnstileSiteKey is the Cloudflare Turnstile widget's
+  //     site key (NOT the secret — the secret lives only in the Worker
+  //     env). It's safe to ship in the HTML; Cloudflare validates the
+  //     paired secret server-side on every submit.
+  // The real *.workers.dev URL is filled in after the first wrangler
+  // deploy resolves it; until then this placeholder stops the fetch
+  // from ever hitting a real network (any string here that doesn't
+  // resolve simply produces a TypeError caught by enquiry.js).
+  endpoints: {
+    enquiry: 'https://vayana-enquiries.vayana.workers.dev/submit',
+    turnstileSiteKey: '0x4AAAAAADpxs0HIUft5BY7_',
+  },
   // The heart glyph is a literal U+2764 — must match `&#10084;` in HTML so
   // the textContent rewrite at hydration is a no-op (no visible flicker).
   copyright: '© 2026 Made with ❤ by Vayana di Mare',

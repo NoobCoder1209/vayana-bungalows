@@ -17,6 +17,13 @@
     <link rel="stylesheet" href="/assets/css/base.css" />
     <link rel="stylesheet" href="/assets/css/layout.css" />
     <link rel="stylesheet" href="/assets/css/sections.css" />
+    <!-- Cloudflare Turnstile — async loader, calls window.onTurnstileLoad
+         once api.js is ready. enquiry.js defines that callback and renders
+         the widget programmatically into the [data-enquiry-turnstile] div
+         below, passing the site key from site-config.js so the URL stays
+         single-source-of-truth. Loaded from challenges.cloudflare.com (same
+         origin policy as the Worker submission target). -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -136,10 +143,15 @@
         </div>
 
         <!-- The form itself.
-             v1 STUB: full client-side validation + honeypot + flatpickr
-             dates, but submit just opens a "Thank you" .modal — NO network
-             request goes anywhere. Real Cloudflare Worker wiring is tracked
-             in #15, captcha decision in #20.
+             On submit, enquiry.js POSTs the payload as JSON to the Worker
+             defined in site-config.js endpoints.enquiry. The Worker verifies
+             the Turnstile token, validates the body again server-side, and
+             appends a row to the Google Sheet.
+             With JS disabled, the Turnstile widget below cannot render
+             (api.js is deferred), so a classic form POST would always fail
+             the captcha gate server-side. Rather than route no-JS users
+             into a guaranteed 403, the <noscript> block surfaces the mail
+             address inline and the submit button stays HTML-disabled.
              Markup contracts (data-* attributes) are the JS module's hooks
              — keep them in sync with assets/js/enquiry.js. -->
         <div class="container enquiry-page__form-wrap">
@@ -263,6 +275,19 @@
                      aria-label="Leave this field empty"
                      data-enquiry-honeypot />
             </div>
+
+            <!-- 9b. Cloudflare Turnstile anti-spam widget.
+                 enquiry.js's window.onTurnstileLoad callback calls
+                 turnstile.render() on this container, reading the site key
+                 from site-config.js. The widget then injects a hidden
+                 input named `cf-turnstile-response` inside this div on
+                 successful challenge — that token rides along to the
+                 Worker via JS fetch (read explicitly) or via the no-JS
+                 classic POST (browser includes it like any other form
+                 field). aria-live=polite so screen readers announce any
+                 challenge state changes without preempting submit errors. -->
+            <div class="enquiry-form__field enquiry-form__field--full enquiry-form__turnstile"
+                 data-enquiry-turnstile aria-live="polite"></div>
 
             <!-- 10. Privacy consent — checkbox sits inside the <form> so
                  form.reset() catches it on success.

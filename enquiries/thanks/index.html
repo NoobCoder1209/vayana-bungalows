@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Swap no-js → js-on synchronously, before any stylesheet loads, so
+         the JS-on hamburger doesn't flash invisible during the deferred
+         module's load window. CSS uses html.no-js for the no-JS fallback. -->
+    <script>document.documentElement.classList.replace('no-js','js-on');</script>
+    <title>Thank you &mdash; Vayana Bungalows</title>
+    <meta name="description" content="Your enquiry was received. We will reply within 24-48 hours." />
+    <!-- noindex,nofollow — this page only exists as a no-JS-fallback
+         redirect target for the Worker's success path. There's no value
+         to search engines indexing it; do NOT let it leak into SERPs. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://noobcoder1209.github.io/vayana-bungalows/enquiries/thanks/" />
+    <meta name="theme-color" content="#0e0d0a" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/css/tokens.css" />
+    <link rel="stylesheet" href="/assets/css/base.css" />
+    <link rel="stylesheet" href="/assets/css/layout.css" />
+    <link rel="stylesheet" href="/assets/css/sections.css" />
+  </head>
+  <!--
+    ==========================================================================
+    REVIEW & FINALIZE BEFORE LAUNCH
+    --------------------------------------------------------------------------
+    Static confirmation page. The Cloudflare Worker (#15) redirects here
+    after a successful form submission on the no-JS path (303 See Other).
+    JS path opens an in-page modal and does not navigate to this URL —
+    but the page is still reachable via direct link / future success-page
+    bookmarking.
+
+    Nothing to finalize copy-wise; if the operator's reply-window changes
+    (currently 24-48 hours), update the message in <main> AND keep it in
+    sync with /enquiries/index.html, /contacts/index.html, /destination/,
+    and /stay/ CTA strips (all four reference the same window).
+
+    NO query parameters are read on this page. NO innerHTML writes. The
+    page renders identically regardless of how the user got here, by
+    design — eliminates the XSS surface that a "Thank you, {name}!"
+    treatment would introduce.
+
+    Reference: github.com/NoobCoder1209/vayana-bungalows/issues/15
+
+    KEEP IN SYNC across all pages — sticky header + drawer + footer
+    blocks below are the canonical sibling list (Vite multi-page build,
+    no shared layout primitive yet):
+      - ../../index.html
+      - ../../stay/index.html
+      - ../../destination/index.html
+      - ../../contacts/index.html
+      - ../../enquiries/index.html
+      - ../../privacy/index.html
+      - ../../terms/index.html
+      - ../../cancellation/index.html
+      - ../../premier-beachfront-suite/index.html
+      - ../../premier-oceanview-villa/index.html
+      - ../../deluxe-hilltop-residence/index.html
+    ==========================================================================
+  -->
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Sticky header — KEEP IN SYNC. Note the double-up paths (../../)
+         because this file is one level deeper than the sibling pages
+         (enquiries/thanks/index.html vs enquiries/index.html). -->
+    <div id="header-sentinel" aria-hidden="true"></div>
+    <header class="site-header" id="site-header">
+      <div class="container site-header__inner">
+        <button class="site-header__menu" type="button" aria-label="Open menu"
+                aria-controls="primary-nav" aria-expanded="false"
+                aria-haspopup="dialog" data-nav-toggle>
+          <span></span><span></span><span></span>
+        </button>
+
+        <a href="../../" class="site-logo">
+          <span class="site-logo__mark" aria-hidden="true">V</span>
+          <span class="site-logo__word">Vayana Bungalows</span>
+        </a>
+
+        <div class="site-header__cta">
+          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call" aria-label="Call us at +359 88 888 8888" data-call-cta>
+            <span class="site-header__call-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+            </span>
+            <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
+          </a>
+          <a href="../" class="btn btn-primary site-header__enquiries">Enquiries</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Backdrop + side drawer. -->
+    <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
+    <nav id="primary-nav" class="primary-nav__panel" aria-label="Primary"
+         role="dialog"
+         aria-hidden="true" tabindex="-1" hidden>
+      <button class="primary-nav__close" type="button"
+              aria-label="Close menu" data-nav-close>
+        <span aria-hidden="true">&times;</span>
+      </button>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Your bespoke stay</span>
+        <ul class="primary-nav__list">
+          <li><a href="../../" data-nav-link>Home</a></li>
+          <li><a href="../../stay/" data-nav-link>Stay</a></li>
+          <li><a href="../../destination/" data-nav-link>Destination</a></li>
+          <li><a href="../../contacts/" data-nav-link>Contacts</a></li>
+        </ul>
+      </div>
+
+      <a href="../../" class="primary-nav__brand" data-nav-link>
+        <span class="primary-nav__brand-mark" aria-hidden="true">V</span>
+        <span class="primary-nav__brand-word">Vayana Bungalows</span>
+      </a>
+
+      <div class="primary-nav__col">
+        <span class="primary-nav__eyebrow">Get in touch</span>
+        <ul class="primary-nav__list">
+          <li><a href="../" data-nav-link>Enquiries</a></li>
+          <li><a data-site-config-href="phone.href" href="tel:+359888888888" data-nav-link><span data-site-config="phone.display">+359 88 888 8888</span></a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- JS-disabled fallback. -->
+    <noscript>
+      <nav class="primary-nav__noscript" aria-label="Primary (no JavaScript)">
+        <ul>
+          <li><a href="../../">Home</a></li>
+          <li><a href="../../stay/">Stay</a></li>
+          <li><a href="../../destination/">Destination</a></li>
+          <li><a href="../../contacts/">Contacts</a></li>
+        </ul>
+      </nav>
+    </noscript>
+
+    <main id="main">
+      <article class="legal-page">
+        <div class="container legal-page__inner">
+          <header class="legal-page__head">
+            <span class="eyebrow">Enquiry sent</span>
+            <h1>Thank you for your enquiry</h1>
+            <p class="legal-page__lede">
+              We've received your message and a member of the team will reply
+              within 24-48 hours with availability and a tailored proposal.
+            </p>
+          </header>
+
+          <section aria-labelledby="thanks-next">
+            <h2 id="thanks-next">What happens next</h2>
+            <p>
+              Our reply will arrive at the email address you provided. If
+              you don't see it within 48 hours, please check your spam
+              folder, or get in touch directly using the details below.
+            </p>
+            <ul>
+              <li>
+                Phone:
+                <a data-site-config-href="phone.href" href="tel:+359888888888">
+                  <span data-site-config="phone.display">+359 88 888 8888</span>
+                </a>
+              </li>
+              <li>
+                Email:
+                <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">
+                  <span data-site-config="email.display">contact@vayanabungalows.com</span>
+                </a>
+              </li>
+            </ul>
+          </section>
+
+          <p class="legal-page__back">
+            <a href="../../">← Back to home</a>
+            &nbsp;·&nbsp;
+            <a href="../">Send another enquiry</a>
+          </p>
+        </div>
+      </article>
+    </main>
+
+    <!-- Footer (KEEP IN SYNC across all pages) -->
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <div class="site-footer__col site-footer__col--contact">
+          <span class="eyebrow eyebrow--light" data-site-config="brand">Vayana Bungalows</span>
+          <ul class="site-footer__contact">
+            <li>
+              <a data-site-config-href="phone.href" href="tel:+359888888888">
+                <span data-site-config="phone.display">+359 88 888 8888</span>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">
+                <span data-site-config="email.display">contact@vayanabungalows.com</span>
+              </a>
+            </li>
+            <li>
+              <span data-site-config="address.line1">Tsarevo</span>,
+              <span data-site-config="address.line2">Bulgaria</span>
+            </li>
+          </ul>
+        </div>
+        <div class="site-footer__col site-footer__col--social">
+          <span class="eyebrow eyebrow--light">Follow us</span>
+          <ul class="social-list">
+            <li>
+              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg>
+              </a>
+            </li>
+            <li>
+              <a data-site-config-href="social.linkedin" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4 4h4v16H4zM6 2.5A1.5 1.5 0 116 5.5 1.5 1.5 0 016 2.5zM10 8h3.8v2h.05A4.16 4.16 0 0117.6 8C21.4 8 22 10.4 22 13.6V20h-4v-5.7c0-1.4 0-3.1-1.9-3.1S14 12.6 14 14.2V20h-4z"/></svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies and enquiries">
+          <span class="eyebrow eyebrow--light">Policies</span>
+          <ul>
+            <li><a href="../" class="site-footer__enquire">Enquire</a></li>
+            <li><a data-site-config-path="policies.terms" href="/terms/">Terms &amp; Conditions</a></li>
+            <li><a data-site-config-path="policies.cancellation" href="/cancellation/">Cancellation Policy</a></li>
+            <li><a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="site-footer__bar">
+        <div class="container site-footer__bar-inner">
+          <p data-site-config="copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
+          <p class="site-footer__license">License number: <span data-site-config="license">1327673</span></p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="/assets/js/main.js"></script>
+  </body>
+</html>

@@ -23,6 +23,7 @@ export default defineConfig(({ command }) => ({
         deluxeHilltopResidence: resolve(__dirname, 'deluxe-hilltop-residence/index.html'),
         premierBeachfrontSuite: resolve(__dirname, 'premier-beachfront-suite/index.html'),
         enquiries: resolve(__dirname, 'enquiries/index.html'),
+        enquiriesThanks: resolve(__dirname, 'enquiries/thanks/index.html'),
         stay: resolve(__dirname, 'stay/index.html'),
         destination: resolve(__dirname, 'destination/index.html'),
         contacts: resolve(__dirname, 'contacts/index.html'),

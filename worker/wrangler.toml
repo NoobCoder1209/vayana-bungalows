@@ -1,0 +1,27 @@
+# Cloudflare Worker — vayana-enquiries-worker
+#
+# Deploy via `wrangler deploy` (locally) or the `deploy-worker.yml`
+# GitHub Actions workflow (on push to main when `worker/**` changes).
+#
+# Secrets (NOT in this file — set once via `wrangler secret put <NAME>`):
+#   - TURNSTILE_SECRET    server-side captcha secret
+#   - GSHEETS_SA_JSON     write service-account JSON blob (single line)
+#   - GSHEETS_SHEET_ID    Google spreadsheet ID
+#   - GSHEETS_ENQUIRES_TAB tab name where enquiries are appended (e.g. "Enquires")
+#   - IP_HASH_SALT        32-byte hex string, salts SHA-256 of source IP
+#
+# Non-secret config lives under [vars] below.
+
+name = "vayana-enquiries"
+main = "src/index.js"
+compatibility_date = "2026-06-23"
+workers_dev = true
+
+[vars]
+# Comma-separated origin allowlist used by CORS + redirect responses.
+# Add localhost:5173 for `vite dev` and the GitHub Pages origin for live.
+ALLOWED_ORIGINS = "https://noobcoder1209.github.io,http://localhost:5173,http://localhost:4173"
+
+# Path of the public site under the origin (used for 303 redirect targets
+# on the no-JS path; GitHub Pages serves the site under /vayana-bungalows/).
+SITE_BASE = "/vayana-bungalows"
