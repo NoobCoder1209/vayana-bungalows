@@ -1,0 +1,25 @@
+# Template for local dev secrets. Copy to `.dev.vars` (gitignored) and fill in
+# real values from the team password manager.
+#
+# Wrangler loads .dev.vars automatically when you run `wrangler dev`.
+# In production these same names are set via `wrangler secret put <NAME>`.
+
+# Cloudflare Turnstile — server-side secret key (sitekey lives in site-config.js)
+TURNSTILE_SECRET="0x0000000000000000000000000000000000000000"
+
+# Google service-account JSON — single-line, ESCAPED (literal \n in private_key).
+# Same shape as scripts/fetch-bookings.mjs's GOOGLE_SHEETS_KEY, but a DIFFERENT
+# service account: this one has Editor on the spreadsheet (writes only the
+# Enquires tab in practice).
+GSHEETS_SA_JSON='{"type":"service_account","project_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n","client_email":"...@....iam.gserviceaccount.com"}'
+
+# Spreadsheet ID — same file as the bookings calendar.
+GSHEETS_SHEET_ID="1d_NAxImy1UbRx70os2sXxWRweduqWevQPR0v6fG7Ew8"
+
+# Tab name within that spreadsheet — the one with the header row already in place.
+GSHEETS_ENQUIRES_TAB="Enquires"
+
+# 32-byte (64 hex chars) random salt for hashing source IPs. Rotate this to
+# render previously stored hashes uncorrelatable. Generate with:
+#   openssl rand -hex 32
+IP_HASH_SALT="0000000000000000000000000000000000000000000000000000000000000000"

@@ -8,3 +8,14 @@ dist/
 # Generated at deploy-time by scripts/fetch-bookings.mjs from Google Sheets;
 # never committed.
 public/assets/data/bookings.json
+
+# Cloudflare Worker local dev (worker/) — NEVER commit real secrets or
+# wrangler scratch state. .dev.vars.example IS committed as a template.
+.dev.vars
+.wrangler/
+worker/node_modules/
+
+# Generic env files — defensive, in case anyone drops one in.
+.env
+.env.*
+!.env.example

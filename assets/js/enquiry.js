@@ -1,19 +1,27 @@
-// Enquiry form — v1 stub for /enquiries/ (#11).
+// Enquiry form — /enquiries/ (#11, #15).
 //
-// v1 behaviour: validate name + dates + adults/children/infants + email
-// + phone + consent + honeypot, then open the "Thank you" .modal.
-// NO network request goes anywhere.
+// Behaviour: validate name + dates + adults/children/infants + email
+// + phone + consent + honeypot, render a Cloudflare Turnstile captcha,
+// then POST a JSON payload to the Cloudflare Worker defined in
+// site-config.js endpoints.enquiry. On 200 success the "Thank you"
+// .modal opens; on any error a generic message is surfaced in the
+// existing aria-live error pill.
 //
-// TODO: wire to Cloudflare Worker — see follow-up issues
-//   https://github.com/NoobCoder1209/vayana-bungalows/issues/15 (Worker + Sheets)
-//   https://github.com/NoobCoder1209/vayana-bungalows/issues/20 (captcha decision)
+// Closing #15 (Worker + Sheets) and #20 (captcha = Turnstile, decided
+// during planning) — the previous v1 stub had NO network request; the
+// fetch call below is the missing half. Honeypot trip still routes
+// silently to successPath() WITHOUT touching the Worker — same UX
+// as the original stub, no signal to bots.
 //
 // Same shape as assets/js/newsletter.js — error handling, idempotency
 // guard, honeypot-mimics-success, generic email error, focus restore,
 // JS-disabled fallback (submit button ships disabled in HTML, enabled
-// here on init; the <noscript> mailto block is the no-JS path).
+// here on init; the <noscript> mailto block is the no-JS path — the
+// Worker requires Turnstile, which itself requires JS, so no-JS users
+// genuinely cannot post the form).
 
 import flatpickr from 'flatpickr';
+import { SITE_CONFIG } from './site-config.js';
 
 // Stricter than HTML5's `type=email` (which accepts "a@b" with no TLD).
 // The form ships with `novalidate` so HTML5 enforcement is disabled by
@@ -69,6 +77,23 @@ const MESSAGE_TOO_LONG_MSG = 'Your message is too long (max 2000 characters).';
 // wording changes, this string changes in the same commit.
 const CONSENT_ERROR_MSG = 'Please accept the Privacy Policy to continue.';
 
+// Worker error → user-facing pill copy. Keys match the `error` strings
+// the Worker returns in worker/src/index.js — keep in lockstep when
+// either side adds a new bucket. The pill is the only surface the user
+// sees, so messages are deliberately generic (no debug detail leaks).
+const ERROR_MSGS = {
+  validation: 'Please check the highlighted fields and try again.',
+  captcha:    'The anti-spam check failed. Please tick the box if shown, or refresh the page.',
+  'rate-limit': 'Too many enquiries from this connection. Please try again in a few minutes.',
+  'content-type': 'Sorry, something went wrong sending your enquiry. Please refresh and try again.',
+  'too-large': 'Your message is too long. Please shorten it and try again.',
+  method:     'Sorry, something went wrong sending your enquiry. Please refresh and try again.',
+  downstream: 'Sorry, we couldn’t save your enquiry. Please try again, or email us at the address in the footer.',
+  network:    'Network error — please check your connection and try again.',
+  default:    'Sorry, something went wrong. Please try again or email us directly.',
+};
+const SUBMIT_BUSY_TEXT = 'Sending…';
+
 // Bungalow allowlist for `?villa=<slug>` pre-fill. Anything not in this
 // set is silently ignored so an attacker can't craft a link that injects
 // arbitrary text into the message field via the URL. The display name
@@ -107,6 +132,7 @@ export function initEnquiry() {
   const errorEl = form.querySelector('[data-enquiry-error]');
   const consentInput = form.querySelector('[data-enquiry-consent]');
   const consentLabel = consentInput?.closest('.enquiry-form__consent');
+  const turnstileContainer = form.querySelector('[data-enquiry-turnstile]');
   const modal = document.getElementById('enquiry-modal');
 
   // Hard requirements: bail and warn on any missing element so future
@@ -127,6 +153,7 @@ export function initEnquiry() {
   if (!submit) missing.push('[data-enquiry-submit]');
   if (!errorEl) missing.push('[data-enquiry-error]');
   if (!consentInput) missing.push('[data-enquiry-consent]');
+  if (!turnstileContainer) missing.push('[data-enquiry-turnstile]');
   if (!modal) missing.push('#enquiry-modal');
   if (missing.length) {
     console.warn('[enquiry] missing required elements:', missing.join(', '));
@@ -140,6 +167,41 @@ export function initEnquiry() {
   // The HTML ships it disabled (JS-disabled fallback: button stays
   // greyed, <noscript> mailto block is the call-to-action).
   submit.disabled = false;
+
+  // Cloudflare Turnstile widget — rendered programmatically (not
+  // declaratively via class="cf-turnstile") so the site-key stays in
+  // site-config.js and never duplicates into HTML. The Turnstile
+  // api.js loader in /enquiries/index.html appends ?onload=onTurnstileLoad,
+  // which fires once api.js is ready — we install the callback below.
+  //
+  // Race handling: if Turnstile loads BEFORE this module (unlikely with
+  // async/defer + ESM, but possible from bfcache), window.turnstile
+  // is already defined and we render immediately. If Turnstile loads
+  // AFTER (the common case), the callback below fires later and renders
+  // then. Either way the widget ends up rendered exactly once.
+  let turnstileWidgetId = null;
+  const renderTurnstile = () => {
+    if (turnstileWidgetId !== null || !window.turnstile) return;
+    try {
+      turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+        sitekey: SITE_CONFIG.endpoints.turnstileSiteKey,
+        theme: 'light',
+        action: 'enquiry',
+        // No callback — we read the token explicitly on submit via
+        // turnstile.getResponse(widgetId). Avoids race between
+        // callback-set state and the form's own submit handler.
+      });
+    } catch (e) {
+      // Don't block the form if Turnstile fails to render — the user
+      // can still try to submit, and the Worker will reject server-side
+      // (better UX: log + carry on rather than freeze the page).
+      console.warn('[enquiry] turnstile render failed:', e?.message || e);
+    }
+  };
+  // Install the global callback. If api.js already loaded and fired,
+  // window.turnstile is set — call renderTurnstile() directly below.
+  window.onTurnstileLoad = renderTurnstile;
+  if (window.turnstile) renderTurnstile();
 
   // Wire flatpickr on both date inputs. Same pattern as booking.js but
   // with d/m/Y format per user decision (Bulgarian audience reads it
@@ -273,7 +335,7 @@ export function initEnquiry() {
     fpCheckout.set('minDate', tTomorrow);
   };
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     // ALWAYS preventDefault first. Default submit would attempt a
     // same-origin GET with the form values in the query string, leaking
     // the email/phone into the URL bar / referer chain on GitHub Pages
@@ -382,13 +444,93 @@ export function initEnquiry() {
 
     if (honeypot.value.trim() !== '') {
       // Silent bot trip — do exactly what a valid submit does.
+      // CRITICAL: NO Worker fetch. The trip is invisible to the bot
+      // (same modal opens, same form-reset, same generated ref-free
+      // success UX) but the sheet stays clean.
       successPath();
       return;
     }
 
-    // All good — open the modal. NO fetch, NO XHR, NO sendBeacon.
-    // (Real Worker submission is #15; until then this is a stub.)
-    successPath();
+    // Read the Turnstile token. window.turnstile may be undefined if
+    // api.js failed to load (offline, CSP block) — in that case the
+    // token is empty and the Worker will reject with 403. Better UX
+    // than freezing the form: surface the failure and let the user
+    // retry. The Worker is the ground truth on captcha success.
+    const captchaToken = (window.turnstile && turnstileWidgetId !== null)
+      ? (window.turnstile.getResponse(turnstileWidgetId) || '')
+      : '';
+
+    // Build the JSON payload. Field names mirror the Worker's
+    // validation.js (worker/src/validation.js) — keep them in lockstep.
+    // Dates: enquiry.js holds them as Date objects; serialise to
+    // YYYY-MM-DD which is the canonical format the Worker accepts.
+    // IMPORTANT: we use the LOCAL-TIME getters (getFullYear/getMonth/getDate)
+    // NOT Date.toISOString().slice(0,10). flatpickr stores the selected
+    // date as the user's local midnight; the local getters return the
+    // day the user actually clicked. Using toISOString() would convert
+    // that local midnight to UTC and shift the day for any user east
+    // of UTC by 1 day backwards (and west of UTC midnight-by-clock to
+    // the "next" day). Local getters preserve user intent.
+    const toISO = (d) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+    const payload = {
+      name: nameVal,
+      email: emailVal,
+      phone: phoneVal,
+      checkin: toISO(checkinDate),
+      checkout: toISO(checkoutDate),
+      adults: adults.value,
+      children: children.value,
+      infants: infants.value,
+      message: messageVal,
+      consent: consentInput.checked ? 'true' : 'false',
+      'cf-turnstile-response': captchaToken,
+    };
+
+    // Loading state — disable submit, swap label, announce via
+    // aria-busy. The error pill (aria-live=assertive) doesn't double
+    // as a busy indicator, so the label change is the user's only cue
+    // that something is happening. Restore in finally so any branch
+    // (success / error / network failure) lands cleanly.
+    const originalSubmitText = submit.textContent;
+    submit.disabled = true;
+    submit.setAttribute('aria-busy', 'true');
+    submit.textContent = SUBMIT_BUSY_TEXT;
+
+    try {
+      const res = await fetch(SITE_CONFIG.endpoints.enquiry, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      // Even on a 4xx/5xx the Worker returns a JSON body — parse it.
+      // On a hard network error the fetch() throws and we land in
+      // the catch below.
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 200 && data.ok) {
+        successPath();
+        return;
+      }
+      // Worker returned an error envelope — map to user-facing copy.
+      const msg = ERROR_MSGS[data.error] || ERROR_MSGS.default;
+      showError(msg);
+    } catch (err) {
+      // Network failure, CORS block, fetch abort, etc.
+      showError(ERROR_MSGS.network);
+    } finally {
+      submit.disabled = false;
+      submit.removeAttribute('aria-busy');
+      submit.textContent = originalSubmitText;
+      // Reset Turnstile so a next attempt issues a fresh token —
+      // managed-mode tokens are single-use, so reusing would 403 again.
+      if (window.turnstile && turnstileWidgetId !== null) {
+        try { window.turnstile.reset(turnstileWidgetId); } catch (_) {}
+      }
+    }
   });
 
   // Modal close wiring — same pattern as booking.js / newsletter.js.
