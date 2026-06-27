@@ -24,6 +24,18 @@ const ALLOWED_ADULTS = new Set(['1', '2', '3', '4']);
 // "none". Both translate to "0" on the wire (see normaliseOptionalCount
 // below). The historical sheet schema is numeric — keeping it numeric
 // avoids breaking the existing pivot/sort behaviour in the spreadsheet.
+//
+// API-contract note: ALL THREE of these are accepted and normalised
+// to "0" by normaliseOptionalCount —
+//   - the literal "-"
+//   - the empty string (placeholder option selected)
+//   - the key omitted entirely from the JSON body (String(undefined ?? '')
+//     coerces to '' which is in the allowlist)
+// Pre-#41 polish, omitting the key was a 400 validation error. First-
+// party callers (assets/js/enquiry.js) always send the key because the
+// <select>.value reads as '' rather than undefined, so no real client is
+// affected. Documented here so future tests / third-party integrations
+// don't get tripped up by the silent acceptance.
 const ALLOWED_OPTIONAL_COUNT = new Set(['', '-', '0', '1', '2', '3', '4']);
 
 function normaliseOptionalCount(raw) {

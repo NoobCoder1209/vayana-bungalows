@@ -143,13 +143,23 @@
   letter-spacing: 0.04em;
   color: inherit;
   white-space: nowrap;
-  /* Optical-centre nudge. The right-side cluster (phone icon +
-     Enquiries pill) is visually heavier than the lone hamburger on
-     the left, so the geometrically-centred logo still reads as
-     slightly right of optical centre. A tiny leftward shift
-     compensates. Value picked by eye against the current cluster
-     weights; revisit if the header items change materially. */
-  margin-left: -12px;
+}
+
+/* Optical-centre nudge for the brand on viewports where the right
+   cluster (phone icon + Enquiries pill) outweighs the lone hamburger
+   on the left. A small leftward shift puts the logo at OPTICAL centre
+   rather than geometric centre.
+
+   Scoped to >=541px: at <=540px the existing breakpoint hides
+   .site-header__enquiries, so the right side becomes (phone icon
+   only) ≈ left side (hamburger), and the geometric centre is the
+   optical centre. Without this scope, the -12px would overcorrect
+   the small-screen layout and the wordmark could be pushed under
+   the hamburger at 320px widths. */
+@media (min-width: 541px) {
+  .site-logo {
+    margin-left: -12px;
+  }
 }
 
 .site-logo:hover {

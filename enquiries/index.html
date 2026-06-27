@@ -169,11 +169,13 @@
             <!-- 2. Check-in date — flatpickr (d/m/Y, minDate today).
                  Placeholder shows the in-pill label only; flatpickr's
                  picker opens on click and renders the date back in
-                 dd/mm/yyyy format. Format hint dropped from the
-                 placeholder per design (the picker UI makes it
-                 obvious enough). -->
+                 dd/mm/yyyy format. Format hint dropped from both the
+                 visible placeholder and the sr-only label per design
+                 — the picker UI makes the format obvious to sighted
+                 users, and SR users hear the same content as sighted
+                 users would read (audio/visual parity). -->
             <div class="enquiry-form__field">
-              <label for="eq-checkin" class="sr-only">Check-in date (required, dd/mm/yyyy)</label>
+              <label for="eq-checkin" class="sr-only">Check-in date (required)</label>
               <input id="eq-checkin" name="checkin" type="text"
                      placeholder="CHECK-IN*"
                      autocomplete="off" required
@@ -183,7 +185,7 @@
             <!-- 3. Check-out date — flatpickr, minDate re-anchors when
                  check-in changes (set in enquiry.js's onChange callback). -->
             <div class="enquiry-form__field">
-              <label for="eq-checkout" class="sr-only">Check-out date (required, dd/mm/yyyy)</label>
+              <label for="eq-checkout" class="sr-only">Check-out date (required)</label>
               <input id="eq-checkout" name="checkout" type="text"
                      placeholder="CHECK-OUT*"
                      autocomplete="off" required

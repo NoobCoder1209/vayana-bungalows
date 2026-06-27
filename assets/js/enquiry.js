@@ -334,6 +334,14 @@ export function initEnquiry() {
     form.reset();
     flagConsent(false);
     clearError();
+    // Clear the bfcache snapshot too — after a successful submit, the
+    // form is intentionally blank, and a subsequent Back navigation
+    // should land on a blank form, not on the previous user's pick.
+    try {
+      sessionStorage.removeItem(SELECT_SNAPSHOT_KEY);
+    } catch {
+      // ignore — same private-mode/quota story as pagehide above.
+    }
     // Reset flatpickr's internal state too — form.reset() clears the
     // <input> value, but the picker still thinks a date is selected
     // and the next open shows it highlighted. Calling .clear() syncs
@@ -348,6 +356,58 @@ export function initEnquiry() {
     tTomorrow.setDate(tNow.getDate() + 1);
     fpCheckout.set('minDate', tTomorrow);
   };
+
+  // bfcache restore: re-apply select values that the browser snapshot
+  // forgot. Firefox in particular loses the user's pick on
+  // disabled+selected+hidden first-option placeholder selects when
+  // the page is restored from bfcache (the HTML-attribute `selected`
+  // on the disabled first option wins on restore, snapping the field
+  // back to "ADULTS*" even though the user had picked e.g. 3).
+  //
+  // Strategy: snapshot the three select values to sessionStorage on
+  // pagehide (which fires before bfcache stash AND before a normal
+  // navigation), and on pageshow.persisted (bfcache restore signal),
+  // read them back and re-apply via setAttribute('selected') plus
+  // .value = ... so both the DOM-attribute state and the property
+  // state agree.
+  //
+  // We only act on event.persisted=true so a fresh navigation (no
+  // bfcache) doesn't pick up stale values from a previous session.
+  // sessionStorage is per-tab, so this doesn't leak across tabs.
+  //
+  // Scoped to the three guest-count selects only — the inputs
+  // (name/email/phone/dates/message) and the textarea all survive
+  // bfcache cleanly because their .value lives in the snapshot.
+  const SELECT_SNAPSHOT_KEY = 'vayana.enquiry.guests';
+  const guestSelects = [adults, children, infants].filter(Boolean);
+  window.addEventListener('pagehide', () => {
+    try {
+      const snap = guestSelects.reduce((acc, el) => {
+        acc[el.id] = el.value;
+        return acc;
+      }, {});
+      sessionStorage.setItem(SELECT_SNAPSHOT_KEY, JSON.stringify(snap));
+    } catch {
+      // sessionStorage may throw in private-mode Safari or with
+      // exhausted quota. Silent fallback — the user just sees the
+      // placeholder reset, same as before this handler existed.
+    }
+  });
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) return;
+    let snap;
+    try {
+      snap = JSON.parse(sessionStorage.getItem(SELECT_SNAPSHOT_KEY) || '{}');
+    } catch {
+      return;
+    }
+    guestSelects.forEach((el) => {
+      const saved = snap[el.id];
+      if (saved && saved !== el.value) {
+        el.value = saved;
+      }
+    });
+  });
 
   form.addEventListener('submit', async (e) => {
     // ALWAYS preventDefault first. Default submit would attempt a
