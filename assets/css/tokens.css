@@ -63,7 +63,7 @@
 
   /* Shape */
   --radius-button: 0px;
-  --radius-form: 0px;
+  --radius-form: 999px;
   --radius-card: 0px;
 
   /* Motion */

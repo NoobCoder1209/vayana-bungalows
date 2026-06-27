@@ -18,8 +18,30 @@ const MAX_PHONE_LEN = 40;
 const MAX_MESSAGE_LEN = 2000;
 
 const ALLOWED_ADULTS = new Set(['1', '2', '3', '4']);
-const ALLOWED_CHILDREN = new Set(['0', '1', '2', '3', '4']);
-const ALLOWED_INFANTS = new Set(['0', '1', '2', '3', '4']);
+// Children and Infants are OPTIONAL. The form's default state shows a
+// label-style placeholder ("CHILDREN" / "INFANTS") whose <option> has
+// an empty value, and includes "-" as a real selectable option meaning
+// "none". Both translate to "0" on the wire (see normaliseOptionalCount
+// below). The historical sheet schema is numeric — keeping it numeric
+// avoids breaking the existing pivot/sort behaviour in the spreadsheet.
+//
+// API-contract note: ALL THREE of these are accepted and normalised
+// to "0" by normaliseOptionalCount —
+//   - the literal "-"
+//   - the empty string (placeholder option selected)
+//   - the key omitted entirely from the JSON body (String(undefined ?? '')
+//     coerces to '' which is in the allowlist)
+// Pre-#41 polish, omitting the key was a 400 validation error. First-
+// party callers (assets/js/enquiry.js) always send the key because the
+// <select>.value reads as '' rather than undefined, so no real client is
+// affected. Documented here so future tests / third-party integrations
+// don't get tripped up by the silent acceptance.
+const ALLOWED_OPTIONAL_COUNT = new Set(['', '-', '0', '1', '2', '3', '4']);
+
+function normaliseOptionalCount(raw) {
+  if (raw === '' || raw === '-') return '0';
+  return raw;
+}
 
 // Date — YYYY-MM-DD (what enquiry.js sends in JS mode) OR dd/mm/yyyy
 // (what flatpickr renders into the no-JS submitted input value).
@@ -134,17 +156,17 @@ export function validateBody(body) {
   }
 
   const childrenRaw = typeof body.children === 'string' ? body.children : String(body.children ?? '');
-  if (!ALLOWED_CHILDREN.has(childrenRaw)) {
+  if (!ALLOWED_OPTIONAL_COUNT.has(childrenRaw)) {
     invalid.push('children');
   } else {
-    cleaned.children = childrenRaw;
+    cleaned.children = normaliseOptionalCount(childrenRaw);
   }
 
   const infantsRaw = typeof body.infants === 'string' ? body.infants : String(body.infants ?? '');
-  if (!ALLOWED_INFANTS.has(infantsRaw)) {
+  if (!ALLOWED_OPTIONAL_COUNT.has(infantsRaw)) {
     invalid.push('infants');
   } else {
-    cleaned.infants = infantsRaw;
+    cleaned.infants = normaliseOptionalCount(infantsRaw);
   }
 
   // Message — optional, length-capped.

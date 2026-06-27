@@ -25,7 +25,7 @@
          origin policy as the Worker submission target). -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
   </head>
-  <body>
+  <body class="body--cream">
     <a class="skip-link" href="#main">Skip to content</a>
 
     <!-- Sticky header -->
@@ -136,9 +136,7 @@
           <span class="eyebrow">Plan your stay</span>
           <h1 id="enquiry-title">Send us an enquiry</h1>
           <p class="enquiry-page__lede">
-            Tell us your dates and a little about your party &mdash;
-            we'll reply within 24-48 hours with availability and a
-            tailored proposal.
+            Leave your contact information and we will reach out to you shortly.
           </p>
         </div>
 
@@ -156,70 +154,110 @@
              — keep them in sync with assets/js/enquiry.js. -->
         <div class="container enquiry-page__form-wrap">
           <form class="enquiry-form" data-enquiry-form novalidate>
-            <!-- 1. Full name — full-row width (extended per spec) -->
+            <!-- 1. Full name — full-row width (extended per spec).
+                 Visible <label> hidden via .sr-only so screen readers
+                 still announce the field; sighted users see the
+                 placeholder act as the in-pill label. -->
             <div class="enquiry-form__field enquiry-form__field--full">
-              <label for="eq-name">Full name</label>
+              <label for="eq-name" class="sr-only">Full name (required)</label>
               <input id="eq-name" name="name" type="text" required
+                     placeholder="FULL NAME*"
                      autocomplete="name" maxlength="120"
                      data-enquiry-name />
             </div>
 
-            <!-- 2. Check-in date — flatpickr (d/m/Y, minDate today) -->
+            <!-- 2. Check-in date — flatpickr (d/m/Y, minDate today).
+                 Placeholder shows the in-pill label only; flatpickr's
+                 picker opens on click and renders the date back in
+                 dd/mm/yyyy format. Format hint dropped from both the
+                 visible placeholder and the sr-only label per design
+                 — the picker UI makes the format obvious to sighted
+                 users, and SR users hear the same content as sighted
+                 users would read (audio/visual parity). -->
             <div class="enquiry-form__field">
-              <label for="eq-checkin">Check-in</label>
+              <label for="eq-checkin" class="sr-only">Check-in date (required)</label>
               <input id="eq-checkin" name="checkin" type="text"
-                     placeholder="dd/mm/yyyy" autocomplete="off" required
+                     placeholder="CHECK-IN*"
+                     autocomplete="off" required
                      data-enquiry-checkin />
             </div>
 
             <!-- 3. Check-out date — flatpickr, minDate re-anchors when
                  check-in changes (set in enquiry.js's onChange callback). -->
             <div class="enquiry-form__field">
-              <label for="eq-checkout">Check-out</label>
+              <label for="eq-checkout" class="sr-only">Check-out date (required)</label>
               <input id="eq-checkout" name="checkout" type="text"
-                     placeholder="dd/mm/yyyy" autocomplete="off" required
+                     placeholder="CHECK-OUT*"
+                     autocomplete="off" required
                      data-enquiry-checkout />
             </div>
 
-            <!-- 4. Adults — 1..4, default 2 -->
-            <div class="enquiry-form__field">
-              <label for="eq-adults">Adults</label>
-              <select id="eq-adults" name="adults" required data-enquiry-adults>
-                <option value="1">1</option>
-                <option value="2" selected>2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-              </select>
-            </div>
+            <!-- 4–6. Guest counts (Adults / Children / Infants) — laid out
+                 as a 3-column row on desktop so the trio reads as a single
+                 "party composition" block. Collapses to 1 column on mobile
+                 via the breakpoint in sections.css.
 
-            <!-- 5. Children — 0..4, default 0 -->
-            <div class="enquiry-form__field">
-              <label for="eq-children">Children</label>
-              <select id="eq-children" name="children" required data-enquiry-children>
-                <option value="0" selected>0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-              </select>
-            </div>
+                 Select label trick: HTML's <select> can't have a
+                 placeholder attribute, so we put the label text in a
+                 disabled+selected first <option>. The user sees e.g.
+                 "ADULTS*" until they open the dropdown and pick a
+                 value. After picking, the label option is unreachable
+                 (until page refresh) — matches placeholder behaviour.
 
-            <!-- 6. Infants — 0..4, default 0 -->
-            <div class="enquiry-form__field">
-              <label for="eq-infants">Infants</label>
-              <select id="eq-infants" name="infants" required data-enquiry-infants>
-                <option value="0" selected>0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-              </select>
+                 Adults is REQUIRED — leaving it at the label option
+                 fails server validation. Children and Infants are
+                 OPTIONAL; "-" (empty) means none. The Worker
+                 normalizes empty/"-" to 0 before writing to the
+                 sheet (see worker/src/validation.js). -->
+            <div class="enquiry-form__guests enquiry-form__field--full">
+              <!-- 4. Adults — required, 1..4. Label-option has empty
+                   value so HTML required-validation rejects submit
+                   when left untouched. -->
+              <div class="enquiry-form__field">
+                <label for="eq-adults" class="sr-only">Adults (required)</label>
+                <select id="eq-adults" name="adults" required data-enquiry-adults>
+                  <option value="" disabled selected hidden>ADULTS*</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+
+              <!-- 5. Children — optional, 0..4. "-" is a real choice
+                   meaning zero. Label-option lives separately as the
+                   default-state placeholder. -->
+              <div class="enquiry-form__field">
+                <label for="eq-children" class="sr-only">Children (optional)</label>
+                <select id="eq-children" name="children" data-enquiry-children>
+                  <option value="" disabled selected hidden>CHILDREN</option>
+                  <option value="-">-</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+
+              <!-- 6. Infants — optional, 0..4. Same pattern as Children. -->
+              <div class="enquiry-form__field">
+                <label for="eq-infants" class="sr-only">Infants (optional)</label>
+                <select id="eq-infants" name="infants" data-enquiry-infants>
+                  <option value="" disabled selected hidden>INFANTS</option>
+                  <option value="-">-</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
             </div>
 
             <!-- 7. Email -->
             <div class="enquiry-form__field">
-              <label for="eq-email">Email</label>
+              <label for="eq-email" class="sr-only">Email (required)</label>
               <input id="eq-email" name="email" type="email" required
+                     placeholder="EMAIL*"
                      autocomplete="email" maxlength="254"
                      data-enquiry-email />
             </div>
@@ -227,8 +265,9 @@
             <!-- 8. Telephone — type=tel + loose regex (digits + symbols, 7+ chars).
                  No country selector / library — server (#15) will reformat. -->
             <div class="enquiry-form__field">
-              <label for="eq-phone">Telephone</label>
+              <label for="eq-phone" class="sr-only">Telephone (required)</label>
               <input id="eq-phone" name="phone" type="tel" required
+                     placeholder="TELEPHONE*"
                      autocomplete="tel" maxlength="40"
                      data-enquiry-phone />
             </div>
@@ -236,12 +275,13 @@
             <!-- 9. Message — optional, capped at 2000 chars (per spec).
                  Pre-fill text is written by enquiry.js when ?villa=<slug> is
                  in the URL and <slug> is on the allowlist; otherwise empty.
-                 The textarea label says "(optional)" inline so the user
-                 knows they can leave it blank. -->
+                 The placeholder says "(optional)" so the user knows they
+                 can leave it blank. -->
             <div class="enquiry-form__field enquiry-form__field--full">
-              <label for="eq-message">Message <span class="enquiry-form__optional">(optional)</span></label>
+              <label for="eq-message" class="sr-only">Message (optional)</label>
               <textarea id="eq-message" name="message"
                         maxlength="2000" rows="5"
+                        placeholder="MESSAGE (optional)"
                         data-enquiry-message></textarea>
             </div>
 
