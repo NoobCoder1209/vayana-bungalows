@@ -50,11 +50,31 @@
 }
 
 .site-header__inner {
-  display: flex;
+  /* 3-column grid (left items / brand / right items) so the brand
+     column sits at true 50% of the header regardless of how heavy
+     the left or right clusters are. flex `space-between` previously
+     even-spaced the three items, which let the heavier right
+     cluster (phone + Enquiries CTA) pull the logo's visual centre
+     ~76px left of the page midpoint. The middle column is `auto`
+     (sized to content) so the logo doesn't stretch; the 1fr columns
+     either side absorb the slack symmetrically. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-4);
   min-height: var(--header-height);
+}
+
+/* Left and right clusters each fill their column and align their
+   contents to the outer edge of the header (hamburger flush-left,
+   phone+CTA flush-right) — mirrors the old flex space-between
+   behaviour for the outer items only, leaving the centre column
+   purely for the brand. */
+.site-header__inner > .site-header__menu {
+  justify-self: start;
+}
+.site-header__inner > .site-header__cta {
+  justify-self: end;
 }
 
 /* Left slot — hamburger toggle (always visible, drawer behaviour lands in #3) */
@@ -123,6 +143,13 @@
   letter-spacing: 0.04em;
   color: inherit;
   white-space: nowrap;
+  /* Optical-centre nudge. The right-side cluster (phone icon +
+     Enquiries pill) is visually heavier than the lone hamburger on
+     the left, so the geometrically-centred logo still reads as
+     slightly right of optical centre. A tiny leftward shift
+     compensates. Value picked by eye against the current cluster
+     weights; revisit if the header items change materially. */
+  margin-left: -12px;
 }
 
 .site-logo:hover {

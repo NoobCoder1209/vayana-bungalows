@@ -77,6 +77,13 @@ const MESSAGE_TOO_LONG_MSG = 'Your message is too long (max 2000 characters).';
 // wording changes, this string changes in the same commit.
 const CONSENT_ERROR_MSG = 'Please accept the Privacy Policy to continue.';
 
+// Adults required ('1'..'4'). Empty value comes from the placeholder
+// option ("ADULTS*"). Children / Infants are intentionally OPTIONAL
+// — they're not checked client-side; the Worker normalises empty/'-'
+// to 0 (see worker/src/validation.js).
+const ALLOWED_ADULTS = new Set(['1', '2', '3', '4']);
+const ADULTS_ERROR_MSG = 'Please choose how many adults are travelling.';
+
 // Worker error → user-facing pill copy. Keys match the `error` strings
 // the Worker returns in worker/src/index.js — keep in lockstep when
 // either side adds a new bucket. The pill is the only surface the user
@@ -276,7 +283,14 @@ export function initEnquiry() {
   // omitted from `allFields` — they have defaults (2/0/0), every option
   // is valid, and there is no validation branch that could fail on them.
   // Round-2 review finding N-R2-2 (explicit comment requested).
-  const allFields = [name, checkinEl, checkoutEl, email, phone, message, consentInput];
+  //
+  // POST-#41 / placeholder-pattern update: Adults is now REQUIRED with
+  // no numeric default — the select starts on a disabled placeholder
+  // option ("ADULTS*"). It joins allFields so submit-time validation
+  // failures get the aria-invalid marker like the other required
+  // inputs. Children and Infants remain optional (placeholder or "-"
+  // are both legal) so they stay out of allFields.
+  const allFields = [name, checkinEl, checkoutEl, adults, email, phone, message, consentInput];
   const showError = (msg, field) => {
     errorEl.textContent = msg;
     errorEl.hidden = false;
@@ -411,6 +425,21 @@ export function initEnquiry() {
         || !PHONE_RE.test(phoneVal)) {
       showError(PHONE_ERROR_MSG, phone);
       phone.focus();
+      return;
+    }
+
+    // Adults — required. The select's default state is a disabled+
+    // selected first <option> with empty value (placeholder pattern),
+    // so an untouched form submits adults.value === ''. Reject that
+    // before sending to the Worker (the Worker rejects too — server
+    // is authoritative, this is just for instant UX feedback). The
+    // ALLOWED_ADULTS check also rejects DevTools-injected values
+    // outside 1..4. Children / Infants stay optional ('-', empty,
+    // 0..4 all accepted); the Worker normalises empty/'-' to 0.
+    const adultsVal = (adults.value || '').trim();
+    if (!ALLOWED_ADULTS.has(adultsVal)) {
+      showError(ADULTS_ERROR_MSG, adults);
+      adults.focus();
       return;
     }
 
