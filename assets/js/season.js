@@ -60,12 +60,24 @@ export function seasonMaxDate() {
  * a <select> makes the ceiling structural — the wrong years can't be
  * chosen at all.
  *
- * Wire via flatpickr's `onOpen` hook. NOT `onReady`: onReady fires when
- * flatpickr's config is initialised, but at that point the calendar
- * header hasn't been appended to the DOM yet on some flatpickr versions
- * (`fp.currentYearElement` is undefined). onOpen fires the first time
- * the calendar opens, guaranteeing the header is live. We use an
- * idempotency guard so subsequent opens don't re-swap.
+ * Wire via flatpickr's `onReady` hook. Traced through flatpickr 4.6.13's
+ * build() → buildMonthNav() sequence: currentYearElement is assigned
+ * before triggerEvent("onReady") fires, so it's live at that point.
+ *
+ * DOM-swap cleanup: replacing the <input> with a <select> is not enough
+ * — flatpickr keeps a reference to the original input in
+ * fp.currentYearElement and fp.yearElements[0]. Multiple internal code
+ * paths (minMaxDateSetter, updateNavigationCurrentMonth) later write
+ * .value / .min / .max / .disabled on that reference. If the reference
+ * still points at the detached input, those writes silently no-op.
+ * Today the onYearChange sync below saves us in practice, but that's
+ * fragile. Rebinding both references to our <select> future-proofs
+ * against any downstream .set('minDate', ...) / .set('maxDate', ...)
+ * call the caller may add later.
+ *
+ * Idempotency: onReady only fires once per instance, but we still guard
+ * with fp._yearDropdownAttached in case a future caller adds `onOpen`
+ * as a belt-and-braces trigger. Cheap insurance.
  *
  * Cross-picker consistency: the built-in monthDropdown is a real
  * <select> with class .flatpickr-monthDropdown-months. We clone its
@@ -73,13 +85,11 @@ export function seasonMaxDate() {
  * apply to both automatically — no separate rule needed. .cur-year is
  * carried over too because the existing header layout keys off it.
  *
- * @param {Array} selectedDates — passed by flatpickr's onOpen signature
- * @param {string} dateStr      — passed by flatpickr's onOpen signature
- * @param {object} fp           — the flatpickr instance
+ * @param {Array}  _selectedDates — flatpickr hook signature (unused here)
+ * @param {string} _dateStr       — flatpickr hook signature (unused here)
+ * @param {object} fp             — the flatpickr instance
  */
 export function attachYearDropdown(_selectedDates, _dateStr, fp) {
-  // Idempotency: onOpen fires every time the calendar opens; we only
-  // want to swap the input once. Flag the instance after first pass.
   if (fp._yearDropdownAttached) return;
   const yearInput = fp.currentYearElement;
   if (!yearInput) return;
@@ -108,7 +118,7 @@ export function attachYearDropdown(_selectedDates, _dateStr, fp) {
   // internal hooks as the built-in year input, so onYearChange listeners
   // and the picker grid stay in sync.
   select.addEventListener('change', (e) => {
-    fp.changeYear(parseInt(e.target.value, 10));
+    fp.changeYear(Number(e.target.value));
   });
 
   // Keep our <select> in sync when the picker's year changes via other
@@ -124,6 +134,16 @@ export function attachYearDropdown(_selectedDates, _dateStr, fp) {
   // values. Removing it makes the year genuinely inaccessible outside
   // our <select>.
   yearInput.parentNode.replaceChild(select, yearInput);
+
+  // Rebind flatpickr's internal references to our <select> so any later
+  // .set('minDate', ...) / .set('maxDate', ...) / keyboard-nav /
+  // updateNavigationCurrentMonth call operates on the live element
+  // instead of silently writing to a detached input. Setting .min /
+  // .max on a <select> is a no-op (not valid attrs), so writes there
+  // remain harmless; .disabled and .value writes now land on the
+  // visible element as flatpickr expects.
+  fp.currentYearElement = select;
+  fp.yearElements[0] = select;
 
   // Flatpickr also injects .arrowUp / .arrowDown <span> siblings next
   // to the year input inside .numInputWrapper. They spin the year up

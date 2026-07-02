@@ -1327,6 +1327,14 @@
   min-height: 44px;
   padding: 6px 0;
   overflow: visible;
+  /* Vendor CSS doesn't set position on .flatpickr-months, so the
+     absolutely-positioned prev/next-month arrows anchor to the
+     .flatpickr-calendar container (the nearest positioned ancestor).
+     That was fine when they used `top: 0` (calendar top and header
+     top are visually coincident), but we're switching them to
+     `top: 50%` (S1 below) which needs the header itself as the
+     positioning context. */
+  position: relative;
 }
 
 .flatpickr-months .flatpickr-month {
@@ -1355,6 +1363,19 @@
   font-weight: 500;
   line-height: 1.3;
   padding: 0 0.15rem;
+  height: auto;
+}
+
+/* Vertically re-center the prev/next month arrows against the taller
+   44px .flatpickr-months header. Flatpickr's default CSS pins them at
+   `top: 0; height: 34px`, which put them ~5px above the flex-centered
+   month/year text once we bumped the container's min-height. Anchor
+   to 50% + translate to re-center, and drop the fixed height so the
+   SVG icon inside sizes naturally. */
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  top: 50%;
+  transform: translateY(-50%);
   height: auto;
 }
 

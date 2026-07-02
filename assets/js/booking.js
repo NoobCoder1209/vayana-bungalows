@@ -129,7 +129,6 @@ export function initBooking() {
     disableMobile: true,
     onDayCreate: tagBookedDay('in'),
     onReady: attachYearDropdown,
-    onOpen: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -147,7 +146,6 @@ export function initBooking() {
     disableMobile: true,
     onDayCreate: tagBookedDay('out'),
     onReady: attachYearDropdown,
-    onOpen: attachYearDropdown,
   });
 
   // Pull the per-page bungalow key (B1 / B2 / B3) and patch in the

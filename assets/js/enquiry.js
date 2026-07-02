@@ -235,7 +235,6 @@ export function initEnquiry() {
     disable: [isOffSeason],
     dateFormat: 'd/m/Y',
     onReady: attachYearDropdown,
-    onOpen: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -257,7 +256,6 @@ export function initEnquiry() {
     disable: [isOffSeason],
     dateFormat: 'd/m/Y',
     onReady: attachYearDropdown,
-    onOpen: attachYearDropdown,
   });
 
   // URL-param pre-fill: `?villa=<slug>` populates the message textarea
