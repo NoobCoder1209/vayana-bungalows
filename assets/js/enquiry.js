@@ -22,6 +22,7 @@
 
 import flatpickr from 'flatpickr';
 import { SITE_CONFIG } from './site-config.js';
+import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
 
 // Stricter than HTML5's `type=email` (which accepts "a@b" with no TLD).
 // The form ships with `novalidate` so HTML5 enforcement is disabled by
@@ -230,7 +231,11 @@ export function initEnquiry() {
 
   const fpCheckin = flatpickr(checkinEl, {
     minDate: 'today',
+    maxDate: seasonMaxDate(),
+    disable: [isOffSeason],
     dateFormat: 'd/m/Y',
+    onReady: attachYearDropdown,
+    onOpen: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -248,7 +253,11 @@ export function initEnquiry() {
 
   const fpCheckout = flatpickr(checkoutEl, {
     minDate: tomorrow,
+    maxDate: seasonMaxDate(),
+    disable: [isOffSeason],
     dateFormat: 'd/m/Y',
+    onReady: attachYearDropdown,
+    onOpen: attachYearDropdown,
   });
 
   // URL-param pre-fill: `?villa=<slug>` populates the message textarea

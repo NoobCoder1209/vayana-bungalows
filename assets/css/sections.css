@@ -1306,6 +1306,58 @@
   border-color: var(--primary);
 }
 
+/* ========== Flatpickr — month/year header fix ==========
+   The default flatpickr CSS assumes a system-ui-like font with a
+   compact em-box and gives .flatpickr-months a fixed height (~34px)
+   with `overflow: hidden`. Our site's --font-heading (Marcellus) has
+   a taller intrinsic em-box, and .flatpickr-current-month inherits
+   from parent styles — the resulting text sticks out above the
+   fixed-height container and the ascenders/caps get clipped
+   (visible as "July 2026" showing only its lower halves).
+
+   Fix: give the month/year row explicit height and vertical padding,
+   force the body font (Jost) which fits flatpickr's default box,
+   and align the numeric year input's line-height. Scoped to the
+   flatpickr popup so nothing else on the page is affected.
+
+   Applies wherever flatpickr renders — /enquiries/, /stay/, and each
+   individual bungalow page's booking widget. */
+.flatpickr-months {
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 0;
+  overflow: visible;
+}
+
+.flatpickr-months .flatpickr-month {
+  height: auto;
+  min-height: 44px;
+  overflow: visible;
+}
+
+.flatpickr-current-month {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.3;
+  padding: 0;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.3;
+  padding: 0 0.15rem;
+  height: auto;
+}
+
 /* ========== Booking widget legend ========== */
 .booking-legend {
   display: flex;
