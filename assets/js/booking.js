@@ -1,4 +1,5 @@
 import flatpickr from 'flatpickr';
+import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
 
 // Where bookings.json lives once Vite has applied the production base path.
 // In dev: /assets/data/bookings.json
@@ -113,14 +114,21 @@ export function initBooking() {
 
   const fpIn = flatpickr(checkin, {
     minDate: 'today',
+    maxDate: seasonMaxDate(),
     dateFormat: 'M j, Y',
-    disable: [],
+    // The isOffSeason predicate greys out Oct..Apr; per-bungalow booked
+    // dates get pushed in later via .set('disable', ...) once bookings.json
+    // resolves (see loadBookings().then below). We seed with the season
+    // predicate so first paint is already season-aware — booked-day
+    // decoration comes second.
+    disable: [isOffSeason],
     // Force the flatpickr calendar grid even on mobile UAs. Without this,
     // flatpickr falls back to a native <input type="date"> which doesn't
     // honour our disable list, never fires onDayCreate (so .is-booked never
     // lands), and makes the legend underneath misleading.
     disableMobile: true,
     onDayCreate: tagBookedDay('in'),
+    onReady: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -132,10 +140,12 @@ export function initBooking() {
 
   const fpOut = flatpickr(checkout, {
     minDate: tomorrow,
+    maxDate: seasonMaxDate(),
     dateFormat: 'M j, Y',
-    disable: [],
+    disable: [isOffSeason],
     disableMobile: true,
     onDayCreate: tagBookedDay('out'),
+    onReady: attachYearDropdown,
   });
 
   // Pull the per-page bungalow key (B1 / B2 / B3) and patch in the
@@ -172,8 +182,13 @@ export function initBooking() {
       // is bound to the picker's dateFormat ('M j, Y'), and an ISO string
       // can silently fail to match — leaving the disable list effectively
       // empty. Date objects are unambiguous.
-      fpIn.set('disable', unavailable.map(parseIso));
-      fpOut.set('disable', checkoutDisable.map(parseIso));
+      //
+      // Prepend the isOffSeason predicate to both lists — .set('disable',
+      // ...) REPLACES the array, so without re-adding the predicate here
+      // the season block would silently disappear once bookings.json
+      // resolves, right when the user first sees the calendar.
+      fpIn.set('disable', [isOffSeason, ...unavailable.map(parseIso)]);
+      fpOut.set('disable', [isOffSeason, ...checkoutDisable.map(parseIso)]);
 
       // If the user managed to pick a date in the brief window before
       // bookings.json loaded, and that date is now known-blocked, clear
