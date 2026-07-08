@@ -1010,45 +1010,79 @@ function buildHeadBlock(opts) {
  * Anchor: markers are HTML comments so `<!--openText-->…<!--closeText-->`.
  * The `.` in `[\s\S]` allows newlines. `.*?` is non-greedy so the FIRST
  * close-marker after an open ends the block.
+ *
+ * L1: does NOT trim leading/trailing whitespace around the match. Prior
+ * revisions ate a single leading and trailing newline via `\s*`, which
+ * on the second re-transform pass would swallow the newline separating
+ * our previous block from a Vite-injected sibling — producing adjacent-
+ * without-separator markup. Leaving the newlines intact means multiple
+ * re-transforms accumulate one blank line per pass; insertAfterHead's
+ * own leading `\n` compensates by not adding another.
  */
 function stripMarkedString(html, openText, closeText) {
   const escOpen = openText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const escClose = closeText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // \s* around the open marker eats any leading whitespace/newline the
-  // previous emit inserted before the comment; same for after close.
   const re = new RegExp(
-    `\\s*<!--${escOpen}-->[\\s\\S]*?<!--${escClose}-->\\s*`,
+    `<!--${escOpen}-->[\\s\\S]*?<!--${escClose}-->`,
     'g',
   );
   return html.replace(re, '');
 }
 
 /**
- * Insert `block` immediately after the opening `<head>` tag in `html`.
+ * Insert `block` into <head> at a position that keeps `<meta charset>`
+ * within WHATWG's 1024-byte safety window. Boot-script + hreflang can
+ * push a bare-`<head>` insertion past that window (measured ~1170 bytes
+ * for our ~1130-byte block on a minimal page), which risks browsers
+ * mis-detecting page encoding for the first ~1KB of content.
+ *
+ * Preference order:
+ *   1. If `<meta charset="…">` exists in <head>, insert AFTER it (so
+ *      charset stays at its original near-top position).
+ *   2. Otherwise, insert right after `<head>` (falls back to L4's
+ *      behaviour; charset detection uses the HTTP header + default
+ *      UTF-8 which is fine).
+ *
  * String-splice rather than DOM insertion (see applyHead's Phase-2
  * rationale): marker comments always survive because they're just text.
+ * Uses a comment-masked scan copy so `<head>`/`<meta charset>` substrings
+ * inside HTML comments don't false-match.
  *
- * The naive approach — regex `/<head[^>]*>/i` — would match the string
- * "<head>" appearing INSIDE an HTML comment (e.g. a leading file-header
- * comment that documents the head structure), and splice our block into
- * the middle of the comment, producing nested-comment markup that
- * parse5 rejects. To avoid: strip HTML comments from a scan copy of
- * the head-searching prefix, find the real `<head>` there, then map
- * back to the original string index.
+ * M4: caller (applyLocale) has ALREADY run stripMarkedString by the
+ * time we get here, so returning `html` unchanged when there's no
+ * `<head>` would leave the document in a mid-idempotency state (previous
+ * blocks stripped, new block silently dropped). If we can't find `<head>`
+ * after strip already ran, that's an invariant break — throw so the
+ * dev sees the failure instead of shipping a subtly-broken page.
  *
- * If the source has no real `<head>` (test-only fragments), leaves the
- * input untouched.
+ * L2: emits a leading + trailing newline around `block` so the block
+ * doesn't run directly into the surrounding markup — cosmetic only.
  */
 function insertAfterHead(html, block) {
   // Build a scan copy where every HTML comment span is replaced with
   // spaces of equal length. That way index positions in the scan copy
   // map 1-to-1 to indices in the original, but comment-embedded
-  // "<head>" text can't match.
+  // "<head>" / "<meta charset>" text can't match.
   const scan = html.replace(/<!--[\s\S]*?-->/g, (m) => ' '.repeat(m.length));
-  const m = scan.match(/<head[^>]*>/i);
-  if (!m) return html;
-  const insertAt = m.index + m[0].length;
-  return `${html.slice(0, insertAt)}\n${block}${html.slice(insertAt)}`;
+  const headMatch = scan.match(/<head[^>]*>/i);
+  if (!headMatch) {
+    throw new Error(
+      '[i18n] insertAfterHead: no <head> element found after strip pass — head-injection idempotency invariant broken. Source HTML may have been mangled between strip and insert.',
+    );
+  }
+  // Prefer to insert AFTER <meta charset> if it exists within <head>
+  // (L4). Match up to the closing `>` including a possible self-closing
+  // slash. Both `<meta charset="utf-8">` and `<meta charset="utf-8" />`
+  // shapes are covered.
+  const charsetRe = /<meta[^>]*\bcharset\b[^>]*>/i;
+  const charsetMatch = scan.slice(headMatch.index).match(charsetRe);
+  let insertAt;
+  if (charsetMatch) {
+    insertAt = headMatch.index + charsetMatch.index + charsetMatch[0].length;
+  } else {
+    insertAt = headMatch.index + headMatch[0].length;
+  }
+  return `${html.slice(0, insertAt)}\n${block}\n${html.slice(insertAt)}`;
 }
 
 /**
@@ -1079,7 +1113,7 @@ function pageUrl({ basePath, pagePath, locale, defaultLocale }) {
   }
   if (pagePath !== 'index.html' && !pagePath.endsWith('/index.html')) {
     throw new Error(
-      `[i18n] pageUrl: pagePath must end with 'index.html' (directory-form URLs only), got "${pagePath}"`,
+      `[i18n] pageUrl: pagePath must name the index file (end with 'index.html') — emitted URL is directory-form, but the source-path anchor needs the filename. Got "${pagePath}"`,
     );
   }
   const prefix = locale === defaultLocale ? '' : `${locale}/`;
@@ -1274,7 +1308,6 @@ export function i18nPlugin(options) {
       // nothing (should never happen in practice).
       const outDir = options?.dir || resolve(projectRoot, 'dist');
       let count = 0;
-      let warnedRelative = false; // F-double-warn — only warn on EN pass
       for (const [fileName, asset] of Object.entries(bundle)) {
         if (!asset || asset.type !== 'asset') continue;
         if (!fileName.endsWith('.html')) continue;
@@ -1298,11 +1331,10 @@ export function i18nPlugin(options) {
         if (enHtml.charCodeAt(0) === 0xfeff) enHtml = enHtml.slice(1);
 
         // Sweep the FINAL EN emit for `../` hrefs (after Vite's
-        // asset-URL rewrite). Only warn once per page — the BG mirror
-        // inherits the same offenders, warning twice would double log
+        // asset-URL rewrite). Runs ONLY on the EN pass — the BG mirror
+        // inherits the same offenders, warning again is duplicate log
         // spam (F-double-warn).
         rejectRelativeHrefs(parseHtml(enHtml, PARSER_OPTIONS), fileName);
-        warnedRelative = true;
 
         // Apply BG head injection on top of the EN-rendered HTML. The
         // marker attributes are already gone (transform stripped them
@@ -1319,10 +1351,6 @@ export function i18nPlugin(options) {
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
         });
-        // No second rejectRelativeHrefs call — the BG mirror inherits
-        // the exact same offenders as EN and warning again just spams
-        // the log with duplicates (F-double-warn).
-        void warnedRelative; // silences the unused-var lint if any
         const bgPath = resolve(outDir, 'bg', fileName);
         mkdirSync(dirname(bgPath), { recursive: true });
         writeFileSync(bgPath, bg, 'utf-8');
@@ -1345,15 +1373,19 @@ export function i18nPlugin(options) {
      * post-base-strip path.
      */
     configureServer(server) {
-      // Return a post-hook so Vite installs our middleware AFTER its
-      // own internal ones (F5). This is the documented pattern for
-      // middleware that wants to see req.url with `base` already
-      // stripped and URL decoded.
+      // F5 fix — LOAD-BEARING: returning a function here tells Vite to
+      // install our middleware AFTER its own base/decodeURI middlewares.
+      // If this `return` is deleted, our middleware runs BEFORE Vite
+      // strips the base, and req.url still carries the '/vayana-bungalows/'
+      // prefix — the '/bg/' startsWith check misses and BG dev URLs 404.
+      // The manual cfgBase strip below is DEFENSIVE only (belt-and-braces
+      // for older Vite versions or edge cases where the post-hook order
+      // isn't respected). Keep BOTH.
       return () => {
-        // F5: strip the Vite server base (e.g. '/vayana-bungalows/')
-        // from req.url before the /bg/ prefix check. In dev the base
-        // is normally '/', but a subpath base breaks the prefix match
-        // otherwise.
+        // Defensive base-strip (see comment above). server.config.base
+        // is e.g. '/vayana-bungalows/'; trailing slash normalised to
+        // '/vayana-bungalows' so a request to exactly '/vayana-bungalows'
+        // (no trailing slash) still matches.
         const cfgBase = (server.config.base || '/').replace(/\/$/, '');
 
         server.middlewares.use((req, res, next) => {
@@ -1459,18 +1491,32 @@ export function i18nPlugin(options) {
             // best-effort
           }
         };
-        // F-listener-leak: register the SAME function reference so a
-        // Vite restart that re-runs configureServer(...) can dedup by
-        // reference. Also register a cleanup on server.close for
-        // completeness.
+        // F-listener-leak — register + arrange for cleanup on server
+        // shutdown so a Vite restart that re-invokes configureServer
+        // doesn't accumulate stale onLocaleChange listeners.
+        //
+        // Caveat: cleanup requires `server.httpServer` to exist. In
+        // middleware-mode Vite (where the caller owns the HTTP server
+        // and Vite runs as pure middleware), httpServer is null and
+        // the optional-chained `once('close', …)` silently no-ops.
+        // Emit a one-time warning so a middleware-mode integrator
+        // sees the leak instead of debugging phantom double-reloads
+        // after 5 restarts.
         server.watcher.on('change', onLocaleChange);
         server.watcher.on('add', onLocaleChange);
         server.watcher.on('unlink', onLocaleChange);
-        server.httpServer?.once('close', () => {
-          server.watcher.off('change', onLocaleChange);
-          server.watcher.off('add', onLocaleChange);
-          server.watcher.off('unlink', onLocaleChange);
-        });
+        if (server.httpServer) {
+          server.httpServer.once('close', () => {
+            server.watcher.off('change', onLocaleChange);
+            server.watcher.off('add', onLocaleChange);
+            server.watcher.off('unlink', onLocaleChange);
+          });
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn(
+            '[i18n] middleware-mode Vite (no httpServer) — watcher-cleanup on restart not wired; expect one extra locale-reload listener per config restart.',
+          );
+        }
       };
     },
   };
