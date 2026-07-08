@@ -1,0 +1,207 @@
+{
+  "meta": {
+    "brand": "Vayana Bungalows",
+    "brand_credit": "Vayana di Mare",
+    "tagline": "Boutique Bungalows in Tsarevo, Bulgaria"
+  },
+  "common": {
+    "skip_link": "Skip to content",
+    "header": {
+      "menu_open_aria": "Open menu",
+      "menu_close_aria": "Close menu",
+      "call_aria": "Call us at {phone}",
+      "enquiries_cta": "Enquiries",
+      "lang_group_aria": "Language",
+      "lang_en_label": "EN",
+      "lang_bg_label": "BG",
+      "lang_en_current_aria": "English, current language",
+      "lang_bg_current_aria": "Bulgarian, current language",
+      "lang_switch_to_en_aria": "Switch to English",
+      "lang_switch_to_bg_aria": "Switch to Bulgarian",
+      "_note_DO_NOT_TRANSLATE_lang_aria_keys": "The four lang_*_aria keys above (lang_en_current_aria, lang_bg_current_aria, lang_switch_to_en_aria, lang_switch_to_bg_aria) are consumed IMPLICITLY by the i18n plugin (scripts/i18n-plugin.js) — the plugin string-constructs the key names per-emit from a segment's data-lang plus its is-active state. They will appear as ORPHAN in `npm run i18n:lint` output because no HTML data-i18n attribute references them. DO NOT DELETE them thinking they're unused. This _note key itself is also orphan by design; leave it here as future-editor guidance. This note key's value is kept identical across all locales — do NOT translate it, or a future dev reading a translated identifier list will not be able to grep for the identifiers in code."
+    },
+    "drawer": {
+      "col_left_eyebrow": "Your bespoke stay",
+      "col_right_eyebrow": "Get in touch",
+      "nav_home": "Home",
+      "nav_stay": "Stay",
+      "nav_destination": "Destination",
+      "nav_contacts": "Contacts",
+      "nav_enquiries": "Enquiries",
+      "noscript_aria": "Primary (no JavaScript)"
+    },
+    "footer": {
+      "brand_eyebrow": "Vayana Bungalows",
+      "follow_eyebrow": "Follow us",
+      "follow_facebook_aria": "Facebook",
+      "follow_instagram_aria": "Instagram",
+      "follow_linkedin_aria": "LinkedIn",
+      "policies_eyebrow": "Policies",
+      "policies_aria": "Policies and enquiries",
+      "enquire": "Enquire",
+      "terms": "Terms & Conditions",
+      "cancellation": "Cancellation Policy",
+      "privacy": "Privacy Policy",
+      "copyright": "© 2026 Made with ❤ by {credit}",
+      "license_prefix": "License number:"
+    },
+    "video_modal_aria": "Resort video",
+    "close_aria": "Close",
+    "close_video_aria": "Close video"
+  },
+  "home": {
+    "meta": {
+      "title": "Vayana Bungalows — Boutique Bungalows in Tsarevo, Bulgaria",
+      "description": "Vayana Bungalows: a boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days.",
+      "og_description": "A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days."
+    },
+    "hero": {
+      "eyebrow": "Welcome to Vayana Bungalows",
+      "title_html": "Boutique Black Sea<br />Bungalows",
+      "subtitle": "Where the pines meet the coast and the days run on tide and appetite."
+    },
+    "cta_strip": {
+      "eyebrow": "Reservations open",
+      "title": "Choose your bungalow, then book your stay.",
+      "body": "Twenty-eight villas across the island, each with its own character. Pick the one that calls you.",
+      "cta": "Explore the bungalows"
+    },
+    "intro": {
+      "eyebrow": "Welcome to Vayana Bungalows",
+      "title": "On the Black Sea coast, at the edge of the Strandzha forest.",
+      "body_para1": "Vayana Bungalows is a small family-run retreat in Tsarevo, Bulgaria — a handful of hardwood bungalows tucked between the pines and the sea, hand-built and run with the same care we'd put into our own home.",
+      "body_para2": "Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the drive back.",
+      "cta": "Discover the resort",
+      "img_alt": "Wooden over-water villa at sunset"
+    },
+    "gallery": {
+      "eyebrow": "A glimpse of the island",
+      "title": "Moments at Vayana Bungalows",
+      "prev_aria": "Previous photos",
+      "next_aria": "Next photos",
+      "img1_alt": "Beach at golden hour",
+      "img2_alt": "Open-air villa terrace",
+      "img3_alt": "Pool deck overlooking the sea",
+      "img4_alt": "Tropical fine-dining table",
+      "img5_alt": "Palms over a turquoise lagoon",
+      "img6_alt": "Spa pavilion at dusk",
+      "img7_alt": "Sailboat anchored offshore",
+      "img8_alt": "Cocktail at the beach bar"
+    },
+    "video_band": {
+      "aria": "Resort video",
+      "play_aria": "Play resort video"
+    },
+    "rooms": {
+      "eyebrow": "Enjoy a world-class stay",
+      "title": "The accommodations",
+      "prev_aria": "Previous rooms",
+      "next_aria": "Next rooms",
+      "card1_title": "Bungalow 1",
+      "card2_title": "Bungalow 2",
+      "card3_title": "Bungalow 3",
+      "card1_price_html": "From <strong>$960</strong> / night",
+      "card2_price_html": "From <strong>$1,240</strong> / night",
+      "card3_price_html": "From <strong>$1,480</strong> / night",
+      "card_more": "Discover more",
+      "card1_img_alt": "Bungalow 1",
+      "card2_img_alt": "Bungalow 2",
+      "card3_img_alt": "Bungalow 3"
+    },
+    "locations": {
+      "eyebrow": "Unforgettable experience",
+      "title": "One of the world's most desirable locations.",
+      "spa_title": "Spa & wellness",
+      "spa_body": "Open-air pavilions, salt-water plunge pools, and treatments built around the island's botanicals.",
+      "activities_title": "Island activities",
+      "activities_body": "Reef snorkeling at first light, sunset paddleboards, guided hikes to the volcanic crater rim.",
+      "dine_title": "Gastronomic dine",
+      "dine_body": "Three restaurants from a single kitchen garden. Black Sea seafood, wood fire, no menu after seven."
+    },
+    "cta_block": {
+      "eyebrow": "A retreat for two",
+      "title": "Stay four nights, the fifth is on us.",
+      "body": "An invitation to slow down, between June and September, in any of our bungalows.",
+      "cta": "View the offer",
+      "img_alt": "Infinity pool overlooking the ocean"
+    },
+    "testimonial": {
+      "eyebrow": "Voice from our guests",
+      "quote": "“The kind of place where the days run on tide and appetite, and the staff seem to know what you need before you do.”",
+      "cite": "— Travel + Leisure"
+    },
+    "services": {
+      "eyebrow": "Discover the services we offer",
+      "title": "All the essentials for a cozy and comfortable stay.",
+      "airport_title": "Airport pick-up",
+      "airport_body": "Boat transfer included with every stay.",
+      "housekeeper_title": "Housekeeper",
+      "housekeeper_body": "Twice-daily villa service, twenty-four-hour butler.",
+      "wifi_title": "Wifi & internet",
+      "wifi_body": "Fibre across the island, even on the beach.",
+      "laundry_title": "Laundry",
+      "laundry_body": "Same-day pressing, hand-care for delicate fabrics.",
+      "breakfast_title": "Breakfast in bed",
+      "breakfast_body": "Tropical fruit, pressed juice, and pastries before sunrise.",
+      "pool_title": "Swimming pool",
+      "pool_body": "Three pools, including a fifty-metre lap at the beach club."
+    },
+    "location": {
+      "eyebrow": "Tsarevo, Bulgaria",
+      "title": "Find us",
+      "map_title": "Map showing Vayana Bungalows in Tsarevo, Bulgaria",
+      "map_fallback": "Map unavailable — see address below.",
+      "plus_code_prefix": "Plus Code:",
+      "directions_cta": "Open in Google Maps",
+      "directions_sr": "(opens Google Maps in a new tab)"
+    },
+    "newsletter": {
+      "eyebrow": "Notes from the bay",
+      "title": "Stay with us",
+      "lede": "Quiet notes from the island — three or four a year, never more.",
+      "email_label": "Email address",
+      "email_placeholder": "Your email address",
+      "hp_label": "Website",
+      "submit": "Subscribe",
+      "consent_html": "I agree to the <a href=\"{privacy_url}\">Privacy Policy</a> and consent to receiving occasional emails from Vayana Bungalows.",
+      "noscript_html": "Subscribe by emailing <a href=\"{email_href}\">{email_display}</a> with the subject \"Subscribe\".",
+      "modal_eyebrow": "Subscribed",
+      "modal_title": "Thank you — you're on the list.",
+      "modal_body": "We'll send a quiet note when there's something worth sharing — no more than four a year.",
+      "modal_close": "Close"
+    },
+    "contact": {
+      "heading_sr": "Contact",
+      "address_eyebrow": "Address",
+      "phone_eyebrow": "Phone",
+      "email_eyebrow": "Email"
+    }
+  },
+  "stay": {
+    "_stub": "This section is filled by issue #48 — marketing pages."
+  },
+  "bungalows": {
+    "_stub": "This section is filled by issue #48 — marketing pages (three bungalow detail pages)."
+  },
+  "destination": {
+    "_stub": "This section is filled by issue #48 — marketing pages."
+  },
+  "contacts": {
+    "_stub": "This section is filled by issue #48 — marketing pages."
+  },
+  "enquiries": {
+    "_stub": "This section is filled by issue #48 — marketing pages (form labels, errors, modal, thanks page)."
+  },
+  "enquiries_thanks": {
+    "_stub": "This section is filled by issue #48 — /enquiries/thanks/ landing page."
+  },
+  "privacy": {
+    "_stub": "This section is filled by issue #49 — legal pages."
+  },
+  "terms": {
+    "_stub": "This section is filled by issue #49 — legal pages."
+  },
+  "cancellation": {
+    "_stub": "This section is filled by issue #49 — legal pages."
+  }
+}

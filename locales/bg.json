@@ -1,0 +1,207 @@
+{
+  "meta": {
+    "brand": "Vayana Bungalows",
+    "brand_credit": "Vayana di Mare",
+    "tagline": "Бутик бунгала в Царево, България"
+  },
+  "common": {
+    "skip_link": "Към съдържанието",
+    "header": {
+      "menu_open_aria": "Отваряне на менюто",
+      "menu_close_aria": "Затваряне на менюто",
+      "call_aria": "Позвънете ни на {phone}",
+      "enquiries_cta": "Запитване",
+      "lang_group_aria": "Език",
+      "lang_en_label": "EN",
+      "lang_bg_label": "BG",
+      "lang_en_current_aria": "Английски, текущ език",
+      "lang_bg_current_aria": "Български, текущ език",
+      "lang_switch_to_en_aria": "Превключване на английски",
+      "lang_switch_to_bg_aria": "Превключване на български",
+      "_note_DO_NOT_TRANSLATE_lang_aria_keys": "The four lang_*_aria keys above (lang_en_current_aria, lang_bg_current_aria, lang_switch_to_en_aria, lang_switch_to_bg_aria) are consumed IMPLICITLY by the i18n plugin (scripts/i18n-plugin.js) — the plugin string-constructs the key names per-emit from a segment's data-lang plus its is-active state. They will appear as ORPHAN in `npm run i18n:lint` output because no HTML data-i18n attribute references them. DO NOT DELETE them thinking they're unused. This _note key itself is also orphan by design; leave it here as future-editor guidance. This note key's value is kept identical across all locales — do NOT translate it, or a future dev reading a translated identifier list will not be able to grep for the identifiers in code."
+    },
+    "drawer": {
+      "col_left_eyebrow": "Вашият престой",
+      "col_right_eyebrow": "Свържете се с нас",
+      "nav_home": "Начало",
+      "nav_stay": "Настаняване",
+      "nav_destination": "Дестинация",
+      "nav_contacts": "Контакти",
+      "nav_enquiries": "Запитване",
+      "noscript_aria": "Основна навигация (без JavaScript)"
+    },
+    "footer": {
+      "brand_eyebrow": "Vayana Bungalows",
+      "follow_eyebrow": "Последвайте ни",
+      "follow_facebook_aria": "Facebook",
+      "follow_instagram_aria": "Instagram",
+      "follow_linkedin_aria": "LinkedIn",
+      "policies_eyebrow": "Правила",
+      "policies_aria": "Правила и запитване",
+      "enquire": "Запитване",
+      "terms": "Общи условия",
+      "cancellation": "Условия за отказ",
+      "privacy": "Политика за поверителност",
+      "copyright": "© 2026 Създадено с ❤ от {credit}",
+      "license_prefix": "Лиценз №:"
+    },
+    "video_modal_aria": "Видео на комплекса",
+    "close_aria": "Затваряне",
+    "close_video_aria": "Затваряне на видеото"
+  },
+  "home": {
+    "meta": {
+      "title": "Vayana Bungalows — Бутик бунгала в Царево, България",
+      "description": "Vayana Bungalows: бутиков комплекс от бунгала на българското Черноморие в Царево — грижовно гостоприемство, градински гледки и спокойни дни.",
+      "og_description": "Бутиков комплекс от бунгала на българското Черноморие в Царево — грижовно гостоприемство, градински гледки и спокойни дни."
+    },
+    "hero": {
+      "eyebrow": "Добре дошли във Vayana Bungalows",
+      "title_html": "Бутик бунгала<br />на Черноморието",
+      "subtitle": "Където боровете срещат брега, а дните текат в ритъма на прилива и апетита."
+    },
+    "cta_strip": {
+      "eyebrow": "Резервациите са открити",
+      "title": "Изберете своето бунгало и запазете престоя си.",
+      "body": "Двадесет и осем бунгала в комплекса — всяко със свой характер. Изберете това, което ви говори.",
+      "cta": "Разгледайте бунгалата"
+    },
+    "intro": {
+      "eyebrow": "Добре дошли във Vayana Bungalows",
+      "title": "На брега на Черно море, в подножието на Странджа.",
+      "body_para1": "Vayana Bungalows е малък семеен комплекс в Царево, България — шепа дървени бунгала, сгушени между боровете и морето, построени и стопанисвани със същата грижа, която бихме отделили на собствения си дом.",
+      "body_para2": "Гостите ни идват за тишината, за сутрешните плувания и за неприбързаното гостоприемство, което остава дълго след като са потеглили обратно.",
+      "cta": "Разгледайте комплекса",
+      "img_alt": "Дървена вила над водата по залез"
+    },
+    "gallery": {
+      "eyebrow": "Поглед към брега",
+      "title": "Мигове от Vayana Bungalows",
+      "prev_aria": "Предишни снимки",
+      "next_aria": "Следващи снимки",
+      "img1_alt": "Плажът в златния час",
+      "img2_alt": "Тераса на бунгало на открито",
+      "img3_alt": "Басейн с гледка към морето",
+      "img4_alt": "Маса за изискана вечеря",
+      "img5_alt": "Палми над тюркоазена лагуна",
+      "img6_alt": "СПА павилион по здрач",
+      "img7_alt": "Ветроходна лодка на котва",
+      "img8_alt": "Коктейл на плажния бар"
+    },
+    "video_band": {
+      "aria": "Видео на комплекса",
+      "play_aria": "Пусни видеото на комплекса"
+    },
+    "rooms": {
+      "eyebrow": "Насладете се на престой от най-висока класа",
+      "title": "Настаняване",
+      "prev_aria": "Предишни бунгала",
+      "next_aria": "Следващи бунгала",
+      "card1_title": "Бунгало 1",
+      "card2_title": "Бунгало 2",
+      "card3_title": "Бунгало 3",
+      "card1_price_html": "От <strong>$960</strong> на нощ",
+      "card2_price_html": "От <strong>$1,240</strong> на нощ",
+      "card3_price_html": "От <strong>$1,480</strong> на нощ",
+      "card_more": "Научете повече",
+      "card1_img_alt": "Бунгало 1",
+      "card2_img_alt": "Бунгало 2",
+      "card3_img_alt": "Бунгало 3"
+    },
+    "locations": {
+      "eyebrow": "Незабравимо преживяване",
+      "title": "Едно от най-желаните места в света.",
+      "spa_title": "СПА и уелнес",
+      "spa_body": "Павилиони на открито, солени басейни и процедури с местни билки.",
+      "activities_title": "Активности край брега",
+      "activities_body": "Гмуркане призори, каяк по залез, водени преходи в Странджа.",
+      "dine_title": "Гастрономия",
+      "dine_body": "Три ресторанта, една кухня и градина. Черноморски рибни специалитети, огън на дърва, без меню след седем."
+    },
+    "cta_block": {
+      "eyebrow": "Убежище за двама",
+      "title": "Четири нощувки, петата е от нас.",
+      "body": "Покана да забавите ход между юни и септември — в което и да е от бунгалата ни.",
+      "cta": "Вижте офертата",
+      "img_alt": "Безкраен басейн с гледка към морето"
+    },
+    "testimonial": {
+      "eyebrow": "Гласове на нашите гости",
+      "quote": "„Място, където дните текат в ритъма на прилива и апетита, а екипът сякаш знае какво ви трябва още преди вие самите.“",
+      "cite": "— Travel + Leisure"
+    },
+    "services": {
+      "eyebrow": "Услуги, които предлагаме",
+      "title": "Всичко необходимо за спокоен и уютен престой.",
+      "airport_title": "Трансфер",
+      "airport_body": "Трансфер, включен в престоя.",
+      "housekeeper_title": "Обслужване на стаята",
+      "housekeeper_body": "Двукратно почистване дневно, батлер 24 часа.",
+      "wifi_title": "Wi-Fi и интернет",
+      "wifi_body": "Оптика в целия комплекс, дори на плажа.",
+      "laundry_title": "Пране",
+      "laundry_body": "Гладене в същия ден, деликатна грижа за фини тъкани.",
+      "breakfast_title": "Закуска в леглото",
+      "breakfast_body": "Свежи плодове, прясно изцеден сок и топли печива преди изгрев.",
+      "pool_title": "Басейн",
+      "pool_body": "Три басейна, включително петдесетметров плувен басейн на плажния бар."
+    },
+    "location": {
+      "eyebrow": "Царево, България",
+      "title": "Намерете ни",
+      "map_title": "Карта с местоположението на Vayana Bungalows в Царево, България",
+      "map_fallback": "Картата не се зарежда — вижте адреса по-долу.",
+      "plus_code_prefix": "Plus Code:",
+      "directions_cta": "Отвори в Google Карти",
+      "directions_sr": "(отваря Google Карти в нов раздел)"
+    },
+    "newsletter": {
+      "eyebrow": "Бележки от залива",
+      "title": "Останете с нас",
+      "lede": "Тихи бележки от брега — три-четири пъти в годината, не повече.",
+      "email_label": "Имейл адрес",
+      "email_placeholder": "Вашият имейл адрес",
+      "hp_label": "Уебсайт",
+      "submit": "Абонирайте се",
+      "consent_html": "Съгласявам се с <a href=\"{privacy_url}\">Политиката за поверителност</a> и приемам да получавам периодични съобщения от Vayana Bungalows.",
+      "noscript_html": "За абонамент изпратете имейл до <a href=\"{email_href}\">{email_display}</a> с тема „Subscribe“.",
+      "modal_eyebrow": "Абонирахте се",
+      "modal_title": "Благодарим — вече сте в списъка.",
+      "modal_body": "Ще ви пишем, когато има какво да споделим — не повече от четири пъти в годината.",
+      "modal_close": "Затвори"
+    },
+    "contact": {
+      "heading_sr": "Контакт",
+      "address_eyebrow": "Адрес",
+      "phone_eyebrow": "Телефон",
+      "email_eyebrow": "Имейл"
+    }
+  },
+  "stay": {
+    "_stub": "This section is filled by issue #48 — marketing pages."
+  },
+  "bungalows": {
+    "_stub": "This section is filled by issue #48 — marketing pages (three bungalow detail pages)."
+  },
+  "destination": {
+    "_stub": "This section is filled by issue #48 — marketing pages."
+  },
+  "contacts": {
+    "_stub": "This section is filled by issue #48 — marketing pages."
+  },
+  "enquiries": {
+    "_stub": "This section is filled by issue #48 — marketing pages (form labels, errors, modal, thanks page)."
+  },
+  "enquiries_thanks": {
+    "_stub": "This section is filled by issue #48 — /enquiries/thanks/ landing page."
+  },
+  "privacy": {
+    "_stub": "This section is filled by issue #49 — legal pages."
+  },
+  "terms": {
+    "_stub": "This section is filled by issue #49 — legal pages."
+  },
+  "cancellation": {
+    "_stub": "This section is filled by issue #49 — legal pages."
+  }
+}
