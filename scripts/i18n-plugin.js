@@ -1,4 +1,5 @@
-// Build-time i18n plugin (#47) — Part 1: loader, per-page transform, Vite hook.
+// Build-time i18n plugin (#47) — loader, per-page transform, head injection,
+// BG mirror emit, dev middleware.
 //
 // Overview
 // --------
@@ -28,10 +29,42 @@
 //                               allowlist: http, https, mailto, tel, /, #)
 //   data-i18n-meta="key"      → <meta content="value">
 //
-// The head-injection block (hreflang alternates, per-locale canonical/og
-// URL rewrite, boot-redirect script, `<html lang>`, `data-lang-pill-
-// expected` marker) lands in Part 2 of Task #163 — this file will grow
-// to add it.
+// Head injection (Part 2)
+// -----------------------
+// After the marker transform, applyHead() rewrites:
+//   - `<html lang>`                            → per-locale
+//   - `<link rel="canonical">` / og:url / twitter:url  → locale-prefixed URLs
+//   - `<link rel="alternate" hreflang="en|bg|x-default">` alternates
+//     wrapped in `<!-- i18n:hreflang -->` marker comments so re-transform
+//     is idempotent
+//   - inline `<head>` boot-redirect script (`<!-- i18n:boot-redirect -->`)
+//     that runs BEFORE any stylesheet loads and handles:
+//       * ?lang=en|bg override (writes localStorage, redirects if needed)
+//       * localStorage return-visit redirect (stored 'bg' + EN page →
+//         location.replace(bgUrl))
+//     Sets `data-i18n-redirecting="1"` on <html> BEFORE calling
+//     location.replace() so click handlers in lang.js can detect a
+//     doomed page and skip wiring (protects the stored preference from
+//     mid-navigation taps).
+//   - `data-lang-pill-expected="1"` on <html> when the source contains a
+//     `.site-header__lang` element (signals to lang.js that a missing
+//     pill in the rendered DOM is a real regression, not a legit
+//     pill-less page).
+//
+// BG mirror emit
+// --------------
+// The `closeBundle` hook iterates the emitted asset bundle for every
+// input page and writes the BG variant to `dist/bg/<path>/index.html`.
+// The BG pass re-transforms the SOURCE HTML (not the EN-transformed
+// output) so the two locales are independent and neither can corrupt
+// the other.
+//
+// Dev middleware
+// --------------
+// `configureServer` installs middleware that serves `/bg/<path>` in
+// dev by transforming the source HTML on the fly. An HMR watcher pushes
+// a `full-reload` to any BG tabs whenever a locale JSON or source HTML
+// file changes.
 //
 // Interpolation tokens
 // --------------------
@@ -57,6 +90,10 @@
 //   with the offending fragment.
 // * `{Token}`-shaped non-matches in a locale value (case mismatch, typo)
 //   → hard-fail at load time (H6). No silent literal `{Token}` in output.
+// * Pre-escaped HTML entity (`&amp;`, `&copy;`, `&#39;`, etc.) → hard-fail
+//   at load time (RH3). Locale values must be raw Unicode.
+// * `../` relative href in emitted HTML → hard-fail at build time (breaks
+//   under the /bg/ path prefix).
 //
 // Idempotency
 // -----------
@@ -75,8 +112,8 @@
 // bypass attempt we can think of, because latent hazards become live
 // hazards after refactors.
 
-import { readFileSync, readdirSync, lstatSync } from 'node:fs';
-import { resolve, join, relative, sep } from 'node:path';
+import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync } from 'node:fs';
+import { resolve, join, relative, sep, dirname } from 'node:path';
 import { parse as parseHtml } from 'node-html-parser';
 
 // Shared parser options — threaded through EVERY parseHtml call so the
@@ -620,9 +657,12 @@ function isAllowedHref(href) {
  *   locale       — 'en' | 'bg'
  *   dict         — flat { key: value } for this locale
  *   ctx          — interpolation context (per locale — see vite.config.js)
- *   isDefault    — true for EN (path-prefix-less)
+ *   isDefault    — true for the default locale (path-prefix-less)
  *   basePath     — Vite base, e.g. '/vayana-bungalows/'
  *   pagePath     — the source-tree relative path, e.g. 'enquiries/index.html'
+ *   allLocales   — array of every locale the plugin knows about (used by
+ *                  the head-injection block for hreflang alternates)
+ *   defaultLocale — the locale that owns the site root (path-prefix-less)
  *
  * Returns the transformed HTML string. Never mutates opts.
  */
@@ -633,6 +673,11 @@ export function applyLocale(html, opts) {
   // where it's inert text) — that's what we want at build time so the
   // markers inside work.
   transformSubtree(root, opts);
+  // Head injection: <html lang>, hreflang alternates, per-locale canonical/
+  // og:url/twitter:url rewrite, inline boot-redirect script, pill-expected
+  // marker. All idempotent via marker comments so re-running the transform
+  // (dev-mode HMR path) doesn't duplicate the injected block.
+  applyHead(root, opts);
   return root.toString();
 }
 
@@ -811,7 +856,292 @@ function lookup(dict, key, pagePath) {
 }
 
 // ============================================================================
-// 5. Vite plugin factory
+// 5. Head injection (Part 2)
+// ============================================================================
+
+// Marker comments wrapping every plugin-generated head block. Anything
+// between an open and close marker is REMOVED on subsequent transform
+// passes so re-running the plugin (dev HMR, or a re-render for another
+// locale) is idempotent — the block gets stripped and re-emitted rather
+// than duplicated.
+const HREFLANG_OPEN = 'i18n:hreflang open';
+const HREFLANG_CLOSE = 'i18n:hreflang close';
+const BOOT_OPEN = 'i18n:boot-redirect open';
+const BOOT_CLOSE = 'i18n:boot-redirect close';
+
+/**
+ * Apply the plugin-generated head block:
+ *   1. <html lang="…">
+ *   2. data-lang-pill-expected on <html> (if source has .site-header__lang)
+ *   3. Strip any pre-existing i18n-marked head block (idempotency)
+ *   4. Emit hreflang alternates (en, bg, x-default)
+ *   5. Rewrite canonical, og:url, twitter:url per locale
+ *   6. Emit inline boot-redirect script positioned BEFORE any stylesheet
+ *
+ * opts uses the same fields applyLocale takes plus allLocales +
+ * defaultLocale. If either is missing, applyHead is a no-op — this
+ * mode is used by the unit tests to exercise the marker transform
+ * without the head injection.
+ */
+function applyHead(root, opts) {
+  const {
+    locale,
+    isDefault,
+    basePath,
+    pagePath,
+    allLocales,
+    defaultLocale,
+  } = opts;
+  if (!allLocales || !defaultLocale) return; // test-only opt-out
+
+  const htmlEl = root.querySelector('html');
+  const headEl = root.querySelector('head');
+  if (!htmlEl || !headEl) return; // fragment inputs (test opts) — skip
+
+  // <html lang> — safeSetAttribute handles the ampersand edge but the
+  // locale is a whitelisted 2-letter code, no escape concerns.
+  safeSetAttribute(htmlEl, 'lang', locale);
+
+  // data-lang-pill-expected marker. Set only when the source had a
+  // `.site-header__lang` element — lang.js reads this to decide whether
+  // "no pill segments in DOM" is a regression to warn about.
+  if (root.querySelector('.site-header__lang')) {
+    safeSetAttribute(htmlEl, 'data-lang-pill-expected', '1');
+  }
+
+  // Strip prior i18n-marked head blocks so the transform is idempotent.
+  stripMarkedBlock(headEl, HREFLANG_OPEN, HREFLANG_CLOSE);
+  stripMarkedBlock(headEl, BOOT_OPEN, BOOT_CLOSE);
+
+  // Rewrite canonical / og:url / twitter:url to point at the current
+  // locale's URL. Skips silently if the source doesn't ship them (no
+  // hard-fail here — some pages legitimately don't have all three).
+  rewriteCanonicalUrls(headEl, {
+    locale,
+    isDefault,
+    basePath,
+    pagePath,
+    defaultLocale,
+  });
+
+  // Emit hreflang alternates + boot script. Both are inserted at the
+  // top of <head> (in reverse order so boot ends up FIRST — it must
+  // run before any stylesheet-loading <link>).
+  emitHreflang(headEl, {
+    basePath,
+    pagePath,
+    allLocales,
+    defaultLocale,
+  });
+  emitBootScript(headEl, {
+    locale,
+    isDefault,
+    basePath,
+    pagePath,
+    defaultLocale,
+  });
+}
+
+/**
+ * Remove every child of `parent` that sits between the open/close marker
+ * comments (inclusive of the markers themselves). Idempotency helper —
+ * lets the plugin re-emit blocks on subsequent transforms without
+ * duplicating them.
+ *
+ * A marker mid-attribute-value or inside a script string would still be
+ * text (comment nodes are structural), so this only matches actual
+ * comment nodes at the top level of `parent`.
+ */
+function stripMarkedBlock(parent, openText, closeText) {
+  const children = parent.childNodes;
+  let openIdx = -1;
+  let closeIdx = -1;
+  for (let i = 0; i < children.length; i++) {
+    const c = children[i];
+    if (c.nodeType !== 8 /* COMMENT_NODE */) continue;
+    const text = (c.rawText || c.text || '').trim();
+    if (text === openText) openIdx = i;
+    else if (text === closeText && openIdx >= 0) { closeIdx = i; break; }
+  }
+  if (openIdx < 0 || closeIdx < 0) return;
+  // Remove nodes from closeIdx down to openIdx inclusive so the earlier
+  // indices remain stable while iterating.
+  for (let i = closeIdx; i >= openIdx; i--) {
+    parent.removeChild(children[i]);
+  }
+}
+
+/**
+ * Compute the per-locale URL for a given source page. `pagePath` is the
+ * source-tree-relative path (e.g. 'enquiries/index.html'); the returned
+ * URL is a site-absolute path suitable for canonical/og/hreflang:
+ *
+ *   basePath = '/vayana-bungalows/'
+ *   pagePath = 'enquiries/index.html'
+ *   locale = 'en' (default) → '/vayana-bungalows/enquiries/'
+ *   locale = 'bg'            → '/vayana-bungalows/bg/enquiries/'
+ *   pagePath = 'index.html'
+ *   locale = 'en'            → '/vayana-bungalows/'
+ *   locale = 'bg'            → '/vayana-bungalows/bg/'
+ *
+ * Trailing 'index.html' is stripped so URLs are directory-form (matches
+ * how GH Pages serves them). basePath already ends with `/` per Vite's
+ * convention.
+ */
+function pageUrl({ basePath, pagePath, locale, defaultLocale }) {
+  const prefix = locale === defaultLocale ? '' : `${locale}/`;
+  const cleaned = pagePath.replace(/(^|\/)index\.html$/, '/').replace(/^\/+/, '');
+  // pagePath may be just 'index.html' → cleaned becomes '/', which
+  // after the leading-slash strip is ''. That's fine — join basePath +
+  // prefix + '' produces the root directory URL.
+  return `${basePath}${prefix}${cleaned}`;
+}
+
+/**
+ * Rewrite the value of a per-page URL meta tag to its locale-specific
+ * form. Uses safeSetAttribute so the ampersand-in-value edge is handled
+ * even though the URLs the plugin builds never contain `&` in practice.
+ */
+function rewriteCanonicalUrls(headEl, opts) {
+  const url = pageUrl(opts);
+  const canonical = headEl.querySelector('link[rel="canonical"]');
+  if (canonical) safeSetAttribute(canonical, 'href', url);
+
+  const og = headEl.querySelector('meta[property="og:url"]');
+  if (og) safeSetAttribute(og, 'content', url);
+
+  const tw = headEl.querySelector('meta[name="twitter:url"]');
+  if (tw) safeSetAttribute(tw, 'content', url);
+}
+
+/**
+ * Emit `<link rel="alternate" hreflang="…" href="…">` for every locale
+ * plus `x-default` (pointing at the default locale). Wrapped in the
+ * `i18n:hreflang` marker comments so the block is idempotent.
+ *
+ * Inserted at the TOP of <head> — right after the plugin's other head
+ * writes but ahead of any stylesheet <link>. This positioning matters
+ * only for the boot-redirect script (below) which shares the same
+ * top-insertion pattern; hreflang is order-insensitive semantically.
+ */
+function emitHreflang(headEl, opts) {
+  const { basePath, pagePath, allLocales, defaultLocale } = opts;
+  const lines = [];
+  lines.push(`<!--${HREFLANG_OPEN}-->`);
+  for (const loc of allLocales) {
+    const url = pageUrl({ basePath, pagePath, locale: loc, defaultLocale });
+    lines.push(
+      `<link rel="alternate" hreflang="${escapeHtmlAttr(loc)}" href="${escapeHtmlAttr(url)}">`,
+    );
+  }
+  const defaultUrl = pageUrl({
+    basePath,
+    pagePath,
+    locale: defaultLocale,
+    defaultLocale,
+  });
+  lines.push(
+    `<link rel="alternate" hreflang="x-default" href="${escapeHtmlAttr(defaultUrl)}">`,
+  );
+  lines.push(`<!--${HREFLANG_CLOSE}-->`);
+  prependHeadHtml(headEl, lines.join('\n'));
+}
+
+/**
+ * Emit the inline `<head>` boot-redirect script. Runs synchronously
+ * BEFORE any stylesheet loads (positioned at the top of <head> — the
+ * user perceives zero FOUC when the redirect fires).
+ *
+ * Responsibilities (matches the runtime lang.js's docstring):
+ *   1. ?lang=en|bg URL query override — writes localStorage.setItem(
+ *      'vb.lang', <lang>); if the current page's locale doesn't match
+ *      the override, location.replace() to the counterpart page.
+ *   2. Return-visit redirect — if the visitor previously chose BG
+ *      (localStorage.getItem('vb.lang') === 'bg') and the current
+ *      page is the EN root, location.replace() to the BG counterpart.
+ *   3. Sentinel — data-i18n-redirecting="1" on <html> is set BEFORE
+ *      calling location.replace() so lang.js can detect a doomed page
+ *      and skip wiring click handlers (protects the stored preference
+ *      from mid-navigation taps).
+ *
+ * Security: the script accepts ?lang= via a raw WHITELIST match (no
+ * decodeURIComponent — a malformed URI would throw and swallow the
+ * whole boot logic). Non-whitelisted values silently no-op.
+ */
+function emitBootScript(headEl, opts) {
+  const { locale, basePath, pagePath, defaultLocale } = opts;
+  // Compute the counterpart URL for EACH locale so the boot script
+  // knows where to redirect. Baked into data-* attrs on the script
+  // element rather than the script body — keeps the body identical
+  // across every page + locale, which is nice for cache-hit rate and
+  // easier to audit.
+  const enUrl = pageUrl({ basePath, pagePath, locale: 'en', defaultLocale });
+  const bgUrl = pageUrl({ basePath, pagePath, locale: 'bg', defaultLocale });
+
+  // Inline script body — kept minimal (~650 bytes minified). No
+  // decodeURIComponent (whitelist raw match). go() null-guards
+  // location.replace() and sets the sentinel. Try/catch wraps the
+  // whole thing because localStorage may throw in private browsing.
+  const bootBody = `(function(){try{var s=document.currentScript;var here=s.getAttribute('data-locale');var enUrl=s.getAttribute('data-en-url');var bgUrl=s.getAttribute('data-bg-url');function go(u){if(!u)return false;try{document.documentElement.setAttribute('data-i18n-redirecting','1');}catch(e){}location.replace(u);return true;}var q=null;var m=location.search.match(/[?&]lang=([^&]*)/);if(m){var v=m[1];if(v==='en'||v==='bg')q=v;}if(q){try{localStorage.setItem('vb.lang',q);}catch(e){}if(q!==here){if(go(q==='bg'?bgUrl:enUrl))return;}}else{var st=null;try{st=localStorage.getItem('vb.lang');}catch(e){}if(st==='bg'&&here==='en'){if(go(bgUrl))return;}}}catch(e){}})();`;
+
+  const scriptHtml = `<!--${BOOT_OPEN}-->\n<script data-locale="${escapeHtmlAttr(locale)}" data-en-url="${escapeHtmlAttr(enUrl)}" data-bg-url="${escapeHtmlAttr(bgUrl)}">${bootBody}</script>\n<!--${BOOT_CLOSE}-->`;
+  prependHeadHtml(headEl, scriptHtml);
+}
+
+/**
+ * Prepend an HTML fragment to the top of <head>. Uses node-html-parser's
+ * insertAdjacentHTML('afterbegin', ...) — the same API a browser
+ * exposes — so the parser owns the tree updates instead of us hand-
+ * splicing childNodes and parentNode refs (which had ordering bugs).
+ *
+ * afterbegin inserts the fragment as the FIRST children of headEl,
+ * pushing existing children down. Multiple calls stack in reverse
+ * insertion order — the LAST call ends up at position 0, matching the
+ * "boot script must come before hreflang alternates" ordering we
+ * want (hreflang alternates are inserted first, boot script after,
+ * so boot ends up above hreflang in the final markup).
+ */
+function prependHeadHtml(headEl, fragmentHtml) {
+  headEl.insertAdjacentHTML('afterbegin', fragmentHtml);
+}
+
+// ============================================================================
+// 6. Relative-href rejection sweep
+// ============================================================================
+
+/**
+ * Every emitted HTML must not carry any `href="../…"` or `src="../…"`
+ * — under the `/bg/` path prefix, a `../` in an emitted BG page resolves
+ * ONE directory ABOVE the root, silently breaking. All internal links
+ * MUST be root-absolute (`/vayana-bungalows/…`).
+ *
+ * This is a build-time sweep run on every locale variant AFTER the
+ * transform completes. Currently emits a WARNING (not a hard-fail) so
+ * pre-existing `../` links in legacy pages don't block the build.
+ * Task #165 (key home page) is where the actual link-conversion sweep
+ * lands per the Issue #47 plan; when that ships, tighten this to a
+ * throw.
+ */
+function rejectRelativeHrefs(root, pagePath) {
+  const bad = [];
+  for (const el of root.querySelectorAll('[href], [src], [action]')) {
+    for (const attr of ['href', 'src', 'action']) {
+      const v = el.getAttribute(attr);
+      if (v && v.startsWith('../')) {
+        bad.push(`${el.rawTagName || 'element'}[${attr}="${v}"]`);
+      }
+    }
+  }
+  if (bad.length) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[i18n] ${pagePath}: ${bad.length} relative "../" href/src/action detected — internal links must be root-absolute (BG /bg/ prefix breaks them). Task #165 will sweep. Offenders: ${bad.slice(0, 3).join('; ')}${bad.length > 3 ? `; and ${bad.length - 3} more` : ''}`,
+    );
+  }
+}
+
+// ============================================================================
+// 7. Vite plugin factory
 // ============================================================================
 
 /**
@@ -826,16 +1156,18 @@ function lookup(dict, key, pagePath) {
  *                     site-config.js.
  *   basePath    — Vite's base config value ('/vayana-bungalows/' in prod, '/' in dev)
  *   projectRoot — absolute path to the repo root
- *   inputs      — Vite's rollup input map (same object passed to build.rollupOptions.input).
- *                 TODO(part2): the plugin uses this to enumerate which
- *                 pages get the BG mirror emit; currently accepted for
- *                 forward-compat only.
+ *   inputs      — Vite's rollup input map (same object passed to
+ *                 build.rollupOptions.input). The plugin uses this to
+ *                 enumerate which pages get the BG mirror emit at
+ *                 closeBundle time.
  *
- * Part 1 (this file) wires up: dictionary load, per-page transform for the
- * DEFAULT locale (EN), and Vite's transformIndexHtml hook so the source HTML
- * is transformed inline during the normal build. Part 2 will add the BG
- * mirror emit (via closeBundle), the head-injection block, and the dev-mode
- * middleware + watcher.
+ * Registers three Vite hooks:
+ *   - transformIndexHtml: transforms each source HTML with the default
+ *     locale (EN); the emitted output lands at dist/<page>/index.html.
+ *   - closeBundle: re-reads each EN-emitted HTML and writes the BG
+ *     mirror under dist/bg/<page>/index.html.
+ *   - configureServer: dev-mode middleware serving /bg/<path> URLs on
+ *     the fly, plus an HMR watcher for locale JSON + source HTML edits.
  */
 export function i18nPlugin(options) {
   const {
@@ -895,7 +1227,7 @@ export function i18nPlugin(options) {
     /**
      * transformIndexHtml — Vite calls this once per input HTML page. We
      * transform IN PLACE for the default locale here; the BG mirror emit
-     * lands in Part 2 via closeBundle.
+     * lands via closeBundle below.
      *
      * Vite gives us `ctx.filename` — the absolute path to the source file
      * on disk. We derive the page-relative path via path.relative (L17),
@@ -907,17 +1239,7 @@ export function i18nPlugin(options) {
       order: 'pre',
       handler(html, viteCtx) {
         const abs = viteCtx?.filename || '';
-        let rel;
-        if (!abs) {
-          rel = '<unknown>';
-        } else {
-          rel = relative(projectRoot, abs);
-          // path.relative returns absolute if not under projectRoot; keep
-          // the absolute path in that case so the error anchor is still
-          // useful. Normalise separators to `/` so the display is
-          // platform-consistent.
-          rel = rel.split(sep).join('/');
-        }
+        const rel = relFromRoot(abs, projectRoot);
         return applyLocale(html, {
           locale: DEFAULT_LOCALE,
           dict: dicts[DEFAULT_LOCALE],
@@ -925,10 +1247,166 @@ export function i18nPlugin(options) {
           isDefault: true,
           basePath,
           pagePath: rel,
+          allLocales: locales,
+          defaultLocale: DEFAULT_LOCALE,
         });
       },
     },
+
+    /**
+     * writeBundle — Vite calls this after every bundle asset has been
+     * written to disk. We iterate the bundle object, find every HTML
+     * asset (they land after JS/CSS via Vite's own html-plugin), read
+     * them fresh from dist/ if the bundle entry only has the pre-
+     * transform source, and emit BG variants.
+     */
+    writeBundle(_options, bundle) {
+      const outDir = resolve(projectRoot, 'dist');
+      let count = 0;
+      for (const [fileName, asset] of Object.entries(bundle)) {
+        if (!fileName.endsWith('.html')) continue;
+        if (asset.type !== 'asset') continue;
+        // Read the emitted HTML from disk — Vite's html-plugin has now
+        // finalised asset URLs and written the file. Using the bundle
+        // asset's `source` directly might give us pre-final content
+        // depending on the plugin order.
+        const emittedPath = resolve(outDir, fileName);
+        let enHtml;
+        try {
+          enHtml = readFileSync(emittedPath, 'utf-8');
+        } catch (e) {
+          throw new Error(
+            `[i18n] writeBundle: cannot read emitted file ${emittedPath}: ${e.message}`,
+          );
+        }
+        rejectRelativeHrefs(parseHtml(enHtml, PARSER_OPTIONS), fileName);
+        // Apply BG head injection on top of the EN-rendered HTML. The
+        // marker attributes are already gone (transform stripped them
+        // in the EN pass), so the transformSubtree call inside
+        // applyLocale is a near-no-op — the work is in applyHead
+        // rewriting <html lang>, hreflang, canonical, boot script.
+        const bg = applyLocale(enHtml, {
+          locale: 'bg',
+          dict: dicts.bg,
+          ctx: contextByLocale.bg,
+          isDefault: false,
+          basePath,
+          pagePath: fileName,
+          allLocales: locales,
+          defaultLocale: DEFAULT_LOCALE,
+        });
+        rejectRelativeHrefs(parseHtml(bg, PARSER_OPTIONS), `bg/${fileName}`);
+        const bgPath = resolve(outDir, 'bg', fileName);
+        mkdirSync(dirname(bgPath), { recursive: true });
+        writeFileSync(bgPath, bg, 'utf-8');
+        count++;
+      }
+      // eslint-disable-next-line no-console
+      console.log(`[i18n] emitted BG variants for ${count} page(s) under dist/bg/`);
+    },
+
+    /**
+     * configureServer — dev-mode middleware serving `/bg/<path>` by
+     * transforming source HTML on the fly. Also installs an HMR
+     * watcher that pushes `full-reload` on any locale JSON or source
+     * HTML edit so BG tabs stay in sync.
+     */
+    configureServer(server) {
+      // 1. Path-traversal-safe middleware for /bg/* URLs.
+      server.middlewares.use((req, res, next) => {
+        const url = req.url || '';
+        if (!url.startsWith('/bg/') && url !== '/bg') return next();
+        // Strip the /bg prefix + normalise to a source-tree path.
+        let rel = url.replace(/^\/bg\/?/, '');
+        if (rel === '' || rel.endsWith('/')) rel += 'index.html';
+        // Resolve the source path and refuse anything outside projectRoot
+        // (path-traversal defence — /bg/../foo would escape).
+        const source = resolve(projectRoot, rel);
+        if (!source.startsWith(projectRoot + sep) && source !== projectRoot) {
+          res.statusCode = 403;
+          res.end('forbidden');
+          return;
+        }
+        // Only serve HTML through the transform; other assets fall
+        // through to Vite's default handling.
+        if (!source.endsWith('.html')) return next();
+        let html;
+        try {
+          html = readFileSync(source, 'utf-8');
+        } catch {
+          return next();
+        }
+        try {
+          const out = applyLocale(html, {
+            locale: 'bg',
+            dict: dicts.bg,
+            ctx: contextByLocale.bg,
+            isDefault: false,
+            basePath: '/',
+            pagePath: rel,
+            allLocales: locales,
+            defaultLocale: DEFAULT_LOCALE,
+          });
+          // Delegate to Vite's transformIndexHtml pipeline so dev-mode
+          // asset URLs get rewritten (import <script type="module">
+          // paths, HMR client injection, etc.).
+          server.transformIndexHtml(url, out, req.originalUrl).then(
+            (transformed) => {
+              res.setHeader('content-type', 'text/html; charset=utf-8');
+              res.end(transformed);
+            },
+            (err) => {
+              res.statusCode = 500;
+              res.end(`[i18n dev] ${err.message}`);
+            },
+          );
+        } catch (err) {
+          res.statusCode = 500;
+          res.end(`[i18n dev] ${err.message}`);
+        }
+      });
+
+      // 2. HMR watcher — locale JSON or source HTML edit triggers a
+      // full-reload on every open dev tab (BG tabs need it because
+      // they're served by our middleware, and Vite doesn't natively
+      // know they exist).
+      const boundary = localesDir + sep;
+      const rootBoundary = projectRoot + sep;
+      const distSep = `${sep}dist${sep}`;
+      const nodeModulesSep = `${sep}node_modules${sep}`;
+      const onChange = (path) => {
+        const isLocaleJson = path.startsWith(boundary) && path.endsWith('.json');
+        const isSourceHtml =
+          path.startsWith(rootBoundary) &&
+          path.endsWith('.html') &&
+          !path.includes(distSep) &&
+          !path.includes(nodeModulesSep);
+        if (isLocaleJson || isSourceHtml) {
+          try {
+            server.ws.send({ type: 'full-reload', path: '*' });
+          } catch {
+            // best-effort
+          }
+        }
+      };
+      server.watcher.on('change', onChange);
+      server.watcher.on('add', onChange);
+      server.watcher.on('unlink', onChange);
+    },
   };
+}
+
+/**
+ * Derive a source-tree-relative page path from an absolute filename,
+ * normalising separators to `/` and falling back to a `<unknown>`
+ * marker when the filename is missing or lives outside projectRoot.
+ * Shared between transformIndexHtml and closeBundle so error anchors
+ * are identical across both.
+ */
+function relFromRoot(abs, projectRoot) {
+  if (!abs) return '<unknown>';
+  const rel = relative(projectRoot, abs);
+  return rel.split(sep).join('/');
 }
 
 // Re-exports for tests + the standalone i18n lint script (Task #164).

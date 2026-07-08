@@ -445,3 +445,122 @@ test('applyLocale: does not mutate opts', () => {
   assert.deepEqual(o.dict, snapshot.dict);
   assert.deepEqual(o.ctx, snapshot.ctx);
 });
+
+// ---------------------------------------------------------------------------
+// applyLocale — head injection (Part 2)
+// ---------------------------------------------------------------------------
+
+function headOpts(overrides = {}) {
+  // Adds the Part-2 allLocales + defaultLocale required to exercise the
+  // head-injection block. applyLocale is a no-op on head-injection when
+  // these are absent (test-only opt-out).
+  return opts({
+    isDefault: overrides.locale === 'bg' ? false : true,
+    basePath: '/vayana-bungalows/',
+    pagePath: 'index.html',
+    allLocales: ['bg', 'en'],
+    defaultLocale: 'en',
+    ...overrides,
+  });
+}
+
+test('applyLocale: writes <html lang="bg"> on BG pass (head)', () => {
+  const dict = { title: 'x' };
+  const out = applyLocale(
+    '<!doctype html><html><head></head><body></body></html>',
+    headOpts({ locale: 'bg', dict }),
+  );
+  assert.match(out, /<html[^>]*\blang="bg"/);
+});
+
+test('applyLocale: emits hreflang alternates (en + bg + x-default)', () => {
+  const dict = {};
+  const out = applyLocale(
+    '<!doctype html><html><head></head><body></body></html>',
+    headOpts({ locale: 'en', dict, pagePath: 'enquiries/index.html' }),
+  );
+  assert.match(out, /hreflang="en" href="\/vayana-bungalows\/enquiries\/"/);
+  assert.match(out, /hreflang="bg" href="\/vayana-bungalows\/bg\/enquiries\/"/);
+  assert.match(out, /hreflang="x-default" href="\/vayana-bungalows\/enquiries\/"/);
+});
+
+test('applyLocale: hreflang emit is idempotent — re-transform strips prior block', () => {
+  const dict = {};
+  const first = applyLocale(
+    '<!doctype html><html><head></head><body></body></html>',
+    headOpts({ locale: 'en', dict }),
+  );
+  const second = applyLocale(first, headOpts({ locale: 'bg', dict }));
+  // Only ONE open marker after the second pass — the first pass's block
+  // was stripped before the second pass emitted its own.
+  const opens = (second.match(/i18n:hreflang open/g) || []).length;
+  assert.equal(opens, 1);
+});
+
+test('applyLocale: boot-redirect script has correct data attrs', () => {
+  const out = applyLocale(
+    '<!doctype html><html><head></head><body></body></html>',
+    headOpts({ locale: 'bg', dict: {}, pagePath: 'enquiries/index.html' }),
+  );
+  assert.match(out, /<script data-locale="bg"/);
+  assert.match(out, /data-en-url="\/vayana-bungalows\/enquiries\/"/);
+  assert.match(out, /data-bg-url="\/vayana-bungalows\/bg\/enquiries\/"/);
+});
+
+test('applyLocale: boot-redirect script sets sentinel + no decodeURIComponent', () => {
+  const out = applyLocale(
+    '<!doctype html><html><head></head><body></body></html>',
+    headOpts({ locale: 'en', dict: {} }),
+  );
+  // Sentinel that lang.js reads to skip click wiring on doomed pages.
+  assert.match(out, /data-i18n-redirecting/);
+  // Whitelist raw match — no decodeURIComponent (would throw on
+  // malformed URI and swallow the whole boot script).
+  assert.doesNotMatch(out, /decodeURIComponent/);
+});
+
+test('applyLocale: canonical + og:url + twitter:url rewritten per locale', () => {
+  const src = [
+    '<!doctype html><html><head>',
+    '<link rel="canonical" href="/foo/">',
+    '<meta property="og:url" content="/foo/">',
+    '<meta name="twitter:url" content="/foo/">',
+    '</head><body></body></html>',
+  ].join('');
+  const out = applyLocale(
+    src,
+    headOpts({ locale: 'bg', dict: {}, pagePath: 'enquiries/index.html' }),
+  );
+  assert.match(out, /rel="canonical" href="\/vayana-bungalows\/bg\/enquiries\/"/);
+  assert.match(out, /property="og:url" content="\/vayana-bungalows\/bg\/enquiries\/"/);
+  assert.match(out, /name="twitter:url" content="\/vayana-bungalows\/bg\/enquiries\/"/);
+});
+
+test('applyLocale: data-lang-pill-expected marker when source has .site-header__lang', () => {
+  const out = applyLocale(
+    '<!doctype html><html><head></head><body><nav class="site-header__lang">pill</nav></body></html>',
+    headOpts({ locale: 'en', dict: {} }),
+  );
+  assert.match(out, /<html[^>]*\bdata-lang-pill-expected="1"/);
+});
+
+test('applyLocale: NO pill-expected marker when source lacks .site-header__lang', () => {
+  const out = applyLocale(
+    '<!doctype html><html><head></head><body></body></html>',
+    headOpts({ locale: 'en', dict: {} }),
+  );
+  assert.doesNotMatch(out, /data-lang-pill-expected/);
+});
+
+test('applyLocale: skips head injection when allLocales/defaultLocale absent (test opt-out)', () => {
+  // Without the Part-2 fields, applyLocale is a no-op on the head — used
+  // by every other test in this file. Sanity-check the opt-out.
+  const out = applyLocale(
+    '<!doctype html><html lang="xx"><head></head><body></body></html>',
+    opts({ locale: 'bg', dict: {} }), // no allLocales / defaultLocale
+  );
+  // <html lang> was NOT rewritten.
+  assert.match(out, /<html[^>]*\blang="xx"/);
+  // No hreflang block.
+  assert.doesNotMatch(out, /i18n:hreflang/);
+});
