@@ -564,3 +564,97 @@ test('applyLocale: skips head injection when allLocales/defaultLocale absent (te
   // No hreflang block.
   assert.doesNotMatch(out, /i18n:hreflang/);
 });
+
+// ---------------------------------------------------------------------------
+// Round-2 review fixes — Part 2 rework
+// ---------------------------------------------------------------------------
+
+test('applyLocale: insertAfterHead ignores <head> substring inside HTML comments (F-parse5)', () => {
+  // Bungalow detail pages start with a multi-line HTML comment that
+  // mentions `<head>` in body text describing shared structure. Naive
+  // regex insertion would splice INSIDE the comment, producing
+  // nested-comment markup that parse5 rejects. The scan-copy fix
+  // masks comment spans before searching.
+  const src = [
+    '<!doctype html>',
+    '<!--',
+    '  Duplication note: the shared <head> region is documented here.',
+    '-->',
+    '<html><head><title>x</title></head><body></body></html>',
+  ].join('\n');
+  const out = applyLocale(src, headOpts({ locale: 'en', dict: {} }));
+  // Boot script landed AFTER the real <head>, not inside the comment.
+  const commentEndIdx = out.indexOf('-->');
+  const bootIdx = out.indexOf('i18n:boot-redirect open');
+  assert.ok(bootIdx > commentEndIdx, 'boot script must land after the doc-comment');
+});
+
+test('applyLocale: string-splice strip removes only content between markers (F2)', () => {
+  // On re-transform, Vite may have injected <link modulepreload> etc.
+  // between our previous markers. Our strip must remove ONLY the
+  // exact marker-comment span — anything OUTSIDE the markers stays.
+  const firstPass = applyLocale(
+    '<!doctype html><html><head><meta charset="utf-8"></head><body></body></html>',
+    headOpts({ locale: 'en', dict: {} }),
+  );
+  // Simulate a Vite injection AFTER our previous block (between close
+  // marker and next existing head content).
+  const withVite = firstPass.replace(
+    '<!--i18n:hreflang close-->',
+    '<!--i18n:hreflang close-->\n<link rel="modulepreload" href="/x.js">',
+  );
+  const secondPass = applyLocale(withVite, headOpts({ locale: 'bg', dict: {} }));
+  // Vite's injection must survive the second pass.
+  assert.match(secondPass, /modulepreload/);
+  // Our blocks re-emit in the fresh position (single copy).
+  const opens = (secondPass.match(/i18n:hreflang open/g) || []).length;
+  assert.equal(opens, 1);
+});
+
+test('applyLocale: boot script null-guards document.currentScript (F-boot)', () => {
+  const out = applyLocale(
+    '<!doctype html><html><head></head><body></body></html>',
+    headOpts({ locale: 'en', dict: {} }),
+  );
+  // Guard OR-fallback to querySelector when currentScript is null
+  // (async execution, event handler, extension reinject).
+  assert.match(out, /document\.currentScript\|\|document\.querySelector\('script\[data-locale\]'\)/);
+  // Bail if the fallback also fails.
+  assert.match(out, /if\(!s\)return/);
+});
+
+test('applyLocale: strips UTF-8 BOM before parsing — well, only in build hooks — this pins the contract', () => {
+  // applyLocale itself doesn't strip BOM (parseHtml handles a leading
+  // ﻿ as a text node). This test documents that behaviour: a BOM
+  // survives the transform. writeBundle strips it defensively (see
+  // configureServer + writeBundle in the plugin factory).
+  const out = applyLocale(
+    '﻿<!doctype html><html><head></head><body>x</body></html>',
+    headOpts({ locale: 'en', dict: {} }),
+  );
+  // BOM survives at the front (parseHtml tolerates it).
+  assert.equal(out.charCodeAt(0), 0xfeff);
+});
+
+test('pageUrl hard-fails on backslash pagePath', async () => {
+  // pageUrl requires forward-slash pagePath. Windows-style backslashes
+  // would silently corrupt canonical/hreflang URLs. Test via a full
+  // applyLocale call — pageUrl is not directly exported.
+  assert.throws(
+    () => applyLocale(
+      '<!doctype html><html><head></head><body></body></html>',
+      headOpts({ locale: 'en', dict: {}, pagePath: 'enquiries\\index.html' }),
+    ),
+    /forward-slash separators/i,
+  );
+});
+
+test('pageUrl hard-fails on non-index.html pagePath', () => {
+  assert.throws(
+    () => applyLocale(
+      '<!doctype html><html><head></head><body></body></html>',
+      headOpts({ locale: 'en', dict: {}, pagePath: 'stay.html' }),
+    ),
+    /directory-form URLs only/i,
+  );
+});

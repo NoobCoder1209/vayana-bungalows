@@ -670,15 +670,20 @@ export function applyLocale(html, opts) {
   const root = parseHtml(html, PARSER_OPTIONS);
   // Recurse the whole tree including <noscript> subtrees. node-html-parser
   // parses <noscript> content as ordinary elements (unlike a real browser
-  // where it's inert text) — that's what we want at build time so the
-  // markers inside work.
+  // where it's inert). transformSubtree handles data-i18n* markers.
   transformSubtree(root, opts);
-  // Head injection: <html lang>, hreflang alternates, per-locale canonical/
-  // og:url/twitter:url rewrite, inline boot-redirect script, pill-expected
-  // marker. All idempotent via marker comments so re-running the transform
-  // (dev-mode HMR path) doesn't duplicate the injected block.
-  applyHead(root, opts);
-  return root.toString();
+  // Phase 1 of head injection (DOM ops on lang/pill/canonical). Returns
+  // false if allLocales/defaultLocale absent (test opt-out).
+  const doHead = applyHead(root, opts);
+  let out = root.toString();
+  if (doHead) {
+    // Phase 2: string-splice for hreflang + boot script emit. Idempotency
+    // via marker-comment substrings — see applyHead docstring.
+    out = stripMarkedString(out, HREFLANG_OPEN, HREFLANG_CLOSE);
+    out = stripMarkedString(out, BOOT_OPEN, BOOT_CLOSE);
+    out = insertAfterHead(out, buildHeadBlock(opts));
+  }
+  return out;
 }
 
 /**
@@ -870,18 +875,39 @@ const BOOT_OPEN = 'i18n:boot-redirect open';
 const BOOT_CLOSE = 'i18n:boot-redirect close';
 
 /**
- * Apply the plugin-generated head block:
- *   1. <html lang="…">
- *   2. data-lang-pill-expected on <html> (if source has .site-header__lang)
- *   3. Strip any pre-existing i18n-marked head block (idempotency)
- *   4. Emit hreflang alternates (en, bg, x-default)
- *   5. Rewrite canonical, og:url, twitter:url per locale
- *   6. Emit inline boot-redirect script positioned BEFORE any stylesheet
+ * Apply the plugin-generated head block. Two-phase:
+ *
+ *   Phase 1 (DOM, on `root`):
+ *     1. <html lang="…">
+ *     2. data-lang-pill-expected on <html> (if source has .site-header__lang)
+ *     3. Rewrite canonical, og:url, twitter:url per locale
+ *
+ *   Phase 2 (string-splice on the caller — see applyLocale):
+ *     4. Strip any pre-existing i18n-marked hreflang/boot blocks
+ *     5. Insert fresh hreflang + boot-redirect block right after the
+ *        opening <head> tag
+ *
+ * Phase 2 uses string operations rather than DOM mutation for two
+ * reasons: (a) node-html-parser's `insertAdjacentHTML` internally
+ * re-parses the fragment WITHOUT our PARSER_OPTIONS, and that reparse
+ * has historically dropped comment nodes on some versions — which
+ * would silently break the idempotency contract because the marker
+ * comments would vanish; (b) DOM-based `stripMarkedBlock` removed
+ * EVERY child between open and close markers, but Vite's html-plugin
+ * may insert modulepreload/CSS <link> tags between our previous
+ * markers when we re-transform the EN emit for the BG mirror — those
+ * Vite-inserted preloads would be silently deleted from the BG page.
+ *
+ * String-splice sidesteps both hazards: marker-comment text substrings
+ * are unambiguous, and we only touch the exact span between markers.
  *
  * opts uses the same fields applyLocale takes plus allLocales +
  * defaultLocale. If either is missing, applyHead is a no-op — this
  * mode is used by the unit tests to exercise the marker transform
  * without the head injection.
+ *
+ * Returns true if head injection ran, false if opted out (caller
+ * uses this to decide whether to skip the Phase 2 string splice).
  */
 function applyHead(root, opts) {
   const {
@@ -892,11 +918,11 @@ function applyHead(root, opts) {
     allLocales,
     defaultLocale,
   } = opts;
-  if (!allLocales || !defaultLocale) return; // test-only opt-out
+  if (!allLocales || !defaultLocale) return false; // test-only opt-out
 
   const htmlEl = root.querySelector('html');
   const headEl = root.querySelector('head');
-  if (!htmlEl || !headEl) return; // fragment inputs (test opts) — skip
+  if (!htmlEl || !headEl) return false; // fragment inputs (test opts)
 
   // <html lang> — safeSetAttribute handles the ampersand edge but the
   // locale is a whitelisted 2-letter code, no escape concerns.
@@ -909,13 +935,8 @@ function applyHead(root, opts) {
     safeSetAttribute(htmlEl, 'data-lang-pill-expected', '1');
   }
 
-  // Strip prior i18n-marked head blocks so the transform is idempotent.
-  stripMarkedBlock(headEl, HREFLANG_OPEN, HREFLANG_CLOSE);
-  stripMarkedBlock(headEl, BOOT_OPEN, BOOT_CLOSE);
-
   // Rewrite canonical / og:url / twitter:url to point at the current
-  // locale's URL. Skips silently if the source doesn't ship them (no
-  // hard-fail here — some pages legitimately don't have all three).
+  // locale's URL. Skips silently if the source doesn't ship them.
   rewriteCanonicalUrls(headEl, {
     locale,
     isDefault,
@@ -924,51 +945,110 @@ function applyHead(root, opts) {
     defaultLocale,
   });
 
-  // Emit hreflang alternates + boot script. Both are inserted at the
-  // top of <head> (in reverse order so boot ends up FIRST — it must
-  // run before any stylesheet-loading <link>).
-  emitHreflang(headEl, {
-    basePath,
-    pagePath,
-    allLocales,
-    defaultLocale,
-  });
-  emitBootScript(headEl, {
-    locale,
-    isDefault,
-    basePath,
-    pagePath,
-    defaultLocale,
-  });
+  return true;
 }
 
 /**
- * Remove every child of `parent` that sits between the open/close marker
- * comments (inclusive of the markers themselves). Idempotency helper —
- * lets the plugin re-emit blocks on subsequent transforms without
- * duplicating them.
+ * Build the plugin-generated head block as a string. The block has
+ * both marker comments (open + close), the boot-redirect script (must
+ * come first — before any stylesheet loads), and the hreflang alternates.
  *
- * A marker mid-attribute-value or inside a script string would still be
- * text (comment nodes are structural), so this only matches actual
- * comment nodes at the top level of `parent`.
+ * Returned string is what gets spliced into the emitted HTML right after
+ * `<head>`.
  */
-function stripMarkedBlock(parent, openText, closeText) {
-  const children = parent.childNodes;
-  let openIdx = -1;
-  let closeIdx = -1;
-  for (let i = 0; i < children.length; i++) {
-    const c = children[i];
-    if (c.nodeType !== 8 /* COMMENT_NODE */) continue;
-    const text = (c.rawText || c.text || '').trim();
-    if (text === openText) openIdx = i;
-    else if (text === closeText && openIdx >= 0) { closeIdx = i; break; }
+function buildHeadBlock(opts) {
+  const { locale, basePath, pagePath, allLocales, defaultLocale } = opts;
+
+  // Hreflang alternates block.
+  const hreflangLines = [];
+  hreflangLines.push(`<!--${HREFLANG_OPEN}-->`);
+  for (const loc of allLocales) {
+    const url = pageUrl({ basePath, pagePath, locale: loc, defaultLocale });
+    hreflangLines.push(
+      `<link rel="alternate" hreflang="${escapeHtmlAttr(loc)}" href="${escapeHtmlAttr(url)}">`,
+    );
   }
-  if (openIdx < 0 || closeIdx < 0) return;
-  // Remove nodes from closeIdx down to openIdx inclusive so the earlier
-  // indices remain stable while iterating.
-  for (let i = closeIdx; i >= openIdx; i--) {
-    parent.removeChild(children[i]);
-  }
+  const defaultUrl = pageUrl({
+    basePath,
+    pagePath,
+    locale: defaultLocale,
+    defaultLocale,
+  });
+  hreflangLines.push(
+    `<link rel="alternate" hreflang="x-default" href="${escapeHtmlAttr(defaultUrl)}">`,
+  );
+  hreflangLines.push(`<!--${HREFLANG_CLOSE}-->`);
+
+  // Boot script — F-boot fix: null-guard document.currentScript before
+  // deref. `s || (document.currentScript = ...)` doesn't work because
+  // currentScript is read-only; instead try currentScript first, then
+  // fall back to a querySelector.
+  const enUrl = pageUrl({ basePath, pagePath, locale: 'en', defaultLocale });
+  const bgUrl = pageUrl({ basePath, pagePath, locale: 'bg', defaultLocale });
+  const bootBody = `(function(){try{var s=document.currentScript||document.querySelector('script[data-locale]');if(!s)return;var here=s.getAttribute('data-locale');var enUrl=s.getAttribute('data-en-url');var bgUrl=s.getAttribute('data-bg-url');function go(u){if(!u)return false;try{document.documentElement.setAttribute('data-i18n-redirecting','1');}catch(e){}location.replace(u);return true;}var q=null;var m=location.search.match(/[?&]lang=([^&]*)/);if(m){var v=m[1];if(v==='en'||v==='bg')q=v;}if(q){try{localStorage.setItem('vb.lang',q);}catch(e){}if(q!==here){if(go(q==='bg'?bgUrl:enUrl))return;}}else{var st=null;try{st=localStorage.getItem('vb.lang');}catch(e){}if(st==='bg'&&here==='en'){if(go(bgUrl))return;}}}catch(e){}})();`;
+  const bootLines = [
+    `<!--${BOOT_OPEN}-->`,
+    `<script data-locale="${escapeHtmlAttr(locale)}" data-en-url="${escapeHtmlAttr(enUrl)}" data-bg-url="${escapeHtmlAttr(bgUrl)}">${bootBody}</script>`,
+    `<!--${BOOT_CLOSE}-->`,
+  ];
+
+  // Boot script FIRST (must run before any stylesheet). Hreflang after.
+  return [...bootLines, ...hreflangLines].join('\n');
+}
+
+/**
+ * Strip a previously-emitted marker block from an HTML STRING. Removes
+ * everything between the open and close marker comments (inclusive).
+ *
+ * Regex-based rather than DOM-based (F2): DOM-based strip removed every
+ * child element between markers, including Vite-injected modulepreload/
+ * stylesheet links that landed in there on re-transform of an already-
+ * emitted page. The regex here matches ONLY the exact marker-comment
+ * boundaries — anything Vite inserted OUTSIDE our markers (or after
+ * them) is untouched.
+ *
+ * Anchor: markers are HTML comments so `<!--openText-->…<!--closeText-->`.
+ * The `.` in `[\s\S]` allows newlines. `.*?` is non-greedy so the FIRST
+ * close-marker after an open ends the block.
+ */
+function stripMarkedString(html, openText, closeText) {
+  const escOpen = openText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escClose = closeText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // \s* around the open marker eats any leading whitespace/newline the
+  // previous emit inserted before the comment; same for after close.
+  const re = new RegExp(
+    `\\s*<!--${escOpen}-->[\\s\\S]*?<!--${escClose}-->\\s*`,
+    'g',
+  );
+  return html.replace(re, '');
+}
+
+/**
+ * Insert `block` immediately after the opening `<head>` tag in `html`.
+ * String-splice rather than DOM insertion (see applyHead's Phase-2
+ * rationale): marker comments always survive because they're just text.
+ *
+ * The naive approach — regex `/<head[^>]*>/i` — would match the string
+ * "<head>" appearing INSIDE an HTML comment (e.g. a leading file-header
+ * comment that documents the head structure), and splice our block into
+ * the middle of the comment, producing nested-comment markup that
+ * parse5 rejects. To avoid: strip HTML comments from a scan copy of
+ * the head-searching prefix, find the real `<head>` there, then map
+ * back to the original string index.
+ *
+ * If the source has no real `<head>` (test-only fragments), leaves the
+ * input untouched.
+ */
+function insertAfterHead(html, block) {
+  // Build a scan copy where every HTML comment span is replaced with
+  // spaces of equal length. That way index positions in the scan copy
+  // map 1-to-1 to indices in the original, but comment-embedded
+  // "<head>" text can't match.
+  const scan = html.replace(/<!--[\s\S]*?-->/g, (m) => ' '.repeat(m.length));
+  const m = scan.match(/<head[^>]*>/i);
+  if (!m) return html;
+  const insertAt = m.index + m[0].length;
+  return `${html.slice(0, insertAt)}\n${block}${html.slice(insertAt)}`;
 }
 
 /**
@@ -984,16 +1064,29 @@ function stripMarkedBlock(parent, openText, closeText) {
  *   locale = 'en'            → '/vayana-bungalows/'
  *   locale = 'bg'            → '/vayana-bungalows/bg/'
  *
- * Trailing 'index.html' is stripped so URLs are directory-form (matches
- * how GH Pages serves them). basePath already ends with `/` per Vite's
- * convention.
+ * Requires: pagePath uses forward-slash separators AND ends with
+ * `index.html` (directory-form only). Every call site in the plugin
+ * normalises via relFromRoot (which converts `sep` → `/`) or reads
+ * Vite bundle keys (always forward-slash). A non-conforming pagePath
+ * hard-fails at build time rather than silently emitting a URL with
+ * backslashes or a filename suffix.
  */
 function pageUrl({ basePath, pagePath, locale, defaultLocale }) {
+  if (pagePath.includes('\\')) {
+    throw new Error(
+      `[i18n] pageUrl: pagePath must use forward-slash separators, got "${pagePath}"`,
+    );
+  }
+  if (pagePath !== 'index.html' && !pagePath.endsWith('/index.html')) {
+    throw new Error(
+      `[i18n] pageUrl: pagePath must end with 'index.html' (directory-form URLs only), got "${pagePath}"`,
+    );
+  }
   const prefix = locale === defaultLocale ? '' : `${locale}/`;
-  const cleaned = pagePath.replace(/(^|\/)index\.html$/, '/').replace(/^\/+/, '');
-  // pagePath may be just 'index.html' → cleaned becomes '/', which
-  // after the leading-slash strip is ''. That's fine — join basePath +
-  // prefix + '' produces the root directory URL.
+  // 'index.html' → '' ; 'enquiries/index.html' → 'enquiries/'
+  const cleaned = pagePath === 'index.html'
+    ? ''
+    : pagePath.slice(0, -'index.html'.length);
   return `${basePath}${prefix}${cleaned}`;
 }
 
@@ -1012,97 +1105,6 @@ function rewriteCanonicalUrls(headEl, opts) {
 
   const tw = headEl.querySelector('meta[name="twitter:url"]');
   if (tw) safeSetAttribute(tw, 'content', url);
-}
-
-/**
- * Emit `<link rel="alternate" hreflang="…" href="…">` for every locale
- * plus `x-default` (pointing at the default locale). Wrapped in the
- * `i18n:hreflang` marker comments so the block is idempotent.
- *
- * Inserted at the TOP of <head> — right after the plugin's other head
- * writes but ahead of any stylesheet <link>. This positioning matters
- * only for the boot-redirect script (below) which shares the same
- * top-insertion pattern; hreflang is order-insensitive semantically.
- */
-function emitHreflang(headEl, opts) {
-  const { basePath, pagePath, allLocales, defaultLocale } = opts;
-  const lines = [];
-  lines.push(`<!--${HREFLANG_OPEN}-->`);
-  for (const loc of allLocales) {
-    const url = pageUrl({ basePath, pagePath, locale: loc, defaultLocale });
-    lines.push(
-      `<link rel="alternate" hreflang="${escapeHtmlAttr(loc)}" href="${escapeHtmlAttr(url)}">`,
-    );
-  }
-  const defaultUrl = pageUrl({
-    basePath,
-    pagePath,
-    locale: defaultLocale,
-    defaultLocale,
-  });
-  lines.push(
-    `<link rel="alternate" hreflang="x-default" href="${escapeHtmlAttr(defaultUrl)}">`,
-  );
-  lines.push(`<!--${HREFLANG_CLOSE}-->`);
-  prependHeadHtml(headEl, lines.join('\n'));
-}
-
-/**
- * Emit the inline `<head>` boot-redirect script. Runs synchronously
- * BEFORE any stylesheet loads (positioned at the top of <head> — the
- * user perceives zero FOUC when the redirect fires).
- *
- * Responsibilities (matches the runtime lang.js's docstring):
- *   1. ?lang=en|bg URL query override — writes localStorage.setItem(
- *      'vb.lang', <lang>); if the current page's locale doesn't match
- *      the override, location.replace() to the counterpart page.
- *   2. Return-visit redirect — if the visitor previously chose BG
- *      (localStorage.getItem('vb.lang') === 'bg') and the current
- *      page is the EN root, location.replace() to the BG counterpart.
- *   3. Sentinel — data-i18n-redirecting="1" on <html> is set BEFORE
- *      calling location.replace() so lang.js can detect a doomed page
- *      and skip wiring click handlers (protects the stored preference
- *      from mid-navigation taps).
- *
- * Security: the script accepts ?lang= via a raw WHITELIST match (no
- * decodeURIComponent — a malformed URI would throw and swallow the
- * whole boot logic). Non-whitelisted values silently no-op.
- */
-function emitBootScript(headEl, opts) {
-  const { locale, basePath, pagePath, defaultLocale } = opts;
-  // Compute the counterpart URL for EACH locale so the boot script
-  // knows where to redirect. Baked into data-* attrs on the script
-  // element rather than the script body — keeps the body identical
-  // across every page + locale, which is nice for cache-hit rate and
-  // easier to audit.
-  const enUrl = pageUrl({ basePath, pagePath, locale: 'en', defaultLocale });
-  const bgUrl = pageUrl({ basePath, pagePath, locale: 'bg', defaultLocale });
-
-  // Inline script body — kept minimal (~650 bytes minified). No
-  // decodeURIComponent (whitelist raw match). go() null-guards
-  // location.replace() and sets the sentinel. Try/catch wraps the
-  // whole thing because localStorage may throw in private browsing.
-  const bootBody = `(function(){try{var s=document.currentScript;var here=s.getAttribute('data-locale');var enUrl=s.getAttribute('data-en-url');var bgUrl=s.getAttribute('data-bg-url');function go(u){if(!u)return false;try{document.documentElement.setAttribute('data-i18n-redirecting','1');}catch(e){}location.replace(u);return true;}var q=null;var m=location.search.match(/[?&]lang=([^&]*)/);if(m){var v=m[1];if(v==='en'||v==='bg')q=v;}if(q){try{localStorage.setItem('vb.lang',q);}catch(e){}if(q!==here){if(go(q==='bg'?bgUrl:enUrl))return;}}else{var st=null;try{st=localStorage.getItem('vb.lang');}catch(e){}if(st==='bg'&&here==='en'){if(go(bgUrl))return;}}}catch(e){}})();`;
-
-  const scriptHtml = `<!--${BOOT_OPEN}-->\n<script data-locale="${escapeHtmlAttr(locale)}" data-en-url="${escapeHtmlAttr(enUrl)}" data-bg-url="${escapeHtmlAttr(bgUrl)}">${bootBody}</script>\n<!--${BOOT_CLOSE}-->`;
-  prependHeadHtml(headEl, scriptHtml);
-}
-
-/**
- * Prepend an HTML fragment to the top of <head>. Uses node-html-parser's
- * insertAdjacentHTML('afterbegin', ...) — the same API a browser
- * exposes — so the parser owns the tree updates instead of us hand-
- * splicing childNodes and parentNode refs (which had ordering bugs).
- *
- * afterbegin inserts the fragment as the FIRST children of headEl,
- * pushing existing children down. Multiple calls stack in reverse
- * insertion order — the LAST call ends up at position 0, matching the
- * "boot script must come before hreflang alternates" ordering we
- * want (hreflang alternates are inserted first, boot script after,
- * so boot ends up above hreflang in the final markup).
- */
-function prependHeadHtml(headEl, fragmentHtml) {
-  headEl.insertAdjacentHTML('afterbegin', fragmentHtml);
 }
 
 // ============================================================================
@@ -1257,19 +1259,30 @@ export function i18nPlugin(options) {
      * writeBundle — Vite calls this after every bundle asset has been
      * written to disk. We iterate the bundle object, find every HTML
      * asset (they land after JS/CSS via Vite's own html-plugin), read
-     * them fresh from dist/ if the bundle entry only has the pre-
-     * transform source, and emit BG variants.
+     * them from disk (where Vite has finalised asset-URL hashes), and
+     * emit BG variants.
+     *
+     * options.dir is honoured (F-writeBundle-2) so `build.outDir`
+     * overrides work. bg/-prefixed HTMLs are skipped so a future refactor
+     * that emits BG via `generateBundle` won't recursively produce
+     * dist/bg/bg/… (F-recursion).
      */
-    writeBundle(_options, bundle) {
-      const outDir = resolve(projectRoot, 'dist');
+    writeBundle(options, bundle) {
+      // options.dir is Rollup's output directory. For Vite that's
+      // typically dist/, but users may override via `build.outDir`.
+      // Fall back to `dist/` under projectRoot only if Rollup gave us
+      // nothing (should never happen in practice).
+      const outDir = options?.dir || resolve(projectRoot, 'dist');
       let count = 0;
+      let warnedRelative = false; // F-double-warn — only warn on EN pass
       for (const [fileName, asset] of Object.entries(bundle)) {
+        if (!asset || asset.type !== 'asset') continue;
         if (!fileName.endsWith('.html')) continue;
-        if (asset.type !== 'asset') continue;
-        // Read the emitted HTML from disk — Vite's html-plugin has now
-        // finalised asset URLs and written the file. Using the bundle
-        // asset's `source` directly might give us pre-final content
-        // depending on the plugin order.
+        // F-recursion: if a future refactor emits BG via generateBundle,
+        // bundle would include bg/… paths — skip them to prevent
+        // dist/bg/bg/…
+        if (fileName.startsWith('bg/')) continue;
+
         const emittedPath = resolve(outDir, fileName);
         let enHtml;
         try {
@@ -1279,7 +1292,18 @@ export function i18nPlugin(options) {
             `[i18n] writeBundle: cannot read emitted file ${emittedPath}: ${e.message}`,
           );
         }
+        // F-BOM: strip a leading UTF-8 BOM if present (Vite doesn't emit
+        // one but a source file with a BOM could round-trip through
+        // Vite's html-plugin without normalisation).
+        if (enHtml.charCodeAt(0) === 0xfeff) enHtml = enHtml.slice(1);
+
+        // Sweep the FINAL EN emit for `../` hrefs (after Vite's
+        // asset-URL rewrite). Only warn once per page — the BG mirror
+        // inherits the same offenders, warning twice would double log
+        // spam (F-double-warn).
         rejectRelativeHrefs(parseHtml(enHtml, PARSER_OPTIONS), fileName);
+        warnedRelative = true;
+
         // Apply BG head injection on top of the EN-rendered HTML. The
         // marker attributes are already gone (transform stripped them
         // in the EN pass), so the transformSubtree call inside
@@ -1295,7 +1319,10 @@ export function i18nPlugin(options) {
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
         });
-        rejectRelativeHrefs(parseHtml(bg, PARSER_OPTIONS), `bg/${fileName}`);
+        // No second rejectRelativeHrefs call — the BG mirror inherits
+        // the exact same offenders as EN and warning again just spams
+        // the log with duplicates (F-double-warn).
+        void warnedRelative; // silences the unused-var lint if any
         const bgPath = resolve(outDir, 'bg', fileName);
         mkdirSync(dirname(bgPath), { recursive: true });
         writeFileSync(bgPath, bg, 'utf-8');
@@ -1308,90 +1335,143 @@ export function i18nPlugin(options) {
     /**
      * configureServer — dev-mode middleware serving `/bg/<path>` by
      * transforming source HTML on the fly. Also installs an HMR
-     * watcher that pushes `full-reload` on any locale JSON or source
-     * HTML edit so BG tabs stay in sync.
+     * watcher that reloads locale JSON edits into memory and pushes
+     * a full-reload to BG tabs.
+     *
+     * Returns a function (post-hook style) so the middleware is
+     * inserted AFTER Vite's built-in middlewares (F5) — that way
+     * Vite's config.base / decodeURI middleware normalises req.url
+     * before we see it, and the /bg/ prefix comparison lands on the
+     * post-base-strip path.
      */
     configureServer(server) {
-      // 1. Path-traversal-safe middleware for /bg/* URLs.
-      server.middlewares.use((req, res, next) => {
-        const url = req.url || '';
-        if (!url.startsWith('/bg/') && url !== '/bg') return next();
-        // Strip the /bg prefix + normalise to a source-tree path.
-        let rel = url.replace(/^\/bg\/?/, '');
-        if (rel === '' || rel.endsWith('/')) rel += 'index.html';
-        // Resolve the source path and refuse anything outside projectRoot
-        // (path-traversal defence — /bg/../foo would escape).
-        const source = resolve(projectRoot, rel);
-        if (!source.startsWith(projectRoot + sep) && source !== projectRoot) {
-          res.statusCode = 403;
-          res.end('forbidden');
-          return;
-        }
-        // Only serve HTML through the transform; other assets fall
-        // through to Vite's default handling.
-        if (!source.endsWith('.html')) return next();
-        let html;
-        try {
-          html = readFileSync(source, 'utf-8');
-        } catch {
-          return next();
-        }
-        try {
-          const out = applyLocale(html, {
-            locale: 'bg',
-            dict: dicts.bg,
-            ctx: contextByLocale.bg,
-            isDefault: false,
-            basePath: '/',
-            pagePath: rel,
-            allLocales: locales,
-            defaultLocale: DEFAULT_LOCALE,
-          });
-          // Delegate to Vite's transformIndexHtml pipeline so dev-mode
-          // asset URLs get rewritten (import <script type="module">
-          // paths, HMR client injection, etc.).
-          server.transformIndexHtml(url, out, req.originalUrl).then(
+      // Return a post-hook so Vite installs our middleware AFTER its
+      // own internal ones (F5). This is the documented pattern for
+      // middleware that wants to see req.url with `base` already
+      // stripped and URL decoded.
+      return () => {
+        // F5: strip the Vite server base (e.g. '/vayana-bungalows/')
+        // from req.url before the /bg/ prefix check. In dev the base
+        // is normally '/', but a subpath base breaks the prefix match
+        // otherwise.
+        const cfgBase = (server.config.base || '/').replace(/\/$/, '');
+
+        server.middlewares.use((req, res, next) => {
+          const rawUrl = req.url || '';
+          // F-query: strip query string + fragment before path
+          // resolution so /bg/foo/?x=1 doesn't produce a filename
+          // containing '?'.
+          const urlNoQuery = rawUrl.split(/[?#]/)[0];
+          // Strip the Vite base prefix if any.
+          let urlPath = urlNoQuery;
+          if (cfgBase && urlPath.startsWith(cfgBase)) {
+            urlPath = urlPath.slice(cfgBase.length) || '/';
+          }
+          if (!urlPath.startsWith('/bg/') && urlPath !== '/bg') return next();
+
+          // Strip the /bg[/] prefix + normalise to a source-tree path.
+          let rel = urlPath.replace(/^\/bg\/?/, '');
+          if (rel === '' || rel.endsWith('/')) rel += 'index.html';
+          // Path-traversal defence: resolve() then confirm the result
+          // stays under projectRoot. Anything outside → 403.
+          const source = resolve(projectRoot, rel);
+          if (!source.startsWith(projectRoot + sep) && source !== projectRoot) {
+            res.statusCode = 403;
+            res.end('forbidden');
+            return;
+          }
+          if (!source.endsWith('.html')) return next();
+
+          let html;
+          try {
+            html = readFileSync(source, 'utf-8');
+          } catch {
+            return next();
+          }
+          // Strip UTF-8 BOM defensively (F-BOM).
+          if (html.charCodeAt(0) === 0xfeff) html = html.slice(1);
+
+          // F-listener-close: bail if the client closed the connection
+          // before our transform completes.
+          let closed = false;
+          req.on('close', () => { closed = true; });
+
+          let out;
+          try {
+            out = applyLocale(html, {
+              locale: 'bg',
+              dict: dicts.bg,
+              ctx: contextByLocale.bg,
+              isDefault: false,
+              basePath: '/',
+              pagePath: rel,
+              allLocales: locales,
+              defaultLocale: DEFAULT_LOCALE,
+            });
+          } catch (err) {
+            res.statusCode = 500;
+            res.end(`[i18n dev] ${err.message}`);
+            return;
+          }
+
+          server.transformIndexHtml(rawUrl, out, req.originalUrl).then(
             (transformed) => {
+              if (closed) return;
               res.setHeader('content-type', 'text/html; charset=utf-8');
               res.end(transformed);
             },
             (err) => {
+              if (closed) return;
               res.statusCode = 500;
               res.end(`[i18n dev] ${err.message}`);
             },
           );
-        } catch (err) {
-          res.statusCode = 500;
-          res.end(`[i18n dev] ${err.message}`);
-        }
-      });
+        });
 
-      // 2. HMR watcher — locale JSON or source HTML edit triggers a
-      // full-reload on every open dev tab (BG tabs need it because
-      // they're served by our middleware, and Vite doesn't natively
-      // know they exist).
-      const boundary = localesDir + sep;
-      const rootBoundary = projectRoot + sep;
-      const distSep = `${sep}dist${sep}`;
-      const nodeModulesSep = `${sep}node_modules${sep}`;
-      const onChange = (path) => {
-        const isLocaleJson = path.startsWith(boundary) && path.endsWith('.json');
-        const isSourceHtml =
-          path.startsWith(rootBoundary) &&
-          path.endsWith('.html') &&
-          !path.includes(distSep) &&
-          !path.includes(nodeModulesSep);
-        if (isLocaleJson || isSourceHtml) {
+        // HMR watcher — locale JSON edits reload the in-memory dicts
+        // AND push a full-reload to open BG tabs. Source HTML edits
+        // are handled by Vite's own watcher (dropped from here to
+        // avoid double-reload — F4).
+        const boundary = localesDir + sep;
+        const onLocaleChange = (path) => {
+          if (!path.startsWith(boundary) || !path.endsWith('.json')) return;
+          // F3: re-load dicts from disk so the next transform sees the
+          // updated locale. loadDictionaries hard-fails on asymmetry,
+          // so a broken edit surfaces immediately in the dev log rather
+          // than shipping stale content.
+          try {
+            const fresh = loadDictionaries(localesDir);
+            // Mutate in place so the closure-captured `dicts` sees the
+            // new values on the next transform without needing to
+            // rebind every downstream reference.
+            for (const key of Object.keys(dicts)) delete dicts[key];
+            for (const [k, v] of Object.entries(fresh.dicts)) dicts[k] = v;
+            // eslint-disable-next-line no-console
+            console.log('[i18n] reloaded locales after change:', path);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error(`[i18n] locale reload FAILED — keeping previous dicts. ${err.message}`);
+            return; // don't reload the browser on a broken edit
+          }
           try {
             server.ws.send({ type: 'full-reload', path: '*' });
           } catch {
             // best-effort
           }
-        }
+        };
+        // F-listener-leak: register the SAME function reference so a
+        // Vite restart that re-runs configureServer(...) can dedup by
+        // reference. Also register a cleanup on server.close for
+        // completeness.
+        server.watcher.on('change', onLocaleChange);
+        server.watcher.on('add', onLocaleChange);
+        server.watcher.on('unlink', onLocaleChange);
+        server.httpServer?.once('close', () => {
+          server.watcher.off('change', onLocaleChange);
+          server.watcher.off('add', onLocaleChange);
+          server.watcher.off('unlink', onLocaleChange);
+        });
       };
-      server.watcher.on('change', onChange);
-      server.watcher.on('add', onChange);
-      server.watcher.on('unlink', onChange);
     },
   };
 }
