@@ -164,7 +164,7 @@
       "hp_label": "Website",
       "submit": "Абонирайте се",
       "consent_html": "Съгласявам се с <a href=\"{privacy_url}\">Политиката за поверителност</a> и приемам да получавам периодични съобщения от Vayana Bungalows.",
-      "noscript_html": "За абонамент изпратете имейл до <a href=\"{email_href}\">{email_display}</a> с тема Subscribe (буквално, на латиница).",
+      "noscript_html": "За абонамент изпратете имейл до <a href=\"{email_href}\">{email_display}</a> с тема „Subscribe“ (изписано на латиница).",
       "modal_eyebrow": "Абонирахте се",
       "modal_title": "Благодарим — вече сте в списъка.",
       "modal_body": "Ще ви пишем, когато има какво да споделим — не повече от четири пъти в годината.",
