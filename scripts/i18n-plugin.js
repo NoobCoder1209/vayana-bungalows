@@ -632,6 +632,14 @@ function transformSubtree(root, opts) {
     } else if (hasText) {
       const key = el.getAttribute('data-i18n');
       const value = lookup(opts.dict, key, pagePath);
+      // Mark descendants orphaned BEFORE setTextContent clears them —
+      // otherwise the outer loop keeps processing markers on detached
+      // children and throws "unknown key" for keys that never reach the
+      // emitted output. Same reasoning as the data-i18n-html branch
+      // above; both branches destroy the element's children.
+      for (const desc of el.querySelectorAll('*')) {
+        orphaned.add(desc);
+      }
       setTextContent(el, interpolate(value, opts.ctx, key));
       el.removeAttribute('data-i18n');
     }

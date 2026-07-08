@@ -311,6 +311,23 @@ test('applyLocale: descendants of a data-i18n-html parent are not iterated (H4)'
   assert.doesNotMatch(out, /never\.exists/);
 });
 
+test('applyLocale: descendants of a data-i18n parent are ALSO orphaned (H4-a)', () => {
+  // pr-reviewer caught: the H4 fix only protected data-i18n-html
+  // descendants, but the plain-text data-i18n path ALSO destroys
+  // children via setTextContent's clear-and-replace. Without the
+  // orphan-mark on this branch, an inner marker child threw
+  // "unknown key" on a marker never in the output.
+  const dict = { parent: 'PARENT_TEXT' };
+  const out = applyLocale(
+    '<div data-i18n="parent"><span data-i18n="never.exists"></span></div>',
+    opts({ dict }),
+  );
+  assert.match(out, /PARENT_TEXT/);
+  // Build didn't throw on the orphaned inner marker.
+  assert.doesNotMatch(out, /never\.exists/);
+  assert.doesNotMatch(out, /<span/);
+});
+
 test('applyLocale: BG pass emits Cyrillic', () => {
   const dict = { hi: 'Здравей, свят' };
   const out = applyLocale(
