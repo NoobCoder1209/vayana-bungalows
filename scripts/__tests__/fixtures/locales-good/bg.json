@@ -1,0 +1,4 @@
+{
+  "hello": "Здравей {name}",
+  "nested": { "greeting": "Здрасти" }
+}

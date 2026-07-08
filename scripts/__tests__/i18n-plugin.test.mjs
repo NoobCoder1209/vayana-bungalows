@@ -1,0 +1,351 @@
+// Unit tests for the i18n plugin (Task #163, Part 1).
+//
+// Run with:  node --test scripts/__tests__/i18n-plugin.test.mjs
+//
+// Uses Node's built-in `node:test` runner — no test-framework dep.
+// Every test targets a specific review finding from the round-1 code
+// review; keeping the mapping visible in the test names so a future
+// regression maps back to a known-bad case fast.
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+  loadDictionaries,
+  interpolate,
+  escapeHtmlAttr,
+  sanitizeHtmlFragment,
+  applyLocale,
+} from '../i18n-plugin.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const FIX = (name) => resolve(__dirname, 'fixtures', name);
+
+// Minimal opts factory — a real locale/dict/ctx that the transform can chew on.
+function opts(overrides = {}) {
+  return {
+    locale: 'en',
+    dict: { greeting: 'Hello', with_token: 'Call {phone}', bold: 'Save <strong>10%</strong>' },
+    ctx: { phone: '+1 555', name: 'World' },
+    isDefault: true,
+    basePath: '/',
+    pagePath: 'test.html',
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// loadDictionaries
+// ---------------------------------------------------------------------------
+
+test('loadDictionaries: happy path — symmetric dicts pass', () => {
+  const { locales, dicts } = loadDictionaries(FIX('locales-good'));
+  assert.deepEqual(locales, ['bg', 'en']);
+  assert.equal(dicts.en.hello, 'Hello {name}');
+  assert.equal(dicts.bg.hello, 'Здравей {name}');
+  assert.equal(dicts.en['nested.greeting'], 'Hi');
+});
+
+test('loadDictionaries: asymmetric key set — hard-fails', () => {
+  assert.throws(
+    () => loadDictionaries(FIX('locales-asym')),
+    /not symmetric/i,
+  );
+});
+
+test('loadDictionaries: malformed token {Name} — hard-fails at load (H6)', () => {
+  assert.throws(
+    () => loadDictionaries(FIX('locales-badtoken')),
+    /malformed token/i,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// interpolate — C3 prototype pollution, H5 undefined values, H6 token shape
+// ---------------------------------------------------------------------------
+
+test('interpolate: happy path', () => {
+  assert.equal(interpolate('Call {phone}', { phone: '+1' }, 'x'), 'Call +1');
+});
+
+test('interpolate: missing token hard-fails', () => {
+  assert.throws(() => interpolate('{gone}', {}, 'k'), /missing context value/i);
+});
+
+test('interpolate: prototype-inherited key does NOT satisfy (C3)', () => {
+  // {__proto__} matches the strict token regex (all lowercase + underscores)
+  // AND is a prototype property, so it's the perfect proto-pollution
+  // canary for interpolate. Under `name in ctx` it would return the
+  // Object.prototype `__proto__` accessor (or, in some engines,
+  // Object.prototype itself). hasOwn correctly rejects.
+  assert.throws(() => interpolate('{__proto__}', {}, 'k'), /missing context value/i);
+});
+
+test('interpolate: undefined value hard-fails (H5)', () => {
+  assert.throws(
+    () => interpolate('{phone}', { phone: undefined }, 'k'),
+    /is undefined/i,
+  );
+});
+
+test('interpolate: null value hard-fails (H5)', () => {
+  assert.throws(
+    () => interpolate('{phone}', { phone: null }, 'k'),
+    /is null/i,
+  );
+});
+
+test('interpolate: non-string value hard-fails (H5)', () => {
+  assert.throws(
+    () => interpolate('{phone}', { phone: 42 }, 'k'),
+    /number, expected string/i,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// sanitizeHtmlFragment — C2 protocol-relative, H7 case, M13 wrapper-escape,
+// M14 target=_blank
+// ---------------------------------------------------------------------------
+
+test('sanitizer: allowed inline formatting passes', () => {
+  const out = sanitizeHtmlFragment('Save <strong>$960</strong>', 'k');
+  assert.match(out, /<strong>\$960<\/strong>/);
+});
+
+test('sanitizer: allowed <a href="/path"> passes', () => {
+  const out = sanitizeHtmlFragment('<a href="/privacy/">policy</a>', 'k');
+  assert.match(out, /href="\/privacy\/"/);
+});
+
+test('sanitizer: <script> rejected', () => {
+  assert.throws(() => sanitizeHtmlFragment('<script>x</script>', 'k'), /disallowed tag/i);
+});
+
+test('sanitizer: javascript: scheme rejected', () => {
+  assert.throws(
+    () => sanitizeHtmlFragment('<a href="javascript:alert(1)">x</a>', 'k'),
+    /disallowed href/i,
+  );
+});
+
+test('sanitizer: data: scheme rejected', () => {
+  assert.throws(
+    () => sanitizeHtmlFragment('<a href="data:text/html;base64,ABC">x</a>', 'k'),
+    /disallowed href/i,
+  );
+});
+
+test('sanitizer: protocol-relative //evil rejected (C2)', () => {
+  assert.throws(
+    () => sanitizeHtmlFragment('<a href="//evil.com/phish">x</a>', 'k'),
+    /disallowed href/i,
+  );
+});
+
+test('sanitizer: uppercase HREF still triggers scheme check (H7)', () => {
+  // `<a HREF="javascript:...">` — a case-sensitivity refactor bug in a
+  // previous version let this slip through. It must reject.
+  assert.throws(
+    () => sanitizeHtmlFragment('<a HREF="javascript:alert(1)">x</a>', 'k'),
+    /disallowed/i,
+  );
+});
+
+test('sanitizer: target="_blank" rejected (M14)', () => {
+  assert.throws(
+    () => sanitizeHtmlFragment('<a href="/x" target="_blank">x</a>', 'k'),
+    /disallowed attribute/i,
+  );
+});
+
+test('sanitizer: onclick rejected', () => {
+  assert.throws(
+    () => sanitizeHtmlFragment('<strong onclick="x">y</strong>', 'k'),
+    /disallowed attribute/i,
+  );
+});
+
+test('sanitizer: </div> wrapper-breakout also rejected (M13)', () => {
+  // Old wrapper-based sanitizer silently dropped content when a value
+  // contained </div>. The new root-iteration variant treats the outer
+  // <script> as a top-level element and hard-fails.
+  assert.throws(
+    () => sanitizeHtmlFragment('</div><script>alert(1)</script>', 'k'),
+    /disallowed/i,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// escapeHtmlAttr
+// ---------------------------------------------------------------------------
+
+test('escapeHtmlAttr: 5-char escape', () => {
+  assert.equal(escapeHtmlAttr('a"b<c>d&e\'f'), 'a&quot;b&lt;c&gt;d&amp;e&#39;f');
+});
+
+// ---------------------------------------------------------------------------
+// applyLocale — C1 text-escape, H4 orphan iter, H8 attr amp-escape, L20 order
+// ---------------------------------------------------------------------------
+
+test('applyLocale: data-i18n escapes HTML in the value (C1)', () => {
+  // If set_content had been used raw (the C1 bug), the <b> would land
+  // as a real element. With text-content escaping, it must survive as
+  // literal text.
+  const dict = { html_ish: 'A <b>&</b> B' };
+  const out = applyLocale(
+    '<div data-i18n="html_ish"></div>',
+    opts({ dict }),
+  );
+  assert.match(out, /A &lt;b&gt;&amp;&lt;\/b&gt; B/);
+  // And the marker was removed:
+  assert.doesNotMatch(out, /data-i18n=/);
+});
+
+test('applyLocale: data-i18n-html sanitised and inlined', () => {
+  const dict = { bold: 'Save <strong>10%</strong>' };
+  const out = applyLocale(
+    '<p data-i18n-html="bold"></p>',
+    opts({ dict }),
+  );
+  assert.match(out, /<strong>10%<\/strong>/);
+  assert.doesNotMatch(out, /data-i18n-html=/);
+});
+
+test('applyLocale: data-i18n-attr split-on-last-colon (aria-labelledby key ok)', () => {
+  const dict = { 'aria.msg': 'Click me' };
+  const out = applyLocale(
+    '<button data-i18n-attr="aria-label:aria.msg"></button>',
+    opts({ dict }),
+  );
+  assert.match(out, /aria-label="Click me"/);
+});
+
+test('applyLocale: data-i18n-attr with empty attr rejected (M10)', () => {
+  const dict = { k: 'v' };
+  assert.throws(
+    () =>
+      applyLocale(
+        '<div data-i18n-attr=":k"></div>',
+        opts({ dict }),
+      ),
+    /empty attr name/i,
+  );
+});
+
+test('applyLocale: data-i18n-attr with empty key rejected (M10)', () => {
+  const dict = { k: 'v' };
+  assert.throws(
+    () =>
+      applyLocale(
+        '<div data-i18n-attr="title:"></div>',
+        opts({ dict }),
+      ),
+    /empty key/i,
+  );
+});
+
+test('applyLocale: unknown key hard-fails with page + key (C3)', () => {
+  assert.throws(
+    () =>
+      applyLocale(
+        '<h1 data-i18n="nonexistent"></h1>',
+        opts({ dict: {} }),
+      ),
+    /unknown key "nonexistent"/,
+  );
+});
+
+test('applyLocale: data-i18n="toString" also hits unknown-key path (C3)', () => {
+  // Dict keys are arbitrary strings supplied by the HTML author — no
+  // regex constraint like tokens have. A marker `data-i18n="toString"`
+  // used to bypass the unknown-key hard-fail via prototype-chain lookup
+  // and return Object.prototype.toString (a function), which then
+  // crashed the transform with "str.replace is not a function".
+  // hasOwn correctly rejects.
+  assert.throws(
+    () =>
+      applyLocale(
+        '<h1 data-i18n="toString"></h1>',
+        opts({ dict: {} }),
+      ),
+    /unknown key "toString"/,
+  );
+});
+
+test('applyLocale: both data-i18n and data-i18n-html on same element rejected', () => {
+  const dict = { a: 'x', b: 'y' };
+  assert.throws(
+    () =>
+      applyLocale(
+        '<div data-i18n="a" data-i18n-html="b"></div>',
+        opts({ dict }),
+      ),
+    /pick one/i,
+  );
+});
+
+test('applyLocale: attribute value with & is escaped (H8)', () => {
+  const dict = { title: 'Bed & Breakfast' };
+  const out = applyLocale(
+    '<div data-i18n-attr="title:title"></div>',
+    opts({ dict }),
+  );
+  // safeSetAttribute converts & → &amp; so the output is valid HTML5.
+  assert.match(out, /title="Bed &amp; Breakfast"/);
+});
+
+test('applyLocale: descendants of a data-i18n-html parent are not iterated (H4)', () => {
+  // Parent's innerHTML rewrite orphans the inner <span>. Without the
+  // orphan-guard, the inner marker would trigger an "unknown key"
+  // error. With the guard, the inner marker is ignored because it's
+  // detached from the emitted DOM before the loop reaches it.
+  const dict = { outer: 'REPLACED' };
+  const out = applyLocale(
+    '<div data-i18n-html="outer"><span data-i18n="never.exists"></span></div>',
+    opts({ dict }),
+  );
+  assert.match(out, /REPLACED/);
+  // The inner marker's key was never looked up → build didn't fail.
+  // Verify the orphaned span isn't in the output either.
+  assert.doesNotMatch(out, /never\.exists/);
+});
+
+test('applyLocale: BG pass emits Cyrillic', () => {
+  const dict = { hi: 'Здравей, свят' };
+  const out = applyLocale(
+    '<h1 data-i18n="hi"></h1>',
+    opts({ locale: 'bg', dict }),
+  );
+  assert.match(out, /Здравей, свят/);
+});
+
+test('applyLocale: noscript recursion translates real markers', () => {
+  const dict = { fallback: 'JS-off message' };
+  const out = applyLocale(
+    '<noscript><p data-i18n="fallback"></p></noscript>',
+    opts({ dict }),
+  );
+  assert.match(out, /JS-off message/);
+});
+
+test('applyLocale: noscript recursion does NOT trigger on prose containing data-i18n= (M9)', () => {
+  // No real marker inside the noscript — just prose that mentions the
+  // attribute name. The old regex-detection variant would re-parse
+  // and throw "unknown key"; the new parse-first variant skips.
+  const dict = { unused: 'x' };
+  const out = applyLocale(
+    '<noscript><p>Devs: this site uses data-i18n="key" markers.</p></noscript>',
+    opts({ dict }),
+  );
+  // Prose survives verbatim, no build error.
+  assert.match(out, /data-i18n="key"/);
+});
+
+test('applyLocale: does not mutate opts', () => {
+  const o = opts({ dict: { k: 'v' } });
+  const snapshot = JSON.parse(JSON.stringify({ ...o, dict: { ...o.dict }, ctx: { ...o.ctx } }));
+  applyLocale('<div data-i18n="k"></div>', o);
+  assert.deepEqual(o.dict, snapshot.dict);
+  assert.deepEqual(o.ctx, snapshot.ctx);
+});
