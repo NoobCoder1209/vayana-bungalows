@@ -42,7 +42,7 @@
       "terms": "Terms & Conditions",
       "cancellation": "Cancellation Policy",
       "privacy": "Privacy Policy",
-      "copyright": "© 2026 Made with ❤ by {credit}",
+      "copyright": "© 2026 Made with ❤️ by {credit}",
       "license_prefix": "License number:"
     },
     "video_modal_aria": "Resort video",
@@ -57,25 +57,25 @@
     },
     "hero": {
       "eyebrow": "Welcome to Vayana Bungalows",
-      "title_html": "Boutique Black Sea<br />Bungalows",
+      "title_html": "Black Sea<br />Boutique Bungalows",
       "subtitle": "Where the pines meet the coast and the days run on tide and appetite."
     },
     "cta_strip": {
       "eyebrow": "Reservations open",
       "title": "Choose your bungalow, then book your stay.",
-      "body": "Twenty-eight villas across the island, each with its own character. Pick the one that calls you.",
+      "body": "Twenty-eight bungalows across the resort, each with its own character. Pick the one that calls you.",
       "cta": "Explore the bungalows"
     },
     "intro": {
       "eyebrow": "Welcome to Vayana Bungalows",
-      "title": "On the Black Sea coast, at the edge of the Strandzha forest.",
-      "body_para1": "Vayana Bungalows is a small family-run retreat in Tsarevo, Bulgaria — a handful of hardwood bungalows tucked between the pines and the sea, hand-built and run with the same care we'd put into our own home.",
+      "title": "On the Black Sea coast, at the foot of the Strandzha mountains.",
+      "body_para1": "Vayana Bungalows is a small family-run retreat in Tsarevo, Bulgaria — a handful of hardwood bungalows tucked between the pines and the sea, hand-built and run with the same care we’d put into our own home.",
       "body_para2": "Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the drive back.",
       "cta": "Discover the resort",
-      "img_alt": "Wooden over-water villa at sunset"
+      "img_alt": "Wooden bungalow terrace at sunset"
     },
     "gallery": {
-      "eyebrow": "A glimpse of the island",
+      "eyebrow": "A glimpse of the coast",
       "title": "Moments at Vayana Bungalows",
       "prev_aria": "Previous photos",
       "next_aria": "Next photos",
@@ -110,11 +110,11 @@
     },
     "locations": {
       "eyebrow": "Unforgettable experience",
-      "title": "One of the world's most desirable locations.",
+      "title": "One of the world’s most desirable locations.",
       "spa_title": "Spa & wellness",
-      "spa_body": "Open-air pavilions, salt-water plunge pools, and treatments built around the island's botanicals.",
-      "activities_title": "Island activities",
-      "activities_body": "Reef snorkeling at first light, sunset paddleboards, guided hikes to the volcanic crater rim.",
+      "spa_body": "Open-air pavilions, salt-water plunge pools, and treatments built around the coast’s botanicals.",
+      "activities_title": "Coastal activities",
+      "activities_body": "Diving at first light, sunset kayaking, guided hikes into the Strandzha nature park.",
       "dine_title": "Gastronomic dine",
       "dine_body": "Three restaurants from a single kitchen garden. Black Sea seafood, wood fire, no menu after seven."
     },
@@ -133,12 +133,12 @@
     "services": {
       "eyebrow": "Discover the services we offer",
       "title": "All the essentials for a cozy and comfortable stay.",
-      "airport_title": "Airport pick-up",
+      "airport_title": "Transfer",
       "airport_body": "Boat transfer included with every stay.",
       "housekeeper_title": "Housekeeper",
       "housekeeper_body": "Twice-daily villa service, twenty-four-hour butler.",
       "wifi_title": "Wifi & internet",
-      "wifi_body": "Fibre across the island, even on the beach.",
+      "wifi_body": "Fibre across the resort, even on the beach.",
       "laundry_title": "Laundry",
       "laundry_body": "Same-day pressing, hand-care for delicate fabrics.",
       "breakfast_title": "Breakfast in bed",
@@ -158,7 +158,7 @@
     "newsletter": {
       "eyebrow": "Notes from the bay",
       "title": "Stay with us",
-      "lede": "Quiet notes from the island — three or four a year, never more.",
+      "lede": "Quiet notes from the coast — three or four a year, never more.",
       "email_label": "Email address",
       "email_placeholder": "Your email address",
       "hp_label": "Website",
@@ -166,8 +166,8 @@
       "consent_html": "I agree to the <a href=\"{privacy_url}\">Privacy Policy</a> and consent to receiving occasional emails from Vayana Bungalows.",
       "noscript_html": "Subscribe by emailing <a href=\"{email_href}\">{email_display}</a> with the subject \"Subscribe\".",
       "modal_eyebrow": "Subscribed",
-      "modal_title": "Thank you — you're on the list.",
-      "modal_body": "We'll send a quiet note when there's something worth sharing — no more than four a year.",
+      "modal_title": "Thank you — you’re on the list.",
+      "modal_body": "We’ll send a quiet note when there’s something worth sharing — no more than four a year.",
       "modal_close": "Close"
     },
     "contact": {
