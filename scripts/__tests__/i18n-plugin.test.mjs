@@ -328,6 +328,85 @@ test('applyLocale: descendants of a data-i18n parent are ALSO orphaned (H4-a)', 
   assert.doesNotMatch(out, /<span/);
 });
 
+test('applyLocale: data-i18n parent orphans a data-i18n-attr child (RM6)', () => {
+  // Round-2 review coverage gap — attr markers on descendants of a
+  // destroyed parent must also be skipped. The unknown key on the
+  // orphan would otherwise leak as a build-fail on markup that never
+  // reaches the output.
+  const dict = { parent: 'TEXT' };
+  const out = applyLocale(
+    '<div data-i18n="parent"><span data-i18n-attr="title:never.exists"></span></div>',
+    opts({ dict }),
+  );
+  assert.match(out, /TEXT/);
+  assert.doesNotMatch(out, /never\.exists/);
+});
+
+test('applyLocale: data-i18n-html parent orphans a data-i18n-attr descendant (RM6)', () => {
+  const dict = { outer: 'HTML' };
+  const out = applyLocale(
+    '<div data-i18n-html="outer"><span data-i18n-attr="aria-label:never.exists"></span></div>',
+    opts({ dict }),
+  );
+  assert.match(out, /HTML/);
+  assert.doesNotMatch(out, /never\.exists/);
+});
+
+test('applyLocale: nested data-i18n-html — inner is orphaned before its own iteration (RM6)', () => {
+  const dict = { outer: 'OUTER' };
+  const out = applyLocale(
+    '<div data-i18n-html="outer"><section data-i18n-html="never.exists"></section></div>',
+    opts({ dict }),
+  );
+  assert.match(out, /OUTER/);
+  assert.doesNotMatch(out, /never\.exists/);
+});
+
+test('applyLocale: data-i18n parent orphans a data-i18n-meta descendant (RM6)', () => {
+  const dict = { parent: 'TEXT' };
+  const out = applyLocale(
+    '<div data-i18n="parent"><meta data-i18n-meta="never.exists"></div>',
+    opts({ dict }),
+  );
+  assert.match(out, /TEXT/);
+  assert.doesNotMatch(out, /never\.exists/);
+});
+
+test('sanitizer: CDATA payload rejected (RC1 — live XSS bypass)', () => {
+  // The critical finding from round-2. Without the text-node raw-`<`
+  // check, `<![CDATA[<script>alert(1)</script>]]>` bypassed the tag
+  // allowlist because node-html-parser stores CDATA as a single text
+  // node. On serialize + browser parse, HTML5 has no CDATA outside
+  // SVG/MathML, so the browser executes the embedded script.
+  assert.throws(
+    () => sanitizeHtmlFragment('<![CDATA[<script>alert(1)</script>]]>', 'k'),
+    /raw '<' in text\/CDATA/i,
+  );
+});
+
+test('sanitizer: HTML comment rejected (RL7)', () => {
+  // Round-2 flagged that comments passed through the sanitizer despite
+  // no legitimate translator use case. Reject.
+  assert.throws(
+    () => sanitizeHtmlFragment('<!-- hidden comment -->', 'k'),
+    /disallowed HTML comment/i,
+  );
+});
+
+test('loadDictionaries: pre-escaped &copy; entity rejected at load time (RH3)', async () => {
+  // Fixture uses raw JSON strings — we can't build one on the fly with
+  // fs-writes here, so exercise the helper directly via applyLocale
+  // with a value that contains the entity. But rejectPreEscapedEntities
+  // fires at LOAD time not TRANSFORM time — so the assertion below
+  // is written against a directory fixture. Fixture at
+  // fixtures/locales-preescape.
+  const { loadDictionaries } = await import('../i18n-plugin.js');
+  assert.throws(
+    () => loadDictionaries(FIX('locales-preescape')),
+    /pre-escaped HTML entity/i,
+  );
+});
+
 test('applyLocale: BG pass emits Cyrillic', () => {
   const dict = { hi: 'Здравей, свят' };
   const out = applyLocale(

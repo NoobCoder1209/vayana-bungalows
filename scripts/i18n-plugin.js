@@ -222,10 +222,13 @@ export function loadDictionaries(localesDir) {
   // prose.
   const tokensByKey = {};
   for (const key of referenceKeys) {
-    // Validate BOTH locales for token-shape issues at load time. Catches
-    // uppercase-cased tokens, empty {} placeholders, hyphens-in-names, etc.
+    // Validate BOTH locales for token-shape issues + pre-escaped entity
+    // hazards at load time. Catches uppercase-cased tokens, empty {}
+    // placeholders, hyphens-in-names (H6), AND `&copy;`/`&amp;`-style
+    // pre-escapes that would double-escape on emit (RH3).
     for (const locale of locales) {
       rejectMalformedTokens(dicts[locale][key], key, locale);
+      rejectPreEscapedEntities(dicts[locale][key], key, locale);
     }
     const refTokens = collectTokens(dicts[locales[0]][key] || '');
     tokensByKey[key] = refTokens;
@@ -324,6 +327,41 @@ function rejectMalformedTokens(value, key, locale) {
         `[i18n] malformed token "{${inner}}" at "${key}" in ${locale} — tokens must match [a-z_][a-z0-9_]*. Rename or escape the braces.`,
       );
     }
+  }
+}
+
+// Match any HTML-entity-shaped sequence a translator might write out of
+// habit: `&amp;`, `&lt;`, `&#39;`, `&#x27;`, `&copy;`, `&nbsp;`. Locale
+// values are stored raw (Unicode) — the plugin escapes on write. A
+// translator who pre-escapes creates double-escapes in the emitted HTML
+// (e.g. `&copy;` → literal `&copy;` visible in the browser instead of
+// `©`). RH3 fails loudly at load time so the failure is a build error,
+// not an unnoticed shipped bug.
+const HTML_ENTITY_RE = /&(?:#\d+|#x[0-9a-fA-F]+|amp|lt|gt|quot|apos|copy|nbsp|reg|trade|hellip|mdash|ndash|laquo|raquo|[a-zA-Z][a-zA-Z0-9]{1,10});/;
+
+/**
+ * Reject HTML-entity-shaped substrings in locale values (RH3). Locale
+ * values are stored as raw Unicode; the plugin's escape helpers
+ * (setTextContent, safeSetAttribute) transform `&` → `&amp;` on WRITE.
+ * If a translator pre-escapes (`&amp;copy; 2026`), that becomes
+ * `&amp;amp;copy; 2026` in the emitted output — user sees literal
+ * `&amp;copy;` in the browser instead of `©`. The failure is silent
+ * (build passes) but user-visible.
+ *
+ * We could instead decode entities at load time (permissive normalise),
+ * but the fail-loud approach matches the plugin's design: every hazard
+ * is a build error, not a "just works differently" surprise.
+ *
+ * Legitimate raw `&` (e.g. "Bed & Breakfast") is allowed — this regex
+ * only matches `&NAME;` and `&#NNN;` shapes.
+ */
+function rejectPreEscapedEntities(value, key, locale) {
+  if (typeof value !== 'string') return;
+  const m = HTML_ENTITY_RE.exec(value);
+  if (m) {
+    throw new Error(
+      `[i18n] pre-escaped HTML entity "${m[0]}" at "${key}" in ${locale} — locale values must be raw Unicode (write "©" not "&copy;", "&" not "&amp;"). The plugin escapes on emit; pre-escaping produces "&amp;copy;" in the browser.`,
+    );
   }
 }
 
@@ -511,11 +549,41 @@ function walkFragment(node, keyForError) {
         );
       }
       walkFragment(child, keyForError);
+    } else if (child.nodeType === 3 /* TEXT_NODE */) {
+      // RC1 — CDATA sanitizer bypass. HTML5 has no CDATA outside SVG/MathML.
+      // node-html-parser treats `<![CDATA[...]]>` as a single text node
+      // rather than an element, so the tag-allowlist branch above never
+      // sees the payload. When serialized back and re-parsed by a browser,
+      // `<![CDATA[` becomes a bogus-comment, and anything inside (like
+      // `<script>alert(1)</script>`) is parsed as real markup — LIVE XSS.
+      //
+      // Similar shape: PI-like `<?xml ...?>`, comment-in-text `<!-- ... -->`
+      // that the parser missed, or a raw `<` that slipped past because
+      // node-html-parser couldn't find a matching `>`.
+      //
+      // Fix: any text node containing an unescaped `<` in its raw
+      // representation is markup-in-disguise. Reject.
+      const raw = child.rawText != null ? child.rawText : (child.text || '');
+      if (raw.includes('<')) {
+        throw new Error(
+          `[i18n] disallowed raw '<' in text/CDATA fragment for key "${keyForError}" (possible CDATA/comment/PI bypass)`,
+        );
+      }
+    } else if (child.nodeType === 8 /* COMMENT_NODE */) {
+      // RL7 — HTML comments have no legitimate translator use case and
+      // add dead-weight bytes to the emitted HTML. Reject rather than
+      // silently pass through. Conditional-comment IE quirks and
+      // comment-in-noscript oddities are exactly the class of latent
+      // hazard the module docblock warns about.
+      throw new Error(
+        `[i18n] disallowed HTML comment in data-i18n-html value for key "${keyForError}"`,
+      );
     }
-    // Text nodes pass through. Comments are dropped by the parser at
-    // read time (PARSER_OPTIONS has comment:true which PRESERVES them —
-    // and that's fine, translator-authored comments are benign and would
-    // hard-fail on the tag check anyway if they contained one).
+    // Any other node type (CDataSection, ProcessingInstruction, etc.)
+    // silently ignored — node-html-parser doesn't emit these under
+    // PARSER_OPTIONS. If a future parser upgrade starts emitting them,
+    // the tag-allowlist check will fail-closed on any element wrapping
+    // them, and the text-check above catches raw `<` in text.
   }
 }
 
@@ -585,11 +653,16 @@ export function applyLocale(html, opts) {
  *      running them post-text is safe. They also read el.hasAttribute
  *      independently of anything set_content/innerHTML did.
  *
- * H4 (orphan iteration): when data-i18n-html replaces innerHTML, every
- * descendant marker-bearing element in the pre-collected node list
- * becomes detached. We deduplicate by tracking a WeakSet of elements
- * that have been swallowed by an ancestor's innerHTML rewrite; those
- * are skipped in the remainder of the loop.
+ * H4 + H4-a (orphan iteration): BOTH the data-i18n-html branch AND the
+ * plain-text data-i18n branch destroy the element's children:
+ *   - data-i18n-html rewrites innerHTML via set_content()
+ *   - data-i18n clears children via setTextContent's removeChild loop
+ * Every descendant marker-bearing element in the pre-collected node
+ * list becomes detached. We deduplicate by tracking a WeakSet of
+ * elements that have been swallowed by an ancestor's rewrite; those
+ * are skipped in the remainder of the loop. Both branches must
+ * populate the WeakSet — reverting either one reintroduces the
+ * misleading "unknown key on markup that never emits" build failure.
  */
 function transformSubtree(root, opts) {
   const { pagePath } = opts;
@@ -601,13 +674,13 @@ function transformSubtree(root, opts) {
   const orphaned = new WeakSet();
   for (const el of nodes) {
     if (orphaned.has(el)) continue;
-    // If an ancestor is orphaned, so is this element. querySelectorAll
-    // returned parents before children (depth-first), so an ancestor's
-    // rewrite has already run by the time we visit its descendants.
-    if (hasOrphanedAncestor(el, orphaned)) {
-      orphaned.add(el);
-      continue;
-    }
+    // Note: no ancestor-walk fallback needed. The two branches below
+    // that destroy children both do `for (const desc of
+    // el.querySelectorAll('*')) orphaned.add(desc)` — querySelectorAll('*')
+    // is exhaustively recursive, so every descendant Element in the
+    // pre-collected `nodes` list gets marked orphaned before its own
+    // iteration reaches the check above. If you add a new
+    // child-destroying branch, follow the same pattern.
 
     const hasText = el.hasAttribute('data-i18n');
     const hasHtml = el.hasAttribute('data-i18n-html');
@@ -670,15 +743,6 @@ function transformSubtree(root, opts) {
     transformSubtree(nested, opts);
     ns.set_content(nested.toString());
   }
-}
-
-function hasOrphanedAncestor(el, orphaned) {
-  let p = el.parentNode;
-  while (p) {
-    if (orphaned.has(p)) return true;
-    p = p.parentNode;
-  }
-  return false;
 }
 
 /**
