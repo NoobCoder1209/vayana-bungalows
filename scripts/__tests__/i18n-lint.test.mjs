@@ -106,7 +106,7 @@ test('exits 1 on malformed data-i18n-attr (missing colon)', () => {
   try {
     const { code, stderr } = runLint(root);
     assert.equal(code, 1);
-    assert.match(stderr, /malformed data-i18n-attr/);
+    assert.match(stderr, /missing colon separator/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -119,7 +119,8 @@ test('exits 1 on malformed data-i18n-attr (empty attr or key)', () => {
   try {
     const { code, stderr } = runLint(root);
     assert.equal(code, 1);
-    assert.match(stderr, /malformed data-i18n-attr/);
+    assert.match(stderr, /empty attr name/);
+    assert.match(stderr, /empty key/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -132,6 +133,32 @@ test('accepts multi-pair data-i18n-attr with valid attr:key pairs', () => {
   try {
     const { code, stdout } = runLint(root);
     assert.equal(code, 0, `stdout=${stdout}`);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('rejects trailing ";" in data-i18n-attr (matches plugin) (H1)', () => {
+  const root = makeFixture(goodDicts, {
+    'index.html': `<a data-i18n-attr="href:hello;">x</a>`,
+  });
+  try {
+    const { code, stderr } = runLint(root);
+    assert.equal(code, 1);
+    assert.match(stderr, /empty pair/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('rejects ";;" duplicate separator in data-i18n-attr (H1)', () => {
+  const root = makeFixture(goodDicts, {
+    'index.html': `<a data-i18n-attr="href:hello;;title:bye">x</a>`,
+  });
+  try {
+    const { code, stderr } = runLint(root);
+    assert.equal(code, 1);
+    assert.match(stderr, /empty pair/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -329,6 +356,89 @@ test('missing root dir exits 2', () => {
   assert.match(result.stderr, /does not exist/);
 });
 
+test('--root at end of argv exits 2 with a friendly message (M3)', () => {
+  const result = spawnSync(process.execPath, [LINT_SCRIPT, '--root'], {
+    encoding: 'utf-8',
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /missing value for --root/);
+});
+
+test('--locales-dir at end of argv exits 2 with a friendly message (M3)', () => {
+  const result = spawnSync(process.execPath, [LINT_SCRIPT, '--locales-dir'], {
+    encoding: 'utf-8',
+  });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /missing value for --locales-dir/);
+});
+
+test('ignores data-i18n inside <script> template literals (H2)', () => {
+  const root = makeFixture(goodDicts, {
+    'index.html': `
+      <p data-i18n="hello">real</p>
+      <script>
+        const tpl = '<p data-i18n="not.in.dict">fake</p>';
+        console.log(tpl);
+      </script>
+    `,
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0, `expected 0, stdout=${stdout}`);
+    assert.match(stdout, /1 used/); // only "hello"
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('ignores data-i18n inside <style> blocks (H2)', () => {
+  const root = makeFixture(goodDicts, {
+    'index.html': `
+      <style>
+        /* data-i18n="not.in.dict" — this is a CSS comment, not a marker */
+        .foo::before { content: 'data-i18n="also.fake"'; }
+      </style>
+      <p data-i18n="hello">real</p>
+    `,
+  });
+  try {
+    const { code } = runLint(root);
+    assert.equal(code, 0);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('ignores data-i18n inside HTML comments (H2)', () => {
+  const root = makeFixture(goodDicts, {
+    'index.html': `
+      <!-- TODO drop data-i18n="legacy.stub" once migration complete -->
+      <p data-i18n="hello">real</p>
+    `,
+  });
+  try {
+    const { code } = runLint(root);
+    assert.equal(code, 0);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('does NOT confuse data-i18n-attr with data-i18n (H2 regex anchoring)', () => {
+  // The negative-lookahead `(?![\w-])` after each attribute name means
+  // `data-i18n` should NOT match `data-i18n-attr` or `data-i18n-html`.
+  const root = makeFixture(goodDicts, {
+    'index.html': `<a data-i18n-attr="href:hello">x</a>`,
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0);
+    assert.match(stdout, /1 used/); // "hello" via attr, NOT via text
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('runs cleanly against the real project tree (smoke)', () => {
   // The real repo currently has locales/en+bg and one un-keyed index.html.
   // This test guards against the lint script blowing up on the real inputs.
@@ -338,5 +448,9 @@ test('runs cleanly against the real project tree (smoke)', () => {
     { encoding: 'utf-8' },
   );
   // Expected exit is 0 with warnings about orphans (nothing keyed yet).
-  assert.equal(result.status, 0, `stderr=${result.stderr}`);
+  assert.equal(
+    result.status,
+    0,
+    `stdout=${result.stdout}\nstderr=${result.stderr}`,
+  );
 });

@@ -920,45 +920,14 @@ const URL_BEARING_ATTRS = new Set([
   'longdesc',
 ]);
 
-function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
-  if (!el.hasAttribute(markerName)) return;
-  const rawValue = el.getAttribute(markerName);
-
-  let attr, key;
-  if (fixedAttr) {
-    attr = fixedAttr;
-    key = rawValue;
-    // L8: mirror the empty-key check that the attr:key branch performs
-    // below, so `<meta data-i18n-meta="">` produces the clearer error
-    // "has empty key" instead of falling through to lookup() and
-    // throwing the less-actionable "unknown key \"\"".
-    if (key.length === 0) {
-      throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" has empty key (expected a dictionary key)`,
-      );
-    }
-  } else {
-    const lastColon = rawValue.lastIndexOf(':');
-    if (lastColon < 0) {
-      throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" missing colon separator (expected attr:key)`,
-      );
-    }
-    attr = rawValue.slice(0, lastColon);
-    key = rawValue.slice(lastColon + 1);
-    if (attr.length === 0) {
-      throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" has empty attr name (expected attr:key)`,
-      );
-    }
-    if (key.length === 0) {
-      throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" has empty key (expected attr:key)`,
-      );
-    }
-  }
-  // Attribute-name allowlist — see the "Attribute-name allowlist (S1)"
-  // section in the docblock above.
+/**
+ * Apply the full attr-name allowlist + URL-scheme allowlist + <meta
+ * http-equiv> guard for a single (attr, key) pair, then write the
+ * resolved value onto `el`. Split out of the marker-parsing driver so
+ * multi-pair markers (below) can reuse the exact same enforcement per
+ * pair without duplicating rules.
+ */
+function applyAttrPair(el, opts, markerName, rawValue, attr, key) {
   const attrLower = attr.toLowerCase();
   if (FORBIDDEN_ATTR_NAMES.has(attrLower)) {
     throw new Error(
@@ -996,6 +965,74 @@ function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
     );
   }
   safeSetAttribute(el, attr, interpolated);
+}
+
+function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
+  if (!el.hasAttribute(markerName)) return;
+  const rawValue = el.getAttribute(markerName);
+
+  if (fixedAttr) {
+    // data-i18n-meta shortcut — the whole value is the dict key.
+    // L8: mirror the empty-key check that the attr:key branch performs
+    // below, so `<meta data-i18n-meta="">` produces the clearer error
+    // "has empty key" instead of falling through to lookup() and
+    // throwing the less-actionable "unknown key \"\"".
+    if (rawValue.length === 0) {
+      throw new Error(
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" has empty key (expected a dictionary key)`,
+      );
+    }
+    applyAttrPair(el, opts, markerName, rawValue, fixedAttr, rawValue);
+    el.removeAttribute(markerName);
+    return;
+  }
+
+  // Multi-pair `attr:key` syntax — split on `;` so a single marker can
+  // key multiple attributes on the same element (e.g.
+  // `data-i18n-attr="href:home_url; title:home_title; aria-label:home_aria"`).
+  // Semicolons inside dict values are fine — the split is on the RAW
+  // marker value only, not on the resolved translation. Whitespace
+  // between pairs is trimmed; empty segments (leading/trailing `;` or
+  // `;;` in the middle) are rejected so a translator can't leave the
+  // marker in a half-authored state.
+  //
+  // Within a single pair, `attr` / `key` are separated by the LAST
+  // colon (permits keys containing `:`, which the dict flattener does
+  // NOT produce today but which we don't want to forbid at the marker
+  // layer).
+  const pairs = rawValue.split(';');
+  if (pairs.length === 0) {
+    throw new Error(
+      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" is empty`,
+    );
+  }
+  for (const rawPair of pairs) {
+    const pair = rawPair.trim();
+    if (pair.length === 0) {
+      throw new Error(
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" contains an empty pair (leading/trailing/duplicate ";"). Expected "attr:key" pairs separated by ";".`,
+      );
+    }
+    const lastColon = pair.lastIndexOf(':');
+    if (lastColon < 0) {
+      throw new Error(
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" pair "${pair}" missing colon separator (expected attr:key)`,
+      );
+    }
+    const attr = pair.slice(0, lastColon).trim();
+    const key = pair.slice(lastColon + 1).trim();
+    if (attr.length === 0) {
+      throw new Error(
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" pair "${pair}" has empty attr name (expected attr:key)`,
+      );
+    }
+    if (key.length === 0) {
+      throw new Error(
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" pair "${pair}" has empty key (expected attr:key)`,
+      );
+    }
+    applyAttrPair(el, opts, markerName, rawValue, attr, key);
+  }
   el.removeAttribute(markerName);
 }
 

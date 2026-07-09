@@ -11,7 +11,11 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # Run on every branch push — a feature branch that stays red between
+    # PR-open events wastes reviewer time. The concurrency group below
+    # cancels stale runs on the same ref so a flurry of commits doesn't
+    # queue up.
+    branches: ['**']
   pull_request:
     branches: [main]
 
@@ -26,7 +30,10 @@ concurrency:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    # Pinned rather than `ubuntu-latest` so a GitHub-driven bump can't
+    # silently change the Node/npm/glibc versions under CI. Bump
+    # intentionally when a newer LTS is available.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 

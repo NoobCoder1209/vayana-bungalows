@@ -1136,3 +1136,95 @@ test('applyLocale: boot script fits inside the WHATWG <meta charset> safety wind
     `<meta charset> at byte ${charsetIdx}, should be within the first 1024 bytes`,
   );
 });
+
+// ---------------------------------------------------------------------
+// data-i18n-attr multi-pair syntax (H1) — semicolon-separated attr:key
+// pairs so a single marker can key multiple attributes on one element.
+// Each pair goes through the SAME allowlist as a single-pair marker;
+// there is no fast path.
+// ---------------------------------------------------------------------
+
+test('data-i18n-attr: multi-pair — writes all attributes from one marker (H1)', () => {
+  const dict = {
+    home_url: 'https://example.com/',
+    home_title: 'Go home',
+    home_aria: 'Home page',
+  };
+  const out = applyLocale(
+    '<a data-i18n-attr="href:home_url; title:home_title; aria-label:home_aria">x</a>',
+    opts({ dict }),
+  );
+  assert.match(out, /href="https:\/\/example\.com\/"/);
+  assert.match(out, /title="Go home"/);
+  assert.match(out, /aria-label="Home page"/);
+  assert.doesNotMatch(out, /data-i18n-attr=/);
+});
+
+test('data-i18n-attr: multi-pair — whitespace around pairs is trimmed (H1)', () => {
+  const dict = { a: 'A', b: 'B' };
+  const out = applyLocale(
+    '<div data-i18n-attr="  title:a  ;   aria-label:b  "></div>',
+    opts({ dict }),
+  );
+  assert.match(out, /title="A"/);
+  assert.match(out, /aria-label="B"/);
+});
+
+test('data-i18n-attr: multi-pair — empty segment (trailing ";") rejected (H1)', () => {
+  assert.throws(
+    () =>
+      applyLocale(
+        '<a data-i18n-attr="href:a;">x</a>',
+        opts({ dict: { a: '/x' } }),
+      ),
+    /empty pair/,
+  );
+});
+
+test('data-i18n-attr: multi-pair — duplicate ";;" rejected (H1)', () => {
+  assert.throws(
+    () =>
+      applyLocale(
+        '<a data-i18n-attr="href:a;;title:b">x</a>',
+        opts({ dict: { a: '/x', b: 'T' } }),
+      ),
+    /empty pair/,
+  );
+});
+
+test('data-i18n-attr: multi-pair — allowlist runs per pair (H1)', () => {
+  // One pair is legitimate, one hits FORBIDDEN_ATTR_NAMES. Whole marker
+  // must fail — a "one bad pair spoils the whole marker" contract is
+  // the only safe default (partial-apply would leave the DOM in a
+  // half-authored state).
+  assert.throws(
+    () =>
+      applyLocale(
+        '<a data-i18n-attr="href:a; target:b">x</a>',
+        opts({ dict: { a: '/x', b: '_blank' } }),
+      ),
+    /forbidden/,
+  );
+});
+
+test('data-i18n-attr: multi-pair — URL-scheme allowlist runs per pair (H1)', () => {
+  assert.throws(
+    () =>
+      applyLocale(
+        '<a data-i18n-attr="href:good; src:bad">x</a>',
+        opts({
+          dict: { good: '/x', bad: 'javascript:alert(1)' },
+        }),
+      ),
+    /not an allowed URL/,
+  );
+});
+
+test('data-i18n-attr: single-pair syntax still works (H1 backwards compat)', () => {
+  const dict = { label: 'Click' };
+  const out = applyLocale(
+    '<button data-i18n-attr="aria-label:label"></button>',
+    opts({ dict }),
+  );
+  assert.match(out, /aria-label="Click"/);
+});

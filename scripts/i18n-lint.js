@@ -2,10 +2,14 @@
 /**
  * i18n-lint — standalone validator for locale dictionaries and HTML markers.
  *
- * Runs the same load-time validations the Vite plugin runs at build time
- * (symmetry, tokens, entities, symlinks, depth cap) and additionally scans
- * every HTML file in the source tree for `data-i18n*` markers, then
- * cross-references marker keys against the dictionaries.
+ * Scope: validates dict integrity (via loadDictionaries — symmetry, tokens,
+ * entities, symlinks, depth cap) + cross-references HTML `data-i18n*`
+ * markers against the dictionaries. It does NOT reproduce the plugin's
+ * markup-level checks (double-marker collisions, attribute-name allowlist,
+ * URL-scheme allowlist, <meta http-equiv> rejection, sanitiser rules) —
+ * those are transform-time concerns and the plugin owns them at build.
+ * The lint's job is the fast-feedback dict/marker cross-reference so
+ * broken keys don't require a full build to surface.
  *
  * Exit codes:
  *   0 — clean (may print WARNINGS but nothing broken)
@@ -14,23 +18,27 @@
  *   2 — usage error
  *
  * Usage:
- *   node scripts/i18n-lint.js [--locales-dir <path>] [--strict-orphans]
+ *   node scripts/i18n-lint.js [--locales-dir <path>] [--root <path>]
+ *                             [--strict-orphans]
  *
  * Options:
- *   --locales-dir <path>   Where the locale JSONs live (default: ./locales)
+ *   --locales-dir <path>   Where the locale JSONs live (default:
+ *                          <root>/locales, resolved after --root)
+ *   --root <path>          Root directory to scan for HTML files
+ *                          (default: the repo root that contains this
+ *                          script, NOT process.cwd())
  *   --strict-orphans       Treat orphan keys (in dict, unused in HTML) as
  *                          errors instead of warnings. Enable once every
  *                          page has been keyed (post-Task #165).
- *   --root <path>          Root directory to scan for HTML files
- *                          (default: cwd)
  *   --help                 Print this help and exit 0.
  *
- * The HTML scan is a lightweight regex sweep — it does NOT parse markup,
- * because the plugin already does authoritative parsing at build time and
- * re-doing it here doubles the surface for bugs. What we need is
- * "is this key in the dict, yes/no", and a regex reliably answers that.
- * If a marker attribute value happens to contain HTML-quote characters
- * they'd have been rejected as invalid HTML long before reaching lint.
+ * The HTML scan is a lightweight regex sweep — it does NOT DOM-parse. To
+ * avoid false positives from marker-shaped substrings inside <script>
+ * template literals, <style> blocks, or HTML comments (which the DOM-
+ * parsing plugin never sees as attributes), we strip those regions from
+ * the source before matching. A DOM-parse would also work but doubles the
+ * bug surface for a linter that already fails-open on the plugin's own
+ * markup checks.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -46,33 +54,50 @@ const PROJECT_ROOT = resolve(__dirname, '..');
 // match `data-i18n-attrs="…"` (with trailing s) or `data-i18nfoo="…"`.
 // The attribute name must be immediately followed by `=` (allowing
 // tolerant whitespace, though HTML5 disallows it). Value can be single-
-// or double-quoted.
+// or double-quoted. `[^"]*` and `[^']*` DO match newlines by default in
+// JavaScript regex, so multi-line attribute values work.
 //
-// One regex per marker kind so we can attach kind-specific parsing:
-const RE_I18N_TEXT   = /\bdata-i18n\s*=\s*("([^"]*)"|'([^']*)')/g;
-const RE_I18N_HTML   = /\bdata-i18n-html\s*=\s*("([^"]*)"|'([^']*)')/g;
-const RE_I18N_ATTR   = /\bdata-i18n-attr\s*=\s*("([^"]*)"|'([^']*)')/g;
-const RE_I18N_META   = /\bdata-i18n-meta\s*=\s*("([^"]*)"|'([^']*)')/g;
+// The negative-lookahead `(?![\w-])` after each attribute name prevents
+// a false match on `data-i18nfoo="…"` or `data-i18n-html="…"` when we
+// were looking for `data-i18n`.
+const RE_I18N_TEXT   = /\bdata-i18n(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/g;
+const RE_I18N_HTML   = /\bdata-i18n-html(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/g;
+const RE_I18N_ATTR   = /\bdata-i18n-attr(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/g;
+const RE_I18N_META   = /\bdata-i18n-meta(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/g;
+
+// Regions to blank out before marker extraction. `[\s\S]` is the
+// newline-inclusive "any char" idiom (regex `.` alone doesn't cross
+// newlines without the `s` flag, and even then some hosts have parsing
+// quirks). All patterns are non-greedy so nested tag-like content
+// doesn't over-consume.
+const RE_HTML_COMMENT   = /<!--[\s\S]*?-->/g;
+const RE_SCRIPT_BLOCK   = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
+const RE_STYLE_BLOCK    = /<style\b[^>]*>[\s\S]*?<\/style\s*>/gi;
 
 // Directories to skip when walking the tree. `dist/` is a build artefact
 // (it contains injected translations, which would fake-pass every check).
-// `node_modules/` is obvious. `scripts/__tests__/fixtures/` contains
-// intentionally-malformed dicts for the plugin's own test suite.
+// `node_modules/` is obvious. `__tests__/` contains fixtures with
+// intentionally-malformed dicts/HTML that would blow up the lint.
+// `.github`/`.claude`/`.husky` etc. all fall through the dotfile skip
+// below and don't need explicit entries here.
 const SKIP_DIRS = new Set([
   'node_modules',
   'dist',
   '.git',
   'coverage',
+  '__tests__',
 ]);
 
 /**
  * Recursively walk a directory, yielding every `.html` file path (absolute).
- * Symlinks are followed via readdirSync's default behavior; we don't try
- * to be defensive here because a repo checkout shouldn't have adversarial
- * symlinks and the plugin's build-time symlink guard covers the locale
- * files (which is the real attack surface).
+ *
+ * Symlinks are NOT followed. With `withFileTypes: true`, Dirent.isDirectory()
+ * returns false for symlinks-to-directories (they satisfy isSymbolicLink()
+ * instead), so recursion never descends into them. This is deliberate —
+ * a repo checkout with adversarial symlinks would let a lint that follows
+ * them scan outside the tree it was pointed at.
  */
-function* walkHtml(dir) {
+function* walkHtml(dir, rootDir) {
   let entries;
   try {
     entries = readdirSync(dir, { withFileTypes: true });
@@ -80,43 +105,57 @@ function* walkHtml(dir) {
     // Missing dir is fatal only if it's the top-level scan root; a
     // missing subdirectory during recursion means it disappeared
     // mid-walk, which is fine to skip.
-    if (dir === PROJECT_ROOT) throw err;
+    if (dir === rootDir) throw err;
     return;
   }
   for (const entry of entries) {
-    if (entry.name.startsWith('.') && entry.name !== '.github') continue;
+    // Skip all dotfiles/dotdirs — this covers `.git`, `.github`, `.claude`,
+    // `.vscode`, `.husky`, `.env*`, and anything else prefixed with a dot.
+    // None of these contain HTML the lint should be validating.
+    if (entry.name.startsWith('.')) continue;
     if (SKIP_DIRS.has(entry.name)) continue;
-    // Skip fixtures for the plugin's own tests — they intentionally contain
-    // malformed dicts/HTML and would blow up the lint.
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
-      yield* walkHtml(full);
+      yield* walkHtml(full, rootDir);
     } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.html')) {
-      // Explicit skip for anything under a `__tests__` directory anywhere
-      // in the tree — fixtures live there.
-      const rel = relative(PROJECT_ROOT, full);
-      if (rel.split(sep).includes('__tests__')) continue;
       yield full;
     }
   }
 }
 
 /**
+ * Blank out <script>, <style>, and <!-- --> regions in HTML source so
+ * marker regexes can't false-match on template literals, CSS content,
+ * or commented-out markup. Replacement is space-of-equal-length so
+ * subsequent regex offsets (if we ever add source-position reporting)
+ * stay meaningful.
+ */
+function maskNonMarkupRegions(html) {
+  const blank = (m) => ' '.repeat(m.length);
+  return html
+    .replace(RE_HTML_COMMENT, blank)
+    .replace(RE_SCRIPT_BLOCK, blank)
+    .replace(RE_STYLE_BLOCK, blank);
+}
+
+/**
  * Extract all i18n marker references from a single HTML source. Returns a
- * list of `{kind, key, raw}` records; `kind` is one of `text | html |
- * attr | meta` and `key` is the dot-path to look up in the dictionaries.
+ * list of `{kind, key}` records; `kind` is one of `text | html | attr |
+ * meta` and `key` is the dot-path to look up in the dictionaries.
  *
- * For `data-i18n-attr` the raw value can pack multiple `attr:key` pairs
- * separated by `;` — we split-on-last-colon per pair to allow keys with
- * embedded colons (which the plugin also does).
+ * For `data-i18n-attr` the raw value packs 1..N `attr:key` pairs
+ * separated by `;` — matches the plugin's `handleAttrMarker` semantics.
+ * Empty pairs (leading/trailing/duplicate `;`) are errors, matching the
+ * plugin's behaviour so the lint can catch them before build.
  */
 function extractMarkers(html, relPath) {
   const out = [];
   const errors = [];
 
+  const source = maskNonMarkupRegions(html);
   const capture = (match) => match[2] ?? match[3] ?? '';
 
-  for (const m of html.matchAll(RE_I18N_TEXT)) {
+  for (const m of source.matchAll(RE_I18N_TEXT)) {
     const val = capture(m).trim();
     if (!val) {
       errors.push(`${relPath}: empty data-i18n= value`);
@@ -125,7 +164,7 @@ function extractMarkers(html, relPath) {
     out.push({ kind: 'text', key: val });
   }
 
-  for (const m of html.matchAll(RE_I18N_HTML)) {
+  for (const m of source.matchAll(RE_I18N_HTML)) {
     const val = capture(m).trim();
     if (!val) {
       errors.push(`${relPath}: empty data-i18n-html= value`);
@@ -134,37 +173,61 @@ function extractMarkers(html, relPath) {
     out.push({ kind: 'html', key: val });
   }
 
-  for (const m of html.matchAll(RE_I18N_ATTR)) {
-    const val = capture(m).trim();
-    if (!val) {
+  for (const m of source.matchAll(RE_I18N_ATTR)) {
+    const raw = capture(m);
+    // Preserve raw for error messages but split on the untrimmed value —
+    // matches plugin exactly.
+    if (raw.trim().length === 0) {
       errors.push(`${relPath}: empty data-i18n-attr= value`);
       continue;
     }
-    for (const pair of val.split(';')) {
-      const p = pair.trim();
-      if (!p) continue;
-      // Split on the LAST colon so keys may contain colons (unusual but
-      // permitted — the plugin's `handleAttrMarker` uses the same rule).
-      const idx = p.lastIndexOf(':');
-      if (idx <= 0 || idx === p.length - 1) {
+    const pairs = raw.split(';');
+    let hadError = false;
+    for (const rawPair of pairs) {
+      const pair = rawPair.trim();
+      if (pair.length === 0) {
+        // Empty pair (leading `;`, trailing `;`, or `;;`) — plugin
+        // rejects, so lint rejects too.
         errors.push(
-          `${relPath}: malformed data-i18n-attr pair "${p}" — expected "attr:key"`,
+          `${relPath}: data-i18n-attr="${raw}" contains an empty pair (leading/trailing/duplicate ";"). Expected "attr:key" pairs separated by ";".`,
         );
+        hadError = true;
+        break;
+      }
+      // Split on the LAST colon so keys may contain colons (permitted by
+      // the plugin, though the dict flattener doesn't currently produce
+      // such keys).
+      const idx = pair.lastIndexOf(':');
+      if (idx < 0) {
+        errors.push(
+          `${relPath}: data-i18n-attr="${raw}" pair "${pair}" missing colon separator (expected attr:key)`,
+        );
+        hadError = true;
         continue;
       }
-      const attr = p.slice(0, idx).trim();
-      const key = p.slice(idx + 1).trim();
-      if (!attr || !key) {
+      const attr = pair.slice(0, idx).trim();
+      const key = pair.slice(idx + 1).trim();
+      if (!attr) {
         errors.push(
-          `${relPath}: malformed data-i18n-attr pair "${p}" — attr and key must be non-empty`,
+          `${relPath}: data-i18n-attr="${raw}" pair "${pair}" has empty attr name`,
         );
+        hadError = true;
+        continue;
+      }
+      if (!key) {
+        errors.push(
+          `${relPath}: data-i18n-attr="${raw}" pair "${pair}" has empty key`,
+        );
+        hadError = true;
         continue;
       }
       out.push({ kind: 'attr', key, attr });
     }
+    // hadError already appended messages; nothing else to do.
+    void hadError;
   }
 
-  for (const m of html.matchAll(RE_I18N_META)) {
+  for (const m of source.matchAll(RE_I18N_META)) {
     const val = capture(m).trim();
     if (!val) {
       errors.push(`${relPath}: empty data-i18n-meta= value`);
@@ -176,13 +239,25 @@ function extractMarkers(html, relPath) {
   return { markers: out, errors };
 }
 
-/** Parse a simple long-flag CLI: `--flag`, `--flag value`. */
+/**
+ * Parse a simple long-flag CLI: `--flag`, `--flag value`. Returns null
+ * (with a message printed to stderr) on any usage error so main() can
+ * exit 2. Missing values for value-flags are explicit usage errors
+ * rather than crashes.
+ */
 function parseArgs(argv) {
   const opts = {
     localesDir: null,
     strictOrphans: false,
     root: PROJECT_ROOT,
     help: false,
+  };
+  const requireValue = (flag, i) => {
+    if (i + 1 >= argv.length) {
+      console.error(`i18n-lint: missing value for ${flag}`);
+      return null;
+    }
+    return argv[i + 1];
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -191,9 +266,15 @@ function parseArgs(argv) {
     } else if (arg === '--strict-orphans') {
       opts.strictOrphans = true;
     } else if (arg === '--locales-dir') {
-      opts.localesDir = argv[++i];
+      const v = requireValue(arg, i);
+      if (v == null) return null;
+      opts.localesDir = v;
+      i++;
     } else if (arg === '--root') {
-      opts.root = resolve(argv[++i]);
+      const v = requireValue(arg, i);
+      if (v == null) return null;
+      opts.root = resolve(v);
+      i++;
     } else {
       console.error(`i18n-lint: unknown argument "${arg}"`);
       return null;
@@ -208,8 +289,8 @@ const HELP = `Usage: node scripts/i18n-lint.js [options]
 Validates locale dictionaries and HTML i18n markers.
 
 Options:
-  --locales-dir <path>   Locale JSONs directory (default: ./locales)
-  --root <path>          Directory tree to scan for HTML (default: cwd)
+  --locales-dir <path>   Locale JSONs directory (default: <root>/locales)
+  --root <path>          Directory tree to scan for HTML (default: repo root)
   --strict-orphans       Treat unused dict keys as errors (default: warn)
   -h, --help             Print this help and exit
 `;
@@ -246,7 +327,9 @@ async function main() {
     return 1;
   }
   const { locales, dicts } = dictBundle;
-  // Reference key set — all locales are already symmetric per loadDictionaries.
+  // Reference key set — loadDictionaries has already enforced symmetry
+  // (every locale declares the same key set) and thrown if not, so
+  // sampling from locales[0] is safe.
   const dictKeys = new Set(Object.keys(dicts[locales[0]]));
 
   // 2. Walk HTML sources, extract markers, collect malformed-marker errors.
@@ -255,9 +338,13 @@ async function main() {
   const markerErrors = [];
   let filesScanned = 0;
 
-  for (const file of walkHtml(opts.root)) {
+  for (const file of walkHtml(opts.root, opts.root)) {
     filesScanned++;
     const rel = relative(opts.root, file);
+    // Defensive: sep-split rejects the pathological case where a file
+    // path itself contains a `__tests__` segment despite SKIP_DIRS
+    // filtering (e.g. a symlinked entry that raced past withFileTypes).
+    if (rel.split(sep).includes('__tests__')) continue;
     let html;
     try {
       html = readFileSync(file, 'utf-8');
