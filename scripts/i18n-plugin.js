@@ -808,7 +808,58 @@ function transformSubtree(root, opts) {
  *
  * Empty attr name is rejected (M10) — `:key` or `attr::key` used to
  * silently emit malformed HTML like `<div ="val">`.
+ *
+ * Attribute-name allowlist (S1): translators write locale copy but MUST
+ * NOT be able to bypass the sanitiser via data-i18n-attr. Without a
+ * check, `data-i18n-attr="onclick:evil"` + `evil = "alert(1)"` would
+ * ship XSS from a benign-looking locale value. We enforce the same
+ * fail-closed posture the data-i18n-html sanitiser does:
+ *
+ *   1. attr-name allowlist: reject any `on*` event handler, reject
+ *      dangerous embedding attrs (srcdoc, style), reject the meta
+ *      http-equiv/refresh redirect vector, and reject `content` on
+ *      <meta http-equiv> tags for the same reason. Everything else
+ *      is allowed — the intent of data-i18n-attr is legitimate label /
+ *      aria-* / title / placeholder / alt copy, which is exactly what
+ *      real usage looks like.
+ *
+ *   2. URL-scheme allowlist: for attributes that carry URLs (href,
+ *      src, action, formaction, xlink:href, poster, background, cite,
+ *      manifest, data, ping, longdesc), the resulting value MUST pass
+ *      isAllowedHref (same allowlist the data-i18n-html sanitiser
+ *      uses). A translator writing `javascript:alert(1)` or
+ *      `//attacker.example` fails the build.
+ *
+ * The intent-line stays clean: locale JSON gets to author human copy;
+ * translator mistakes → build error; XSS via marker attributes →
+ * impossible.
  */
+// Attribute names that would trivially XSS if a translator string
+// landed in them. Reject unconditionally regardless of tag.
+const FORBIDDEN_ATTR_NAMES = new Set([
+  'srcdoc',       // <iframe srcdoc="<script>…"> runs verbatim
+  'style',        // could inject CSS with `expression(…)` or url(javascript:)
+  'onload',       // legacy event-handler naming (also caught by on* below)
+]);
+// Any attribute name matching /^on/i is a DOM event handler — reject.
+const EVENT_HANDLER_RE = /^on/i;
+// Attribute names whose value is a URL — must pass the sanitiser's
+// href-scheme allowlist so `javascript:`, `data:`, `//evil` all fail.
+const URL_BEARING_ATTRS = new Set([
+  'href',
+  'src',
+  'action',
+  'formaction',
+  'xlink:href',
+  'poster',
+  'background',
+  'cite',
+  'manifest',
+  'data',
+  'ping',
+  'longdesc',
+]);
+
 function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
   if (!el.hasAttribute(markerName)) return;
   const rawValue = el.getAttribute(markerName);
@@ -837,8 +888,45 @@ function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
       );
     }
   }
+  // Attribute-name allowlist — see the "Attribute-name allowlist (S1)"
+  // section in the docblock above.
+  const attrLower = attr.toLowerCase();
+  if (FORBIDDEN_ATTR_NAMES.has(attrLower)) {
+    throw new Error(
+      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — attribute "${attr}" is forbidden (XSS-adjacent sinks: srcdoc, style, onload). Author intent belongs elsewhere in the DOM.`,
+    );
+  }
+  if (EVENT_HANDLER_RE.test(attr)) {
+    throw new Error(
+      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — attribute "${attr}" is a DOM event handler (on*). Translator strings must not land in event handlers.`,
+    );
+  }
+  // <meta http-equiv="refresh" content="0; url=…"> is a redirect vector.
+  // Reject data-i18n-attr on any <meta http-equiv> element's `content`
+  // (same shape data-i18n-meta writes) OR any attempt to set http-equiv
+  // itself. Legitimate <meta name="…" content="…"> keeps working.
+  const tag = el.rawTagName?.toLowerCase();
+  if (tag === 'meta') {
+    if (attrLower === 'http-equiv') {
+      throw new Error(
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — cannot set http-equiv via data-i18n-attr (redirect vector).`,
+      );
+    }
+    if (attrLower === 'content' && el.hasAttribute('http-equiv')) {
+      throw new Error(
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — cannot set content on <meta http-equiv> (redirect vector). Legitimate <meta name="…" content="…"> is fine.`,
+      );
+    }
+  }
   const value = lookup(opts.dict, key, opts.pagePath);
-  safeSetAttribute(el, attr, interpolate(value, opts.ctx, key));
+  const interpolated = interpolate(value, opts.ctx, key);
+  // URL-scheme allowlist for URL-bearing attrs — see docblock (S1).
+  if (URL_BEARING_ATTRS.has(attrLower) && !isAllowedHref(interpolated)) {
+    throw new Error(
+      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — resolved value "${interpolated}" is not an allowed URL for attribute "${attr}". Allowed schemes: ${ALLOWED_HREF_SCHEMES.join(', ')}, plus internal /path, #anchor, empty.`,
+    );
+  }
+  safeSetAttribute(el, attr, interpolated);
   el.removeAttribute(markerName);
 }
 
@@ -1360,7 +1448,19 @@ export function i18nPlugin(options) {
         // F-recursion: if a future refactor emits BG via generateBundle,
         // bundle would include bg/… paths — skip them to prevent
         // dist/bg/bg/…
-        if (fileName.startsWith('bg/')) continue;
+        //
+        // S2: emit a WARNING when we skip so a maintainer who adds a
+        // legitimately-bg-prefixed source page (e.g. a Bulgaria-specific
+        // legacy redirect) sees why their BG mirror isn't landing.
+        // Without this, the skip is silent and the missing mirror
+        // eats debug time.
+        if (fileName.startsWith('bg/')) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[i18n] skipping BG mirror emit for "${fileName}" — bg/-prefixed sources are treated as already-mirrored to prevent recursion. If this is a legitimate source page, rename to avoid the bg/ prefix or refactor the recursion guard.`,
+          );
+          continue;
+        }
 
         const emittedPath = resolve(outDir, fileName);
         let enHtml;

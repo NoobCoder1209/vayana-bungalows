@@ -756,6 +756,156 @@ test('insertAfterHead: HTML4-style http-equiv charset is honoured (M-L4-2)', () 
   assert.ok(blockIdx > metaEnd, 'block must land after http-equiv Content-Type meta');
 });
 
+// ---------------------------------------------------------------------------
+// data-i18n-attr / data-i18n-meta — attribute-name + URL-scheme allowlist
+// (S1 from round-4 sanity review)
+// ---------------------------------------------------------------------------
+
+test('data-i18n-attr: rejects event-handler attribute (S1)', () => {
+  // `onclick`, `onload`, `onerror`, etc. — translator strings must not
+  // land in DOM event handlers. `on*` is a name-shape match, no
+  // per-attribute lookup needed.
+  assert.throws(
+    () => applyLocale(
+      '<img data-i18n-attr="onerror:evil">',
+      opts({ dict: { evil: 'alert(1)' } }),
+    ),
+    /DOM event handler/i,
+  );
+  assert.throws(
+    () => applyLocale(
+      '<div data-i18n-attr="onclick:evil"></div>',
+      opts({ dict: { evil: 'alert(1)' } }),
+    ),
+    /DOM event handler/i,
+  );
+});
+
+test('data-i18n-attr: rejects srcdoc / style / onload (S1)', () => {
+  // srcdoc: <iframe srcdoc="<script>…"> executes the string as HTML.
+  assert.throws(
+    () => applyLocale(
+      '<iframe data-i18n-attr="srcdoc:evil"></iframe>',
+      opts({ dict: { evil: '<script>alert(1)</script>' } }),
+    ),
+    /XSS-adjacent sinks/i,
+  );
+  // style: CSS with url(javascript:…) / expression(…) is a legacy XSS vector.
+  assert.throws(
+    () => applyLocale(
+      '<div data-i18n-attr="style:evil"></div>',
+      opts({ dict: { evil: 'color:red' } }),
+    ),
+    /XSS-adjacent sinks/i,
+  );
+});
+
+test('data-i18n-attr: rejects javascript: in URL-bearing attributes (S1)', () => {
+  // href, src, action, formaction, xlink:href, poster, background,
+  // cite, manifest, data, ping, longdesc — all URL-bearing.
+  // Their values must pass isAllowedHref (same as data-i18n-html).
+  for (const attr of ['href', 'src', 'action', 'formaction', 'poster']) {
+    assert.throws(
+      () => applyLocale(
+        `<a data-i18n-attr="${attr}:evil">click</a>`,
+        opts({ dict: { evil: 'javascript:alert(1)' } }),
+      ),
+      /not an allowed URL/i,
+      `attribute ${attr} should reject javascript:`,
+    );
+  }
+});
+
+test('data-i18n-attr: rejects protocol-relative URL in href (S1)', () => {
+  assert.throws(
+    () => applyLocale(
+      '<a data-i18n-attr="href:evil">click</a>',
+      opts({ dict: { evil: '//attacker.example/phish' } }),
+    ),
+    /not an allowed URL/i,
+  );
+});
+
+test('data-i18n-attr: rejects <meta http-equiv> redirect vector (S1)', () => {
+  // <meta http-equiv="refresh" content="0;url=…"> is a URL-redirect vector.
+  // Reject setting http-equiv itself AND reject setting content on any
+  // <meta http-equiv> element.
+  assert.throws(
+    () => applyLocale(
+      '<meta data-i18n-attr="http-equiv:evil">',
+      opts({ dict: { evil: 'refresh' } }),
+    ),
+    /http-equiv/i,
+  );
+  assert.throws(
+    () => applyLocale(
+      '<meta http-equiv="refresh" data-i18n-attr="content:evil">',
+      opts({ dict: { evil: '0; url=https://attacker.example' } }),
+    ),
+    /http-equiv/i,
+  );
+});
+
+test('data-i18n-attr: accepts legitimate label / aria / title / placeholder (S1)', () => {
+  // The 90% real use case — label copy — must NOT be broken by the
+  // allowlist. All these should transform cleanly.
+  const dict = { label: 'Click me', title: 'Tooltip', ph: 'Enter text' };
+  const out = applyLocale(
+    [
+      '<button data-i18n-attr="aria-label:label"></button>',
+      '<div data-i18n-attr="title:title"></div>',
+      '<input data-i18n-attr="placeholder:ph">',
+    ].join(''),
+    opts({ dict }),
+  );
+  assert.match(out, /aria-label="Click me"/);
+  assert.match(out, /title="Tooltip"/);
+  assert.match(out, /placeholder="Enter text"/);
+});
+
+test('data-i18n-attr: accepts safe http/https/mailto/tel URLs in href (S1)', () => {
+  const dict = {
+    web: 'https://example.com',
+    mail: 'mailto:x@y.co',
+    call: 'tel:+123',
+    root: '/internal/',
+    anchor: '#top',
+  };
+  const out = applyLocale(
+    [
+      '<a data-i18n-attr="href:web">w</a>',
+      '<a data-i18n-attr="href:mail">m</a>',
+      '<a data-i18n-attr="href:call">c</a>',
+      '<a data-i18n-attr="href:root">r</a>',
+      '<a data-i18n-attr="href:anchor">a</a>',
+    ].join(''),
+    opts({ dict }),
+  );
+  assert.match(out, /href="https:\/\/example\.com"/);
+  assert.match(out, /href="mailto:x@y\.co"/);
+  assert.match(out, /href="tel:\+123"/);
+  assert.match(out, /href="\/internal\/"/);
+  assert.match(out, /href="#top"/);
+});
+
+test('data-i18n-meta: allowlist applies to meta shortcut too (S1)', () => {
+  // data-i18n-meta="key" writes to `content`. On a <meta http-equiv>
+  // element that content is a redirect vector; must reject.
+  assert.throws(
+    () => applyLocale(
+      '<meta http-equiv="refresh" data-i18n-meta="evil">',
+      opts({ dict: { evil: '0; url=https://attacker.example' } }),
+    ),
+    /http-equiv/i,
+  );
+  // Legitimate <meta name="description" content="…"> keeps working.
+  const out = applyLocale(
+    '<meta name="description" data-i18n-meta="desc">',
+    opts({ dict: { desc: 'A page description' } }),
+  );
+  assert.match(out, /content="A page description"/);
+});
+
 test('applyLocale: BG regression — full-cycle test writeBundle-shape emit works', () => {
   // Simulates the writeBundle flow: EN emit is fed into applyLocale
   // as a BG pass. The head block from the EN pass must be replaced
