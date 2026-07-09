@@ -1040,29 +1040,51 @@ function stripMarkedString(html, openText, closeText) {
  *   1. If `<meta charset="…">` exists in <head>, insert AFTER it (so
  *      charset stays at its original near-top position).
  *   2. Otherwise, insert right after `<head>` (falls back to L4's
- *      behaviour; charset detection uses the HTTP header + default
- *      UTF-8 which is fine).
+ *      original behaviour; charset detection uses the HTTP header +
+ *      default UTF-8 which is fine).
+ *
+ * Bounded scan (H-L4-1): the charset-match window is HARD-BOUNDED to
+ * the `<head>…</head>` span. A `<meta charset>` in `<body>` (or a
+ * template comment, or `<noscript>` fallback) is IGNORED — otherwise
+ * an unbounded scan would splice our block INTO `<body>`, silently
+ * corrupting emitted output.
+ *
+ * Anchored regex (M-L4-2): the meta-charset regex requires `charset`
+ * to appear as an ATTRIBUTE NAME (`\s+charset\s*=`), not as a
+ * substring inside another attribute's value like
+ * `<meta name="description" content="charset behaviour">`. Also
+ * matches the HTML4-style `<meta http-equiv="Content-Type"
+ * content="…; charset=utf-8">` because for THAT tag, `charset=`
+ * inside `content=` is the actual charset declaration and we want
+ * to land after it too — verified by the WHATWG parser using
+ * exactly the same "either shape" detection.
  *
  * String-splice rather than DOM insertion (see applyHead's Phase-2
  * rationale): marker comments always survive because they're just text.
- * Uses a comment-masked scan copy so `<head>`/`<meta charset>` substrings
+ * Uses a comment-masked scan copy so `<head>`/`<meta …>` substrings
  * inside HTML comments don't false-match.
  *
  * M4: caller (applyLocale) has ALREADY run stripMarkedString by the
  * time we get here, so returning `html` unchanged when there's no
- * `<head>` would leave the document in a mid-idempotency state (previous
- * blocks stripped, new block silently dropped). If we can't find `<head>`
- * after strip already ran, that's an invariant break — throw so the
- * dev sees the failure instead of shipping a subtly-broken page.
+ * `<head>` would leave the document in a mid-idempotency state
+ * (previous blocks stripped, new block silently dropped). If we can't
+ * find `<head>` after strip already ran, that's an invariant break —
+ * throw so the dev sees the failure instead of shipping a subtly-
+ * broken page.
  *
  * L2: emits a leading + trailing newline around `block` so the block
  * doesn't run directly into the surrounding markup — cosmetic only.
+ * Note (L1 reconciliation): stripMarkedString removes markers WITHOUT
+ * touching surrounding whitespace, and this function ADDS a `\n` on
+ * both sides. Net effect is that each re-transform pass grows the
+ * head by ~2 blank lines (one leading + one trailing) — cosmetic
+ * only, `<head>` whitespace has no functional effect.
  */
 function insertAfterHead(html, block) {
   // Build a scan copy where every HTML comment span is replaced with
   // spaces of equal length. That way index positions in the scan copy
   // map 1-to-1 to indices in the original, but comment-embedded
-  // "<head>" / "<meta charset>" text can't match.
+  // "<head>" / "<meta …>" text can't match.
   const scan = html.replace(/<!--[\s\S]*?-->/g, (m) => ' '.repeat(m.length));
   const headMatch = scan.match(/<head[^>]*>/i);
   if (!headMatch) {
@@ -1070,17 +1092,41 @@ function insertAfterHead(html, block) {
       '[i18n] insertAfterHead: no <head> element found after strip pass — head-injection idempotency invariant broken. Source HTML may have been mangled between strip and insert.',
     );
   }
-  // Prefer to insert AFTER <meta charset> if it exists within <head>
-  // (L4). Match up to the closing `>` including a possible self-closing
-  // slash. Both `<meta charset="utf-8">` and `<meta charset="utf-8" />`
-  // shapes are covered.
-  const charsetRe = /<meta[^>]*\bcharset\b[^>]*>/i;
-  const charsetMatch = scan.slice(headMatch.index).match(charsetRe);
+  const headOpenEnd = headMatch.index + headMatch[0].length;
+  // Bound the charset search to the <head>…</head> span. If </head>
+  // isn't found (malformed but tolerated), fall back to the whole
+  // remainder — that's still safer than an unbounded scan because the
+  // regex is name-anchored.
+  const headCloseIdx = scan.indexOf('</head>', headOpenEnd);
+  const searchEnd = headCloseIdx >= 0 ? headCloseIdx : scan.length;
+  const headBody = scan.slice(headOpenEnd, searchEnd);
+  // Two accepted shapes:
+  //   HTML5:  <meta charset="utf-8">
+  //   HTML4:  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  // The regex requires `charset` as an ATTRIBUTE NAME (preceded by
+  // whitespace after the `<meta` tag name, followed by `=`). The
+  // `[^>]*` before `\scharset\s*=` matches ANY other attributes that
+  // may precede it. Substring `charset` embedded in prose (e.g.
+  // content="describes the charset behaviour") won't match because
+  // it isn't followed by `=`.
+  const html5 = /<meta\b[^>]*\scharset\s*=[^>]*>/i;
+  const html4 = /<meta\b[^>]*\shttp-equiv\s*=\s*["']?content-type["']?[^>]*>/i;
+  const html5Match = headBody.match(html5);
+  const html4Match = headBody.match(html4);
+  let charsetIdxWithinBody = -1;
+  let charsetMatchLen = 0;
+  if (html5Match) {
+    charsetIdxWithinBody = html5Match.index;
+    charsetMatchLen = html5Match[0].length;
+  } else if (html4Match) {
+    charsetIdxWithinBody = html4Match.index;
+    charsetMatchLen = html4Match[0].length;
+  }
   let insertAt;
-  if (charsetMatch) {
-    insertAt = headMatch.index + charsetMatch.index + charsetMatch[0].length;
+  if (charsetIdxWithinBody >= 0) {
+    insertAt = headOpenEnd + charsetIdxWithinBody + charsetMatchLen;
   } else {
-    insertAt = headMatch.index + headMatch[0].length;
+    insertAt = headOpenEnd;
   }
   return `${html.slice(0, insertAt)}\n${block}\n${html.slice(insertAt)}`;
 }
@@ -1351,6 +1397,10 @@ export function i18nPlugin(options) {
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
         });
+        // F-double-warn: do NOT add another `rejectRelativeHrefs(bg, …)`
+        // call here. The BG mirror is derived from the EN emit which we
+        // already scanned above; the same `../` offenders would produce
+        // duplicate warnings.
         const bgPath = resolve(outDir, 'bg', fileName);
         mkdirSync(dirname(bgPath), { recursive: true });
         writeFileSync(bgPath, bg, 'utf-8');
@@ -1499,9 +1549,10 @@ export function i18nPlugin(options) {
         // middleware-mode Vite (where the caller owns the HTTP server
         // and Vite runs as pure middleware), httpServer is null and
         // the optional-chained `once('close', …)` silently no-ops.
-        // Emit a one-time warning so a middleware-mode integrator
-        // sees the leak instead of debugging phantom double-reloads
-        // after 5 restarts.
+        // Emit a warning (once per configureServer invocation — every
+        // Vite restart triggers a new call, so the warning fires per
+        // restart) so a middleware-mode integrator sees the leak instead
+        // of debugging phantom double-reloads after 5 restarts.
         server.watcher.on('change', onLocaleChange);
         server.watcher.on('add', onLocaleChange);
         server.watcher.on('unlink', onLocaleChange);
@@ -1536,4 +1587,4 @@ function relFromRoot(abs, projectRoot) {
 }
 
 // Re-exports for tests + the standalone i18n lint script (Task #164).
-export { flatten as _flatten };
+export { flatten as _flatten, insertAfterHead as _insertAfterHead };

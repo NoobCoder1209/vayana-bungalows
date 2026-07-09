@@ -17,6 +17,7 @@ import {
   escapeHtmlAttr,
   sanitizeHtmlFragment,
   applyLocale,
+  _insertAfterHead as insertAfterHead,
 } from '../i18n-plugin.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -663,10 +664,13 @@ test('pageUrl hard-fails on non-index.html pagePath', () => {
 // Round-3 review coverage — mechanics not exercised by prior tests
 // ---------------------------------------------------------------------------
 
-test('applyLocale: F-double-warn — repeated Part-2 emits carry the previous block once (not accumulating)', () => {
+test('applyLocale: repeated Part-2 emits stay idempotent — exactly one marker block each', () => {
   // The refactor to string-splice + `\s*`-free strip should mean multiple
   // re-transforms produce EXACTLY ONE hreflang block AND ONE boot block —
   // not zero (over-strip regression) and not N (idempotency regression).
+  // (Prior name mentioned F-double-warn; the actual F-double-warn fix
+  // is exercised in writeBundle, not applyLocale — see the plugin
+  // factory's console.warn spy tests if/when added.)
   let out = applyLocale(
     '<!doctype html><html><head></head><body></body></html>',
     headOpts({ locale: 'en', dict: {} }),
@@ -698,23 +702,58 @@ test('applyLocale: strip does NOT eat whitespace around Vite-injected siblings (
   assert.match(second, /\n<link rel="modulepreload"/);
 });
 
-test('applyLocale: insertAfterHead throws when <head> is missing after strip pass (M4)', async () => {
-  // If applyHead's DOM check said yes (root has <html>+<head>) but the
-  // string toString() somehow produced markup without <head>, that's an
-  // invariant break the fix promises to hard-fail on. Test this via a
-  // synthetic pathological input where applyHead succeeds on the parsed
-  // form but toString drops <head>. We can't easily contrive that in
-  // node-html-parser directly; instead exercise the code path by mocking:
-  // pass allLocales + defaultLocale but strip <head> post-parse by
-  // constructing HTML where node-html-parser's serialize omits it.
-  //
-  // Fallback: this is unreachable in practice with real inputs — the
-  // test documents the intent via an internal call chain. We assert
-  // the code-comment says "invariant broken" is a throw not a return.
-  const src = 'scripts/i18n-plugin.js';
-  const fs = await import('node:fs/promises');
-  const contents = await fs.readFile(new URL('../../' + src, import.meta.url), 'utf-8');
-  assert.match(contents, /insertAfterHead.*no <head>.*invariant broken/s);
+test('insertAfterHead throws when <head> is missing (M4)', () => {
+  // Direct call — bypass applyHead's DOM check so we actually hit the
+  // throw. Round-3 review flagged that gating via applyLocale made the
+  // throw unreachable and the previous "test" only inspected source
+  // strings. Now behavioural: pass head-less markup, assert throw.
+  assert.throws(
+    () => insertAfterHead('<div>no head here</div>', '<script>x</script>'),
+    /no <head> element found after strip pass/i,
+  );
+});
+
+test('insertAfterHead: charset scan bounded to </head> (H-L4-1)', () => {
+  // If <head> lacks <meta charset> but <body> has one, the previous
+  // unbounded scan would splice our block INSIDE <body>. Now bounded
+  // to </head>, so <meta charset> in <body> is ignored and the block
+  // lands at the head-top fallback position.
+  const src = '<!doctype html><html><head><title>x</title></head><body><meta charset="utf-8"></body></html>';
+  const out = insertAfterHead(src, '<!--BLOCK-->');
+  const blockIdx = out.indexOf('<!--BLOCK-->');
+  const headCloseIdx = out.indexOf('</head>');
+  assert.ok(blockIdx > 0, 'block was inserted');
+  assert.ok(blockIdx < headCloseIdx, `block must land inside <head> (block at ${blockIdx}, </head> at ${headCloseIdx})`);
+});
+
+test('insertAfterHead: charset regex ignores "charset" as substring in another attr value (M-L4-2)', () => {
+  // <meta name="description" content="charset behaviour"> — "charset"
+  // appears in the value but is NOT a charset declaration. Previous
+  // unanchored regex matched it and inserted our block AFTER this meta,
+  // burying the block deep in <head> unnecessarily. Now anchored to
+  // `\scharset\s*=` (attribute name position) OR the HTML4
+  // `http-equiv="content-type"` shape.
+  const src = '<!doctype html><html><head><meta name="description" content="talks about charset"><title>x</title></head><body></body></html>';
+  const out = insertAfterHead(src, '<!--BLOCK-->');
+  const blockIdx = out.indexOf('<!--BLOCK-->');
+  const descIdx = out.indexOf('<meta name="description"');
+  // Block lands BEFORE the description meta (at head-top fallback),
+  // because the description-meta's "charset" substring in its content
+  // is NOT a charset declaration.
+  assert.ok(blockIdx < descIdx, 'block must land before the description meta');
+});
+
+test('insertAfterHead: HTML4-style http-equiv charset is honoured (M-L4-2)', () => {
+  // The HTML4 shape `<meta http-equiv="Content-Type"
+  // content="text/html; charset=utf-8">` IS a real charset declaration.
+  // WHATWG treats it as one; we should too and insert AFTER it.
+  const src = '<!doctype html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><title>x</title></head><body></body></html>';
+  const out = insertAfterHead(src, '<!--BLOCK-->');
+  const blockIdx = out.indexOf('<!--BLOCK-->');
+  const metaIdx = out.indexOf('<meta http-equiv');
+  const metaEnd = out.indexOf('>', metaIdx);
+  // Block lands AFTER the closing `>` of the http-equiv meta.
+  assert.ok(blockIdx > metaEnd, 'block must land after http-equiv Content-Type meta');
 });
 
 test('applyLocale: BG regression — full-cycle test writeBundle-shape emit works', () => {
