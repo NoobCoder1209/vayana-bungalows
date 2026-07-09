@@ -42,7 +42,7 @@
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { loadDictionaries } from './i18n-plugin.js';
@@ -60,19 +60,33 @@ const PROJECT_ROOT = resolve(__dirname, '..');
 // The negative-lookahead `(?![\w-])` after each attribute name prevents
 // a false match on `data-i18nfoo="…"` or `data-i18n-html="…"` when we
 // were looking for `data-i18n`.
-const RE_I18N_TEXT   = /\bdata-i18n(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/g;
-const RE_I18N_HTML   = /\bdata-i18n-html(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/g;
-const RE_I18N_ATTR   = /\bdata-i18n-attr(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/g;
-const RE_I18N_META   = /\bdata-i18n-meta(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/g;
+//
+// The `i` flag is REQUIRED: HTML5 attribute names are ASCII case-
+// insensitive; parse5 (used by the plugin) normalises to lowercase on
+// DOM ingest, so `<p Data-I18N="x">` is a legitimate marker to the
+// plugin. Without `i` the lint regex misses it and the plugin/lint
+// contract breaks (M1).
+const RE_I18N_TEXT   = /\bdata-i18n(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/gi;
+const RE_I18N_HTML   = /\bdata-i18n-html(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/gi;
+const RE_I18N_ATTR   = /\bdata-i18n-attr(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/gi;
+const RE_I18N_META   = /\bdata-i18n-meta(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/gi;
 
 // Regions to blank out before marker extraction. `[\s\S]` is the
 // newline-inclusive "any char" idiom (regex `.` alone doesn't cross
 // newlines without the `s` flag, and even then some hosts have parsing
 // quirks). All patterns are non-greedy so nested tag-like content
 // doesn't over-consume.
+//
+// Script/style are handled in TWO parts: the opening tag is left
+// visible (so `<script data-i18n="...">` markers ON the element itself
+// are still seen by the marker regexes — the plugin's DOM parse finds
+// them, so lint must too, per the H3 fix), and only the CONTENT between
+// the tags is blanked. `RE_TAG_CONTENT` in maskNonMarkupRegions uses
+// per-tag scans instead of a single regex to avoid the `[^>]*` early-
+// truncation footgun on tags whose attributes contain `>` (H3 tail).
 const RE_HTML_COMMENT   = /<!--[\s\S]*?-->/g;
-const RE_SCRIPT_BLOCK   = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
-const RE_STYLE_BLOCK    = /<style\b[^>]*>[\s\S]*?<\/style\s*>/gi;
+const RE_SCRIPT_OPEN    = /<script\b[\s\S]*?>/gi;
+const RE_STYLE_OPEN     = /<style\b[\s\S]*?>/gi;
 
 // Directories to skip when walking the tree. `dist/` is a build artefact
 // (it contains injected translations, which would fake-pass every check).
@@ -124,18 +138,75 @@ function* walkHtml(dir, rootDir) {
 }
 
 /**
- * Blank out <script>, <style>, and <!-- --> regions in HTML source so
- * marker regexes can't false-match on template literals, CSS content,
- * or commented-out markup. Replacement is space-of-equal-length so
- * subsequent regex offsets (if we ever add source-position reporting)
- * stay meaningful.
+ * Blank out `<script>` / `<style>` element CONTENT and HTML comments in
+ * the source so marker regexes can't false-match on template literals,
+ * CSS content, or commented-out markup. Replacement is space-of-equal-
+ * length so subsequent regex offsets (if we ever add source-position
+ * reporting) stay meaningful.
+ *
+ * IMPORTANT ordering (H2 fix): script/style CONTENT is blanked FIRST,
+ * comments SECOND. If comments were blanked first, a stray `<!--` inside
+ * a `<script>` string literal (e.g. `const t = '<!-- foo';`) would
+ * make the non-greedy comment regex consume across the script's closing
+ * tag up to any later `-->` on the page, eating legitimate markers in
+ * between.
+ *
+ * IMPORTANT masking granularity (H3 fix): we blank ONLY the content
+ * between opening and closing tags, leaving the opening tag visible so
+ * marker regexes can still find `<script data-i18n="…">` — the plugin's
+ * DOM parse sees those markers and enforces them at build; lint must too
+ * or it fails-open on JS-heavy pages that legitimately use markers on
+ * <script>/<style> elements.
+ *
+ * The tag-content masks use a two-step scan (opening-tag regex → find
+ * matching closing tag by string search) instead of a single
+ * `<script\b[^>]*>...</script>` regex. The `[^>]*` shape truncates at
+ * the first `>` inside the opening tag, so an opening like
+ * `<script data-cfg="{'k':'>'}">` breaks the single-regex approach
+ * silently. Using `<script\b[\s\S]*?>` (which is greedy about crossing
+ * `>` in quoted attribute values) then a plain `indexOf('</script')`
+ * for the close is more robust — matches how HTML5 parsers actually
+ * find the script boundary.
  */
 function maskNonMarkupRegions(html) {
-  const blank = (m) => ' '.repeat(m.length);
-  return html
-    .replace(RE_HTML_COMMENT, blank)
-    .replace(RE_SCRIPT_BLOCK, blank)
-    .replace(RE_STYLE_BLOCK, blank);
+  const blank = (n) => ' '.repeat(n);
+  let out = html;
+
+  // Blank content of every <script>/<style> element. Opening tag is
+  // preserved (so its own attributes remain scannable for markers).
+  const maskTagContent = (source, openRe, closeTag) => {
+    let result = '';
+    let cursor = 0;
+    openRe.lastIndex = 0;
+    let m;
+    while ((m = openRe.exec(source)) !== null) {
+      // Everything up to and including the opening tag stays as-is.
+      const openEnd = m.index + m[0].length;
+      result += source.slice(cursor, openEnd);
+      // Find the matching close tag. Case-insensitive search via
+      // toLowerCase substring; falls back to end-of-source if the
+      // author forgot the close (matches HTML5 parser tolerance).
+      const closeIdx = source
+        .toLowerCase()
+        .indexOf(closeTag, openEnd);
+      const contentEnd = closeIdx < 0 ? source.length : closeIdx;
+      result += blank(contentEnd - openEnd);
+      cursor = contentEnd;
+      openRe.lastIndex = contentEnd; // advance past the blanked span
+    }
+    result += source.slice(cursor);
+    return result;
+  };
+
+  out = maskTagContent(out, RE_SCRIPT_OPEN, '</script');
+  out = maskTagContent(out, RE_STYLE_OPEN, '</style');
+
+  // Comments last — anything comment-shaped that was inside a now-
+  // blanked script/style body is already spaces, so this pass only
+  // touches real HTML comments in the visible markup.
+  out = out.replace(RE_HTML_COMMENT, (m) => blank(m.length));
+
+  return out;
 }
 
 /**
@@ -175,23 +246,29 @@ function extractMarkers(html, relPath) {
 
   for (const m of source.matchAll(RE_I18N_ATTR)) {
     const raw = capture(m);
-    // Preserve raw for error messages but split on the untrimmed value —
-    // matches plugin exactly.
     if (raw.trim().length === 0) {
       errors.push(`${relPath}: empty data-i18n-attr= value`);
       continue;
     }
+    // Buffer this marker's pairs into a local array; only merge into
+    // `out` if the marker parses cleanly (H4 fix). This matches the
+    // plugin's atomicity: a malformed marker MUST NOT contribute keys
+    // to the "used" set, or an orphan check gets silently poisoned by
+    // a broken marker.
     const pairs = raw.split(';');
-    let hadError = false;
+    const pending = [];
+    let markerHadError = false;
     for (const rawPair of pairs) {
       const pair = rawPair.trim();
       if (pair.length === 0) {
-        // Empty pair (leading `;`, trailing `;`, or `;;`) — plugin
-        // rejects, so lint rejects too.
         errors.push(
           `${relPath}: data-i18n-attr="${raw}" contains an empty pair (leading/trailing/duplicate ";"). Expected "attr:key" pairs separated by ";".`,
         );
-        hadError = true;
+        markerHadError = true;
+        // Match the plugin: stop at first empty pair; other errors
+        // ALSO stop here for consistency (finding P9 tail — one policy,
+        // uniformly applied). The marker is invalid; more error messages
+        // for the same marker are noise.
         break;
       }
       // Split on the LAST colon so keys may contain colons (permitted by
@@ -202,8 +279,8 @@ function extractMarkers(html, relPath) {
         errors.push(
           `${relPath}: data-i18n-attr="${raw}" pair "${pair}" missing colon separator (expected attr:key)`,
         );
-        hadError = true;
-        continue;
+        markerHadError = true;
+        break;
       }
       const attr = pair.slice(0, idx).trim();
       const key = pair.slice(idx + 1).trim();
@@ -211,20 +288,22 @@ function extractMarkers(html, relPath) {
         errors.push(
           `${relPath}: data-i18n-attr="${raw}" pair "${pair}" has empty attr name`,
         );
-        hadError = true;
-        continue;
+        markerHadError = true;
+        break;
       }
       if (!key) {
         errors.push(
           `${relPath}: data-i18n-attr="${raw}" pair "${pair}" has empty key`,
         );
-        hadError = true;
-        continue;
+        markerHadError = true;
+        break;
       }
-      out.push({ kind: 'attr', key, attr });
+      pending.push({ kind: 'attr', key, attr });
     }
-    // hadError already appended messages; nothing else to do.
-    void hadError;
+    // Only commit pairs from a fully-valid marker.
+    if (!markerHadError) {
+      for (const p of pending) out.push(p);
+    }
   }
 
   for (const m of source.matchAll(RE_I18N_META)) {
@@ -341,10 +420,6 @@ async function main() {
   for (const file of walkHtml(opts.root, opts.root)) {
     filesScanned++;
     const rel = relative(opts.root, file);
-    // Defensive: sep-split rejects the pathological case where a file
-    // path itself contains a `__tests__` segment despite SKIP_DIRS
-    // filtering (e.g. a symlinked entry that raced past withFileTypes).
-    if (rel.split(sep).includes('__tests__')) continue;
     let html;
     try {
       html = readFileSync(file, 'utf-8');

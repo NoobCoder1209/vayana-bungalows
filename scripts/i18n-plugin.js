@@ -921,22 +921,34 @@ const URL_BEARING_ATTRS = new Set([
 ]);
 
 /**
- * Apply the full attr-name allowlist + URL-scheme allowlist + <meta
- * http-equiv> guard for a single (attr, key) pair, then write the
- * resolved value onto `el`. Split out of the marker-parsing driver so
- * multi-pair markers (below) can reuse the exact same enforcement per
- * pair without duplicating rules.
+ * Validate a single (attr, key) pair against the full allowlist + guard
+ * chain and RETURN the resolved (attrLower, interpolated) tuple. Does NOT
+ * mutate the element — the caller is responsible for atomic write-out
+ * after every pair has been validated. This separation is the H1-atomicity
+ * fix: multi-pair markers must be all-or-nothing on the DOM.
+ *
+ * Returns { attrLower, value } on success; throws on any guard failure.
+ * The lowercased attribute name is returned so the caller can pass it to
+ * safeSetAttribute — writing the raw-case `attr` would let a marker like
+ * `data-i18n-attr="HREF:home_url"` bypass a future case-sensitive check
+ * and leave the DOM with a mixed-case attribute that some downstream
+ * tooling might treat differently from the lowercase form (M2).
  */
-function applyAttrPair(el, opts, markerName, rawValue, attr, key) {
+function validateAttrPair(el, opts, markerName, rawValue, attr, key, pair) {
   const attrLower = attr.toLowerCase();
+  // `pair` is included in error messages when available so a multi-pair
+  // marker's diagnostic can point at the offending segment, not the whole
+  // rawValue (finding P11). For single-pair callers (data-i18n-meta) it's
+  // null and we omit the pair suffix.
+  const pairSuffix = pair ? ` pair "${pair}"` : '';
   if (FORBIDDEN_ATTR_NAMES.has(attrLower)) {
     throw new Error(
-      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — attribute "${attr}" is forbidden (XSS-adjacent sinks: srcdoc, style, onload). Author intent belongs elsewhere in the DOM.`,
+      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}"${pairSuffix} — attribute "${attr}" is forbidden (XSS-adjacent sinks: srcdoc, style, onload). Author intent belongs elsewhere in the DOM.`,
     );
   }
   if (EVENT_HANDLER_RE.test(attr)) {
     throw new Error(
-      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — attribute "${attr}" is a DOM event handler (on*). Translator strings must not land in event handlers.`,
+      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}"${pairSuffix} — attribute "${attr}" is a DOM event handler (on*). Translator strings must not land in event handlers.`,
     );
   }
   // <meta http-equiv="refresh" content="0; url=…"> is a redirect vector.
@@ -947,12 +959,12 @@ function applyAttrPair(el, opts, markerName, rawValue, attr, key) {
   if (tag === 'meta') {
     if (attrLower === 'http-equiv') {
       throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — cannot set http-equiv via data-i18n-attr (redirect vector).`,
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}"${pairSuffix} — cannot set http-equiv via data-i18n-attr (redirect vector).`,
       );
     }
     if (attrLower === 'content' && el.hasAttribute('http-equiv')) {
       throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — cannot set content on <meta http-equiv> (redirect vector). Legitimate <meta name="…" content="…"> is fine.`,
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}"${pairSuffix} — cannot set content on <meta http-equiv> (redirect vector). Legitimate <meta name="…" content="…"> is fine.`,
       );
     }
   }
@@ -961,10 +973,10 @@ function applyAttrPair(el, opts, markerName, rawValue, attr, key) {
   // URL-scheme allowlist for URL-bearing attrs — see docblock (S1).
   if (URL_BEARING_ATTRS.has(attrLower) && !isAllowedHref(interpolated)) {
     throw new Error(
-      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" — resolved value "${interpolated}" is not an allowed URL for attribute "${attr}". Allowed schemes: ${ALLOWED_HREF_SCHEMES.join(', ')}, plus internal /path, #anchor, empty.`,
+      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}"${pairSuffix} — resolved value "${interpolated}" is not an allowed URL for attribute "${attr}". Allowed schemes: ${ALLOWED_HREF_SCHEMES.join(', ')}, plus internal /path, #anchor, empty.`,
     );
   }
-  safeSetAttribute(el, attr, interpolated);
+  return { attrLower, value: interpolated };
 }
 
 function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
@@ -972,17 +984,26 @@ function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
   const rawValue = el.getAttribute(markerName);
 
   if (fixedAttr) {
-    // data-i18n-meta shortcut — the whole value is the dict key.
-    // L8: mirror the empty-key check that the attr:key branch performs
-    // below, so `<meta data-i18n-meta="">` produces the clearer error
-    // "has empty key" instead of falling through to lookup() and
-    // throwing the less-actionable "unknown key \"\"".
-    if (rawValue.length === 0) {
+    // data-i18n-meta shortcut — the whole value is the dict key. Trim
+    // before the empty-check so `<meta data-i18n-meta="   ">` produces
+    // the actionable "has empty key" error instead of a downstream
+    // "unknown key '   '" from lookup() (L1).
+    const trimmed = rawValue.trim();
+    if (trimmed.length === 0) {
       throw new Error(
         `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" has empty key (expected a dictionary key)`,
       );
     }
-    applyAttrPair(el, opts, markerName, rawValue, fixedAttr, rawValue);
+    const { attrLower, value } = validateAttrPair(
+      el,
+      opts,
+      markerName,
+      rawValue,
+      fixedAttr,
+      trimmed,
+      null,
+    );
+    safeSetAttribute(el, attrLower, value);
     el.removeAttribute(markerName);
     return;
   }
@@ -999,13 +1020,22 @@ function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
   // Within a single pair, `attr` / `key` are separated by the LAST
   // colon (permits keys containing `:`, which the dict flattener does
   // NOT produce today but which we don't want to forbid at the marker
-  // layer).
-  const pairs = rawValue.split(';');
-  if (pairs.length === 0) {
+  // layer). Both halves are TRIMMED after the split — a marker like
+  // `data-i18n-attr=" onclick :key"` therefore correctly hits the
+  // forbidden-attr allowlist on the trimmed name `onclick` rather than
+  // silently bypassing on the whitespace-padded literal (L2).
+  //
+  // Atomicity (H1): we validate EVERY pair up-front into a local buffer,
+  // then write all setAttribute calls + removeAttribute at the end. If
+  // any pair throws, no DOM writes have happened. Marker stays in place
+  // for the outer error handler to point at.
+  if (rawValue.length === 0) {
     throw new Error(
-      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" is empty`,
+      `[i18n] ${opts.pagePath}: ${markerName}="" has empty value (expected attr:key pairs)`,
     );
   }
+  const pairs = rawValue.split(';');
+  const writes = []; // [{attrLower, value}, ...] — buffered until all pairs validate
   for (const rawPair of pairs) {
     const pair = rawPair.trim();
     if (pair.length === 0) {
@@ -1031,7 +1061,11 @@ function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
         `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" pair "${pair}" has empty key (expected attr:key)`,
       );
     }
-    applyAttrPair(el, opts, markerName, rawValue, attr, key);
+    writes.push(validateAttrPair(el, opts, markerName, rawValue, attr, key, pair));
+  }
+  // Every pair passed — commit atomically.
+  for (const { attrLower, value } of writes) {
+    safeSetAttribute(el, attrLower, value);
   }
   el.removeAttribute(markerName);
 }

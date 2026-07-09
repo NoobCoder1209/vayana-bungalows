@@ -16,16 +16,33 @@ on:
     # cancels stale runs on the same ref so a flurry of commits doesn't
     # queue up.
     branches: ['**']
+    # Skip runs on docs-only pushes. Files listed here don't affect
+    # runtime code, the i18n bundles, or CI configuration, so a build
+    # + test pass is pure noise/cost. If a doc change reveals a subtle
+    # code issue, the next code push runs full CI anyway.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.claude/**'
+      - '.obsidian/**'
+      - 'LICENSE'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.claude/**'
+      - '.obsidian/**'
+      - 'LICENSE'
 
 permissions:
   contents: read
 
 concurrency:
   # Cancel in-flight CI on the same ref when a newer commit lands — a stale
-  # run is never more useful than a fresh one.
-  group: ci-${{ github.ref }}
+  # run is never more useful than a fresh one. Workflow-scoped so a future
+  # additional workflow can't accidentally collide on this group name (L5).
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

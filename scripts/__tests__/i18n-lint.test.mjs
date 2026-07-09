@@ -439,6 +439,129 @@ test('does NOT confuse data-i18n-attr with data-i18n (H2 regex anchoring)', () =
   }
 });
 
+test('mask ordering: <script> body first, then comments — stray "<!--" in a script string cannot eat across </script> (H2)', () => {
+  // The classic regression: `<script>const t='<!-- foo';</script>` used
+  // to make the comment regex consume from inside-script's `<!--` up to
+  // the next `-->` on the page, blanking real markers in between.
+  // Round-2 fix masks script content first, so any `<!--`/`-->` inside
+  // the script body is already spaces before the comment pass runs.
+  const root = makeFixture(goodDicts, {
+    'index.html': [
+      `<script>const t = '<!-- foo';</script>`,
+      `<p data-i18n="hello">real</p>`,
+      `<!-- trailer comment -->`,
+    ].join('\n'),
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0);
+    // Critical: "hello" must appear in used-keys, not be blanked away.
+    assert.match(stdout, /1 used/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('markers ON the <script> element itself are still seen by lint (H3)', () => {
+  // The plugin's DOM parse finds `<script data-i18n="key">…</script>`
+  // as a real marker. Lint must too, or it fails-open on JS-heavy
+  // pages that legitimately use markers on <script>/<style>.
+  const root = makeFixture(goodDicts, {
+    'index.html': `<script data-i18n="hello">console.log(1)</script>`,
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0);
+    assert.match(stdout, /1 used/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('markers inside <script> BODY are still masked (H3 tail — scripts don\'t leak content markers)', () => {
+  // The complement of the previous test: the opening tag is visible so
+  // its own attributes are scannable, but content between the tags is
+  // blanked so `data-i18n="fake"` inside a JS template literal remains
+  // masked.
+  const root = makeFixture(goodDicts, {
+    'index.html': [
+      `<p data-i18n="hello">real</p>`,
+      `<script>const tpl = '<p data-i18n="not.in.dict">fake</p>';</script>`,
+    ].join('\n'),
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0, `expected 0, stdout=${stdout}`);
+    assert.match(stdout, /1 used/); // only "hello", not "not.in.dict"
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('script opening tag with ">" inside attribute value does NOT truncate the mask (H3 tail)', () => {
+  // The old regex `<script\b[^>]*>` truncated at the first `>` even if
+  // it was inside a quoted attribute value. Round-2 uses a two-step
+  // scan (RE_SCRIPT_OPEN then string search for `</script`) which
+  // survives this shape.
+  const root = makeFixture(goodDicts, {
+    'index.html': [
+      `<script data-cfg="{'k':'>'}">const x='data-i18n="not.in.dict"';</script>`,
+      `<p data-i18n="hello">real</p>`,
+    ].join('\n'),
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0, `expected 0, stdout=${stdout}`);
+    assert.match(stdout, /1 used/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('marker regexes are case-insensitive to match HTML5 attribute semantics (M1)', () => {
+  // parse5 (used by the plugin) normalises attribute names to lowercase
+  // on DOM ingest, so `<p Data-I18N="hello">` is a legitimate marker
+  // to the plugin. Lint must match.
+  const root = makeFixture(goodDicts, {
+    'index.html': `<p Data-I18N="hello">x</p>`,
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0);
+    assert.match(stdout, /1 used/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('malformed multi-pair marker does NOT contribute its valid pairs to the used-key set (H4)', () => {
+  // Before the fix, `<a data-i18n-attr="href:hello; ; title:bye">`
+  // would push {kind:'attr', key:'hello'} into `usedKeys` before
+  // recording the empty-pair error. That silently masked orphans:
+  // if `hello` were referenced ONLY by this broken marker, it would
+  // still count as used. Now the whole marker's keys are buffered and
+  // only committed if the marker parses cleanly.
+  //
+  // We assert by making `hello` orphan-elsewhere-only. If H4 is
+  // buggy, orphan count is 2 (bye, greet) because hello counts as
+  // used. Correct behaviour: orphan count is 3 (hello, bye, greet).
+  const root = makeFixture(goodDicts, {
+    'index.html': `<a data-i18n-attr="href:hello; ; title:bye">x</a>`,
+  });
+  try {
+    const { code, stderr } = runLint(root, ['--strict-orphans']);
+    // Empty pair is still an error → exit 1.
+    assert.equal(code, 1);
+    assert.match(stderr, /empty pair/);
+    // And the orphan report must include hello — proving hello was NOT
+    // counted as used despite the marker mentioning it.
+    assert.match(stderr, /\bhello\b/);
+    assert.match(stderr, /\bbye\b/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('runs cleanly against the real project tree (smoke)', () => {
   // The real repo currently has locales/en+bg and one un-keyed index.html.
   // This test guards against the lint script blowing up on the real inputs.
