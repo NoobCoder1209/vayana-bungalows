@@ -113,7 +113,7 @@
 // hazards after refactors.
 
 import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync } from 'node:fs';
-import { resolve, join, relative, sep, dirname } from 'node:path';
+import { resolve, join, relative, sep, dirname, isAbsolute } from 'node:path';
 import { parse as parseHtml } from 'node-html-parser';
 
 // Shared parser options — threaded through EVERY parseHtml call so the
@@ -298,6 +298,18 @@ function flatten(obj, prefix = '', out = {}, depth = 0) {
     );
   }
   for (const [k, v] of Object.entries(obj)) {
+    // Reject dot-in-key (M3): a locale that has both `{"home.title": "A"}`
+    // at top-level AND `{"home": {"title": "B"}}` would flatten both to
+    // the same dotted key `home.title`. Whichever iterates last wins
+    // silently — invisible to key-symmetry checks (both locales still
+    // declare `home.title`) but the value is ambiguously determined.
+    // Reject `.` in individual object keys so the flat key set is
+    // well-defined.
+    if (k.includes('.')) {
+      throw new Error(
+        `[i18n] locale key "${k}" (at "${prefix || '<root>'}") contains a dot — nested-object dot-flattening would collide. Rename the key or nest it explicitly.`,
+      );
+    }
     const key = prefix ? `${prefix}.${k}` : k;
     if (v === null) {
       throw new Error(
@@ -312,6 +324,13 @@ function flatten(obj, prefix = '', out = {}, depth = 0) {
     if (typeof v === 'object') {
       flatten(v, key, out, depth + 1);
     } else if (typeof v === 'string') {
+      // Defensive: if a caller somehow bypassed the dot check above and
+      // produced a colliding flat key, hard-fail.
+      if (hasOwn(out, key)) {
+        throw new Error(
+          `[i18n] flat key collision at "${key}" — the dictionary declares this key twice under different nested paths.`,
+        );
+      }
       out[key] = v;
     } else {
       throw new Error(
@@ -374,7 +393,21 @@ function rejectMalformedTokens(value, key, locale) {
 // (e.g. `&copy;` → literal `&copy;` visible in the browser instead of
 // `©`). RH3 fails loudly at load time so the failure is a build error,
 // not an unnoticed shipped bug.
-const HTML_ENTITY_RE = /&(?:#\d+|#x[0-9a-fA-F]+|amp|lt|gt|quot|apos|copy|nbsp|reg|trade|hellip|mdash|ndash|laquo|raquo|[a-zA-Z][a-zA-Z0-9]{1,10});/;
+// Match any HTML-entity-shaped sequence a translator might write out of
+// habit: `&amp;`, `&lt;`, `&#39;`, `&#x27;`, `&copy;`, `&nbsp;`. Locale
+// values are stored raw (Unicode) — the plugin escapes on write. A
+// translator who pre-escapes creates double-escapes in the emitted HTML
+// (e.g. `&copy;` → literal `&copy;` visible in the browser instead of
+// `©`). RH3 fails loudly at load time so the failure is a build error,
+// not an unnoticed shipped bug.
+//
+// M7: tightened to an enumerated list of common HTML entity names +
+// numeric-decimal + numeric-hex forms. Prior version had an open-ended
+// `[a-zA-Z][a-zA-Z0-9]{1,10}` fallback that false-positived on legit
+// translator prose like `Baker &Co; est. 1920` or `T&Co;`. The
+// enumerated list covers every entity a translator would plausibly
+// pre-escape by habit; any exotic named entity can be added as needed.
+const HTML_ENTITY_RE = /&(?:#\d+|#x[0-9a-fA-F]+|amp|lt|gt|quot|apos|copy|nbsp|reg|trade|hellip|mdash|ndash|laquo|raquo|larr|rarr|uarr|darr|hearts|diams|clubs|spades|deg|plusmn|times|divide|sup2|sup3|frac12|frac14|frac34|iexcl|iquest);/;
 
 /**
  * Reject HTML-entity-shaped substrings in locale values (RH3). Locale
@@ -471,9 +504,15 @@ export function escapeHtmlAttr(s) {
  * setAttribute forgets — quotes and `<>` are handled by the parser's
  * internal serialiser.
  *
- * Rationale for pre-escape only on `&`: fully calling escapeHtmlAttr would
- * double-escape the characters setAttribute already handles. This is the
- * minimal delta.
+ * Rationale for pre-escape only on `&`: fully calling escapeHtmlAttr
+ * would double-escape the characters setAttribute already handles.
+ * This is the minimal delta.
+ *
+ * L6: use for ALL attribute writes even when the value is provably
+ * plugin-generated (e.g. `lang="en"`, `data-lang-pill-expected="1"`,
+ * canonical URL). No performance cost, and it prevents a future
+ * refactor that swaps a hardcoded value for a locale-supplied one
+ * from silently reintroducing the H8 unescaped-`&` hazard.
  */
 function safeSetAttribute(el, name, value) {
   el.setAttribute(name, String(value).replace(/&/g, '&amp;'));
@@ -517,7 +556,8 @@ function setTextContent(el, text) {
  * Sanitize an HTML fragment intended for `data-i18n-html` insertion.
  * Allowlists:
  *   - tags:    <a>, <strong>, <em>, <br>
- *   - attrs:   href (on <a> only), target, rel  (case-INsensitive match)
+ *   - attrs:   href, rel (on <a> only)  (case-INsensitive match).
+ *              target is intentionally EXCLUDED — see M14 below.
  *   - schemes: http:, https:, mailto:, tel:, plus internal `/` (NOT `//`
  *              — protocol-relative URLs like //evil.com are rejected — C2)
  *              plus `#` and empty
@@ -657,7 +697,6 @@ function isAllowedHref(href) {
  *   locale       — 'en' | 'bg'
  *   dict         — flat { key: value } for this locale
  *   ctx          — interpolation context (per locale — see vite.config.js)
- *   isDefault    — true for the default locale (path-prefix-less)
  *   basePath     — Vite base, e.g. '/vayana-bungalows/'
  *   pagePath     — the source-tree relative path, e.g. 'enquiries/index.html'
  *   allLocales   — array of every locale the plugin knows about (used by
@@ -678,9 +717,10 @@ export function applyLocale(html, opts) {
   let out = root.toString();
   if (doHead) {
     // Phase 2: string-splice for hreflang + boot script emit. Idempotency
-    // via marker-comment substrings — see applyHead docstring.
-    out = stripMarkedString(out, HREFLANG_OPEN, HREFLANG_CLOSE);
-    out = stripMarkedString(out, BOOT_OPEN, BOOT_CLOSE);
+    // via marker-comment substrings — see applyHead docstring. Uses the
+    // precompiled *_STRIP_RE constants (L4) rather than building a fresh
+    // regex per call.
+    out = out.replace(HREFLANG_STRIP_RE, '').replace(BOOT_STRIP_RE, '');
     out = insertAfterHead(out, buildHeadBlock(opts));
   }
   return out;
@@ -714,6 +754,15 @@ export function applyLocale(html, opts) {
  * populate the WeakSet — reverting either one reintroduces the
  * misleading "unknown key on markup that never emits" build failure.
  */
+// L5: shared helper for both destroy-branches. Adds every descendant
+// element of `el` to `orphaned`. querySelectorAll('*') is exhaustively
+// recursive so no ancestor-walk fallback is needed at the outer loop.
+function markDescendantsOrphaned(el, orphaned) {
+  for (const desc of el.querySelectorAll('*')) {
+    orphaned.add(desc);
+  }
+}
+
 function transformSubtree(root, opts) {
   const { pagePath } = opts;
 
@@ -747,9 +796,7 @@ function transformSubtree(root, opts) {
       const interpolated = interpolate(value, opts.ctx, key);
       // Mark every current descendant orphaned BEFORE the innerHTML rewrite
       // so the outer loop's orphan-guard skips them.
-      for (const desc of el.querySelectorAll('*')) {
-        orphaned.add(desc);
-      }
+      markDescendantsOrphaned(el, orphaned);
       el.set_content(sanitizeHtmlFragment(interpolated, key));
       el.removeAttribute('data-i18n-html');
     } else if (hasText) {
@@ -760,9 +807,7 @@ function transformSubtree(root, opts) {
       // children and throws "unknown key" for keys that never reach the
       // emitted output. Same reasoning as the data-i18n-html branch
       // above; both branches destroy the element's children.
-      for (const desc of el.querySelectorAll('*')) {
-        orphaned.add(desc);
-      }
+      markDescendantsOrphaned(el, orphaned);
       setTextContent(el, interpolate(value, opts.ctx, key));
       el.removeAttribute('data-i18n');
     }
@@ -840,6 +885,11 @@ const FORBIDDEN_ATTR_NAMES = new Set([
   'srcdoc',       // <iframe srcdoc="<script>…"> runs verbatim
   'style',        // could inject CSS with `expression(…)` or url(javascript:)
   'onload',       // legacy event-handler naming (also caught by on* below)
+  // target='_blank' + rel other than 'noopener' is a reverse-tabnabbing
+  // sink (M14 rationale). The data-i18n-html sanitiser drops `target`
+  // from <a>'s allowlist entirely; mirror that here so
+  // `data-i18n-attr="target:…"` can't reintroduce the vector on any tag.
+  'target',
 ]);
 // Any attribute name matching /^on/i is a DOM event handler — reject.
 const EVENT_HANDLER_RE = /^on/i;
@@ -848,6 +898,16 @@ const EVENT_HANDLER_RE = /^on/i;
 const URL_BEARING_ATTRS = new Set([
   'href',
   'src',
+  // srcset + imagesrcset: comma-separated URL lists. isAllowedHref will
+  // only check the whole value against the scheme allowlist. `data:` in
+  // <link rel=preload imagesrcset=...> can still fetch and execute in
+  // some renderer paths (M1), so reject any value not starting with a
+  // safe scheme. A translator writing a legit srcset with multiple
+  // /internal urls would need `data-i18n-html` (which sanitises tags)
+  // instead — but srcset markers are rare in copy and can be added to
+  // the allowlist later with a proper comma-split check.
+  'srcset',
+  'imagesrcset',
   'action',
   'formaction',
   'xlink:href',
@@ -868,6 +928,15 @@ function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
   if (fixedAttr) {
     attr = fixedAttr;
     key = rawValue;
+    // L8: mirror the empty-key check that the attr:key branch performs
+    // below, so `<meta data-i18n-meta="">` produces the clearer error
+    // "has empty key" instead of falling through to lookup() and
+    // throwing the less-actionable "unknown key \"\"".
+    if (key.length === 0) {
+      throw new Error(
+        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" has empty key (expected a dictionary key)`,
+      );
+    }
   } else {
     const lastColon = rawValue.lastIndexOf(':');
     if (lastColon < 0) {
@@ -962,6 +1031,53 @@ const HREFLANG_CLOSE = 'i18n:hreflang close';
 const BOOT_OPEN = 'i18n:boot-redirect open';
 const BOOT_CLOSE = 'i18n:boot-redirect close';
 
+// Boot-redirect script body — module-scope constant (L3). The script is
+// identical across every page × locale; per-page data (locale + en/bg
+// URLs) is threaded through `data-*` attributes on the <script> tag
+// and read via s.getAttribute at runtime. Keeping this at module scope
+// avoids allocating the ~800-char template literal on every emit.
+//
+// Responsibilities (matches the runtime lang.js's docstring):
+//   1. ?lang=en|bg URL query override
+//   2. Return-visit redirect from EN → BG when localStorage says 'bg'
+//   3. Sentinel `data-i18n-redirecting="1"` on <html> before location.replace()
+//
+// Security notes:
+//   * document.currentScript || fallback querySelector — resilient when
+//     currentScript is null (event handler, extension re-inject).
+//   * Whitelist raw ?lang= match — NO decodeURIComponent (malformed URI
+//     would throw and swallow the boot logic).
+//   * try/catch wraps localStorage (private-browsing throws).
+const BOOT_BODY = `(function(){try{var s=document.currentScript||document.querySelector('script[data-locale]');if(!s)return;var here=s.getAttribute('data-locale');var enUrl=s.getAttribute('data-en-url');var bgUrl=s.getAttribute('data-bg-url');function go(u){if(!u)return false;try{document.documentElement.setAttribute('data-i18n-redirecting','1');}catch(e){}location.replace(u);return true;}var q=null;var m=location.search.match(/[?&]lang=([^&]*)/);if(m){var v=m[1];if(v==='en'||v==='bg')q=v;}if(q){try{localStorage.setItem('vb.lang',q);}catch(e){}if(q!==here){if(go(q==='bg'?bgUrl:enUrl))return;}}else{var st=null;try{st=localStorage.getItem('vb.lang');}catch(e){}if(st==='bg'&&here==='en'){if(go(bgUrl))return;}}}catch(e){}})();`;
+
+// Precompiled strip regexes for the two known marker pairs (L4). Marker
+// texts are module-scope constants (HREFLANG_OPEN/CLOSE, BOOT_OPEN/CLOSE),
+// so the escape + RegExp compilation only need to happen once per
+// process. Prior version rebuilt the regex on every applyLocale call.
+//
+// Regex-based rather than DOM-based (F2): DOM-based strip removed every
+// child element between markers, including Vite-injected modulepreload
+// tags that landed in there on re-transform of an already-emitted page.
+// The regex here matches ONLY the exact marker-comment boundaries —
+// anything Vite inserted OUTSIDE our markers is untouched.
+//
+// L1: does NOT trim leading/trailing whitespace around the match. Prior
+// revisions ate a single leading and trailing newline via `\s*`, which
+// on the second re-transform pass would swallow the newline separating
+// our previous block from a Vite-injected sibling — producing adjacent-
+// without-separator markup. Leaving the newlines intact means multiple
+// re-transforms accumulate ~2 blank lines per pass around <head>;
+// cosmetic only.
+const REGEX_ESCAPE_RE = /[.*+?^${}()|[\]\\]/g;
+const HREFLANG_STRIP_RE = new RegExp(
+  `<!--${HREFLANG_OPEN.replace(REGEX_ESCAPE_RE, '\\$&')}-->[\\s\\S]*?<!--${HREFLANG_CLOSE.replace(REGEX_ESCAPE_RE, '\\$&')}-->`,
+  'g',
+);
+const BOOT_STRIP_RE = new RegExp(
+  `<!--${BOOT_OPEN.replace(REGEX_ESCAPE_RE, '\\$&')}-->[\\s\\S]*?<!--${BOOT_CLOSE.replace(REGEX_ESCAPE_RE, '\\$&')}-->`,
+  'g',
+);
+
 /**
  * Apply the plugin-generated head block. Two-phase:
  *
@@ -1000,7 +1116,6 @@ const BOOT_CLOSE = 'i18n:boot-redirect close';
 function applyHead(root, opts) {
   const {
     locale,
-    isDefault,
     basePath,
     pagePath,
     allLocales,
@@ -1027,7 +1142,6 @@ function applyHead(root, opts) {
   // locale's URL. Skips silently if the source doesn't ship them.
   rewriteCanonicalUrls(headEl, {
     locale,
-    isDefault,
     basePath,
     pagePath,
     defaultLocale,
@@ -1067,54 +1181,19 @@ function buildHeadBlock(opts) {
   );
   hreflangLines.push(`<!--${HREFLANG_CLOSE}-->`);
 
-  // Boot script — F-boot fix: null-guard document.currentScript before
-  // deref. `s || (document.currentScript = ...)` doesn't work because
-  // currentScript is read-only; instead try currentScript first, then
-  // fall back to a querySelector.
+  // Boot script — data attrs carry the per-page URLs; the body is a
+  // module-scope BOOT_BODY constant so we don't re-allocate the ~800-
+  // char literal on every emit.
   const enUrl = pageUrl({ basePath, pagePath, locale: 'en', defaultLocale });
   const bgUrl = pageUrl({ basePath, pagePath, locale: 'bg', defaultLocale });
-  const bootBody = `(function(){try{var s=document.currentScript||document.querySelector('script[data-locale]');if(!s)return;var here=s.getAttribute('data-locale');var enUrl=s.getAttribute('data-en-url');var bgUrl=s.getAttribute('data-bg-url');function go(u){if(!u)return false;try{document.documentElement.setAttribute('data-i18n-redirecting','1');}catch(e){}location.replace(u);return true;}var q=null;var m=location.search.match(/[?&]lang=([^&]*)/);if(m){var v=m[1];if(v==='en'||v==='bg')q=v;}if(q){try{localStorage.setItem('vb.lang',q);}catch(e){}if(q!==here){if(go(q==='bg'?bgUrl:enUrl))return;}}else{var st=null;try{st=localStorage.getItem('vb.lang');}catch(e){}if(st==='bg'&&here==='en'){if(go(bgUrl))return;}}}catch(e){}})();`;
   const bootLines = [
     `<!--${BOOT_OPEN}-->`,
-    `<script data-locale="${escapeHtmlAttr(locale)}" data-en-url="${escapeHtmlAttr(enUrl)}" data-bg-url="${escapeHtmlAttr(bgUrl)}">${bootBody}</script>`,
+    `<script data-locale="${escapeHtmlAttr(locale)}" data-en-url="${escapeHtmlAttr(enUrl)}" data-bg-url="${escapeHtmlAttr(bgUrl)}">${BOOT_BODY}</script>`,
     `<!--${BOOT_CLOSE}-->`,
   ];
 
   // Boot script FIRST (must run before any stylesheet). Hreflang after.
   return [...bootLines, ...hreflangLines].join('\n');
-}
-
-/**
- * Strip a previously-emitted marker block from an HTML STRING. Removes
- * everything between the open and close marker comments (inclusive).
- *
- * Regex-based rather than DOM-based (F2): DOM-based strip removed every
- * child element between markers, including Vite-injected modulepreload/
- * stylesheet links that landed in there on re-transform of an already-
- * emitted page. The regex here matches ONLY the exact marker-comment
- * boundaries — anything Vite inserted OUTSIDE our markers (or after
- * them) is untouched.
- *
- * Anchor: markers are HTML comments so `<!--openText-->…<!--closeText-->`.
- * The `.` in `[\s\S]` allows newlines. `.*?` is non-greedy so the FIRST
- * close-marker after an open ends the block.
- *
- * L1: does NOT trim leading/trailing whitespace around the match. Prior
- * revisions ate a single leading and trailing newline via `\s*`, which
- * on the second re-transform pass would swallow the newline separating
- * our previous block from a Vite-injected sibling — producing adjacent-
- * without-separator markup. Leaving the newlines intact means multiple
- * re-transforms accumulate one blank line per pass; insertAfterHead's
- * own leading `\n` compensates by not adding another.
- */
-function stripMarkedString(html, openText, closeText) {
-  const escOpen = openText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const escClose = closeText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const re = new RegExp(
-    `<!--${escOpen}-->[\\s\\S]*?<!--${escClose}-->`,
-    'g',
-  );
-  return html.replace(re, '');
 }
 
 /**
@@ -1291,15 +1370,34 @@ function rewriteCanonicalUrls(headEl, opts) {
  * Task #165 (key home page) is where the actual link-conversion sweep
  * lands per the Issue #47 plan; when that ships, tighten this to a
  * throw.
+ *
+ * M4: takes a raw HTML STRING rather than a parsed root — regex-based
+ * scan avoids the extra DOM parse we'd otherwise incur (writeBundle
+ * already parses inside applyLocale; a second parse just for this
+ * WARN-only check was wasted work). The regex is anchored to the
+ * three quoted-value shapes (`attr="…"`, `attr='…'`, `attr=…`) so
+ * character-reference-encoded `href="./..&#x2f;evil"` still won't
+ * decode inside the value — that's a browser-time decode, not a
+ * source-form pattern. When Task #165 tightens to a throw, revisit
+ * decoding rules.
  */
-function rejectRelativeHrefs(root, pagePath) {
+const RELATIVE_HREF_RE = /\b(href|src|action)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
+function rejectRelativeHrefs(html, pagePath) {
   const bad = [];
-  for (const el of root.querySelectorAll('[href], [src], [action]')) {
-    for (const attr of ['href', 'src', 'action']) {
-      const v = el.getAttribute(attr);
-      if (v && v.startsWith('../')) {
-        bad.push(`${el.rawTagName || 'element'}[${attr}="${v}"]`);
-      }
+  RELATIVE_HREF_RE.lastIndex = 0;
+  let m;
+  while ((m = RELATIVE_HREF_RE.exec(html)) !== null) {
+    const attr = m[1].toLowerCase();
+    const v = m[2] ?? m[3] ?? m[4] ?? '';
+    if (!v) continue;
+    // M2: catch both leading and embedded `../`. A prior version only
+    // checked `startsWith('../')`, which missed `./../foo`,
+    // `foo/../../evil`, `/base/../../secret` — under the /bg/ prefix
+    // these still resolve upward. When Task #165 tightens this to a
+    // throw, an embedded `../` in a legacy page silently ships without
+    // this broader check.
+    if (v === '..' || v.startsWith('../') || v.includes('/../') || v.endsWith('/..')) {
+      bad.push(`[${attr}="${v}"]`);
     }
   }
   if (bad.length) {
@@ -1414,7 +1512,6 @@ export function i18nPlugin(options) {
           locale: DEFAULT_LOCALE,
           dict: dicts[DEFAULT_LOCALE],
           ctx: contextByLocale[DEFAULT_LOCALE],
-          isDefault: true,
           basePath,
           pagePath: rel,
           allLocales: locales,
@@ -1479,8 +1576,9 @@ export function i18nPlugin(options) {
         // Sweep the FINAL EN emit for `../` hrefs (after Vite's
         // asset-URL rewrite). Runs ONLY on the EN pass — the BG mirror
         // inherits the same offenders, warning again is duplicate log
-        // spam (F-double-warn).
-        rejectRelativeHrefs(parseHtml(enHtml, PARSER_OPTIONS), fileName);
+        // spam (F-double-warn). String-based regex scan (M4) — no
+        // extra DOM parse.
+        rejectRelativeHrefs(enHtml, fileName);
 
         // Apply BG head injection on top of the EN-rendered HTML. The
         // marker attributes are already gone (transform stripped them
@@ -1491,7 +1589,6 @@ export function i18nPlugin(options) {
           locale: 'bg',
           dict: dicts.bg,
           ctx: contextByLocale.bg,
-          isDefault: false,
           basePath,
           pagePath: fileName,
           allLocales: locales,
@@ -1554,10 +1651,15 @@ export function i18nPlugin(options) {
           // Strip the /bg[/] prefix + normalise to a source-tree path.
           let rel = urlPath.replace(/^\/bg\/?/, '');
           if (rel === '' || rel.endsWith('/')) rel += 'index.html';
-          // Path-traversal defence: resolve() then confirm the result
-          // stays under projectRoot. Anything outside → 403.
+          // Path-traversal defence (L7): use path.relative to normalise
+          // then confirm the relative path doesn't escape upward.
+          // Earlier startsWith(projectRoot + sep) approach was fragile
+          // on Windows drive roots (C:\) and paths with trailing sep —
+          // could spuriously 403 legitimate dev BG pages. relative +
+          // startsWith('..') is portable.
           const source = resolve(projectRoot, rel);
-          if (!source.startsWith(projectRoot + sep) && source !== projectRoot) {
+          const relFromProj = relative(projectRoot, source);
+          if (relFromProj.startsWith('..') || isAbsolute(relFromProj)) {
             res.statusCode = 403;
             res.end('forbidden');
             return;
@@ -1584,7 +1686,6 @@ export function i18nPlugin(options) {
               locale: 'bg',
               dict: dicts.bg,
               ctx: contextByLocale.bg,
-              isDefault: false,
               basePath: '/',
               pagePath: rel,
               allLocales: locales,
@@ -1621,13 +1722,33 @@ export function i18nPlugin(options) {
           // updated locale. loadDictionaries hard-fails on asymmetry,
           // so a broken edit surfaces immediately in the dev log rather
           // than shipping stale content.
+          //
+          // H2 (race): earlier version did `delete dicts[key]` in one
+          // loop then repopulated in a second loop, leaving `dicts` in
+          // an EMPTY state between the loops. A concurrent middleware
+          // request reading `dicts.bg` in that window got `undefined`
+          // and applyLocale exploded downstream. Fix: assign fresh
+          // whole-locale objects FIRST (readers always see either the
+          // old locale map or the new one — never undefined), THEN
+          // delete any locale keys that dropped out of the fresh set.
+          // The per-locale flat-key object itself is replaced by
+          // reference; readers that already dereferenced `dicts.bg`
+          // keep their (stable) old snapshot for the duration of the
+          // current transform.
           try {
             const fresh = loadDictionaries(localesDir);
-            // Mutate in place so the closure-captured `dicts` sees the
-            // new values on the next transform without needing to
-            // rebind every downstream reference.
-            for (const key of Object.keys(dicts)) delete dicts[key];
-            for (const [k, v] of Object.entries(fresh.dicts)) dicts[k] = v;
+            // 1. Overwrite each locale's flat-key object with a fresh one.
+            //    Assignment is atomic per key — no in-between empty state.
+            for (const [k, v] of Object.entries(fresh.dicts)) {
+              dicts[k] = v;
+            }
+            // 2. Delete any locale keys the fresh set no longer has.
+            //    (Only fires if a locale JSON was RENAMED/DELETED — the
+            //    add/change case above already produced a valid fresh
+            //    state; this cleanup just prunes stale pointers.)
+            for (const k of Object.keys(dicts)) {
+              if (!hasOwn(fresh.dicts, k)) delete dicts[k];
+            }
             // eslint-disable-next-line no-console
             console.log('[i18n] reloaded locales after change:', path);
           } catch (err) {

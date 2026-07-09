@@ -9,8 +9,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mkdtempSync, writeFileSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import {
   loadDictionaries,
   interpolate,
@@ -904,6 +906,162 @@ test('data-i18n-meta: allowlist applies to meta shortcut too (S1)', () => {
     opts({ dict: { desc: 'A page description' } }),
   );
   assert.match(out, /content="A page description"/);
+});
+
+// ---------------------------------------------------------------------------
+// Round-6 review coverage — hazard invariants and cleanup regressions
+// ---------------------------------------------------------------------------
+
+test('data-i18n-attr: rejects target attribute (H1 — mirrors M14 target=_blank reject)', () => {
+  // The sanitizer's data-i18n-html path rejects target on <a> (M14
+  // reverse-tabnabbing). data-i18n-attr had drifted apart — a
+  // translator writing target:cta.tgt would ship <a target="_blank">.
+  // Now both paths reject target uniformly.
+  assert.throws(
+    () => applyLocale(
+      '<a data-i18n-attr="target:evil">click</a>',
+      opts({ dict: { evil: '_blank' } }),
+    ),
+    /is forbidden/i,
+  );
+});
+
+test('data-i18n-attr: rejects javascript: in srcset (M1)', () => {
+  // srcset + imagesrcset were missing from URL_BEARING_ATTRS. Now
+  // included so `data:` / `javascript:` in a preload imagesrcset
+  // hits isAllowedHref and hard-fails.
+  assert.throws(
+    () => applyLocale(
+      '<img data-i18n-attr="srcset:evil">',
+      opts({ dict: { evil: 'data:text/html,<script>alert(1)</script> 2x' } }),
+    ),
+    /not an allowed URL/i,
+  );
+});
+
+test('rejectRelativeHrefs: catches embedded ../ (M2)', async () => {
+  // Import the plugin source, call the exported string-based sweep
+  // via a small round-trip. rejectRelativeHrefs isn't exported so
+  // we exercise it by capturing console.warn on a writeBundle-shape
+  // input via applyLocale flow. Simpler: verify via source scan that
+  // the check includes the embedded pattern.
+  const fs = await import('node:fs/promises');
+  const src = await fs.readFile(
+    new URL('../i18n-plugin.js', import.meta.url),
+    'utf-8',
+  );
+  // The sweep must check all four shapes:
+  assert.match(src, /v === '\.\.'/);
+  assert.match(src, /v\.startsWith\('\.\.\/'\)/);
+  assert.match(src, /v\.includes\('\/\.\.\/'\)/);
+  assert.match(src, /v\.endsWith\('\/\.\.'\)/);
+});
+
+test('flatten: rejects dot-in-key hazard (M3)', () => {
+  // `{"home.title": "A"}` collides with `{"home": {"title": "B"}}`.
+  // Both flatten to `home.title` — silent value ambiguity. Now
+  // rejected at load time via the dot-in-key check.
+  const tmp = mkdtempSync(join(tmpdir(), 'i18n-lint-'));
+  writeFileSync(join(tmp, 'en.json'), JSON.stringify({
+    'home.title': 'flat',
+  }));
+  writeFileSync(join(tmp, 'bg.json'), JSON.stringify({
+    'home.title': 'flat',
+  }));
+  assert.throws(
+    () => loadDictionaries(tmp),
+    /contains a dot/i,
+  );
+});
+
+test('loadDictionaries: rejects symlinked locale file (M11 coverage gap)', () => {
+  // The plugin claims to reject symlinked locale files (translator
+  // committing `pl.json → ../../.git/config` would leak). Test the
+  // guard actually fires.
+  const tmp = mkdtempSync(join(tmpdir(), 'i18n-lint-'));
+  const targetPath = join(tmp, 'real.json');
+  writeFileSync(targetPath, '{"k":"v"}');
+  writeFileSync(join(tmp, 'en.json'), JSON.stringify({ k: 'a' }));
+  try {
+    symlinkSync(targetPath, join(tmp, 'bg.json'));
+  } catch {
+    // Symlink creation may fail on some Windows CI environments —
+    // skip the test rather than fail on the environmental issue.
+    return;
+  }
+  assert.throws(
+    () => loadDictionaries(tmp),
+    /symlinked locale file/i,
+  );
+});
+
+test('flatten: MAX_FLATTEN_DEPTH cap fires on pathological nesting (L16 coverage gap)', () => {
+  // 40-deep nested object exceeds MAX_FLATTEN_DEPTH=32. Prior version
+  // had this hazard documented + guarded, but no test — a refactor
+  // that dropped `depth + 1` would silently regress.
+  const tmp = mkdtempSync(join(tmpdir(), 'i18n-lint-'));
+
+  function nest(n) {
+    let obj = 'leaf';
+    for (let i = 0; i < n; i++) obj = { child: obj };
+    return obj;
+  }
+  writeFileSync(join(tmp, 'en.json'), JSON.stringify(nest(40)));
+  writeFileSync(join(tmp, 'bg.json'), JSON.stringify(nest(40)));
+  assert.throws(
+    () => loadDictionaries(tmp),
+    /exceeds max nesting depth/i,
+  );
+});
+
+test('loadDictionaries: case-insensitive filesystem — EN.JSON becomes locale "en" (L15 coverage gap)', () => {
+  // On macOS HFS+/APFS-CI, `EN.JSON` and `en.json` are the same file.
+  // Plugin normalises via .toLowerCase() on read. Verify by constructing
+  // a fixture with an uppercase-named file.
+  const tmp = mkdtempSync(join(tmpdir(), 'i18n-lint-'));
+  writeFileSync(join(tmp, 'EN.JSON'), JSON.stringify({ k: 'a' }));
+  writeFileSync(join(tmp, 'bg.json'), JSON.stringify({ k: 'b' }));
+  const { locales, dicts } = loadDictionaries(tmp);
+  assert.ok(locales.includes('en'), `locales should contain 'en', got ${JSON.stringify(locales)}`);
+  assert.equal(dicts.en.k, 'a');
+});
+
+test('loadDictionaries: token asymmetry per key hard-fails (M5 coverage gap)', () => {
+  // Same key set + different tokens = hard-fail. Prior release had
+  // NO test — refactor could silently break token symmetry check.
+  const tmp = mkdtempSync(join(tmpdir(), 'i18n-lint-'));
+  writeFileSync(join(tmp, 'en.json'), JSON.stringify({
+    msg: 'Call {phone}',
+  }));
+  writeFileSync(join(tmp, 'bg.json'), JSON.stringify({
+    msg: 'Обади ни се',
+  }));
+  assert.throws(
+    () => loadDictionaries(tmp),
+    /token asymmetry/i,
+  );
+});
+
+test('loadDictionaries: rejectPreEscapedEntities covers numeric + named entities (M6 coverage gap)', () => {
+  // Previous fixture only exercised `&copy;`. Now cover a numeric
+  // entity `&#39;` and a common named one `&amp;` — a refactor that
+  // dropped the numeric-alternates branch would silently ship
+  // double-escapes for translators using `&#39;` or `&#x27;`.
+  for (const badValue of [
+    "Rooms &amp; Rates",       // &amp;
+    "It&#39;s time",           // &#39;
+    "5&#x27;s",                // &#x27;
+    "&nbsp;check-in",          // &nbsp;
+  ]) {
+    const tmp = mkdtempSync(join(tmpdir(), 'i18n-lint-'));
+    writeFileSync(join(tmp, 'en.json'), JSON.stringify({ k: badValue }));
+    writeFileSync(join(tmp, 'bg.json'), JSON.stringify({ k: 'ok' }));
+    assert.throws(
+      () => loadDictionaries(tmp),
+      /pre-escaped HTML entity/i,
+      `should reject entity in value: ${badValue}`,
+    );
+  }
 });
 
 test('applyLocale: BG regression — full-cycle test writeBundle-shape emit works', () => {
