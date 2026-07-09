@@ -28,12 +28,14 @@ on:
       - 'LICENSE'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - '.claude/**'
-      - '.obsidian/**'
-      - 'LICENSE'
+    # DELIBERATELY NO paths-ignore here (H5): if branch protection ever
+    # lists this workflow as a required status check, a docs-only PR
+    # would skip the workflow AND the required check would stay
+    # "Expected — waiting for status to be reported" forever, blocking
+    # the merge. paths-ignore on `push` is safe because a stalled
+    # branch-status isn't a merge blocker; on `pull_request` it is.
+    # The cost of running full CI on a docs-only PR is small; the cost
+    # of a wedged PR is not.
 
 permissions:
   contents: read

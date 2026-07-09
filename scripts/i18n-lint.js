@@ -45,7 +45,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
-import { loadDictionaries } from './i18n-plugin.js';
+import { loadDictionaries, parseAttrPairs } from './i18n-plugin.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, '..');
@@ -81,12 +81,37 @@ const RE_I18N_META   = /\bdata-i18n-meta(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/gi
 // visible (so `<script data-i18n="...">` markers ON the element itself
 // are still seen by the marker regexes — the plugin's DOM parse finds
 // them, so lint must too, per the H3 fix), and only the CONTENT between
-// the tags is blanked. `RE_TAG_CONTENT` in maskNonMarkupRegions uses
-// per-tag scans instead of a single regex to avoid the `[^>]*` early-
-// truncation footgun on tags whose attributes contain `>` (H3 tail).
+// the tags is blanked.
+//
+// H1 fix: the opening-tag regex properly tokenises quoted attribute
+// values so a `>` inside a quoted attr doesn't truncate the match. The
+// naive `<script\b[^>]*>` and `<script\b[\s\S]*?>` are both wrong: the
+// first stops at the first `>` (truncates on quoted `>`); the second
+// stops at the first `>` too (non-greedy). This shape allows unquoted
+// content between attrs OR fully-quoted attr values via alternation.
 const RE_HTML_COMMENT   = /<!--[\s\S]*?-->/g;
-const RE_SCRIPT_OPEN    = /<script\b[\s\S]*?>/gi;
-const RE_STYLE_OPEN     = /<style\b[\s\S]*?>/gi;
+const RE_SCRIPT_OPEN    = /<script\b(?:"[^"]*"|'[^']*'|[^>"'])*>/gi;
+const RE_STYLE_OPEN     = /<style\b(?:"[^"]*"|'[^']*'|[^>"'])*>/gi;
+// H4 fix: close-tag search uses a case-insensitive regex with a proper
+// boundary check (`(?![\w-])`), so `</scriptzz` no longer matches as if
+// it were a real close tag. Anchored via `lastIndex` on the ORIGINAL
+// source (no `.toLowerCase()` allocation, no Unicode length-desync
+// hazard from H2).
+const RE_SCRIPT_CLOSE   = /<\/script(?![\w-])/gi;
+const RE_STYLE_CLOSE    = /<\/style(?![\w-])/gi;
+// H3 fix: attribute-value masking. Marker regexes must not false-match
+// on `data-i18n=` substrings that appear INSIDE another attribute's
+// value (e.g. `<div title="see data-i18n='ignored'">`). We mask ALL
+// attribute values in element-opening tags after scripts/styles have
+// been blanked. This regex captures a full attribute assignment
+// `name="value"` or `name='value'`; the replacement blanks only the
+// value portion, preserving the attribute name so the marker regex can
+// still find `data-i18n=` when it's the OUTER attribute.
+//
+// The negative-lookahead on `data-i18n(?![\w-])` (case-insensitive)
+// EXCLUDES the four marker attribute names themselves — otherwise this
+// pass would blank the very values we want to lint.
+const RE_ATTR_VALUE     = /(\s(?!data-i18n(?![\w-])|data-i18n-html(?![\w-])|data-i18n-attr(?![\w-])|data-i18n-meta(?![\w-]))[\w:-]+\s*=\s*)("[^"]*"|'[^']*')/gi;
 
 // Directories to skip when walking the tree. `dist/` is a build artefact
 // (it contains injected translations, which would fake-pass every check).
@@ -138,35 +163,42 @@ function* walkHtml(dir, rootDir) {
 }
 
 /**
- * Blank out `<script>` / `<style>` element CONTENT and HTML comments in
- * the source so marker regexes can't false-match on template literals,
- * CSS content, or commented-out markup. Replacement is space-of-equal-
- * length so subsequent regex offsets (if we ever add source-position
- * reporting) stay meaningful.
+ * Blank out `<script>` / `<style>` element CONTENT, HTML comments, and
+ * attribute values in the source so marker regexes can't false-match on
+ * template literals, CSS content, commented-out markup, or `data-i18n=`
+ * substrings that appear inside another attribute's value. Replacement
+ * is space-of-equal-length so subsequent regex offsets (if we ever add
+ * source-position reporting) stay meaningful.
  *
  * IMPORTANT ordering (H2 fix): script/style CONTENT is blanked FIRST,
- * comments SECOND. If comments were blanked first, a stray `<!--` inside
- * a `<script>` string literal (e.g. `const t = '<!-- foo';`) would
- * make the non-greedy comment regex consume across the script's closing
- * tag up to any later `-->` on the page, eating legitimate markers in
- * between.
+ * comments SECOND, attribute values THIRD. If comments were blanked
+ * first, a stray `<!--` inside a `<script>` string literal (e.g.
+ * `const t = '<!-- foo';`) would make the non-greedy comment regex
+ * consume across the script's closing tag up to any later `-->` on
+ * the page, eating legitimate markers in between.
  *
  * IMPORTANT masking granularity (H3 fix): we blank ONLY the content
  * between opening and closing tags, leaving the opening tag visible so
  * marker regexes can still find `<script data-i18n="…">` — the plugin's
- * DOM parse sees those markers and enforces them at build; lint must too
- * or it fails-open on JS-heavy pages that legitimately use markers on
- * <script>/<style> elements.
+ * DOM parse sees those markers and enforces them at build; lint must
+ * too or it fails-open on JS-heavy pages that legitimately use markers
+ * on <script>/<style> elements.
  *
- * The tag-content masks use a two-step scan (opening-tag regex → find
- * matching closing tag by string search) instead of a single
- * `<script\b[^>]*>...</script>` regex. The `[^>]*` shape truncates at
- * the first `>` inside the opening tag, so an opening like
- * `<script data-cfg="{'k':'>'}">` breaks the single-regex approach
- * silently. Using `<script\b[\s\S]*?>` (which is greedy about crossing
- * `>` in quoted attribute values) then a plain `indexOf('</script')`
- * for the close is more robust — matches how HTML5 parsers actually
- * find the script boundary.
+ * IMPORTANT close-tag search (H4/H2 fix): the close tag is found via a
+ * case-insensitive regex `<\/script(?![\w-])/gi` with `lastIndex` on
+ * the ORIGINAL source. This avoids two hazards:
+ *   1. `source.toLowerCase()` was NOT length-preserving on Unicode —
+ *      `İ` → `i̇` (1 code unit → 2), so `openEnd` from the original
+ *      source pointed to the wrong offset in the lowercased view.
+ *   2. Plain `indexOf('</script')` matched `</scriptzz>` as if it were
+ *      a real close tag. The `(?![\w-])` boundary rejects that.
+ *
+ * IMPORTANT attribute-value masking (H3 additional fix): AFTER scripts
+ * and styles are blanked, we walk the remaining markup and blank every
+ * quoted attribute value in every element opening tag. Prevents
+ * `<div title="see data-i18n='leak'">` from tricking the marker regex.
+ * Attribute NAMES are preserved so legitimate `data-i18n="key"` markers
+ * are still found.
  */
 function maskNonMarkupRegions(html) {
   const blank = (n) => ' '.repeat(n);
@@ -174,7 +206,11 @@ function maskNonMarkupRegions(html) {
 
   // Blank content of every <script>/<style> element. Opening tag is
   // preserved (so its own attributes remain scannable for markers).
-  const maskTagContent = (source, openRe, closeTag) => {
+  //
+  // The opening-tag regex (RE_SCRIPT_OPEN / RE_STYLE_OPEN) correctly
+  // handles `>` inside quoted attribute values via alternation between
+  // quoted-string chunks and non-quote/non-`>` characters (H1 fix).
+  const maskTagContent = (source, openRe, closeRe) => {
     let result = '';
     let cursor = 0;
     openRe.lastIndex = 0;
@@ -183,28 +219,43 @@ function maskNonMarkupRegions(html) {
       // Everything up to and including the opening tag stays as-is.
       const openEnd = m.index + m[0].length;
       result += source.slice(cursor, openEnd);
-      // Find the matching close tag. Case-insensitive search via
-      // toLowerCase substring; falls back to end-of-source if the
-      // author forgot the close (matches HTML5 parser tolerance).
-      const closeIdx = source
-        .toLowerCase()
-        .indexOf(closeTag, openEnd);
-      const contentEnd = closeIdx < 0 ? source.length : closeIdx;
+      // Find the matching close tag via regex on the ORIGINAL source
+      // (no toLowerCase() copy — avoids Unicode length-desync from H2
+      // and the O(n·k) allocation cost). The `(?![\w-])` boundary
+      // rejects `</scriptzz` and similar partial-substring matches
+      // (H4).
+      closeRe.lastIndex = openEnd;
+      const closeMatch = closeRe.exec(source);
+      const contentEnd = closeMatch === null ? source.length : closeMatch.index;
       result += blank(contentEnd - openEnd);
       cursor = contentEnd;
-      openRe.lastIndex = contentEnd; // advance past the blanked span
+      // Advance the open-tag regex past the blanked span so the next
+      // exec doesn't re-scan inside now-blanked content.
+      openRe.lastIndex = contentEnd;
     }
     result += source.slice(cursor);
     return result;
   };
 
-  out = maskTagContent(out, RE_SCRIPT_OPEN, '</script');
-  out = maskTagContent(out, RE_STYLE_OPEN, '</style');
+  out = maskTagContent(out, RE_SCRIPT_OPEN, RE_SCRIPT_CLOSE);
+  out = maskTagContent(out, RE_STYLE_OPEN, RE_STYLE_CLOSE);
 
-  // Comments last — anything comment-shaped that was inside a now-
-  // blanked script/style body is already spaces, so this pass only
-  // touches real HTML comments in the visible markup.
+  // Comments — anything comment-shaped that was inside a now-blanked
+  // script/style body is already spaces, so this pass only touches
+  // real HTML comments in the visible markup.
   out = out.replace(RE_HTML_COMMENT, (m) => blank(m.length));
+
+  // Attribute values (H3): blank every quoted value while preserving
+  // the attribute name so legitimate `data-i18n="key"` outer markers
+  // remain scannable. This runs AFTER script/style/comment masking so
+  // it operates only on visible markup attributes.
+  out = out.replace(RE_ATTR_VALUE, (_, prefix, quoted) => {
+    // `quoted` includes the surrounding quotes. Preserve them (so the
+    // marker regex, which looks for `name="value"`, still sees the
+    // quotes) and blank only the interior.
+    const q = quoted[0];
+    return prefix + q + blank(quoted.length - 2) + q;
+  });
 
   return out;
 }
@@ -246,63 +297,23 @@ function extractMarkers(html, relPath) {
 
   for (const m of source.matchAll(RE_I18N_ATTR)) {
     const raw = capture(m);
-    if (raw.trim().length === 0) {
-      errors.push(`${relPath}: empty data-i18n-attr= value`);
+    // Use the shared parseAttrPairs from the plugin so lint and plugin
+    // can never drift on the pair-parsing contract (M4). The parser
+    // returns either `{pairs, error: null}` (all pairs valid) or
+    // `{pairs: [], error: {code, pair, message}}`. Lint prefixes the
+    // message with the file path; plugin prefixes with `[i18n] pagePath`.
+    const parsed = parseAttrPairs(raw);
+    if (parsed.error) {
+      // Use the SAME wording as the plugin (drop the `data-i18n-attr=`
+      // prefix since the file/rel-path already identifies the marker).
+      errors.push(
+        `${relPath}: data-i18n-attr="${raw}" ${parsed.error.message}`,
+      );
       continue;
     }
-    // Buffer this marker's pairs into a local array; only merge into
-    // `out` if the marker parses cleanly (H4 fix). This matches the
-    // plugin's atomicity: a malformed marker MUST NOT contribute keys
-    // to the "used" set, or an orphan check gets silently poisoned by
-    // a broken marker.
-    const pairs = raw.split(';');
-    const pending = [];
-    let markerHadError = false;
-    for (const rawPair of pairs) {
-      const pair = rawPair.trim();
-      if (pair.length === 0) {
-        errors.push(
-          `${relPath}: data-i18n-attr="${raw}" contains an empty pair (leading/trailing/duplicate ";"). Expected "attr:key" pairs separated by ";".`,
-        );
-        markerHadError = true;
-        // Match the plugin: stop at first empty pair; other errors
-        // ALSO stop here for consistency (finding P9 tail — one policy,
-        // uniformly applied). The marker is invalid; more error messages
-        // for the same marker are noise.
-        break;
-      }
-      // Split on the LAST colon so keys may contain colons (permitted by
-      // the plugin, though the dict flattener doesn't currently produce
-      // such keys).
-      const idx = pair.lastIndexOf(':');
-      if (idx < 0) {
-        errors.push(
-          `${relPath}: data-i18n-attr="${raw}" pair "${pair}" missing colon separator (expected attr:key)`,
-        );
-        markerHadError = true;
-        break;
-      }
-      const attr = pair.slice(0, idx).trim();
-      const key = pair.slice(idx + 1).trim();
-      if (!attr) {
-        errors.push(
-          `${relPath}: data-i18n-attr="${raw}" pair "${pair}" has empty attr name`,
-        );
-        markerHadError = true;
-        break;
-      }
-      if (!key) {
-        errors.push(
-          `${relPath}: data-i18n-attr="${raw}" pair "${pair}" has empty key`,
-        );
-        markerHadError = true;
-        break;
-      }
-      pending.push({ kind: 'attr', key, attr });
-    }
-    // Only commit pairs from a fully-valid marker.
-    if (!markerHadError) {
-      for (const p of pending) out.push(p);
+    // All pairs valid — commit them atomically to the marker set.
+    for (const { attr, key } of parsed.pairs) {
+      out.push({ kind: 'attr', key, attr });
     }
   }
 

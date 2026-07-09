@@ -979,15 +979,131 @@ function validateAttrPair(el, opts, markerName, rawValue, attr, key, pair) {
   return { attrLower, value: interpolated };
 }
 
+/**
+ * Parse the raw value of a `data-i18n-attr` marker into a validated list
+ * of `{attr, key, pair}` records. Pure function — no DOM, no I/O — so
+ * both the plugin (build-time transform) and the lint (regex-based
+ * pre-flight) can share exactly the same parse semantics.
+ *
+ * Contract:
+ *   - Empty rawValue → single error "has empty value".
+ *   - Split on `;`; each segment is trimmed; empty segments (leading /
+ *     trailing / duplicate `;`) → single error "empty pair".
+ *   - Within each segment, `attr:key` splits on the LAST colon (so keys
+ *     may contain colons at the marker layer, though the dict flattener
+ *     doesn't currently produce such keys). Both halves are trimmed.
+ *   - Empty `attr` or empty `key` → single error naming the offending
+ *     pair.
+ *   - Duplicate `attr` (case-insensitive) within one marker → single
+ *     error naming the second occurrence. Prevents last-wins
+ *     silent-shadow attacks where a translator or a PR contributor
+ *     could append a duplicate to overwrite an earlier reviewed pair
+ *     (M3).
+ *
+ * Returns `{pairs, error}`:
+ *   - `pairs` — array of `{attr, key, pair}` records (always populated,
+ *     may be empty if `error` is set).
+ *   - `error` — `null` on success, else `{code, pair, message}` where
+ *     `code` is one of `EMPTY_VALUE | EMPTY_PAIR | MISSING_COLON |
+ *     EMPTY_ATTR | EMPTY_KEY | DUPLICATE_ATTR`. Callers wrap `message`
+ *     with their own prefix (plugin: `[i18n] pagePath:`; lint:
+ *     `relPath:`).
+ */
+export function parseAttrPairs(rawValue) {
+  if (rawValue.length === 0) {
+    return {
+      pairs: [],
+      error: {
+        code: 'EMPTY_VALUE',
+        pair: null,
+        message: 'has empty value (expected attr:key pairs)',
+      },
+    };
+  }
+  const pairs = [];
+  const seenAttrs = new Set();
+  for (const rawPair of rawValue.split(';')) {
+    const pair = rawPair.trim();
+    if (pair.length === 0) {
+      return {
+        pairs: [],
+        error: {
+          code: 'EMPTY_PAIR',
+          pair: null,
+          message:
+            'contains an empty pair (leading/trailing/duplicate ";"). Expected "attr:key" pairs separated by ";".',
+        },
+      };
+    }
+    const lastColon = pair.lastIndexOf(':');
+    if (lastColon < 0) {
+      return {
+        pairs: [],
+        error: {
+          code: 'MISSING_COLON',
+          pair,
+          message: `pair "${pair}" missing colon separator (expected attr:key)`,
+        },
+      };
+    }
+    const attr = pair.slice(0, lastColon).trim();
+    const key = pair.slice(lastColon + 1).trim();
+    if (attr.length === 0) {
+      return {
+        pairs: [],
+        error: {
+          code: 'EMPTY_ATTR',
+          pair,
+          message: `pair "${pair}" has empty attr name (expected attr:key)`,
+        },
+      };
+    }
+    if (key.length === 0) {
+      return {
+        pairs: [],
+        error: {
+          code: 'EMPTY_KEY',
+          pair,
+          message: `pair "${pair}" has empty key (expected attr:key)`,
+        },
+      };
+    }
+    // Duplicate-attr check (M3). Case-insensitive because HTML attribute
+    // names are ASCII case-insensitive and safeSetAttribute writes the
+    // lowercased form — `href:a; HREF:b` would otherwise silently last-
+    // wins on write.
+    const attrLower = attr.toLowerCase();
+    if (seenAttrs.has(attrLower)) {
+      return {
+        pairs: [],
+        error: {
+          code: 'DUPLICATE_ATTR',
+          pair,
+          message: `pair "${pair}" duplicates attribute "${attrLower}" already keyed earlier in the same marker (silent last-wins would let a later pair shadow the reviewed one)`,
+        },
+      };
+    }
+    seenAttrs.add(attrLower);
+    pairs.push({ attr, key, pair });
+  }
+  return { pairs, error: null };
+}
+
 function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
   if (!el.hasAttribute(markerName)) return;
   const rawValue = el.getAttribute(markerName);
 
   if (fixedAttr) {
     // data-i18n-meta shortcut — the whole value is the dict key. Trim
-    // before the empty-check so `<meta data-i18n-meta="   ">` produces
+    // ONLY for the empty-check so `<meta data-i18n-meta="   ">` produces
     // the actionable "has empty key" error instead of a downstream
-    // "unknown key '   '" from lookup() (L1).
+    // "unknown key '   '" from lookup() (L1). The lookup itself uses
+    // the ORIGINAL untrimmed rawValue (M2): a translator's trailing-
+    // space typo like `data-i18n-meta="  home.title  "` must surface
+    // as `unknown key`, not silently succeed. Whitespace tolerance in
+    // dictionary keys is a footgun — the flatten check already forbids
+    // keys with leading/trailing whitespace, so any legitimate key can
+    // be looked up verbatim.
     const trimmed = rawValue.trim();
     if (trimmed.length === 0) {
       throw new Error(
@@ -1000,7 +1116,7 @@ function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
       markerName,
       rawValue,
       fixedAttr,
-      trimmed,
+      rawValue,
       null,
     );
     safeSetAttribute(el, attrLower, value);
@@ -1008,59 +1124,22 @@ function handleAttrMarker(el, opts, markerName, fixedAttr = null) {
     return;
   }
 
-  // Multi-pair `attr:key` syntax — split on `;` so a single marker can
-  // key multiple attributes on the same element (e.g.
-  // `data-i18n-attr="href:home_url; title:home_title; aria-label:home_aria"`).
-  // Semicolons inside dict values are fine — the split is on the RAW
-  // marker value only, not on the resolved translation. Whitespace
-  // between pairs is trimmed; empty segments (leading/trailing `;` or
-  // `;;` in the middle) are rejected so a translator can't leave the
-  // marker in a half-authored state.
+  // Multi-pair `attr:key` syntax — parse via the shared parser so the
+  // lint and plugin can never drift (M4). The parser rejects empty
+  // values, empty pairs, missing colons, empty attr/key, and duplicate
+  // attrs within the same marker (M3).
   //
-  // Within a single pair, `attr` / `key` are separated by the LAST
-  // colon (permits keys containing `:`, which the dict flattener does
-  // NOT produce today but which we don't want to forbid at the marker
-  // layer). Both halves are TRIMMED after the split — a marker like
-  // `data-i18n-attr=" onclick :key"` therefore correctly hits the
-  // forbidden-attr allowlist on the trimmed name `onclick` rather than
-  // silently bypassing on the whitespace-padded literal (L2).
-  //
-  // Atomicity (H1): we validate EVERY pair up-front into a local buffer,
-  // then write all setAttribute calls + removeAttribute at the end. If
-  // any pair throws, no DOM writes have happened. Marker stays in place
-  // for the outer error handler to point at.
-  if (rawValue.length === 0) {
+  // Atomicity (H1): every pair is VALIDATED into a local buffer, then
+  // all writes commit at end. A validate-time throw leaves the DOM
+  // untouched with the marker still present.
+  const parsed = parseAttrPairs(rawValue);
+  if (parsed.error) {
     throw new Error(
-      `[i18n] ${opts.pagePath}: ${markerName}="" has empty value (expected attr:key pairs)`,
+      `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" ${parsed.error.message}`,
     );
   }
-  const pairs = rawValue.split(';');
-  const writes = []; // [{attrLower, value}, ...] — buffered until all pairs validate
-  for (const rawPair of pairs) {
-    const pair = rawPair.trim();
-    if (pair.length === 0) {
-      throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" contains an empty pair (leading/trailing/duplicate ";"). Expected "attr:key" pairs separated by ";".`,
-      );
-    }
-    const lastColon = pair.lastIndexOf(':');
-    if (lastColon < 0) {
-      throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" pair "${pair}" missing colon separator (expected attr:key)`,
-      );
-    }
-    const attr = pair.slice(0, lastColon).trim();
-    const key = pair.slice(lastColon + 1).trim();
-    if (attr.length === 0) {
-      throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" pair "${pair}" has empty attr name (expected attr:key)`,
-      );
-    }
-    if (key.length === 0) {
-      throw new Error(
-        `[i18n] ${opts.pagePath}: ${markerName}="${rawValue}" pair "${pair}" has empty key (expected attr:key)`,
-      );
-    }
+  const writes = []; // [{attrLower, value}, ...]
+  for (const { attr, key, pair } of parsed.pairs) {
     writes.push(validateAttrPair(el, opts, markerName, rawValue, attr, key, pair));
   }
   // Every pair passed — commit atomically.

@@ -1384,3 +1384,93 @@ test('data-i18n-attr: per-pair error messages isolate the failing pair (P11)', (
     assert.doesNotMatch(err.message, /pair "title:good2"/);
   }
 });
+
+// ---------------------------------------------------------------------
+// Round-3 fixes: M3 duplicate-attr, M4 shared parser, M2 meta trim.
+// ---------------------------------------------------------------------
+
+test('data-i18n-attr: duplicate attr in multi-pair marker is rejected (M3)', () => {
+  // `href:a; href:b` used to silently last-wins on write. Now the
+  // parser rejects the second occurrence so a translator or a PR
+  // contributor can't shadow an earlier reviewed pair by appending
+  // a duplicate.
+  assert.throws(
+    () =>
+      applyLocale(
+        '<a data-i18n-attr="href:home; href:evil">x</a>',
+        opts({ dict: { home: '/x', evil: '/attacker' } }),
+      ),
+    /duplicates attribute "href"/,
+  );
+});
+
+test('data-i18n-attr: duplicate check is case-insensitive (M3 — HREF:a; href:b)', () => {
+  // HTML attribute names are case-insensitive; the plugin lowercases
+  // on write, so `HREF:a; href:b` would resolve to the same attribute.
+  // The duplicate check must catch this too.
+  assert.throws(
+    () =>
+      applyLocale(
+        '<a data-i18n-attr="HREF:home; href:evil">x</a>',
+        opts({ dict: { home: '/x', evil: '/attacker' } }),
+      ),
+    /duplicates attribute "href"/,
+  );
+});
+
+test('data-i18n-meta: whitespace-padded key surfaces as "unknown key", not silently trimmed (M2)', () => {
+  // Previously (round-2) the meta shortcut passed `trimmed` as the
+  // lookup key, silently tolerating `  home  ` as `home`. Round-3
+  // passes the untrimmed rawValue, so a translator's leading/trailing
+  // space typo surfaces at build time.
+  assert.throws(
+    () =>
+      applyLocale(
+        '<meta name="x" data-i18n-meta="  home.title  ">',
+        opts({ dict: { 'home.title': 'ok' } }),
+      ),
+    /unknown key/,
+  );
+});
+
+test('parseAttrPairs: exported for lint reuse, returns {pairs, error} shape (M4)', async () => {
+  // The plugin exports parseAttrPairs so lint can import and share
+  // the exact same parse semantics. Contract test: pin the return
+  // shape so a refactor that changes it fails visibly.
+  const { parseAttrPairs } = await import('../i18n-plugin.js');
+
+  // Success path
+  const ok = parseAttrPairs('href:a; title:b');
+  assert.equal(ok.error, null);
+  assert.deepEqual(
+    ok.pairs.map(({ attr, key }) => ({ attr, key })),
+    [{ attr: 'href', key: 'a' }, { attr: 'title', key: 'b' }],
+  );
+
+  // Empty value
+  const empty = parseAttrPairs('');
+  assert.equal(empty.error.code, 'EMPTY_VALUE');
+  assert.deepEqual(empty.pairs, []);
+
+  // Empty pair
+  const trailing = parseAttrPairs('href:a;');
+  assert.equal(trailing.error.code, 'EMPTY_PAIR');
+
+  // Missing colon
+  const noColon = parseAttrPairs('href');
+  assert.equal(noColon.error.code, 'MISSING_COLON');
+  assert.equal(noColon.error.pair, 'href');
+
+  // Empty attr
+  const emptyAttr = parseAttrPairs(':key');
+  assert.equal(emptyAttr.error.code, 'EMPTY_ATTR');
+
+  // Empty key
+  const emptyKey = parseAttrPairs('href:');
+  assert.equal(emptyKey.error.code, 'EMPTY_KEY');
+
+  // Duplicate attr (M3)
+  const dup = parseAttrPairs('href:a; href:b');
+  assert.equal(dup.error.code, 'DUPLICATE_ATTR');
+  assert.match(dup.error.message, /duplicates attribute "href"/);
+});

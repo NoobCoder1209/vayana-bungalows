@@ -577,3 +577,130 @@ test('runs cleanly against the real project tree (smoke)', () => {
     `stdout=${result.stdout}\nstderr=${result.stderr}`,
   );
 });
+
+// ---------------------------------------------------------------------
+// Round-3 lint fixes: H1 (script-open regex tokenises quoted attrs),
+// H3-attr-values (attribute-value masking), H4/H2 (regex close search),
+// M3-propagation (duplicate-attr in multi-pair markers), M4 shared
+// parser.
+// ---------------------------------------------------------------------
+
+test('marker ON <script> opening tag AFTER a quoted ">" is visible to lint (H1)', () => {
+  // The round-2 RE_SCRIPT_OPEN used /<script\b[\s\S]*?>/gi which is
+  // non-greedy and truncated at the first `>` — including one inside
+  // a quoted attribute value. A marker sitting on the open tag AFTER
+  // that quoted `>` was blanked. Round-3 rewrites the regex to
+  // tokenise quoted attribute values.
+  const root = makeFixture(goodDicts, {
+    'index.html': `<script data-cfg="{'x':'>'}" data-i18n="hello">body</script>`,
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0, `stdout=${stdout}`);
+    // Critical: "hello" must count as used, proving the H1 regression
+    // is closed.
+    assert.match(stdout, /1 used/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('marker regex ignores data-i18n= substrings inside another attribute\'s value (H3-attr)', () => {
+  // `<div title="see data-i18n='fake'">` used to trip RE_I18N_TEXT
+  // because maskNonMarkupRegions only blanked script/style/comments.
+  // Round-3 adds an attribute-value masking pass that blanks quoted
+  // values while preserving the marker attribute names themselves.
+  const root = makeFixture(goodDicts, {
+    'index.html': [
+      `<div title="see data-i18n='not.in.dict' here">visible text</div>`,
+      `<p data-i18n="hello">real</p>`,
+    ].join('\n'),
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0, `stdout=${stdout}`);
+    // Only "hello" is counted; the fake inside the title is masked out.
+    assert.match(stdout, /1 used/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('marker on element itself is preserved through attribute-value masking (H3-attr — outer marker visible)', () => {
+  // The attribute-value mask must NOT blank the value of a
+  // data-i18n* marker itself — otherwise every real marker becomes
+  // invisible after the mask pass.
+  const root = makeFixture(goodDicts, {
+    'index.html': [
+      `<a href="/x" data-i18n="hello" title="tooltip">real</a>`,
+      `<div data-i18n-attr="href:bye">x</div>`,
+    ].join('\n'),
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0, `stdout=${stdout}`);
+    // Both markers must be found.
+    assert.match(stdout, /2 used/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('malformed <script> without close tag does NOT blank the entire tail (H4/H2 regression)', () => {
+  // The round-2 fallback `closeIdx < 0 ? source.length : closeIdx`
+  // consumed the entire tail on an unclosed <script>, silently
+  // blanking any real markers after it. Round-3 keeps the fallback
+  // (matching HTML5 parser tolerance) but the RE_SCRIPT_CLOSE regex
+  // now has a proper `(?![\w-])` boundary check so partial matches
+  // like </scriptzz can't fake it into thinking the tag closed.
+  const root = makeFixture(goodDicts, {
+    'index.html': [
+      `<script>const s = '</scriptzz';</script>`,
+      `<p data-i18n="hello">real</p>`,
+    ].join('\n'),
+  });
+  try {
+    const { code, stdout } = runLint(root);
+    assert.equal(code, 0, `stdout=${stdout}`);
+    assert.match(stdout, /1 used/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('duplicate attr in multi-pair marker is rejected by lint (M3 propagation)', () => {
+  // Lint imports parseAttrPairs from the plugin (M4), so the
+  // duplicate-attr rejection surfaces at lint-time too, giving the
+  // developer the same fast-feedback the build would give.
+  const root = makeFixture(goodDicts, {
+    'index.html': `<a data-i18n-attr="href:hello; href:bye">x</a>`,
+  });
+  try {
+    const { code, stderr } = runLint(root);
+    assert.equal(code, 1);
+    assert.match(stderr, /duplicates attribute "href"/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('lint parseAttrPairs consumption matches plugin error shapes (M4/M5)', () => {
+  // Cross-check: same input into both lint and plugin produces the
+  // same core message. Lint prefixes with relPath, plugin prefixes
+  // with `[i18n] pagePath:`. The MIDDLE of both messages is now
+  // identical because both call parseAttrPairs.
+  const root = makeFixture(goodDicts, {
+    'index.html': `<a data-i18n-attr="href:hello;">x</a>`,
+  });
+  try {
+    const { code, stderr } = runLint(root);
+    assert.equal(code, 1);
+    // The plugin's error for this same input would say:
+    //   `[i18n] pagePath: data-i18n-attr="href:hello;" contains an
+    //    empty pair (leading/trailing/duplicate ";"). ...`
+    // Lint should share the "contains an empty pair" wording.
+    assert.match(stderr, /contains an empty pair \(leading\/trailing\/duplicate/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
