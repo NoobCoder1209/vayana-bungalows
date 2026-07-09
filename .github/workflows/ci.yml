@@ -1,0 +1,53 @@
+name: CI
+
+# Runs on every push and PR to catch:
+#   1. i18n regressions — malformed markers, missing keys, dict asymmetry
+#   2. plugin unit-test failures
+#   3. build breakage on either EN or BG output
+#
+# Deliberately independent from deploy.yml (which only runs on push to main
+# and does the pages deploy) so a PR from a fork still gets the full check
+# suite without needing pages-write permissions.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Cancel in-flight CI on the same ref when a newer commit lands — a stale
+  # run is never more useful than a fresh one.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Lint FIRST — dict/marker issues are the cheapest to reproduce
+      # locally and give the clearest error message, so surfacing them
+      # before test/build failures makes the PR feedback loop cleaner.
+      - name: Validate i18n dictionaries + markers
+        run: npm run i18n:lint
+
+      - name: Run unit tests
+        run: npm test
+
+      # Full build both locales so a template that breaks mid-transform
+      # (e.g. a malformed sanitizer input the load-time checks can't catch)
+      # still fails CI rather than shipping later at deploy time.
+      - name: Build site
+        run: npm run build
