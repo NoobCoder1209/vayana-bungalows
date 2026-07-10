@@ -600,6 +600,76 @@ test('applyLocale: pill segments rewritten with is-active + aria-current + hrefl
   assert.match(enSegBg, /href="\/vayana-bungalows\/"/, 'EN segment href swapped to /vayana-bungalows/ on BG pass');
 });
 
+test('applyLocale: pill segments bake data-i18n-attr targeting data-aria-* attrs per emit locale (T166-A)', () => {
+  // End-to-end test for Task #166's new markers: each segment carries a
+  // multi-pair data-i18n-attr pointing at data-aria-current + data-aria-switch.
+  // A regression that stripped data-i18n-attr resolution on segments
+  // (e.g. applyHead's pill rewrite iterating BEFORE transformSubtree
+  // resolves markers) would ship broken aria to production; this test
+  // locks the pipe locale-dict → DOM attribute end-to-end for BOTH emits.
+  const dict = {
+    'lang.en_current': 'English, current language',
+    'lang.bg_current': 'Bulgarian, current language',
+    'lang.switch_en': 'Switch to English',
+    'lang.switch_bg': 'Switch to Bulgarian',
+    'lang.en_current_bg': 'Английски, текущ език',
+    'lang.bg_current_bg': 'Български, текущ език',
+    'lang.switch_en_bg': 'Превключване на английски',
+    'lang.switch_bg_bg': 'Превключване на български',
+  };
+  const src = `<!doctype html><html><head></head><body>
+<div class="site-header__lang">
+  <a class="site-header__lang-seg is-active" href="./" data-lang="en" aria-current="true"
+     data-i18n-attr="data-aria-current:lang.en_current; data-aria-switch:lang.switch_en">EN</a>
+  <a class="site-header__lang-seg" href="bg/" data-lang="bg"
+     data-i18n-attr="data-aria-current:lang.bg_current; data-aria-switch:lang.switch_bg">BG</a>
+</div>
+</body></html>`;
+
+  const enOut = applyLocale(src, headOpts({ locale: 'en', dict }));
+  const enSegEn = enOut.match(/<a\b[^>]*data-lang="en"[^>]*>/i)?.[0] ?? '';
+  const bgSegEn = enOut.match(/<a\b[^>]*data-lang="bg"[^>]*>/i)?.[0] ?? '';
+  assert.match(enSegEn, /data-aria-current="English, current language"/, 'EN pass: EN segment gets English data-aria-current');
+  assert.match(enSegEn, /data-aria-switch="Switch to English"/, 'EN pass: EN segment gets English data-aria-switch');
+  assert.match(bgSegEn, /data-aria-current="Bulgarian, current language"/, 'EN pass: BG segment gets English-authored Bulgarian text');
+  assert.match(bgSegEn, /data-aria-switch="Switch to Bulgarian"/);
+  // data-i18n-attr marker itself is stripped after resolution.
+  assert.doesNotMatch(enOut, /data-i18n-attr=/, 'markers stripped from emit');
+
+  // BG emit uses a translated dict — verify locale-picking works via a
+  // per-locale dict swap. In production the plugin swaps the dict via
+  // contextByLocale; here we simulate by reusing the same test with a
+  // Cyrillic dict re-keyed under the same key names.
+  const bgDict = {
+    'lang.en_current': 'Английски, текущ език',
+    'lang.bg_current': 'Български, текущ език',
+    'lang.switch_en': 'Превключване на английски',
+    'lang.switch_bg': 'Превключване на български',
+  };
+  const bgOut = applyLocale(src, headOpts({ locale: 'bg', dict: bgDict }));
+  const enSegBg = bgOut.match(/<a\b[^>]*data-lang="en"[^>]*>/i)?.[0] ?? '';
+  const bgSegBg = bgOut.match(/<a\b[^>]*data-lang="bg"[^>]*>/i)?.[0] ?? '';
+  assert.match(enSegBg, /data-aria-current="Английски, текущ език"/, 'BG pass: EN segment carries Cyrillic strings');
+  assert.match(enSegBg, /data-aria-switch="Превключване на английски"/);
+  assert.match(bgSegBg, /data-aria-current="Български, текущ език"/, 'BG pass: BG segment carries Cyrillic strings');
+  assert.match(bgSegBg, /data-aria-switch="Превключване на български"/);
+});
+
+test('applyLocale: data-i18n-attr accepts data-* attribute names as targets (T166-B)', () => {
+  // Independent unit test for the target-attr shape: no positive allowlist
+  // for target names, only a denylist for on*/srcdoc/style/target. A future
+  // guard tightening that accidentally caught data-* names would break
+  // production markup — this pins the allowed-through invariant.
+  const dict = { 'k1': 'value-one', 'k2': 'value-two' };
+  const out = applyLocale(
+    '<a data-i18n-attr="data-foo:k1; data-bar-baz:k2">x</a>',
+    opts({ dict }),
+  );
+  assert.match(out, /data-foo="value-one"/, 'data-* target attr resolves');
+  assert.match(out, /data-bar-baz="value-two"/, 'kebab-cased data-* target attr resolves');
+  assert.doesNotMatch(out, /data-i18n-attr=/, 'marker stripped after resolution');
+});
+
 test('applyLocale: hard-fails when .site-header__lang-seg is missing data-lang (R2-L1)', () => {
   // A segment inside .site-header__lang with NO data-lang attribute.
   // The pill invariant is that every segment declares its locale so

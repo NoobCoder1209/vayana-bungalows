@@ -7,6 +7,8 @@
 //
 // Also owns the hamburger drawer (#8): open/close, focus trap, body scroll
 // lock, Esc/backdrop/link/× close paths, focus restoration to the toggle.
+import { isPrimaryClick } from './util/is-primary-click.js';
+
 export function initHeader() {
   const header = document.getElementById('site-header');
   const sentinel = document.getElementById('header-sentinel');
@@ -364,8 +366,7 @@ function initDrawer() {
   // instead of yanking the user's context.
   panel.querySelectorAll('[data-nav-link]').forEach((link) => {
     link.addEventListener('click', (e) => {
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      if (e.button !== undefined && e.button !== 0) return;
+      if (!isPrimaryClick(e)) return;
       close();
     });
   });

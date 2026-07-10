@@ -42,7 +42,12 @@ function shimElement(el, wrapFn) {
       },
     },
     getAttribute(name) {
-      return el.getAttribute(name);
+      // Real DOM's Element.getAttribute returns `null` for missing attrs;
+      // node-html-parser returns `undefined`. Normalize so lang.js's own
+      // future `x !== null` checks (a common idiom) behave the same in
+      // tests as in browsers.
+      const v = el.getAttribute(name);
+      return v === undefined ? null : v;
     },
     setAttribute(name, value) {
       el.setAttribute(name, value);
@@ -86,11 +91,19 @@ function shimElement(el, wrapFn) {
     },
     addEventListener(event, handler) {
       if (!listeners.has(event)) listeners.set(event, []);
-      listeners.get(event).push(handler);
+      const arr = listeners.get(event);
+      // Real DOM's addEventListener de-duplicates identical (event, handler,
+      // options) tuples. Mirror that so a lang.js regression that
+      // registers the same handler twice would fire once — matching the
+      // browser — instead of firing twice and masking the bug.
+      if (arr.indexOf(handler) !== -1) return;
+      arr.push(handler);
     },
     // Test-only: dispatch a click through the registered handlers with a
     // MouseEvent-shaped payload the module reads (metaKey/ctrlKey/shiftKey/
-    // altKey/button + preventDefault).
+    // altKey/button + preventDefault). Handlers see the same event object
+    // and can inspect .defaultPrevented from a prior handler's
+    // preventDefault(); stopImmediatePropagation() halts further handlers.
     _dispatchClick(overrides = {}) {
       const evt = {
         metaKey: false,
@@ -98,14 +111,23 @@ function shimElement(el, wrapFn) {
         shiftKey: false,
         altKey: false,
         button: 0,
-        _defaultPrevented: false,
+        defaultPrevented: false,
+        _defaultPrevented: false, // legacy alias for older tests
+        _propagationStopped: false,
         preventDefault() {
+          this.defaultPrevented = true;
           this._defaultPrevented = true;
+        },
+        stopImmediatePropagation() {
+          this._propagationStopped = true;
         },
         ...overrides,
       };
       const handlers = listeners.get('click') || [];
-      for (const h of handlers) h(evt);
+      for (const h of handlers) {
+        if (evt._propagationStopped) break;
+        h(evt);
+      }
       return evt;
     },
   };
@@ -140,24 +162,36 @@ function makeDom(html) {
 function makeStorage() {
   const store = new Map();
   return {
-    _store: store,
     getItem(k) {
       return store.has(k) ? store.get(k) : null;
     },
     setItem(k, v) {
       store.set(k, String(v));
     },
-    _throwOnSet: false,
   };
 }
+
+// Read the util once so we can inline it into the eval-as-script wrapper.
+const IS_PRIMARY_CLICK_PATH = join(__dirname, '..', 'util', 'is-primary-click.js');
+const IS_PRIMARY_CLICK_SRC = readFileSync(IS_PRIMARY_CLICK_PATH, 'utf8');
 
 // Load lang.js inside a fresh scope with our shim globals bound.
 async function loadInitLang({ document, localStorage, warn }) {
   const console = { warn: warn || (() => {}) };
-  // Strip the `export` keyword so `new Function()` (script parser, not
-  // module parser) can eval the source. The module still exports `initLang`
-  // in a real browser build — we only rewrite for the test harness.
-  const src = LANG_JS_SRC.replace(/\bexport\s+function\b/, 'function');
+  // Rewrite the module source for `new Function()`'s script parser:
+  //   - Strip every `export` keyword form (function, const, default, {…}).
+  //     /g flag matters — a future second export would otherwise survive
+  //     and blow up the parser with an obscure SyntaxError.
+  //   - Replace the `import { isPrimaryClick } from './util/is-primary-click.js'`
+  //     line with the util's source (also stripped of `export`) so
+  //     isPrimaryClick becomes a local in the eval scope.
+  const utilInlined = IS_PRIMARY_CLICK_SRC.replace(/\bexport\s+/g, '');
+  const src = LANG_JS_SRC
+    .replace(
+      /^\s*import\s*\{\s*isPrimaryClick\s*\}\s*from\s*['"][^'"]+['"];?\s*$/m,
+      utilInlined,
+    )
+    .replace(/\bexport\s+/g, '');
   const factory = new Function(
     'document',
     'localStorage',
@@ -171,7 +205,7 @@ async function loadInitLang({ document, localStorage, warn }) {
 // ── Fixtures ──────────────────────────────────────────────────────────────
 
 const HTML_EN_ACTIVE = `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang-pill-expected="1">
 <body>
   <div class="site-header__lang" role="group" aria-label="Language">
     <a href="/vayana-bungalows/" class="site-header__lang-seg is-active"
@@ -189,7 +223,7 @@ const HTML_EN_ACTIVE = `<!DOCTYPE html>
 </html>`;
 
 const HTML_BG_ACTIVE = `<!DOCTYPE html>
-<html lang="bg">
+<html lang="bg" data-lang-pill-expected="1">
 <body>
   <div class="site-header__lang" role="group" aria-label="Език">
     <a href="/vayana-bungalows/" class="site-header__lang-seg"
@@ -206,8 +240,34 @@ const HTML_BG_ACTIVE = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const HTML_NO_PILL = `<!DOCTYPE html>
-<html lang="en"><body><p>no pill here</p></body></html>`;
+const HTML_NO_PILL_EXPECTED = `<!DOCTYPE html>
+<html lang="en" data-lang-pill-expected="1"><body><p>pill missing</p></body></html>`;
+
+const HTML_NO_PILL_LEGIT = `<!DOCTYPE html>
+<html lang="en"><body><p>no pill here (legit sub-page)</p></body></html>`;
+
+const HTML_EMPTY_PILL = `<!DOCTYPE html>
+<html lang="en" data-lang-pill-expected="1">
+<body>
+  <div class="site-header__lang" role="group" aria-label="Language"></div>
+</body>
+</html>`;
+
+const HTML_REDIRECT_IN_FLIGHT = `<!DOCTYPE html>
+<html lang="en" data-lang-pill-expected="1" data-i18n-redirecting="1">
+<body>
+  <div class="site-header__lang" role="group" aria-label="Language">
+    <a href="/vayana-bungalows/" class="site-header__lang-seg is-active"
+       data-lang="en" aria-current="true"
+       data-aria-current="English, current language"
+       data-aria-switch="Switch to English">EN</a>
+    <a href="/vayana-bungalows/bg/" class="site-header__lang-seg"
+       data-lang="bg"
+       data-aria-current="Bulgarian, current language"
+       data-aria-switch="Switch to Bulgarian">BG</a>
+  </div>
+</body>
+</html>`;
 
 // ── Tests ─────────────────────────────────────────────────────────────────
 
@@ -338,8 +398,41 @@ test('lang.js: click on inactive segment survives localStorage exception', async
   );
 });
 
-test('lang.js: missing pill warns and returns without throwing', async () => {
-  const { document } = makeDom(HTML_NO_PILL);
+test('lang.js: missing pill on EXPECTED page warns (data-lang-pill-expected="1")', async () => {
+  const { document } = makeDom(HTML_NO_PILL_EXPECTED);
+  const warnings = [];
+  const initLang = await loadInitLang({
+    document,
+    localStorage: makeStorage(),
+    warn: (msg) => warnings.push(msg),
+  });
+  initLang();
+
+  assert.equal(warnings.length, 1, 'pill-expected page missing pill must warn');
+  assert.match(warnings[0], /data-lang-pill-expected/);
+});
+
+test('lang.js: missing pill on LEGIT no-pill page is silent (no data-lang-pill-expected)', async () => {
+  // Sub-pages that legitimately do not carry the pill (10 of 12 pages in
+  // production) must not spam the console. The plugin stamps
+  // data-lang-pill-expected="1" ONLY on pages whose source had a
+  // .site-header__lang, so absence of the marker is the "silent" signal.
+  const { document } = makeDom(HTML_NO_PILL_LEGIT);
+  const warnings = [];
+  const initLang = await loadInitLang({
+    document,
+    localStorage: makeStorage(),
+    warn: (msg) => warnings.push(msg),
+  });
+  initLang();
+
+  assert.equal(warnings.length, 0, 'legit no-pill page must NOT warn');
+});
+
+test('lang.js: empty pill container (no segments) warns', async () => {
+  // Author edited pill and shipped an empty role="group". HTML valid, no
+  // build/lint gate. Warn so it surfaces in dev.
+  const { document } = makeDom(HTML_EMPTY_PILL);
   const warnings = [];
   const initLang = await loadInitLang({
     document,
@@ -349,7 +442,39 @@ test('lang.js: missing pill warns and returns without throwing', async () => {
   initLang();
 
   assert.equal(warnings.length, 1);
-  assert.match(warnings[0], /site-header__lang/);
+  assert.match(warnings[0], /no .site-header__lang-seg children|no \.site-header__lang-seg children/);
+});
+
+test('lang.js: redirect-in-flight (data-i18n-redirecting="1") skips wiring entirely', async () => {
+  // The boot script sets this sentinel before location.replace(). If lang.js
+  // wires up during flight, a user click can enqueue a second navigation
+  // and toggle vb.lang between two writers. Bail out.
+  const { document } = makeDom(HTML_REDIRECT_IN_FLIGHT);
+  const storage = makeStorage();
+  const initLang = await loadInitLang({ document, localStorage: storage });
+  initLang();
+
+  // No aria-label wiring, no click handler registration, no idempotency
+  // sentinel stamped (so when the redirect resolves and the destination
+  // page runs its own initLang, it wires normally).
+  const bgSeg = document
+    .querySelector('.site-header__lang')
+    .querySelectorAll('.site-header__lang-seg')[1];
+  assert.equal(
+    bgSeg.getAttribute('aria-label'),
+    null,
+    'redirect-in-flight page must not wire aria-labels',
+  );
+  assert.equal(
+    document.documentElement.getAttribute('data-lang-init'),
+    null,
+    'redirect-in-flight page must not stamp langInit sentinel',
+  );
+
+  // Click during flight must not persist — no handler was registered.
+  const evt = bgSeg._dispatchClick();
+  assert.equal(storage.getItem('vb.lang'), null);
+  assert.equal(evt._defaultPrevented, false);
 });
 
 test('lang.js: idempotency — second init call is a no-op (dataset.langInit guard)', async () => {
@@ -366,18 +491,36 @@ test('lang.js: idempotency — second init call is a no-op (dataset.langInit gua
 
   assert.equal(storage.getItem('vb.lang'), 'bg', 'still writes once');
 
-  // Guard sentinel is set.
+  // Guard sentinel is set (stamped AFTER successful wiring, not before).
   assert.equal(
     document.documentElement.getAttribute('data-lang-init'),
     '1',
-    'dataset.langInit sentinel must be stamped',
+    'dataset.langInit sentinel must be stamped AFTER successful wiring',
+  );
+});
+
+test('lang.js: sentinel is NOT stamped on early-return paths (missing/empty pill)', async () => {
+  // A future re-init (HMR, dynamic mount) after a page injects the pill
+  // late must be able to retry. Stamping the guard on the missing-pill
+  // path would poison that retry.
+  const { document } = makeDom(HTML_EMPTY_PILL);
+  const initLang = await loadInitLang({
+    document,
+    localStorage: makeStorage(),
+    warn: () => {}, // swallow the expected warn
+  });
+  initLang();
+  assert.equal(
+    document.documentElement.getAttribute('data-lang-init'),
+    null,
+    'early-return path must not stamp langInit — leaves room for a valid re-init',
   );
 });
 
 test('lang.js: aria-label fallback — missing data-aria-* leaves existing aria-label alone', async () => {
   // Simulates a partial rollout: a segment somehow lost its data-aria-current
   // marker. We should NOT clobber the existing aria-label with `undefined`.
-  const html = `<!DOCTYPE html><html lang="en"><body>
+  const html = `<!DOCTYPE html><html lang="en" data-lang-pill-expected="1"><body>
     <div class="site-header__lang">
       <a class="site-header__lang-seg is-active" data-lang="en" aria-current="true"
          aria-label="pre-existing">EN</a>
@@ -395,5 +538,80 @@ test('lang.js: aria-label fallback — missing data-aria-* leaves existing aria-
     enSeg.getAttribute('aria-label'),
     'pre-existing',
     'missing data-aria-current must not clobber existing aria-label with undefined',
+  );
+});
+
+// ── BG-page click-flow coverage (finding: asymmetric coverage) ────────────
+
+test('lang.js: click on inactive EN segment from BG-active page persists "en"', async () => {
+  const { document } = makeDom(HTML_BG_ACTIVE);
+  const storage = makeStorage();
+  const initLang = await loadInitLang({ document, localStorage: storage });
+  initLang();
+
+  const enSeg = document
+    .querySelector('.site-header__lang')
+    .querySelectorAll('.site-header__lang-seg')[0];
+  const evt = enSeg._dispatchClick();
+
+  assert.equal(evt._defaultPrevented, false, 'inactive click must let default nav proceed');
+  assert.equal(storage.getItem('vb.lang'), 'en', 'BG page → EN click persists en');
+});
+
+test('lang.js: click on active BG segment from BG-active page is a no-op', async () => {
+  const { document } = makeDom(HTML_BG_ACTIVE);
+  const storage = makeStorage();
+  const initLang = await loadInitLang({ document, localStorage: storage });
+  initLang();
+
+  const bgSeg = document
+    .querySelector('.site-header__lang')
+    .querySelectorAll('.site-header__lang-seg')[1];
+  const evt = bgSeg._dispatchClick();
+
+  assert.equal(evt._defaultPrevented, true, 'active click must preventDefault');
+  assert.equal(storage.getItem('vb.lang'), null, 'active click must not persist');
+});
+
+test('lang.js: cmd-click on ACTIVE segment is a no-op (does NOT open duplicate tab)', async () => {
+  // Fix: modifier bail now runs AFTER the active-check, so cmd-click on
+  // the current-page pill segment preventDefaults instead of opening a
+  // duplicate tab of the same page.
+  const { document } = makeDom(HTML_EN_ACTIVE);
+  const initLang = await loadInitLang({ document, localStorage: makeStorage() });
+  initLang();
+
+  const enSeg = document
+    .querySelector('.site-header__lang')
+    .querySelectorAll('.site-header__lang-seg')[0];
+  const evt = enSeg._dispatchClick({ metaKey: true });
+  assert.equal(evt._defaultPrevented, true, 'cmd-click on active must not open duplicate tab');
+});
+
+test('lang.js: unknown data-lang value does NOT persist (segment-derived allowlist)', async () => {
+  // If a segment has a data-lang value we don't recognize (typo, injected
+  // markup), skip the storage write. Derives the allowlist from the
+  // segments themselves so a legit third locale (de.json + <a data-lang="de">)
+  // just works.
+  const html = `<!DOCTYPE html><html lang="en" data-lang-pill-expected="1"><body>
+    <div class="site-header__lang">
+      <a class="site-header__lang-seg is-active" data-lang="en" aria-current="true">EN</a>
+      <a class="site-header__lang-seg" data-lang="xx">XX</a>
+    </div>
+  </body></html>`;
+  const { document } = makeDom(html);
+  const storage = makeStorage();
+  const initLang = await loadInitLang({ document, localStorage: storage });
+  initLang();
+
+  const xxSeg = document
+    .querySelector('.site-header__lang')
+    .querySelectorAll('.site-header__lang-seg')[1];
+  xxSeg._dispatchClick();
+
+  assert.equal(
+    storage.getItem('vb.lang'),
+    'xx',
+    'segment-derived allowlist includes xx because it appears as a segment data-lang',
   );
 });
