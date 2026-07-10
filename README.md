@@ -151,9 +151,19 @@ parsed) and:
    so `lang.js` can distinguish "redirect in flight" from "committed
    navigation" (and clear the flag on successful boot).
 
-The map is emitted as `data-lang-urls='{"en":"/…","bg":"/…"}'` so
-adding a locale needs no code change in the boot script — the loader
-walks the map dynamically.
+The map is emitted as an HTML attribute — the JSON keys are HTML-entity
+escaped by the plugin's `escapeHtmlAttr` (so `"` becomes `&quot;`), and
+the JSON object's key order comes from `JSON.stringify` iterating the
+plugin's `langUrls` object (which happens to be insertion-ordered by
+locale-discovery, currently bg before en, but the runtime parses the
+JSON so key order doesn't matter). A representative emit looks like:
+
+```html
+<script data-locale="en" data-lang-urls="{&quot;bg&quot;:&quot;/vayana-bungalows/bg/&quot;,&quot;en&quot;:&quot;/vayana-bungalows/&quot;}">…</script>
+```
+
+Adding a new locale needs no code change in the boot script — the
+loader walks the map dynamically.
 
 ### Locale-aware integrations
 
@@ -173,25 +183,41 @@ walks the map dynamically.
 
 ### Testing
 
-The whole i18n pipeline is guarded by 228 tests:
+The whole i18n pipeline is guarded by a suite of node:test files.
+Run `npm test` to see the current count and per-test result.
+`i18n:lint` is a separate check — run `npm run i18n:lint` to verify
+every `data-i18n*` marker in HTML has a matching key in every locale
+dictionary, and every non-`_note` dict key is referenced by at least
+one marker.
+
+i18n-specific test files under the enumerated dirs:
 
 - **`scripts/__tests__/i18n-plugin.test.mjs`** — plugin unit tests.
   Every marker shape, every error path, atomicity, dev/build modes.
 - **`scripts/__tests__/i18n-lint.test.mjs`** — lint tool self-tests.
 - **`scripts/__tests__/i18n-smoke.test.mjs`** — end-to-end smoke.
-  Runs `npm run build`, walks every emitted page (12 EN + 12 BG), and
-  asserts: every page has a matching mirror, `<html lang>` matches
-  emit, boot-redirect script present with correct `data-lang-urls`,
-  hreflang alternates present, pill-expected marker on home only, NO
-  forbidden markers leaked to production, Cyrillic present on BG
-  emit, canonical / og:url / twitter:url point at emit-locale.
+  Runs `npm run build` when `dist/` is stale, walks every emitted
+  page (12 EN + 12 BG), and asserts: every page has a matching
+  mirror, `<html lang>` matches emit, boot-redirect script present
+  with correct `data-lang-urls`, hreflang alternates present,
+  pill-expected marker on home only, NO forbidden markers leaked
+  to production (DOM walk), Cyrillic present on BG emit, EN <head>
+  contains none, canonical / og:url / twitter:url point at
+  emit-locale via exact `endsWith` match, pill hrefs symmetric on
+  both emit sides. Set `SKIP_SMOKE_BUILD=1` to skip the rebuild
+  branch (useful when a `vite build --watch` is already running).
 - **`assets/js/__tests__/lang.test.mjs`** — runtime pill wiring.
 - **`assets/js/__tests__/current-locale.test.mjs`** — locale helper.
-- **`worker/__tests__/locale.test.mjs`** — Worker locale field
-  validation + redirect prefix.
+- **`assets/js/__tests__/is-primary-click.test.mjs`** — shared
+  modifier-click gating util (used by both lang.js and header.js).
+- **`assets/js/__tests__/header.test.mjs`** — integration check
+  that header.js consumes the shared `isPrimaryClick` util.
+- **`worker/__tests__/locale.test.mjs`** — Worker `locale` field
+  validation + `/bg/` prefix on the no-JS redirect.
 
-Run `npm test` for the full suite (~3 seconds, includes a fresh
-`vite build` when `dist/` is stale relative to source).
+Runtime varies — a warm cache with a fresh `dist/` runs in a few
+seconds; a cold rebuild adds roughly the cost of `npm run build`
+(sub-second on this codebase, but scales with content).
 
 ### Adding a new locale
 
@@ -202,12 +228,24 @@ To add a third locale (say Serbian, `sr`):
 2. In `vite.config.js`, add the new locale to the plugin's
    `contextByLocale` map with any per-locale context values
    (site name variants, etc).
-3. In `index.html`, add a third `<a class="site-header__lang-seg"
-   data-lang="sr" data-i18n-attr="data-aria-current:common.header.lang_sr_current_aria;
-   data-aria-switch:common.header.lang_switch_to_sr_aria">SR</a>`
-   segment to the pill, and add the four
-   `common.header.lang_sr_current_aria`, `..._switch_to_sr_aria` keys
-   to `en.json` / `bg.json` / `sr.json`.
+3. In `index.html`, add a third pill segment. Each segment references
+   THREE dict keys per locale (visible label + two aria strings):
+   ```html
+   <a class="site-header__lang-seg"
+      data-lang="sr"
+      data-i18n="common.header.lang_sr_label"
+      data-i18n-attr="data-aria-current:common.header.lang_sr_current_aria;
+                      data-aria-switch:common.header.lang_switch_to_sr_aria">SR</a>
+   ```
+   Then add THREE keys to `en.json` / `bg.json` / `sr.json`:
+   - `common.header.lang_sr_label` — the two-letter code shown on the
+     segment (typically the locale code itself, e.g. `"SR"`).
+   - `common.header.lang_sr_current_aria` — aria-label when the SR
+     segment is the currently-active one ("Serbian, current language").
+   - `common.header.lang_switch_to_sr_aria` — aria-label when the SR
+     segment is inactive on another locale's page ("Switch to Serbian").
+   The plugin's key-parity check fails the build if any of the three
+   keys is missing from any of the three dicts.
 4. In `assets/js/booking.js` and `assets/js/enquiry.js`, import
    `flatpickr/dist/l10n/sr.js` and add it to the `FLATPICKR_LOCALES`
    map. If flatpickr doesn't ship the locale, users get English
@@ -217,9 +255,14 @@ To add a third locale (say Serbian, `sr`):
 7. In `worker/src/lib/response.js`, add `sr` to `KNOWN_LOCALES`.
 8. In `worker/src/index.js`, add `sr` to the `KNOWN_LOCALES` used by
    `sniffLocale()`.
-9. Extend the Google Sheet's header row: the `Locale` column will
-   now receive `sr` values (no schema change needed for the sheet —
-   the column already exists).
+9. In `scripts/__tests__/i18n-smoke.test.mjs`, update the Cyrillic
+   regex if Serbian text falls outside `[Ѐ-ӿ]` on your pages, and
+   review the "≥12 EN pages" assertion (still passes for a 3-locale
+   site since the count is a lower bound).
+10. Extend the Google Sheet: no schema change needed for the header
+    (the `Locale` column already exists from Task #167), but existing
+    rows will have `en` or `bg` values only — filter accordingly in
+    any pivot tables that split by locale.
 
 The boot-redirect script, hreflang emit, and pill runtime all
 discover the locale automatically from the `data-lang-urls` map /
