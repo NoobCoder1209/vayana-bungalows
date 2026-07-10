@@ -500,14 +500,23 @@ test('applyLocale: hreflang emit is idempotent — re-transform strips prior blo
   assert.equal(opens, 1);
 });
 
-test('applyLocale: boot-redirect script has correct data attrs', () => {
+test('applyLocale: boot-redirect script has correct data attrs (data-lang-urls JSON map)', () => {
   const out = applyLocale(
     '<!doctype html><html><head></head><body></body></html>',
     headOpts({ locale: 'bg', dict: {}, pagePath: 'enquiries/index.html' }),
   );
   assert.match(out, /<script data-locale="bg"/);
-  assert.match(out, /data-en-url="\/vayana-bungalows\/enquiries\/"/);
-  assert.match(out, /data-bg-url="\/vayana-bungalows\/bg\/enquiries\/"/);
+  // Boot script carries all locale URLs as a JSON map (data-driven so a
+  // future 3rd locale needs no code change to the BOOT_BODY reader).
+  // The attribute value is HTML-attribute-escaped; extract and parse.
+  const m = out.match(/data-lang-urls="([^"]+)"/);
+  assert.ok(m, 'data-lang-urls attribute must be present on the boot script');
+  // escapeHtmlAttr converts " → &quot;, & → &amp; — decode the two the
+  // JSON map can contain in normal use.
+  const rawJson = m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  const langUrls = JSON.parse(rawJson);
+  assert.equal(langUrls.en, '/vayana-bungalows/enquiries/', 'EN URL is default-locale path');
+  assert.equal(langUrls.bg, '/vayana-bungalows/bg/enquiries/', 'BG URL is /bg/ mirror path');
 });
 
 test('applyLocale: boot-redirect script sets sentinel + no decodeURIComponent', () => {
@@ -668,6 +677,26 @@ test('applyLocale: data-i18n-attr accepts data-* attribute names as targets (T16
   assert.match(out, /data-foo="value-one"/, 'data-* target attr resolves');
   assert.match(out, /data-bar-baz="value-two"/, 'kebab-cased data-* target attr resolves');
   assert.doesNotMatch(out, /data-i18n-attr=/, 'marker stripped after resolution');
+});
+
+test('applyLocale: data-i18n-attr STILL rejects denylisted target attributes (T166-B negative)', () => {
+  // Round-2 F10: T166-B pins the ALLOW path but the denylist itself was
+  // untested. Add explicit negative assertions for each denylisted target
+  // so a refactor that dropped the denylist would break at least ONE
+  // assertion. Without these, a template with data-i18n-attr="onclick:key"
+  // could ship an XSS-shaped onclick attribute baked from dict content.
+  const dict = { 'k': 'boom' };
+  for (const forbiddenAttr of ['onclick', 'onload', 'onerror', 'srcdoc', 'style', 'target']) {
+    assert.throws(
+      () =>
+        applyLocale(
+          `<a data-i18n-attr="${forbiddenAttr}:k">x</a>`,
+          opts({ dict }),
+        ),
+      /forbidden|denied|disallow|event.handler/i,
+      `denylist must reject "${forbiddenAttr}" as a target attribute`,
+    );
+  }
 });
 
 test('applyLocale: hard-fails when .site-header__lang-seg is missing data-lang (R2-L1)', () => {

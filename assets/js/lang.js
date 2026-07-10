@@ -10,16 +10,19 @@
 //      inactive segment persists localStorage['vb.lang'] then lets the browser
 //      follow the href to the mirror page. The boot-redirect script (emitted
 //      by the plugin) reads that same key on future visits to auto-jump.
-//   3. Warning when the pill is EXPECTED but missing on this page. The plugin
-//      stamps <html data-lang-pill-expected="1"> only when the source has a
-//      .site-header__lang, so we can distinguish "real regression on a page
-//      that should have a pill" from "legit no-pill page that just doesn't
-//      have one" (currently only the home page has the pill).
+//   3. Warning ONCE when the pill is EXPECTED but missing on this page. The
+//      plugin stamps <html data-lang-pill-expected="1"> only when the source
+//      has a .site-header__lang, so we can distinguish "real regression on a
+//      page that should have a pill" from "legit no-pill page". Warns are
+//      suppressed after the first invocation so React-strict-mode / HMR /
+//      dynamic-mount retries don't flood the console.
 //   4. Bailing when the boot-redirect is still in flight — the plugin sets
-//      <html data-i18n-redirecting="1"> before location.replace(). Between
-//      that write and the navigation actually committing, DOMContentLoaded
-//      can fire; if the user click lands during that window we would stack
-//      a second navigation. Skip wiring so the browser finishes the redirect.
+//      <html data-i18n-redirecting="1"> before location.replace(). We CLEAR
+//      the sentinel on entry: if the boot script stamped it but the redirect
+//      failed silently (offline, CSP nav block, popup interference, user
+//      hit Stop), we would otherwise be stuck with a dead pill forever. By
+//      the time this module runs (DOMContentLoaded), the destination page
+//      has committed and lang.js on THIS page owns the flag.
 //
 // What this module does NOT own:
 //   - Client-side dictionary swaps. This is a build-time i18n stack: EN lives
@@ -34,6 +37,28 @@ import { isPrimaryClick } from './util/is-primary-click.js';
 const STORAGE_KEY = 'vb.lang';
 const PILL_SELECTOR = '.site-header__lang';
 const SEG_SELECTOR = '.site-header__lang-seg';
+const REDIRECT_FLAG = 'data-i18n-redirecting';
+const PILL_EXPECTED_FLAG = 'data-lang-pill-expected';
+const INIT_FLAG = 'data-lang-init';
+
+// One-shot warn dedup keyed on the specific message string. Suppresses noisy
+// re-warn on React-strict-mode double invocation, HMR retries, and dynamic
+// mounts — the sentinel-not-stamped-on-early-return design (Round 1 F3)
+// intentionally lets initLang() retry, but the operator only needs to see
+// the diagnostic once per session.
+const warnedOnce = new Set();
+function warnOnce(msg) {
+  if (warnedOnce.has(msg)) return;
+  warnedOnce.add(msg);
+  if (console && console.warn) console.warn(msg);
+}
+
+// Test-only reset — the runtime module exposes this so unit tests can
+// exercise repeat-warn behavior without cross-contaminating between cases.
+// No production code path calls it.
+export function __resetWarnOnceForTests() {
+  warnedOnce.clear();
+}
 
 export function initLang() {
   const html = document.documentElement;
@@ -41,13 +66,32 @@ export function initLang() {
   // Idempotency — future HMR / re-init must not stack listeners. Guard is
   // stamped LATE (after successful wiring) so an early-return path can be
   // retried by a legitimate re-init. Stamping early would poison the guard.
-  if (html.dataset.langInit === '1') return;
+  if (html.getAttribute(INIT_FLAG) === '1') return;
 
-  // Bail if the boot-redirect is still in flight. The plugin's inline script
-  // sets this before location.replace(); wiring click handlers now would let
-  // a user tap-during-flight enqueue a second navigation and toggle the
-  // stored preference between the boot's write and ours.
-  if (html.getAttribute('data-i18n-redirecting') === '1') return;
+  // Redirect-in-flight guard.
+  //
+  // The plugin's inline boot script sets data-i18n-redirecting="1" before
+  // location.replace(). If lang.js runs before the browser has committed
+  // the redirect, wiring click handlers would let a tap-during-flight
+  // enqueue a second navigation. But we ALSO have to guard against a
+  // stuck-in-flight state — location.replace() can fail silently (offline
+  // + no cache, CSP navigation block, user hits Stop, popup-blocker
+  // interference). If we bailed on every subsequent init we'd ship a dead
+  // pill on those pages forever.
+  //
+  // Trade-off: we CLEAR the flag on entry. If the redirect succeeded,
+  // this module is running on the DESTINATION page (its own <html> has
+  // the flag only because the source-page HTML was cached and served
+  // stale — vanishingly rare). If the redirect failed, this module is
+  // running on the SOURCE page and clearing the flag restores the pill.
+  // In both cases, clearing is correct: the boot script only reads the
+  // flag through document.currentScript context which no longer exists
+  // by the time we run.
+  if (html.getAttribute(REDIRECT_FLAG) === '1') {
+    html.removeAttribute(REDIRECT_FLAG);
+    // Continue with wiring — the redirect is either resolved (destination
+    // page) or dead (source page with a failed replace()).
+  }
 
   const pill = document.querySelector(PILL_SELECTOR);
   if (!pill) {
@@ -56,8 +100,8 @@ export function initLang() {
     // said the pill should be here — a legit no-pill page (currently every
     // sub-page except home) must stay silent to avoid drowning the signal
     // in noise.
-    if (html.getAttribute('data-lang-pill-expected') === '1' && console && console.warn) {
-      console.warn('[lang] data-lang-pill-expected="1" but .site-header__lang not found.');
+    if (html.getAttribute(PILL_EXPECTED_FLAG) === '1') {
+      warnOnce('[lang] data-lang-pill-expected="1" but .site-header__lang not found.');
     }
     return;
   }
@@ -65,11 +109,9 @@ export function initLang() {
   const segments = pill.querySelectorAll(SEG_SELECTOR);
   if (segments.length === 0) {
     // Same class of regression as a missing pill container — an author
-    // edited the pill markup and shipped an empty role="group". Warn so
-    // the dev sees it; HTML validity alone won't catch this.
-    if (console && console.warn) {
-      console.warn('[lang] .site-header__lang has no .site-header__lang-seg children.');
-    }
+    // edited the pill markup and shipped an empty role="group". Warn once
+    // per session so the dev sees it in HMR/strict-mode too.
+    warnOnce('[lang] .site-header__lang has no .site-header__lang-seg children.');
     return;
   }
 
@@ -132,7 +174,7 @@ export function initLang() {
 
   // Stamp the guard AFTER successful wiring so a call that early-returned
   // can be retried by a re-init (HMR, dynamic mount) without silent no-op.
-  html.dataset.langInit = '1';
+  html.setAttribute(INIT_FLAG, '1');
 }
 
 // A segment is active if EITHER signal says so. Two-source-of-truth is

@@ -52,6 +52,9 @@ function shimElement(el, wrapFn) {
     setAttribute(name, value) {
       el.setAttribute(name, value);
     },
+    removeAttribute(name) {
+      el.removeAttribute(name);
+    },
     querySelector(sel) {
       const found = el.querySelector(sel);
       return found ? (wrapFn ? wrapFn(found) : shimElement(found)) : null;
@@ -111,8 +114,8 @@ function shimElement(el, wrapFn) {
         shiftKey: false,
         altKey: false,
         button: 0,
-        defaultPrevented: false,
-        _defaultPrevented: false, // legacy alias for older tests
+        defaultPrevented: false,      // spec-name; new tests may read this
+        _defaultPrevented: false,     // primary field every existing test reads
         _propagationStopped: false,
         preventDefault() {
           this.defaultPrevented = true;
@@ -182,24 +185,39 @@ async function loadInitLang({ document, localStorage, warn }) {
   //   - Strip every `export` keyword form (function, const, default, {…}).
   //     /g flag matters — a future second export would otherwise survive
   //     and blow up the parser with an obscure SyntaxError.
-  //   - Replace the `import { isPrimaryClick } from './util/is-primary-click.js'`
-  //     line with the util's source (also stripped of `export`) so
-  //     isPrimaryClick becomes a local in the eval scope.
+  //   - Strip every top-level ESM `import ... from '...';` line and inject
+  //     the util's source at the top so its exports are locals in the
+  //     eval scope. This is intentionally NAME-AGNOSTIC (Round-2 finding
+  //     #12): the prior single-name regex would silently fail to match
+  //     if lang.js added a second named import, re-introducing the exact
+  //     SyntaxError trap this harness was written to prevent.
   const utilInlined = IS_PRIMARY_CLICK_SRC.replace(/\bexport\s+/g, '');
-  const src = LANG_JS_SRC
-    .replace(
-      /^\s*import\s*\{\s*isPrimaryClick\s*\}\s*from\s*['"][^'"]+['"];?\s*$/m,
-      utilInlined,
-    )
+  const stripped = LANG_JS_SRC
+    // Strip ANY top-level `import ... from '...';` line, regardless of
+    // named/default/namespace/renamed forms. Matches only single-line
+    // imports (multi-line imports would need dotall + non-greedy which
+    // we avoid; if lang.js ever grows a multi-line import, add it here).
+    .replace(/^\s*import[\s\S]*?from\s*['"][^'"]+['"];?\s*$/gm, '')
     .replace(/\bexport\s+/g, '');
+  // Inject the util's stripped source at the top so its exports (functions,
+  // consts) are in-scope for the rest of the module body.
+  const src = `${utilInlined}\n${stripped}`;
   const factory = new Function(
     'document',
     'localStorage',
     'console',
     `${src}
-     return initLang;`,
+     return { initLang: initLang, __resetWarnOnceForTests: typeof __resetWarnOnceForTests === 'function' ? __resetWarnOnceForTests : () => {} };`,
   );
-  return factory(document, localStorage, console);
+  const api = factory(document, localStorage, console);
+  // Reset the module-scope one-shot warn dedup between tests so a warn
+  // fired in a prior test doesn't suppress the warn assertion of a later
+  // test. In production the module is instantiated once per page; tests
+  // instantiate a fresh factory per case but the closure state within a
+  // single case can still leak across initLang() calls, which is what
+  // some tests deliberately exercise.
+  api.__resetWarnOnceForTests();
+  return api.initLang;
 }
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
@@ -442,44 +460,68 @@ test('lang.js: empty pill container (no segments) warns', async () => {
   initLang();
 
   assert.equal(warnings.length, 1);
-  assert.match(warnings[0], /no .site-header__lang-seg children|no \.site-header__lang-seg children/);
+  assert.match(warnings[0], /no \.site-header__lang-seg children/);
 });
 
-test('lang.js: redirect-in-flight (data-i18n-redirecting="1") skips wiring entirely', async () => {
-  // The boot script sets this sentinel before location.replace(). If lang.js
-  // wires up during flight, a user click can enqueue a second navigation
-  // and toggle vb.lang between two writers. Bail out.
+test('lang.js: redirect-in-flight — clears the flag and PROCEEDS with wiring (Round-2 F1 recovery semantics)', async () => {
+  // Round-2 F1 changed the semantics: the prior version BAILED when
+  // data-i18n-redirecting was set, which meant a stuck-in-flight state
+  // (location.replace() failed silently) would leave the pill permanently
+  // dead. The new behavior clears the flag on entry so the page is
+  // recoverable. By the time DOMContentLoaded → initLang runs, either:
+  //   (a) The redirect succeeded — this module is on the destination page.
+  //   (b) The redirect failed — this module is on the source page and
+  //       clearing the flag restores click handling.
+  // Either way, clearing + wiring is correct; bailing would strand case (b).
   const { document } = makeDom(HTML_REDIRECT_IN_FLIGHT);
   const storage = makeStorage();
   const initLang = await loadInitLang({ document, localStorage: storage });
   initLang();
 
-  // No aria-label wiring, no click handler registration, no idempotency
-  // sentinel stamped (so when the redirect resolves and the destination
-  // page runs its own initLang, it wires normally).
+  // Flag is cleared.
+  assert.equal(
+    document.documentElement.getAttribute('data-i18n-redirecting'),
+    null,
+    'redirect flag must be cleared on init',
+  );
+
+  // Aria-labels wired (this fixture is EN-active).
   const bgSeg = document
     .querySelector('.site-header__lang')
     .querySelectorAll('.site-header__lang-seg')[1];
   assert.equal(
     bgSeg.getAttribute('aria-label'),
-    null,
-    'redirect-in-flight page must not wire aria-labels',
+    'Switch to Bulgarian',
+    'aria-label must be wired after flag clear',
   );
+
+  // Click persists correctly.
+  const evt = bgSeg._dispatchClick();
+  assert.equal(storage.getItem('vb.lang'), 'bg', 'click must persist after flag clear');
+  assert.equal(evt._defaultPrevented, false, 'inactive click must let default nav run');
+
+  // Sentinel stamped (successful wire).
   assert.equal(
     document.documentElement.getAttribute('data-lang-init'),
-    null,
-    'redirect-in-flight page must not stamp langInit sentinel',
+    '1',
+    'successful wire on flag-cleared path must stamp langInit',
   );
-
-  // Click during flight must not persist — no handler was registered.
-  const evt = bgSeg._dispatchClick();
-  assert.equal(storage.getItem('vb.lang'), null);
-  assert.equal(evt._defaultPrevented, false);
 });
 
-test('lang.js: idempotency — second init call is a no-op (dataset.langInit guard)', async () => {
+test('lang.js: idempotency — second init call does NOT stack click handlers (setItem call-count)', async () => {
+  // Round-2 F7: the prior version of this test only asserted the final
+  // storage value, which is invariant under N>=1 identical writes. Now
+  // we count setItem calls: exactly ONE write per click, even after two
+  // initLang() invocations. If a regression removed the dataset.langInit
+  // guard, each initLang() would register another handler, and the
+  // dispatch would fire N handlers and produce N writes.
   const { document } = makeDom(HTML_EN_ACTIVE);
-  const storage = makeStorage();
+  let writeCount = 0;
+  const storage = {
+    _store: new Map(),
+    getItem(k) { return this._store.has(k) ? this._store.get(k) : null; },
+    setItem(k, v) { writeCount += 1; this._store.set(k, String(v)); },
+  };
   const initLang = await loadInitLang({ document, localStorage: storage });
   initLang();
   initLang(); // second call must not stack handlers
@@ -489,7 +531,8 @@ test('lang.js: idempotency — second init call is a no-op (dataset.langInit gua
     .querySelectorAll('.site-header__lang-seg')[1];
   bgSeg._dispatchClick();
 
-  assert.equal(storage.getItem('vb.lang'), 'bg', 'still writes once');
+  assert.equal(writeCount, 1, 'exactly one setItem write per click — stacked handlers would fire N times');
+  assert.equal(storage.getItem('vb.lang'), 'bg');
 
   // Guard sentinel is set (stamped AFTER successful wiring, not before).
   assert.equal(
@@ -499,22 +542,118 @@ test('lang.js: idempotency — second init call is a no-op (dataset.langInit gua
   );
 });
 
-test('lang.js: sentinel is NOT stamped on early-return paths (missing/empty pill)', async () => {
-  // A future re-init (HMR, dynamic mount) after a page injects the pill
-  // late must be able to retry. Stamping the guard on the missing-pill
-  // path would poison that retry.
-  const { document } = makeDom(HTML_EMPTY_PILL);
+// Round-2 F8: parameterise over ALL early-return fixtures so a regression
+// that stamps the sentinel on one branch is caught. The prior test loaded
+// only HTML_EMPTY_PILL, silently missing regressions on the missing-pill
+// branch. Redirect-in-flight is NOT in this list because Round-2 F1
+// changed its semantics: initLang now clears the flag and PROCEEDS with
+// wiring (see the dedicated redirect-in-flight test above).
+for (const [label, html] of [
+  ['missing-pill (expected)', HTML_NO_PILL_EXPECTED],
+  ['empty-pill container', HTML_EMPTY_PILL],
+]) {
+  test(`lang.js: sentinel is NOT stamped on early-return path — ${label}`, async () => {
+    // A future re-init (HMR, dynamic mount) after a page injects the pill
+    // late must be able to retry. Stamping the guard on any early-return
+    // branch would poison that retry.
+    const { document } = makeDom(html);
+    const initLang = await loadInitLang({
+      document,
+      localStorage: makeStorage(),
+      warn: () => {}, // swallow the expected warn
+    });
+    initLang();
+    assert.equal(
+      document.documentElement.getAttribute('data-lang-init'),
+      null,
+      `early-return path (${label}) must not stamp langInit`,
+    );
+  });
+}
+
+// Round-2 F9: prove the retry-after-early-return contract actually works.
+// The sentinel-not-stamped assertion above is necessary but insufficient
+// — it doesn't verify that a SECOND initLang() call, after the pill
+// becomes present, actually wires it. A future refactor that stored an
+// "attempted" flag or cached a query result would break the advertised
+// HMR behavior; only this test would catch it.
+test('lang.js: initLang retries successfully after an early-return once the pill is injected', async () => {
+  // Start with an empty-pill fixture — first call bails, sentinel stays unset.
+  const { document, root } = makeDom(HTML_EMPTY_PILL);
+  const storage = makeStorage();
   const initLang = await loadInitLang({
     document,
-    localStorage: makeStorage(),
-    warn: () => {}, // swallow the expected warn
+    localStorage: storage,
+    warn: () => {},
   });
   initLang();
   assert.equal(
     document.documentElement.getAttribute('data-lang-init'),
     null,
-    'early-return path must not stamp langInit — leaves room for a valid re-init',
+    'first call bails and does NOT stamp sentinel',
   );
+
+  // Now inject the segments into the pill container — simulates a
+  // late/dynamic mount. Then re-invoke initLang() — must wire correctly.
+  const pillRaw = root.querySelector('.site-header__lang');
+  pillRaw.set_content(`
+    <a href="/" class="site-header__lang-seg is-active" data-lang="en" aria-current="true"
+       data-aria-current="English, current language" data-aria-switch="Switch to English">EN</a>
+    <a href="/bg/" class="site-header__lang-seg" data-lang="bg"
+       data-aria-current="Bulgarian, current language" data-aria-switch="Switch to Bulgarian">BG</a>
+  `);
+  initLang();
+
+  // Second call succeeded: sentinel stamped, aria-labels applied.
+  assert.equal(
+    document.documentElement.getAttribute('data-lang-init'),
+    '1',
+    'retry after pill injection must succeed and stamp the sentinel',
+  );
+  const bgSeg = document
+    .querySelector('.site-header__lang')
+    .querySelectorAll('.site-header__lang-seg')[1];
+  assert.equal(bgSeg.getAttribute('aria-label'), 'Switch to Bulgarian');
+  // Click handler wired — verify by dispatching.
+  bgSeg._dispatchClick();
+  assert.equal(storage.getItem('vb.lang'), 'bg', 'click handler was wired on retry');
+});
+
+test('lang.js: redirect-in-flight sentinel is CLEARED on init (recovery from stuck-in-flight state)', async () => {
+  // Round-2 F1: the boot script sets data-i18n-redirecting=1 before
+  // location.replace(). If the redirect fails silently (offline, CSP nav
+  // block, popup interference, user hits Stop), the flag stays set. The
+  // fix clears the flag on initLang entry so a future call can wire
+  // normally. Without the clear, the pill would be permanently dead.
+  const { document } = makeDom(HTML_REDIRECT_IN_FLIGHT);
+  const initLang = await loadInitLang({
+    document,
+    localStorage: makeStorage(),
+  });
+  initLang();
+
+  assert.equal(
+    document.documentElement.getAttribute('data-i18n-redirecting'),
+    null,
+    'redirect flag must be cleared on init so a stuck-in-flight page can recover',
+  );
+});
+
+test('lang.js: warn-once — repeated early-returns on the same page emit warn ONLY once', async () => {
+  // Round-2 F2: React-strict-mode double-invocation / HMR retries /
+  // dynamic-mount re-inits should not flood the console. Warns are
+  // dedup'd module-scope by message text.
+  const { document } = makeDom(HTML_EMPTY_PILL);
+  const warnings = [];
+  const initLang = await loadInitLang({
+    document,
+    localStorage: makeStorage(),
+    warn: (msg) => warnings.push(msg),
+  });
+  initLang();
+  initLang();
+  initLang();
+  assert.equal(warnings.length, 1, 'empty-pill warn must fire exactly once even across 3 init calls');
 });
 
 test('lang.js: aria-label fallback — missing data-aria-* leaves existing aria-label alone', async () => {
@@ -588,15 +727,17 @@ test('lang.js: cmd-click on ACTIVE segment is a no-op (does NOT open duplicate t
   assert.equal(evt._defaultPrevented, true, 'cmd-click on active must not open duplicate tab');
 });
 
-test('lang.js: unknown data-lang value does NOT persist (segment-derived allowlist)', async () => {
-  // If a segment has a data-lang value we don't recognize (typo, injected
-  // markup), skip the storage write. Derives the allowlist from the
-  // segments themselves so a legit third locale (de.json + <a data-lang="de">)
-  // just works.
+test('lang.js: 3rd-locale segment persists (segment-derived allowlist is dynamic)', async () => {
+  // Round-1 F5 fix: the allowlist is derived from the segments themselves,
+  // so a legit third locale (locales/de.json + <a data-lang="de">) works
+  // without touching lang.js. This test pins the DYNAMIC allowlist:
+  // whatever segment set the DOM carries IS the allowlist. Its counterpart
+  // below verifies that data-lang values NOT in the segment set do NOT
+  // persist (which is the actual "unknown data-lang" contract).
   const html = `<!DOCTYPE html><html lang="en" data-lang-pill-expected="1"><body>
     <div class="site-header__lang">
       <a class="site-header__lang-seg is-active" data-lang="en" aria-current="true">EN</a>
-      <a class="site-header__lang-seg" data-lang="xx">XX</a>
+      <a class="site-header__lang-seg" data-lang="de">DE</a>
     </div>
   </body></html>`;
   const { document } = makeDom(html);
@@ -604,14 +745,47 @@ test('lang.js: unknown data-lang value does NOT persist (segment-derived allowli
   const initLang = await loadInitLang({ document, localStorage: storage });
   initLang();
 
-  const xxSeg = document
+  const deSeg = document
     .querySelector('.site-header__lang')
     .querySelectorAll('.site-header__lang-seg')[1];
-  xxSeg._dispatchClick();
+  deSeg._dispatchClick();
 
   assert.equal(
     storage.getItem('vb.lang'),
-    'xx',
-    'segment-derived allowlist includes xx because it appears as a segment data-lang',
+    'de',
+    'segment-derived allowlist accepts any data-lang present in the DOM segments',
+  );
+});
+
+test('lang.js: click handler on a segment whose data-lang was mutated to an unknown value does NOT persist', async () => {
+  // The allowlist is captured at initLang() TIME from the segments the
+  // plugin baked. If the DOM is later mutated to change a segment's
+  // data-lang to a value not in the initial set (a runtime XSS injection,
+  // a dynamic pill mutation), the click handler's knownLangs.has() check
+  // rejects it. This is the actual "unknown data-lang does NOT persist"
+  // contract.
+  const html = `<!DOCTYPE html><html lang="en" data-lang-pill-expected="1"><body>
+    <div class="site-header__lang">
+      <a class="site-header__lang-seg is-active" data-lang="en" aria-current="true">EN</a>
+      <a class="site-header__lang-seg" data-lang="bg">BG</a>
+    </div>
+  </body></html>`;
+  const { document } = makeDom(html);
+  const storage = makeStorage();
+  const initLang = await loadInitLang({ document, localStorage: storage });
+  initLang();
+
+  // At initLang time, knownLangs = {en, bg}. Now mutate the BG segment's
+  // data-lang AFTER wiring to simulate a late injection.
+  const bgSeg = document
+    .querySelector('.site-header__lang')
+    .querySelectorAll('.site-header__lang-seg')[1];
+  bgSeg.setAttribute('data-lang', 'xx-injection');
+  bgSeg._dispatchClick();
+
+  assert.equal(
+    storage.getItem('vb.lang'),
+    null,
+    'post-init mutation to an unknown data-lang must NOT persist — the allowlist is snapshot at init',
   );
 });

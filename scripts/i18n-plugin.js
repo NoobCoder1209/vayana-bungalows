@@ -1185,23 +1185,36 @@ const BOOT_OPEN = 'i18n:boot-redirect open';
 const BOOT_CLOSE = 'i18n:boot-redirect close';
 
 // Boot-redirect script body — module-scope constant (L3). The script is
-// identical across every page × locale; per-page data (locale + en/bg
-// URLs) is threaded through `data-*` attributes on the <script> tag
-// and read via s.getAttribute at runtime. Keeping this at module scope
-// avoids allocating the ~800-char template literal on every emit.
+// identical across every page × locale; per-page data (locale + per-locale
+// URLs as a JSON object) is threaded through `data-*` attributes on the
+// <script> tag and read via s.getAttribute at runtime. Keeping this at
+// module scope avoids allocating the template literal on every emit.
 //
 // Responsibilities (matches the runtime lang.js's docstring):
-//   1. ?lang=en|bg URL query override
-//   2. Return-visit redirect from EN → BG when localStorage says 'bg'
+//   1. ?lang=<code> URL query override — accepts ANY locale key present
+//      in the data-lang-urls JSON. This closes Round-2 finding #3:
+//      previously hardcoded `v==='en'||v==='bg'`, so a future 3rd
+//      locale (locales/de.json + a DE segment) would have been silently
+//      rejected by the query-param path.
+//   2. Return-visit redirect from the source locale to a stored non-source
+//      locale — again data-driven off the JSON map, not hardcoded en/bg.
 //   3. Sentinel `data-i18n-redirecting="1"` on <html> before location.replace()
+//      so runtime lang.js can distinguish an in-flight boot from a
+//      committed navigation.
+//
+// The JSON parse is guarded by try/catch so a corrupt data attr does not
+// halt the boot logic — it degrades to "no redirect" and lang.js on the
+// current locale still wires normally.
 //
 // Security notes:
 //   * document.currentScript || fallback querySelector — resilient when
 //     currentScript is null (event handler, extension re-inject).
 //   * Whitelist raw ?lang= match — NO decodeURIComponent (malformed URI
 //     would throw and swallow the boot logic).
-//   * try/catch wraps localStorage (private-browsing throws).
-const BOOT_BODY = `(function(){try{var s=document.currentScript||document.querySelector('script[data-locale]');if(!s)return;var here=s.getAttribute('data-locale');var enUrl=s.getAttribute('data-en-url');var bgUrl=s.getAttribute('data-bg-url');function go(u){if(!u)return false;try{document.documentElement.setAttribute('data-i18n-redirecting','1');}catch(e){}location.replace(u);return true;}var q=null;var m=location.search.match(/[?&]lang=([^&]*)/);if(m){var v=m[1];if(v==='en'||v==='bg')q=v;}if(q){try{localStorage.setItem('vb.lang',q);}catch(e){}if(q!==here){if(go(q==='bg'?bgUrl:enUrl))return;}}else{var st=null;try{st=localStorage.getItem('vb.lang');}catch(e){}if(st==='bg'&&here==='en'){if(go(bgUrl))return;}}}catch(e){}})();`;
+//   * try/catch wraps localStorage (private-browsing throws) and JSON.parse
+//     (defensive: the attr is emitted by the plugin as valid JSON, but a
+//     downstream transform could corrupt it).
+const BOOT_BODY = `(function(){try{var s=document.currentScript||document.querySelector('script[data-locale]');if(!s)return;var here=s.getAttribute('data-locale');var urls={};try{urls=JSON.parse(s.getAttribute('data-lang-urls')||'{}');}catch(e){urls={};}function go(u){if(!u)return false;try{document.documentElement.setAttribute('data-i18n-redirecting','1');}catch(e){}location.replace(u);return true;}var q=null;var m=location.search.match(/[?&]lang=([^&]*)/);if(m){var v=m[1];if(Object.prototype.hasOwnProperty.call(urls,v))q=v;}if(q){try{localStorage.setItem('vb.lang',q);}catch(e){}if(q!==here&&urls[q]){if(go(urls[q]))return;}}else{var st=null;try{st=localStorage.getItem('vb.lang');}catch(e){}if(st&&st!==here&&Object.prototype.hasOwnProperty.call(urls,st)){if(go(urls[st]))return;}}}catch(e){}})();`;
 
 // Precompiled strip regexes for the two known marker pairs (L4). Marker
 // texts are module-scope constants (HREFLANG_OPEN/CLOSE, BOOT_OPEN/CLOSE),
@@ -1497,12 +1510,21 @@ function buildHeadBlock(opts) {
 
   // Boot script — data attrs carry the per-page URLs; the body is a
   // module-scope BOOT_BODY constant so we don't re-allocate the ~800-
-  // char literal on every emit.
-  const enUrl = pageUrl({ basePath, pagePath, locale: 'en', defaultLocale });
-  const bgUrl = pageUrl({ basePath, pagePath, locale: 'bg', defaultLocale });
+  // char literal on every emit. The URLs travel as a JSON map keyed by
+  // locale so BOOT_BODY can support any set of locales without a code
+  // change (Round-2 finding #3/#4 fix — was hardcoded en/bg).
+  const langUrls = {};
+  for (const loc of allLocales) {
+    langUrls[loc] = pageUrl({ basePath, pagePath, locale: loc, defaultLocale });
+  }
+  // JSON.stringify then escape for HTML attribute context. escapeHtmlAttr
+  // handles &, <, >, ", ' — the JSON string never contains raw < or > in
+  // the URLs we emit (pageUrl produces path-only strings), but the escape
+  // is belt-and-braces against a future path shape that includes them.
+  const langUrlsJson = JSON.stringify(langUrls);
   const bootLines = [
     `<!--${BOOT_OPEN}-->`,
-    `<script data-locale="${escapeHtmlAttr(locale)}" data-en-url="${escapeHtmlAttr(enUrl)}" data-bg-url="${escapeHtmlAttr(bgUrl)}">${BOOT_BODY}</script>`,
+    `<script data-locale="${escapeHtmlAttr(locale)}" data-lang-urls="${escapeHtmlAttr(langUrlsJson)}">${BOOT_BODY}</script>`,
     `<!--${BOOT_CLOSE}-->`,
   ];
 
