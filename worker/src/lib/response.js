@@ -3,10 +3,21 @@
 // - jsonResponse() — JSON body for `application/json` requests. ALWAYS
 //   includes the CORS headers so the browser can read the body.
 // - redirectResponse() — 303 redirect for the no-JS `application/x-www-form-urlencoded`
-//   path. Points back to the public site under env.SITE_BASE.
+//   path. Points back to the public site under env.SITE_BASE. Locale-
+//   aware: when the caller passes a non-default locale, the path is
+//   prefixed with `/<locale>` so a BG user is redirected to the BG
+//   mirror page rather than dropped back on the EN page.
 // - corsHeaders() — origin allowlist echoer used by OPTIONS preflight and
 //   by every other response (so a CORS failure still returns the right
 //   status code to inspect, not a network error).
+
+// Locale set the Worker's redirect layer knows about. Must stay in sync
+// with the site's locales/*.json set AND the client-side ALLOWED_LOCALES
+// in worker/src/validation.js. Kept as a small hardcoded literal here
+// because the Worker has no filesystem / plugin to discover locales
+// dynamically — a third locale requires touching this file + validation.js.
+const DEFAULT_LOCALE = 'en';
+const KNOWN_LOCALES = new Set(['en', 'bg']);
 
 function pickOrigin(request, env) {
   const allowed = (env.ALLOWED_ORIGINS || '')
@@ -50,7 +61,7 @@ export function jsonResponse(body, status, request, env) {
   });
 }
 
-export function redirectResponse(path, request, env) {
+export function redirectResponse(path, request, env, locale) {
   // 303 — "see other", makes the browser switch from POST to GET so the
   // user's reload of the thanks page doesn't resubmit the form.
   const base = env.SITE_BASE || '';
@@ -60,7 +71,18 @@ export function redirectResponse(path, request, env) {
   // WHEN CUSTOM DOMAIN LANDS (and add the new origin to ALLOWED_ORIGINS
   // in wrangler.toml at the same time).
   const origin = pickOrigin(request, env) || 'https://noobcoder1209.github.io';
-  const location = `${origin}${base}${path}`;
+  // Locale prefix (Task #167): for a non-default emit-locale, insert
+  // `/<locale>` between base and the path so a BG user's no-JS submit
+  // lands on /bg/enquiries/... — matching the mirror page they came
+  // from. The path itself is a "site-relative slug" like /enquiries/
+  // that mirrors both locales at the same relative position.
+  //
+  // Unknown / missing locale silently falls back to the default (EN, no
+  // prefix). validation.js also degrades unknown locales to the default,
+  // so callers can pass the raw client value here without pre-validating.
+  const loc = KNOWN_LOCALES.has(locale) ? locale : DEFAULT_LOCALE;
+  const localePrefix = loc === DEFAULT_LOCALE ? '' : `/${loc}`;
+  const location = `${origin}${base}${localePrefix}${path}`;
   return new Response(null, {
     status: 303,
     headers: {

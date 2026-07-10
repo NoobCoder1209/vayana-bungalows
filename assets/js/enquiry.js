@@ -21,6 +21,20 @@
 // genuinely cannot post the form).
 
 import flatpickr from 'flatpickr';
+import { Bulgarian } from 'flatpickr/dist/l10n/bg.js';
+import { currentLocale } from './util/current-locale.js';
+
+// flatpickr locale objects keyed by our locale codes. `default` is EN
+// (baseline, needs no import). Mirror of assets/js/booking.js's map —
+// if the site adds a third locale, add the flatpickr l10n import in
+// both files (or extract to a shared util if the pattern grows).
+const FLATPICKR_LOCALES = {
+  en: 'default',
+  bg: Bulgarian,
+};
+function fpLocale() {
+  return FLATPICKR_LOCALES[currentLocale()] || 'default';
+}
 import { SITE_CONFIG } from './site-config.js';
 import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
 
@@ -195,6 +209,15 @@ export function initEnquiry() {
         sitekey: SITE_CONFIG.endpoints.turnstileSiteKey,
         theme: 'light',
         action: 'enquiry',
+        // Localise the widget's own UI copy ("I am human", verifying
+        // status, error messages) to match the emit locale. Turnstile
+        // accepts 'auto' (browser language) or an explicit code — we
+        // pass the emit locale so the widget matches the page's chosen
+        // language, not the browser's, which may differ (e.g. a BG-first
+        // user viewing the EN page still sees English widget copy).
+        // Turnstile's supported languages include 'en' and 'bg'; an
+        // unknown code falls back to English internally.
+        language: currentLocale(),
         // No callback — we read the token explicitly on submit via
         // turnstile.getResponse(widgetId). Avoids race between
         // callback-set state and the form's own submit handler.
@@ -234,6 +257,7 @@ export function initEnquiry() {
     maxDate: seasonMaxDate(),
     disable: [isOffSeason],
     dateFormat: 'd/m/Y',
+    locale: fpLocale(),
     onReady: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
@@ -255,6 +279,7 @@ export function initEnquiry() {
     maxDate: seasonMaxDate(),
     disable: [isOffSeason],
     dateFormat: 'd/m/Y',
+    locale: fpLocale(),
     onReady: attachYearDropdown,
   });
 
@@ -584,6 +609,11 @@ export function initEnquiry() {
       infants: infants.value,
       message: messageVal,
       consent: consentInput.checked ? 'true' : 'false',
+      // Emit-locale of the page the user submitted from. The Worker uses
+      // this to build a locale-aware redirect back (no-JS form path) AND
+      // to write a locale column on the Sheet so the reply-back operator
+      // knows which language to answer in.
+      locale: currentLocale(),
       'cf-turnstile-response': captchaToken,
     };
 

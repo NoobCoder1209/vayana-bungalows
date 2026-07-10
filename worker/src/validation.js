@@ -18,6 +18,18 @@ const MAX_PHONE_LEN = 40;
 const MAX_MESSAGE_LEN = 2000;
 
 const ALLOWED_ADULTS = new Set(['1', '2', '3', '4']);
+
+// Locale field — optional, defaults to the site's default locale ('en').
+// The Worker uses this for:
+//   - Building a locale-aware redirect back on the no-JS form path
+//     (bg → /bg/enquiries/thanks/ etc)
+//   - Writing a "Locale" column on the Sheet so the reply-back operator
+//     knows which language to answer in
+// Kept as a plain allowlist (mirror of the site's locales/*.json set)
+// rather than a regex/anything-goes so a typo or injected value degrades
+// to the default rather than routing to /xx/ (which would 404).
+const ALLOWED_LOCALES = new Set(['en', 'bg']);
+const DEFAULT_LOCALE = 'en';
 // Children and Infants are OPTIONAL. The form's default state shows a
 // label-style placeholder ("CHILDREN" / "INFANTS") whose <option> has
 // an empty value, and includes "-" as a real selectable option meaning
@@ -185,6 +197,15 @@ export function validateBody(body) {
   } else {
     cleaned.consent = 'true';
   }
+
+  // Locale — optional. Unknown / missing / non-string values silently
+  // fall back to DEFAULT_LOCALE. We deliberately do NOT invalidate the
+  // whole submission on a bad locale field because the field is UX
+  // metadata (redirect target, Sheet column label), not part of the
+  // enquiry payload the user typed. Failing a legitimate submit because
+  // some future middleware rewrote the locale key would be user-hostile.
+  const localeRaw = typeof body.locale === 'string' ? body.locale.trim() : '';
+  cleaned.locale = ALLOWED_LOCALES.has(localeRaw) ? localeRaw : DEFAULT_LOCALE;
 
   return invalid.length === 0
     ? { ok: true, cleaned }

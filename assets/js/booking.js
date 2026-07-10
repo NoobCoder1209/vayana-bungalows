@@ -1,5 +1,29 @@
 import flatpickr from 'flatpickr';
+import { Bulgarian } from 'flatpickr/dist/l10n/bg.js';
 import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
+import { currentLocale } from './util/current-locale.js';
+
+// flatpickr locale objects keyed by our locale codes. `default` is the
+// baseline (English) — no import needed. Bulgarian is imported above.
+// Add a new entry per locale when locales/<code>.json lands.
+const FLATPICKR_LOCALES = {
+  en: 'default',
+  bg: Bulgarian,
+};
+
+// Pick the flatpickr locale object for the current emit-locale. Falls back
+// to `'default'` (English) for locales we haven't onboarded — matches the
+// currentLocale() DEFAULT_LOCALE fallback so nothing throws when we later
+// ship a new locale without a matching flatpickr bundle.
+function fpLocale() {
+  return FLATPICKR_LOCALES[currentLocale()] || 'default';
+}
+
+// The dateFormat token string is a locale-neutral pattern. When Bulgarian
+// is active flatpickr will emit month names / weekday headers in Cyrillic
+// while keeping the same D-M-Y ordering. Tokens per flatpickr's format
+// reference: https://flatpickr.js.org/formatting/
+const DATE_FORMAT = 'M j, Y';
 
 // Where bookings.json lives once Vite has applied the production base path.
 // In dev: /assets/data/bookings.json
@@ -115,7 +139,8 @@ export function initBooking() {
   const fpIn = flatpickr(checkin, {
     minDate: 'today',
     maxDate: seasonMaxDate(),
-    dateFormat: 'M j, Y',
+    dateFormat: DATE_FORMAT,
+    locale: fpLocale(),
     // The isOffSeason predicate greys out Oct..Apr; per-bungalow booked
     // dates get pushed in later via .set('disable', ...) once bookings.json
     // resolves (see loadBookings().then below). We seed with the season
@@ -141,7 +166,8 @@ export function initBooking() {
   const fpOut = flatpickr(checkout, {
     minDate: tomorrow,
     maxDate: seasonMaxDate(),
-    dateFormat: 'M j, Y',
+    dateFormat: DATE_FORMAT,
+    locale: fpLocale(),
     disable: [isOffSeason],
     disableMobile: true,
     onDayCreate: tagBookedDay('out'),
