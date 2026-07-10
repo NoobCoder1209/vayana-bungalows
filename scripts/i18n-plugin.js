@@ -691,7 +691,10 @@ function isAllowedHref(href) {
 /**
  * Apply a locale to an HTML string. Pure function of (html, opts). Called
  * once per (page × locale) pair — Vite's transformIndexHtml runs it for
- * EN inline; closeBundle re-runs it for BG on the emitted assets.
+ * Dev mode: `transformIndexHtml` calls this for EN pages; the
+ * configureServer middleware calls it for BG pages. Build mode:
+ * `writeBundle` calls it once per locale over the emitted (marker-
+ * intact, URL-hashed) HTML.
  *
  * opts:
  *   locale       — 'en' | 'bg'
@@ -1643,19 +1646,51 @@ export function i18nPlugin(options) {
     enforce: 'pre', // run before Vite's built-in HTML processing
 
     /**
-     * transformIndexHtml — Vite calls this once per input HTML page. We
-     * transform IN PLACE for the default locale here; the BG mirror emit
-     * lands via closeBundle below.
+     * transformIndexHtml — Vite calls this once per input HTML page in
+     * BOTH dev and build. Behaviour differs by mode:
      *
-     * Vite gives us `ctx.filename` — the absolute path to the source file
-     * on disk. We derive the page-relative path via path.relative (L17),
-     * which correctly handles Windows path separators AND the case where
-     * the filename lives outside projectRoot (virtual/generated sources).
-     * Falls back to a `<unknown>` marker if there's no filename at all.
+     *   BUILD (writeBundle will finalise later):
+     *     Return the source unchanged so Vite's html-plugin still rewrites
+     *     root-absolute asset URLs into hashed emitted names, but
+     *     data-i18n* markers stay INTACT on disk. `writeBundle` then reads
+     *     the emitted file (markers-still-present, URLs-hashed) and runs
+     *     applyLocale twice — once for EN over the emitted file, once for
+     *     BG to dist/bg/. Both locales share the same intermediate input so
+     *     nothing drifts between them.
+     *
+     *   DEV (no writeBundle):
+     *     Vite never calls writeBundle in the dev server, so we MUST apply
+     *     the default locale here — otherwise `/` (EN) would render with
+     *     unresolved data-i18n markers still in the DOM. BG dev URLs are
+     *     handled by the configureServer middleware below, which serves
+     *     /bg/<path> by reading source and applying the BG locale directly
+     *     (independent codepath).
+     *
+     * We detect dev vs build via viteCtx.server: Vite populates this in
+     * dev mode only (build mode passes it as undefined). NOTE: ctx.bundle
+     * looks tempting but Vite only populates it AFTER our `order: 'pre'`
+     * hook runs, so it's undefined here in build mode too. `server` is
+     * the reliable discriminator for pre-hooks.
+     *
+     * Historical note: this hook USED to unconditionally call
+     * applyLocale(html, {locale: 'en'}) even in build mode, stripping
+     * markers during the EN pass. The BG pass in writeBundle then re-read
+     * the marker-stripped EN emit, ran applyLocale with the BG dict, and
+     * found nothing to translate — BG pages silently rendered with EN
+     * copy. The bug was invisible until real pages carried real markers
+     * (Task #165). Splitting build vs dev fixes build symmetrically while
+     * preserving dev-mode EN rendering.
      */
     transformIndexHtml: {
       order: 'pre',
       handler(html, viteCtx) {
+        if (!viteCtx?.server) {
+          // Build mode — defer marker resolution to writeBundle so both
+          // EN and BG start from the same Vite-processed input.
+          return html;
+        }
+        // Dev mode — resolve EN markers now so the dev server serves a
+        // fully-rendered page at /.
         const abs = viteCtx?.filename || '';
         const rel = relFromRoot(abs, projectRoot);
         return applyLocale(html, {
@@ -1672,10 +1707,11 @@ export function i18nPlugin(options) {
 
     /**
      * writeBundle — Vite calls this after every bundle asset has been
-     * written to disk. We iterate the bundle object, find every HTML
-     * asset (they land after JS/CSS via Vite's own html-plugin), read
-     * them from disk (where Vite has finalised asset-URL hashes), and
-     * emit BG variants.
+     * written to disk. Every HTML asset on disk at this point still
+     * carries our data-i18n* markers AND has Vite's asset-URL rewrites
+     * baked in (hashed filenames). We iterate the bundle, read each
+     * emitted HTML, apply the EN transform (overwriting the emit) and
+     * the BG transform (writing to dist/bg/…).
      *
      * options.dir is honoured (F-writeBundle-2) so `build.outDir`
      * overrides work. bg/-prefixed HTMLs are skipped so a future refactor
@@ -1710,9 +1746,9 @@ export function i18nPlugin(options) {
         }
 
         const emittedPath = resolve(outDir, fileName);
-        let enHtml;
+        let rawHtml;
         try {
-          enHtml = readFileSync(emittedPath, 'utf-8');
+          rawHtml = readFileSync(emittedPath, 'utf-8');
         } catch (e) {
           throw new Error(
             `[i18n] writeBundle: cannot read emitted file ${emittedPath}: ${e.message}`,
@@ -1721,21 +1757,31 @@ export function i18nPlugin(options) {
         // F-BOM: strip a leading UTF-8 BOM if present (Vite doesn't emit
         // one but a source file with a BOM could round-trip through
         // Vite's html-plugin without normalisation).
-        if (enHtml.charCodeAt(0) === 0xfeff) enHtml = enHtml.slice(1);
+        if (rawHtml.charCodeAt(0) === 0xfeff) rawHtml = rawHtml.slice(1);
 
-        // Sweep the FINAL EN emit for `../` hrefs (after Vite's
-        // asset-URL rewrite). Runs ONLY on the EN pass — the BG mirror
-        // inherits the same offenders, warning again is duplicate log
-        // spam (F-double-warn). String-based regex scan (M4) — no
-        // extra DOM parse.
-        rejectRelativeHrefs(enHtml, fileName);
+        // Sweep the marker-intact, URL-rewritten EN emit for `../`
+        // hrefs. String-based regex scan (M4) — no extra DOM parse.
+        // Run ONCE against the shared input so we don't double-warn on
+        // the EN-then-BG pass (F-double-warn).
+        rejectRelativeHrefs(rawHtml, fileName);
 
-        // Apply BG head injection on top of the EN-rendered HTML. The
-        // marker attributes are already gone (transform stripped them
-        // in the EN pass), so the transformSubtree call inside
-        // applyLocale is a near-no-op — the work is in applyHead
-        // rewriting <html lang>, hreflang, canonical, boot script.
-        const bg = applyLocale(enHtml, {
+        // EN pass — resolves every marker with the EN dict and
+        // overwrites the emitted file (which still had markers on it).
+        const en = applyLocale(rawHtml, {
+          locale: DEFAULT_LOCALE,
+          dict: dicts[DEFAULT_LOCALE],
+          ctx: contextByLocale[DEFAULT_LOCALE],
+          basePath,
+          pagePath: fileName,
+          allLocales: locales,
+          defaultLocale: DEFAULT_LOCALE,
+        });
+        writeFileSync(emittedPath, en, 'utf-8');
+
+        // BG pass — same input, different dict/ctx/locale. Writes to
+        // dist/bg/<fileName>. Independent DOM parse inside applyLocale
+        // so neither locale can corrupt the other.
+        const bg = applyLocale(rawHtml, {
           locale: 'bg',
           dict: dicts.bg,
           ctx: contextByLocale.bg,
@@ -1744,17 +1790,13 @@ export function i18nPlugin(options) {
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
         });
-        // F-double-warn: do NOT add another `rejectRelativeHrefs(bg, …)`
-        // call here. The BG mirror is derived from the EN emit which we
-        // already scanned above; the same `../` offenders would produce
-        // duplicate warnings.
         const bgPath = resolve(outDir, 'bg', fileName);
         mkdirSync(dirname(bgPath), { recursive: true });
         writeFileSync(bgPath, bg, 'utf-8');
         count++;
       }
       // eslint-disable-next-line no-console
-      console.log(`[i18n] emitted BG variants for ${count} page(s) under dist/bg/`);
+      console.log(`[i18n] emitted EN + BG variants for ${count} page(s) (BG under dist/bg/)`);
     },
 
     /**
