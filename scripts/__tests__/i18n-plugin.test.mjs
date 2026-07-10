@@ -555,6 +555,61 @@ test('applyLocale: NO pill-expected marker when source lacks .site-header__lang'
   assert.doesNotMatch(out, /data-lang-pill-expected/);
 });
 
+test('applyLocale: pill segments rewritten with is-active + aria-current + hreflang + absolute hrefs (R3-L1)', () => {
+  // Two segments with data-lang; EN pass should activate EN segment
+  // and point BG at the /bg/ locale prefix (absolute URL). Fixture
+  // gives EN segment stale href="./" + BG stale href="bg/" — the
+  // rewriter's job is to replace both with locale-aware absolute
+  // URLs regardless of what the source authored.
+  const src = `<!doctype html><html><head></head><body>
+<div class="site-header__lang">
+  <a class="site-header__lang-seg" href="./" data-lang="en">EN</a>
+  <a class="site-header__lang-seg" href="bg/" data-lang="bg">BG</a>
+</div>
+</body></html>`;
+  const enOut = applyLocale(src, headOpts({ locale: 'en', dict: {} }));
+  // EN segment: is-active, aria-current="true", href = base URL for EN.
+  // Match by data-lang="en" first, then look for the specific attributes
+  // on the SAME element (any order — node-html-parser preserves author
+  // order but the assertions shouldn't be tied to that).
+  const enSeg = enOut.match(/<a\b[^>]*data-lang="en"[^>]*>/i)?.[0] ?? '';
+  const bgSeg = enOut.match(/<a\b[^>]*data-lang="bg"[^>]*>/i)?.[0] ?? '';
+  assert.match(enSeg, /\bis-active\b/, 'EN segment has is-active class on EN pass');
+  assert.match(enSeg, /aria-current="true"/, 'EN segment aria-current="true" on EN pass');
+  assert.match(enSeg, /hreflang="en"/, 'EN segment hreflang="en" stamped');
+  assert.match(enSeg, /href="\/vayana-bungalows\/"/, 'EN segment href points at EN URL on EN pass');
+  assert.match(bgSeg, /href="\/vayana-bungalows\/bg\//, 'BG segment href points at /bg/ absolute URL');
+  assert.doesNotMatch(bgSeg, /\bis-active\b/, 'BG segment has no is-active on EN pass');
+  assert.doesNotMatch(bgSeg, /aria-current=/, 'BG segment has no aria-current on EN pass');
+
+  // BG pass swaps: BG segment is active, EN segment points at EN URL.
+  const bgOut = applyLocale(src, headOpts({ locale: 'bg', dict: {} }));
+  const enSegBg = bgOut.match(/<a\b[^>]*data-lang="en"[^>]*>/i)?.[0] ?? '';
+  const bgSegBg = bgOut.match(/<a\b[^>]*data-lang="bg"[^>]*>/i)?.[0] ?? '';
+  assert.match(bgSegBg, /aria-current="true"/, 'BG segment aria-current="true" on BG pass');
+  assert.match(bgSegBg, /\bis-active\b/, 'BG segment is-active on BG pass');
+  assert.doesNotMatch(enSegBg, /aria-current=/, 'EN segment has no aria-current on BG pass');
+  assert.doesNotMatch(enSegBg, /\bis-active\b/, 'EN segment has no is-active on BG pass');
+});
+
+test('applyLocale: hard-fails when .site-header__lang-seg is missing data-lang (R2-L1)', () => {
+  // A segment inside .site-header__lang with NO data-lang attribute.
+  // The pill invariant is that every segment declares its locale so
+  // applyHead can rewrite href + is-active per emit; a segment
+  // missing data-lang would silently ship the source-authored href
+  // (broken link on the BG mirror). applyHead throws instead.
+  const src = `<!doctype html><html><head></head><body>
+<div class="site-header__lang">
+  <a class="site-header__lang-seg" href="./">EN</a>
+</div>
+</body></html>`;
+  assert.throws(
+    () => applyLocale(src, headOpts({ locale: 'en', dict: {} })),
+    /site-header__lang-seg.*missing data-lang|pill invariant broken/i,
+    'R2-L1 hard-fail must surface the "missing data-lang" diagnostic',
+  );
+});
+
 test('applyLocale: skips head injection when allLocales/defaultLocale absent (test opt-out)', () => {
   // Without the Part-2 fields, applyLocale is a no-op on the head — used
   // by every other test in this file. Sanity-check the opt-out.

@@ -1879,6 +1879,21 @@ export function i18nPlugin(options) {
         // substring "data-i18n-locale-applied=" — vanishingly unlikely
         // given the namespace but a scoped test is strictly safer and
         // doesn't cost anything at plugin scale.
+        //
+        // Residual caveat (R3-L2): the regex does NOT strip HTML
+        // comments before scanning, so a source containing a literal
+        // `<!-- <html data-i18n-locale-applied="en"> -->` (e.g.
+        // debugging leftovers, copy-pasted diff snippets in a
+        // documentation block) would false-positive as "already
+        // applied" and skip EN marker resolution. Given how unusual
+        // such comments are AND that they'd already be broken in
+        // other ways (the plugin's own head-block markers use
+        // `<!--i18n:...-->` sentinels, and a debugging comment
+        // impersonating an `<html>` tag is a red flag on its own),
+        // we accept the residual risk. Stripping comments per-call
+        // (regex-mask them to spaces) would eliminate it at the cost
+        // of an extra pass over every dev-mode HTML — not worth it
+        // for a hazard nobody has ever hit.
         if (/<html\b[^>]*\bdata-i18n-locale-applied=/i.test(html)) {
           return html;
         }
@@ -1943,8 +1958,13 @@ export function i18nPlugin(options) {
         try {
           rawHtml = readFileSync(emittedPath, 'utf-8');
         } catch (e) {
+          // Chain the original error via {cause} (R3-L4) so
+          // downstream code inspecting err.cause.code can still see
+          // EACCES/ENOSPC/ENOENT/etc. The wrapper adds context but
+          // doesn't discard the underlying diagnostic.
           throw new Error(
             `[i18n] writeBundle: cannot read emitted file ${emittedPath}: ${e.message}`,
+            { cause: e },
           );
         }
         // F-BOM: strip a leading UTF-8 BOM if present (Vite doesn't emit
@@ -1966,6 +1986,14 @@ export function i18nPlugin(options) {
         // read a marker-free EN emit and produced BG-in-EN copy on
         // every subsequent build. Computing both first means a throw
         // aborts before any file mutation for this page.
+        //
+        // Scope (R3-L3): H6 atomicity is a BUILD-ONLY guarantee. The
+        // dev-mode /bg/ middleware in configureServer below also calls
+        // applyLocale with the BG dict, and its failure mode is
+        // symmetric in shape (throw at interpolate/sanitiser time) but
+        // NOT in consequence — a dev throw becomes a 500 response, not
+        // a stale on-disk file that bites the next build. No dev-side
+        // atomicity contract is enforced or needed.
         //
         // Independent DOM parses inside applyLocale so neither locale
         // can corrupt the other (documented purity contract).
@@ -1997,6 +2025,7 @@ export function i18nPlugin(options) {
         } catch (e) {
           throw new Error(
             `[i18n] writeBundle: cannot write EN emit ${emittedPath}: ${e.message}`,
+            { cause: e },
           );
         }
         const bgPath = resolve(outDir, 'bg', fileName);
@@ -2009,6 +2038,7 @@ export function i18nPlugin(options) {
         } catch (e) {
           throw new Error(
             `[i18n] writeBundle: cannot create BG mirror directory ${dirname(bgPath)}: ${e.message}`,
+            { cause: e },
           );
         }
         try {
@@ -2016,6 +2046,7 @@ export function i18nPlugin(options) {
         } catch (e) {
           throw new Error(
             `[i18n] writeBundle: cannot write BG mirror ${bgPath}: ${e.message}`,
+            { cause: e },
           );
         }
 
