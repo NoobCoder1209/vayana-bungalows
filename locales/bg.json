@@ -28,6 +28,7 @@
       "nav_destination": "Дестинация",
       "nav_contacts": "Контакти",
       "nav_enquiries": "Запитване",
+      "primary_aria": "Основна навигация",
       "noscript_aria": "Основна навигация (без JavaScript)"
     },
     "footer": {

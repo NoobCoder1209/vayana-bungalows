@@ -305,24 +305,21 @@
    stays consistent across the CTA cluster.
 
    Active segment: filled warm-brown (matches .site-header__enquiries),
-   text in --bg-light for AA contrast (~6.4:1 against #6f5e40). The active
-   state is driven by .is-active from lang.js on load, so a keyboard user
-   tabbing through never sees a flash of both segments in the resting
-   look.
+   text in --bg-light for AA contrast (~6.4:1 against #6f5e40).
 
-   The seam between the two segments is a 1px border on the right of the
-   FIRST segment. Using border-right (not gap) keeps the pill visually
+   The seam between the two segments is a 1px border on the LEFT of the
+   SECOND segment. Using a border (not gap) keeps the pill visually
    continuous — a `gap` would introduce a hairline of header background
    between the two anchors, which reads as "two buttons" rather than
-   "one segmented control".
+   "one segmented control". The seam colour is FIXED (rgba warm-brown)
+   rather than currentColor because on :hover the inactive segment's
+   color flips to var(--bg-light) — a currentColor seam would then
+   turn near-white against the warm-brown fill, producing a bright
+   hairline mismatched against the outer pill border (H13).
 
-   text-decoration:none on the anchors overrides base.css's link
-   underline; the segmented pill relies on shape + fill for affordance,
-   not underline.
-
-   The pill collapses to icon-only (labels visually hidden but readable
-   by AT) below 540px so it doesn't compete with the hamburger + brand
-   at phone widths — see media-query blocks below. */
+   At <=540px the pill shrinks (font + padding) but keeps its labels
+   visible — 'EN' and 'BG' are already 2ch, so the labels effectively
+   ARE the icons. No sr-only fallback needed. */
 .site-header__lang {
   display: inline-flex;
   align-items: stretch;
@@ -350,13 +347,20 @@
   transition: background var(--t-fast), color var(--t-fast);
 }
 
-/* Seam between the two segments (see block comment above). */
+/* Seam between segments — fixed warm-brown alpha so a hovered inactive
+   segment doesn't turn its half of the seam near-white (H13). */
 .site-header__lang-seg + .site-header__lang-seg {
-  border-left: 1px solid currentColor;
+  border-left: 1px solid rgba(111, 94, 64, 0.35);
 }
 
-.site-header__lang-seg:hover,
-.site-header__lang-seg:focus-visible {
+/* Hover only applies to the INACTIVE segment (H14). :is() collapses
+   the .is-active + [aria-current='true'] pair to one selector and
+   :not() keeps the hover styling from re-applying on the already-
+   active segment — the active fill is the same colour, so the
+   visual effect is nil, but the cursor:default and the redundant
+   rule block are both dropped. */
+.site-header__lang-seg:not(:is(.is-active, [aria-current="true"])):hover,
+.site-header__lang-seg:not(:is(.is-active, [aria-current="true"])):focus-visible {
   background: #6f5e40;
   color: var(--bg-light);
   outline: none;
@@ -364,25 +368,16 @@
 
 /* Active segment — same warm-brown as .site-header__enquiries so the
    active language reads as "this is the current mode", not a hover state.
-   aria-current="page" is a belt-and-braces selector so the active look
-   survives even if a future refactor drops .is-active. */
-.site-header__lang-seg.is-active,
-.site-header__lang-seg[aria-current="page"] {
+   :is() collapses .is-active (JS-toggle) and [aria-current="true"]
+   (server-rendered) into one selector — the applyHead pill-rewriter
+   sets BOTH so a future refactor dropping either doesn't break the
+   look, but the rule body still lives in one place (H14). */
+.site-header__lang-seg:is(.is-active, [aria-current="true"]) {
   background: #6f5e40;
   color: var(--bg-light);
   /* Non-interactive by convention — the click on the active segment is a
      no-op in lang.js. cursor:default communicates that visually. */
   cursor: default;
-}
-
-/* On the active segment, disable the hover recolour — active + hover
-   should not deepen further; the active fill already communicates state. */
-.site-header__lang-seg.is-active:hover,
-.site-header__lang-seg.is-active:focus-visible,
-.site-header__lang-seg[aria-current="page"]:hover,
-.site-header__lang-seg[aria-current="page"]:focus-visible {
-  background: #6f5e40;
-  color: var(--bg-light);
 }
 
 @media (max-width: 540px) {
@@ -395,9 +390,11 @@
   }
 
   /* Below the 540px breakpoint the header CTA cluster loses the
-     Enquiries pill (above) to make room. The lang pill stays, but
-     collapses to a tighter width so it can share the row with the phone
-     icon at 320px without pushing the brand under the hamburger. */
+     Enquiries pill (above) to make room. The lang pill stays with
+     LABELS PRESERVED — 'EN'/'BG' are 2ch, so a tighter font + padding
+     collapse is enough to share the row with the phone icon at 320px
+     without pushing the brand under the hamburger. No sr-only trick
+     needed; the labels ARE the icons. */
   .site-header__lang {
     font-size: 0.8rem;
   }

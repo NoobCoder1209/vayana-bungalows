@@ -1284,11 +1284,70 @@ function applyHead(root, opts) {
   // locale is a whitelisted 2-letter code, no escape concerns.
   safeSetAttribute(htmlEl, 'lang', locale);
 
+  // Sentinel (H1) — stamped on <html> so transformIndexHtml can
+  // detect that this HTML has already been through applyLocale and
+  // skip re-entry. Without this guard the dev /bg/ middleware's
+  // trailing server.transformIndexHtml call would re-enter our
+  // transformIndexHtml hook and run applyLocale a second time with
+  // the DEFAULT (EN) locale over already-BG-rendered HTML —
+  // reverting <html lang>, canonical, and boot script back to EN
+  // and triggering an infinite redirect loop for returning BG users.
+  //
+  // Idempotent: stamped every pass with the current locale so a
+  // caller inspecting the value gets a truthful "who wrote this
+  // last" answer. Value carries the locale, not just '1', so
+  // integration tests can assert which pass authored the head
+  // block without another round of DOM parsing.
+  safeSetAttribute(htmlEl, 'data-i18n-locale-applied', locale);
+
   // data-lang-pill-expected marker. Set only when the source had a
   // `.site-header__lang` element — lang.js reads this to decide whether
   // "no pill segments in DOM" is a regression to warn about.
-  if (root.querySelector('.site-header__lang')) {
+  const pill = root.querySelector('.site-header__lang');
+  if (pill) {
     safeSetAttribute(htmlEl, 'data-lang-pill-expected', '1');
+
+    // H4: rewrite the two pill segments per emit locale so the
+    // JS-off fallback works on the BG mirror. Without this, the
+    // static source has EN.is-active + href="./" and BG href="bg/"
+    // baked in — on dist/bg/index.html those resolve to /bg/ and
+    // /bg/bg/ respectively, breaking both the "you're on BG" state
+    // and the "click to switch to EN" affordance.
+    //
+    // For each <a data-lang="…">:
+    //   - if data-lang === locale: mark active (aria-current="true"
+    //     + .is-active class) and point href at THIS locale's page
+    //     URL. `aria-current="true"` is used (not "page") because
+    //     the two segments are locale variants of the SAME page,
+    //     not siblings in a page set (H14 flags "page" as wrong).
+    //   - else: strip active state and point href at the OTHER
+    //     locale's page URL. The href is the CANONICAL locale URL
+    //     computed by pageUrl() so /bg/foo/ ↔ /foo/ swap correctly
+    //     regardless of the source markup's ./ or bg/ shortcut.
+    for (const seg of pill.querySelectorAll('.site-header__lang-seg[data-lang]')) {
+      const segLocale = seg.getAttribute('data-lang');
+      const isActive = segLocale === locale;
+      const segUrl = pageUrl({
+        basePath,
+        pagePath,
+        locale: segLocale,
+        defaultLocale,
+      });
+      safeSetAttribute(seg, 'href', segUrl);
+      safeSetAttribute(seg, 'hreflang', segLocale);
+      // Classes: preserve everything except .is-active, then re-add
+      // when this segment is the current locale.
+      const cls = (seg.getAttribute('class') || '')
+        .split(/\s+/)
+        .filter((c) => c && c !== 'is-active');
+      if (isActive) cls.push('is-active');
+      safeSetAttribute(seg, 'class', cls.join(' '));
+      if (isActive) {
+        safeSetAttribute(seg, 'aria-current', 'true');
+      } else {
+        seg.removeAttribute('aria-current');
+      }
+    }
   }
 
   // Rewrite canonical / og:url / twitter:url to point at the current
@@ -1300,7 +1359,86 @@ function applyHead(root, opts) {
     defaultLocale,
   });
 
+  // Rewrite bare-relative internal hrefs to locale-aware root-absolute
+  // form (H7). Without this pass, an author-written `href="enquiries/"`
+  // resolves to `/vayana-bungalows/enquiries/` on the EN home BUT to
+  // `/vayana-bungalows/bg/enquiries/` on the BG mirror — which is what
+  // we want, BUT only accidentally, and only for pages whose source
+  // path happens to be the bare segment. Bare relative anchors from
+  // inside `/bg/foo/index.html` resolve one segment up, producing 404
+  // paths for anything not directly under the same parent.
+  //
+  // This pass finds bare relatives (no leading `/`, `#`, `.`, `?`, or
+  // scheme) and rewrites them to `{basePath}[bg/]{path}`. Same-page
+  // fragments (`#rooms`) and dead placeholders (`#`, `./`) are left
+  // untouched — `./` on the language pill's EN segment is handled by
+  // the pill-rewriting block above, which sets an absolute pageUrl.
+  rewriteInternalHrefs(root, opts);
+
   return true;
+}
+
+/**
+ * Sweep internal href/src/action attributes to locale-aware root-
+ * absolute form (H7). Only rewrites bare relative paths — anything
+ * starting with `/`, `#`, `.`, `?`, or a scheme is left as-is.
+ *
+ * Rewrite rule: `foo/bar/` → `{basePath}[bg/]foo/bar/`. For the
+ * default locale, no prefix is inserted. For non-default locales,
+ * `{locale}/` is inserted between basePath and the path.
+ *
+ * Attribute allowlist matches URL_BEARING_ATTRS but the surface here
+ * is deliberately narrow — this pass runs on the whole tree, so we
+ * only touch attrs that are unambiguously navigational: href on
+ * <a>/<area>/<base>/<link>, action on <form>, src on <img>/<script>/
+ * <iframe>/<source>/<track>/<video>/<audio>. Note: <img src>
+ * translates BUT the codebase writes those as `/assets/…` (root-abs)
+ * so this pass is a no-op for images in practice; keeping it in the
+ * list means a translator who authors a bare-relative src via
+ * data-i18n-attr still gets it swept.
+ */
+function rewriteInternalHrefs(root, opts) {
+  const { locale, basePath, defaultLocale } = opts;
+  // Prefix inserted for non-default locales. Ends with `/` so joining
+  // to a bare path like `enquiries/` yields `bg/enquiries/`.
+  const localeSeg = locale === defaultLocale ? '' : `${locale}/`;
+
+  const ATTR_BY_TAG = {
+    a: 'href',
+    area: 'href',
+    form: 'action',
+    link: 'href',
+    // <img>/<script>/<iframe> etc source rewrites are handled by
+    // Vite's html-plugin (root-absolute paths get hashed); bare
+    // relatives are rare enough here that we keep the pass focused
+    // on navigational anchors.
+  };
+
+  for (const [tag, attr] of Object.entries(ATTR_BY_TAG)) {
+    for (const el of root.querySelectorAll(tag)) {
+      const val = el.getAttribute(attr);
+      if (!val) continue;
+      // Skip anything that isn't a bare relative:
+      //   /foo       → root-absolute already
+      //   //cdn.io   → protocol-relative external
+      //   #frag      → same-page anchor
+      //   ./ or ../  → dot-relative (rejectRelativeHrefs handles ../)
+      //   ?query     → query on current page
+      //   scheme:    → mailto:, tel:, https:, etc.
+      //   empty      → nothing to rewrite
+      if (
+        val.length === 0 ||
+        val.startsWith('/') ||
+        val.startsWith('#') ||
+        val.startsWith('.') ||
+        val.startsWith('?') ||
+        /^[a-z][a-z0-9+.-]*:/i.test(val)
+      ) {
+        continue;
+      }
+      safeSetAttribute(el, attr, `${basePath}${localeSeg}${val}`);
+    }
+  }
 }
 
 /**
@@ -1641,9 +1779,28 @@ export function i18nPlugin(options) {
     }
   }
 
+  // isBuild is set by configResolved({command}) below. Used as the
+  // build-vs-dev discriminator inside transformIndexHtml instead of
+  // sniffing viteCtx.server, which has proven unreliable — see the
+  // H10 comment there.
+  let isBuild = false;
+
   return {
     name: 'vayana-i18n',
     enforce: 'pre', // run before Vite's built-in HTML processing
+
+    /**
+     * configResolved — Vite calls this exactly once after config is
+     * resolved and before any per-input hook fires. We use it to pin
+     * the build-vs-dev discriminator on plugin closure state so
+     * transformIndexHtml doesn't have to sniff the per-call viteCtx
+     * (previously via `viteCtx.server`, which is populated in ways
+     * that vary by Vite version, SSR mode, and third-party test
+     * harnesses — H10).
+     */
+    configResolved(config) {
+      isBuild = config.command === 'build';
+    },
 
     /**
      * transformIndexHtml — Vite calls this once per input HTML page in
@@ -1663,34 +1820,39 @@ export function i18nPlugin(options) {
      *     the default locale here — otherwise `/` (EN) would render with
      *     unresolved data-i18n markers still in the DOM. BG dev URLs are
      *     handled by the configureServer middleware below, which serves
-     *     /bg/<path> by reading source and applying the BG locale directly
-     *     (independent codepath).
+     *     /bg/<path> by reading source and applying the BG locale — that
+     *     middleware then calls `server.transformIndexHtml` on its output
+     *     to complete the Vite plugin chain, which re-invokes THIS hook.
+     *     Without a guard that second invocation would run applyLocale
+     *     with the default (EN) locale over an already-BG-rendered page,
+     *     clobbering <html lang="bg">, canonical, and the boot-redirect
+     *     block back to EN — and a returning BG user's boot script would
+     *     see stored='bg' + here='en' and re-navigate, producing an
+     *     infinite redirect loop (H1).
      *
-     * We detect dev vs build via viteCtx.server: Vite populates this in
-     * dev mode only (build mode passes it as undefined). NOTE: ctx.bundle
-     * looks tempting but Vite only populates it AFTER our `order: 'pre'`
-     * hook runs, so it's undefined here in build mode too. `server` is
-     * the reliable discriminator for pre-hooks.
-     *
-     * Historical note: this hook USED to unconditionally call
-     * applyLocale(html, {locale: 'en'}) even in build mode, stripping
-     * markers during the EN pass. The BG pass in writeBundle then re-read
-     * the marker-stripped EN emit, ran applyLocale with the BG dict, and
-     * found nothing to translate — BG pages silently rendered with EN
-     * copy. The bug was invisible until real pages carried real markers
-     * (Task #165). Splitting build vs dev fixes build symmetrically while
-     * preserving dev-mode EN rendering.
+     *     Guard: skip re-application if the incoming HTML already carries
+     *     the `data-i18n-locale-applied` sentinel we stamp on <html> from
+     *     applyHead. Idempotent — a straight EN page has no sentinel, so
+     *     the first pass runs normally.
      */
     transformIndexHtml: {
       order: 'pre',
       handler(html, viteCtx) {
-        if (!viteCtx?.server) {
+        if (isBuild) {
           // Build mode — defer marker resolution to writeBundle so both
           // EN and BG start from the same Vite-processed input.
           return html;
         }
-        // Dev mode — resolve EN markers now so the dev server serves a
-        // fully-rendered page at /.
+        // Dev mode — guard against re-entrancy from the /bg/ middleware
+        // (H1). The BG middleware calls server.transformIndexHtml on its
+        // applyLocale output, which re-enters this hook with an HTML
+        // that already has the sentinel; running applyLocale again with
+        // EN would clobber the BG head state.
+        if (html.includes('data-i18n-locale-applied=')) {
+          return html;
+        }
+        // Resolve EN markers now so the dev server serves a fully-
+        // rendered page at /.
         const abs = viteCtx?.filename || '';
         const rel = relFromRoot(abs, projectRoot);
         return applyLocale(html, {
@@ -1765,8 +1927,17 @@ export function i18nPlugin(options) {
         // the EN-then-BG pass (F-double-warn).
         rejectRelativeHrefs(rawHtml, fileName);
 
-        // EN pass — resolves every marker with the EN dict and
-        // overwrites the emitted file (which still had markers on it).
+        // Compute BOTH locale outputs BEFORE writing anything to disk
+        // (H6 atomicity). Old flow overwrote the EN emit first and
+        // only THEN ran BG — a mid-loop throw in the BG pass would
+        // leave dist/index.html marker-stripped but with no BG
+        // mirror; re-running `vite build` without cleaning dist/ then
+        // read a marker-free EN emit and produced BG-in-EN copy on
+        // every subsequent build. Computing both first means a throw
+        // aborts before any file mutation for this page.
+        //
+        // Independent DOM parses inside applyLocale so neither locale
+        // can corrupt the other (documented purity contract).
         const en = applyLocale(rawHtml, {
           locale: DEFAULT_LOCALE,
           dict: dicts[DEFAULT_LOCALE],
@@ -1776,11 +1947,6 @@ export function i18nPlugin(options) {
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
         });
-        writeFileSync(emittedPath, en, 'utf-8');
-
-        // BG pass — same input, different dict/ctx/locale. Writes to
-        // dist/bg/<fileName>. Independent DOM parse inside applyLocale
-        // so neither locale can corrupt the other.
         const bg = applyLocale(rawHtml, {
           locale: 'bg',
           dict: dicts.bg,
@@ -1790,9 +1956,37 @@ export function i18nPlugin(options) {
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
         });
+
+        // Writes are still ordered EN then BG; if the EN write fails
+        // mid-way, the BG write is skipped and the outer for-loop
+        // re-throws. Both writes carry the `[i18n]` diagnostic prefix
+        // matching the read failure path (H12).
+        try {
+          writeFileSync(emittedPath, en, 'utf-8');
+        } catch (e) {
+          throw new Error(
+            `[i18n] writeBundle: cannot write EN emit ${emittedPath}: ${e.message}`,
+          );
+        }
         const bgPath = resolve(outDir, 'bg', fileName);
-        mkdirSync(dirname(bgPath), { recursive: true });
-        writeFileSync(bgPath, bg, 'utf-8');
+        try {
+          mkdirSync(dirname(bgPath), { recursive: true });
+          writeFileSync(bgPath, bg, 'utf-8');
+        } catch (e) {
+          throw new Error(
+            `[i18n] writeBundle: cannot write BG mirror ${bgPath}: ${e.message}`,
+          );
+        }
+
+        // Keep bundle[fileName].source in sync with what we just
+        // wrote to disk (H9). Downstream writeBundle plugins that
+        // iterate the bundle to hash asset.source (SRI generators,
+        // CDN uploaders) would otherwise compute against the stale
+        // marker-intact source Vite handed us — hashes mismatch the
+        // on-disk file, uploads ship untranslated HTML with visible
+        // marker attributes.
+        asset.source = en;
+
         count++;
       }
       // eslint-disable-next-line no-console

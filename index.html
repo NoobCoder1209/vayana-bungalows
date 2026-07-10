@@ -56,8 +56,10 @@
                - deluxe-hilltop-residence/index.html
              (Vite multi-page build, no shared layout primitive yet.) -->
         <button class="site-header__menu" type="button"
-                data-i18n-attr="aria-label:common.header.menu_open_aria"
+                data-i18n-attr="aria-label:common.header.menu_open_aria; data-nav-label-open:common.header.menu_open_aria; data-nav-label-close:common.header.menu_close_aria"
                 aria-label="Open menu"
+                data-nav-label-open="Open menu"
+                data-nav-label-close="Close menu"
                 aria-controls="primary-nav" aria-expanded="false"
                 aria-haspopup="dialog" data-nav-toggle>
           <span></span><span></span><span></span>
@@ -133,7 +135,7 @@
          screen readers special-case the attribute on closed dialogs. -->
     <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
     <nav id="primary-nav" class="primary-nav__panel"
-         data-i18n-attr="aria-label:common.header.menu_open_aria"
+         data-i18n-attr="aria-label:common.drawer.primary_aria"
          aria-label="Primary"
          role="dialog"
          aria-hidden="true" tabindex="-1" hidden>
@@ -190,7 +192,7 @@
         <div class="hero__overlay"></div>
         <div class="container hero__content">
           <span class="eyebrow eyebrow--light" data-i18n="home.hero.eyebrow">Welcome to Vayana Bungalows</span>
-          <h1 id="hero-title" data-i18n-html="home.hero.title_html">Boutique Black Sea<br />Bungalows</h1>
+          <h1 id="hero-title" data-i18n-html="home.hero.title_html">Boutique Bungalows<br />on the Black Sea</h1>
           <p class="hero__sub" data-i18n="home.hero.subtitle">Where the pines meet the coast and the days run on tide and appetite.</p>
         </div>
         <div class="hero__scroll" aria-hidden="true">
@@ -204,7 +206,7 @@
           <div class="cta-strip__copy">
             <span class="eyebrow" data-i18n="home.cta_strip.eyebrow">Reservations open</span>
             <h2 id="cta-strip-title" data-i18n="home.cta_strip.title">Choose your bungalow, then book your stay.</h2>
-            <p data-i18n="home.cta_strip.body">Twenty-eight villas across the island, each with its own character. Pick the one that calls you.</p>
+            <p data-i18n="home.cta_strip.body">Twenty-eight bungalows across the resort, each with its own character. Pick the one that calls you.</p>
           </div>
           <a href="#rooms" class="btn btn-primary" data-i18n="home.cta_strip.cta">Explore the bungalows</a>
         </div>
@@ -215,7 +217,7 @@
         <div class="container intro__grid">
           <div class="intro__copy reveal">
             <span class="eyebrow" data-i18n="home.intro.eyebrow">Welcome to Vayana Bungalows</span>
-            <h2 id="intro-title" data-i18n="home.intro.title">On the Black Sea coast, at the edge of the Strandzha forest.</h2>
+            <h2 id="intro-title" data-i18n="home.intro.title">On the Black Sea coast, at the foot of the Strandzha mountains.</h2>
             <p data-i18n="home.intro.body_para1">Vayana Bungalows is a small family-run retreat in Tsarevo, Bulgaria — a handful of hardwood bungalows tucked between the pines and the sea, hand-built and run with the same care we'd put into our own home.</p>
             <p data-i18n="home.intro.body_para2">Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the drive back.</p>
             <a href="#" class="btn btn-outline-dark" data-i18n="home.intro.cta">Discover the resort</a>
@@ -223,7 +225,7 @@
           <div class="intro__media reveal">
             <img src="/assets/img/intro-villa.jpg"
                  data-i18n-attr="alt:home.intro.img_alt"
-                 alt="Wooden over-water villa at sunset" loading="lazy" />
+                 alt="Wooden bungalow terrace at sunset" loading="lazy" />
           </div>
         </div>
       </section>
@@ -231,7 +233,7 @@
       <!-- 6. Gallery carousel -->
       <section class="gallery section" aria-labelledby="gallery-title">
         <div class="container gallery__head reveal">
-          <span class="eyebrow" data-i18n="home.gallery.eyebrow">A glimpse of the island</span>
+          <span class="eyebrow" data-i18n="home.gallery.eyebrow">A glimpse of the coast</span>
           <h3 id="gallery-title" data-i18n="home.gallery.title">Moments at Vayana Bungalows</h3>
         </div>
         <div class="gallery__viewport">
@@ -328,12 +330,12 @@
             <article class="exp-card">
               <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3"/><circle cx="12" cy="12" r="3"/></svg>
               <h5 data-i18n="home.locations.spa_title">Spa &amp; wellness</h5>
-              <p data-i18n="home.locations.spa_body">Open-air pavilions, salt-water plunge pools, and treatments built around the island's botanicals.</p>
+              <p data-i18n="home.locations.spa_body">Open-air pavilions, salt-water plunge pools, and treatments built around the coast's botanicals.</p>
             </article>
             <article class="exp-card">
               <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 18l4-8 4 5 3-7 7 10z"/><path d="M3 21h18"/></svg>
-              <h5 data-i18n="home.locations.activities_title">Island activities</h5>
-              <p data-i18n="home.locations.activities_body">Reef snorkeling at first light, sunset paddleboards, guided hikes to the volcanic crater rim.</p>
+              <h5 data-i18n="home.locations.activities_title">Coastal activities</h5>
+              <p data-i18n="home.locations.activities_body">Diving at first light, sunset kayaking, guided hikes into the Strandzha nature park.</p>
             </article>
             <article class="exp-card">
               <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2v8a4 4 0 008 0V2"/><path d="M10 14v8"/><path d="M18 2c2 0 3 2 3 5s-1 5-3 5v10"/></svg>
@@ -379,7 +381,7 @@
         <div class="container services__grid">
           <article class="service-tile">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 16l-7-2V6.5a2.5 2.5 0 00-5 0V14l-7 2v2l7-1.5V21l-2 1v1l3.5-.5L14 23v-1l-2-1v-4.5L21 18z"/></svg>
-            <h5 data-i18n="home.services.airport_title">Airport pick-up</h5>
+            <h5 data-i18n="home.services.airport_title">Transfer</h5>
             <p data-i18n="home.services.airport_body">Boat transfer included with every stay.</p>
           </article>
           <article class="service-tile">
@@ -390,7 +392,7 @@
           <article class="service-tile">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M5 12.55a11 11 0 0114 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
             <h5 data-i18n="home.services.wifi_title">Wifi &amp; internet</h5>
-            <p data-i18n="home.services.wifi_body">Fibre across the island, even on the beach.</p>
+            <p data-i18n="home.services.wifi_body">Fibre across the resort, even on the beach.</p>
           </article>
           <article class="service-tile">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="14" r="6"/><path d="M9 4h6v3H9z"/></svg>
@@ -485,7 +487,7 @@
         <div class="container newsletter__content reveal">
           <span class="eyebrow eyebrow--light" data-i18n="home.newsletter.eyebrow">Notes from the bay</span>
           <h4 id="newsletter-title" data-i18n="home.newsletter.title">Stay with us</h4>
-          <p class="newsletter__lede" data-i18n="home.newsletter.lede">Quiet notes from the island &mdash; three or four a year, never more.</p>
+          <p class="newsletter__lede" data-i18n="home.newsletter.lede">Quiet notes from the coast &mdash; three or four a year, never more.</p>
           <form class="newsletter__form" data-newsletter-form novalidate>
             <label class="sr-only" for="nl-email" data-i18n="home.newsletter.email_label">Email address</label>
             <input id="nl-email" name="email" type="email" required
@@ -586,7 +588,12 @@
       <div class="container site-footer__inner">
         <!-- Column 1 — Contact -->
         <div class="site-footer__col site-footer__col--contact">
-          <span class="eyebrow eyebrow--light" data-site-config="brand" data-i18n="common.footer.brand_eyebrow">Vayana Bungalows</span>
+          <!-- Brand is a proper noun — no translation. data-site-config
+               owns hydration; the visible text ships from SITE_CONFIG.brand.
+               Deliberately NOT keyed via data-i18n to avoid a dual-writer
+               conflict (H5): both markers write textContent, and site-config
+               runtime hydration wins, silently discarding any locale value. -->
+          <span class="eyebrow eyebrow--light" data-site-config="brand">Vayana Bungalows</span>
           <ul class="site-footer__contact">
             <li>
               <a data-site-config-href="phone.href" href="tel:+359888888888">
@@ -652,7 +659,14 @@
       </div>
       <div class="site-footer__bar">
         <div class="container site-footer__bar-inner">
-          <p data-site-config="copyright" data-i18n="common.footer.copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
+          <!-- Copyright text carries the localised value including the
+               {credit} interpolation. Runtime site-config-inject.js used to
+               hydrate this from SITE_CONFIG.copyright, but that overwrote
+               the BG string with an English literal (H5). Data attribute
+               dropped so i18n is the sole writer. If SITE_CONFIG.copyright
+               ever needs to change, update the locale JSONs and the
+               contextByLocale.{en,bg}.credit token in vite.config.js. -->
+          <p data-i18n="common.footer.copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
           <p class="site-footer__license"><span data-i18n="common.footer.license_prefix">License number:</span> <span data-site-config="license">1327673</span></p>
         </div>
       </div>

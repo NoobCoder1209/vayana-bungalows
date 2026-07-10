@@ -28,6 +28,7 @@
       "nav_destination": "Destination",
       "nav_contacts": "Contacts",
       "nav_enquiries": "Enquiries",
+      "primary_aria": "Primary",
       "noscript_aria": "Primary (no JavaScript)"
     },
     "footer": {
