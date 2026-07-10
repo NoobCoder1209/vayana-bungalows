@@ -1324,8 +1324,20 @@ function applyHead(root, opts) {
     //     locale's page URL. The href is the CANONICAL locale URL
     //     computed by pageUrl() so /bg/foo/ ↔ /foo/ swap correctly
     //     regardless of the source markup's ./ or bg/ shortcut.
-    for (const seg of pill.querySelectorAll('.site-header__lang-seg[data-lang]')) {
+    //
+    // Selector is `.site-header__lang-seg` unfiltered (R2-L1) — the
+    // previous `[data-lang]` filter silently skipped any segment
+    // missing data-lang, which meant a future edit that dropped
+    // data-lang from one segment shipped a broken href with no
+    // warning. Hard-fail instead: the pill invariant is that every
+    // segment declares its locale.
+    for (const seg of pill.querySelectorAll('.site-header__lang-seg')) {
       const segLocale = seg.getAttribute('data-lang');
+      if (!segLocale) {
+        throw new Error(
+          '[i18n] .site-header__lang-seg element is missing data-lang — pill invariant broken. Every segment must declare data-lang="<locale>" so applyHead can rewrite href/is-active per emit.',
+        );
+      }
       const isActive = segLocale === locale;
       const segUrl = pageUrl({
         basePath,
@@ -1379,23 +1391,34 @@ function applyHead(root, opts) {
 }
 
 /**
- * Sweep internal href/src/action attributes to locale-aware root-
- * absolute form (H7). Only rewrites bare relative paths — anything
- * starting with `/`, `#`, `.`, `?`, or a scheme is left as-is.
+ * Sweep internal href/action attributes on navigational anchors to
+ * locale-aware root-absolute form (H7). Only rewrites bare relative
+ * paths — anything starting with `/`, `#`, `.`, `?`, or a scheme is
+ * left as-is.
  *
- * Rewrite rule: `foo/bar/` → `{basePath}[bg/]foo/bar/`. For the
- * default locale, no prefix is inserted. For non-default locales,
- * `{locale}/` is inserted between basePath and the path.
+ * Rewrite rule: `foo/bar/` → `{basePath}[locale/]foo/bar/`. For the
+ * default locale, no locale prefix is inserted; for non-default
+ * locales, `{locale}/` is inserted between basePath and the path.
  *
- * Attribute allowlist matches URL_BEARING_ATTRS but the surface here
- * is deliberately narrow — this pass runs on the whole tree, so we
- * only touch attrs that are unambiguously navigational: href on
- * <a>/<area>/<base>/<link>, action on <form>, src on <img>/<script>/
- * <iframe>/<source>/<track>/<video>/<audio>. Note: <img src>
- * translates BUT the codebase writes those as `/assets/…` (root-abs)
- * so this pass is a no-op for images in practice; keeping it in the
- * list means a translator who authors a bare-relative src via
- * data-i18n-attr still gets it swept.
+ * Coverage — ATTR_BY_TAG below. The scope is deliberately narrow to
+ * navigational anchors that produce user-visible clicks/submits:
+ *   - href on <a>, <area>, <link>
+ *   - action on <form>
+ *
+ * NOT covered by this pass, and why:
+ *   - <base href> — a per-page overrides that would silently retarget
+ *     every relative URL in the document. If the codebase ever grows
+ *     one, treat it as a manual authoring decision, not a sweep target.
+ *   - src on <img>/<script>/<iframe>/<source>/<track>/<video>/<audio>
+ *     — Vite's html-plugin already rewrites root-absolute src values
+ *     into hashed emitted names; the codebase authors those as
+ *     `/assets/…` (root-abs) so this pass would be a no-op in practice.
+ *     A translator authoring a bare-relative src via data-i18n-attr
+ *     would still slip through, but that's a rare enough vector that
+ *     we prefer keeping this pass focused; add coverage here + a test
+ *     the first time it bites.
+ *   - href on <base> or <use xlink:href>, srcset/imagesrcset — same
+ *     rationale as src: rare-enough surface, add per-case.
  */
 function rewriteInternalHrefs(root, opts) {
   const { locale, basePath, defaultLocale } = opts;
@@ -1848,7 +1871,15 @@ export function i18nPlugin(options) {
         // applyLocale output, which re-enters this hook with an HTML
         // that already has the sentinel; running applyLocale again with
         // EN would clobber the BG head state.
-        if (html.includes('data-i18n-locale-applied=')) {
+        //
+        // Scoped regex (R2-L3) — the guard requires the sentinel as an
+        // attribute on the <html> element specifically. A bare
+        // .includes() would false-positive if any translated string,
+        // inline SVG comment, or JS blob ever embedded the literal
+        // substring "data-i18n-locale-applied=" — vanishingly unlikely
+        // given the namespace but a scoped test is strictly safer and
+        // doesn't cost anything at plugin scale.
+        if (/<html\b[^>]*\bdata-i18n-locale-applied=/i.test(html)) {
           return html;
         }
         // Resolve EN markers now so the dev server serves a fully-
@@ -1969,8 +2000,18 @@ export function i18nPlugin(options) {
           );
         }
         const bgPath = resolve(outDir, 'bg', fileName);
+        // Split mkdir + write diagnostics so a mkdir-only failure
+        // (permissions, ENOTDIR, disk-full while creating the parent)
+        // doesn't get reported as a write failure pointing at the
+        // file path (R2-M2).
         try {
           mkdirSync(dirname(bgPath), { recursive: true });
+        } catch (e) {
+          throw new Error(
+            `[i18n] writeBundle: cannot create BG mirror directory ${dirname(bgPath)}: ${e.message}`,
+          );
+        }
+        try {
           writeFileSync(bgPath, bg, 'utf-8');
         } catch (e) {
           throw new Error(

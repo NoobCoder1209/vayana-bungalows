@@ -1486,6 +1486,25 @@ test('parseAttrPairs: exported for lint reuse, returns {pairs, error} shape (M4)
 // object end-to-end: configResolved → transformIndexHtml → writeBundle.
 // ---------------------------------------------------------------------------
 
+/**
+ * Build a Vite-shaped ResolvedConfig mock for configResolved calls
+ * (R2-L4). The plugin currently only reads `config.command`, but
+ * shipping realistic-looking defaults for `base`, `mode`, `root`, and
+ * `build` keeps the mock future-proof: if a later plugin change reads
+ * one of those and the test doesn't provide it, the test surfaces
+ * that additional dependency by breaking loudly rather than silently
+ * receiving undefined and passing.
+ */
+function mockResolvedConfig(command) {
+  return {
+    command, // 'build' | 'serve'
+    base: '/',
+    mode: command === 'build' ? 'production' : 'development',
+    root: process.cwd(),
+    build: { outDir: 'dist' },
+  };
+}
+
 test('i18nPlugin: writeBundle produces marker-stripped EN + translated BG from marker-intact input (H11)', async (t) => {
   const { mkdirSync } = await import('node:fs');
   const { i18nPlugin } = await import('../i18n-plugin.js');
@@ -1513,7 +1532,7 @@ test('i18nPlugin: writeBundle produces marker-stripped EN + translated BG from m
   });
 
   // Signal build mode via configResolved, matching what Vite does.
-  plugin.configResolved({ command: 'build' });
+  plugin.configResolved(mockResolvedConfig('build'));
 
   // Source HTML with a marker + a bare-relative link so we can assert
   // BOTH marker resolution AND the H7 href sweep in the same fixture.
@@ -1595,7 +1614,7 @@ test('i18nPlugin: dev-mode transformIndexHtml resolves EN markers on first call,
   });
 
   // Dev mode — configResolved reports command='serve'.
-  plugin.configResolved({ command: 'serve' });
+  plugin.configResolved(mockResolvedConfig('serve'));
 
   const src = `<!doctype html>
 <html lang="en"><head><title>t</title></head>
@@ -1619,75 +1638,109 @@ test('i18nPlugin: dev-mode transformIndexHtml resolves EN markers on first call,
 });
 
 test('i18nPlugin: writeBundle is atomic — a BG applyLocale throw does not leave EN half-written (H6)', async (t) => {
-  const { mkdirSync } = await import('node:fs');
+  const { mkdirSync, readFileSync } = await import('node:fs');
   const { i18nPlugin } = await import('../i18n-plugin.js');
   const dir = mkdtempSync(join(tmpdir(), 'i18n-hook-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const localesDir = join(dir, 'locales');
   mkdirSync(localesDir, { recursive: true });
+
+  // Both dicts carry the SAME token shape ({name}) so loadDictionaries'
+  // symmetric-token check passes. rejectPreEscapedEntities passes because
+  // there are no pre-escaped entities. contextByLocale has both locales
+  // and both entries are objects with non-empty string values, so the
+  // init-time ctx validator passes.
+  //
+  // The trick: EN's ctx supplies `name`, BG's supplies a DIFFERENT key
+  // (`unused`). Load-time validation only checks that each ctx entry is
+  // an object with valid values — it does NOT cross-reference dict tokens
+  // against ctx keys. So construction succeeds, and the BG applyLocale
+  // pass throws at interpolate() time when it hits the {name} token and
+  // finds no BG context entry named `name`. This is exactly the
+  // 'mid-writeBundle applyLocale throw' case H6 atomicity has to survive.
   writeFileSync(
     join(localesDir, 'en.json'),
-    JSON.stringify({ home: { hi: 'hello' } }),
+    JSON.stringify({ home: { hi: 'Hello, {name}!' } }),
     'utf-8',
   );
-  // BG dict deliberately missing 'home.hi' — will hard-fail with an
-  // unknown-key error during the BG pass. But the plugin loads both
-  // dicts at init and requires them to be symmetric, so we make BG
-  // symmetric with a value that violates a DIFFERENT invariant to
-  // trigger a throw specifically in the BG applyLocale pass, not
-  // at plugin construction. Simplest: give BG a value with a
-  // pre-escaped entity that fails RH3.
   writeFileSync(
     join(localesDir, 'bg.json'),
-    JSON.stringify({ home: { hi: 'hi &amp; hello' } }),
+    JSON.stringify({ home: { hi: 'Здравей, {name}!' } }),
     'utf-8',
   );
 
-  // If loadDictionaries hard-fails here, we assert on that instead —
-  // it's still evidence of the atomicity contract (a bad dict never
-  // reaches writeBundle).
-  let plugin;
-  try {
-    plugin = i18nPlugin({
-      localesDir,
-      contextByLocale: { en: {}, bg: {} },
-      basePath: '/',
-      projectRoot: dir,
-      inputs: { home: join(dir, 'index.html') },
-    });
-  } catch (err) {
-    assert.match(
-      err.message,
-      /entity|escape|RH3|token|malformed/i,
-      'load-time asymmetry hard-fails with a diagnostic — pre-writeBundle atomicity holds',
-    );
-    return;
-  }
+  const plugin = i18nPlugin({
+    localesDir,
+    // EN has `name`, BG has a placeholder key so its ctx object is non-
+    // empty (init-time validator requires non-empty string values on
+    // whatever keys are present, but not that any specific key exists).
+    contextByLocale: { en: { name: 'World' }, bg: { unused: 'placeholder' } },
+    basePath: '/',
+    projectRoot: dir,
+    inputs: { home: join(dir, 'index.html') },
+  });
+  plugin.configResolved(mockResolvedConfig('build'));
 
-  // If we got here, load didn't reject — drive writeBundle and expect
-  // the BG pass to throw with no EN write having landed. Set up a
-  // marker-carrying page in dist/.
-  plugin.configResolved({ command: 'build' });
+  // Marker-carrying source in dist/. `en` interpolates fine, `bg`
+  // throws at applyLocale-time because {name} references a token BG's
+  // ctx doesn't have — that's the mid-writeBundle throw H6 must
+  // survive with EN emit untouched.
   const outDir = join(dir, 'dist');
   mkdirSync(outDir, { recursive: true });
   const src = `<!doctype html><html lang="en"><head><title>t</title></head>
-<body><p data-i18n="home.hi">hi</p></body></html>`;
-  writeFileSync(join(outDir, 'index.html'), src, 'utf-8');
+<body><p data-i18n="home.hi">Hello, World!</p></body></html>`;
   const enBefore = src;
+  writeFileSync(join(outDir, 'index.html'), enBefore, 'utf-8');
 
   const bundle = {
     'index.html': { type: 'asset', fileName: 'index.html', source: src },
   };
+
+  // Precondition sanity — if EN applyLocale can't succeed, our BG-only-
+  // failure premise is wrong. This assertion catches that regression
+  // (e.g. someone tightens load-time validation to also cross-check
+  // dict tokens against ctx keys — the test would then fail at
+  // construction and this assertion surfaces the mismatch clearly).
+  const { applyLocale } = await import('../i18n-plugin.js');
+  const enTest = applyLocale(src, {
+    locale: 'en',
+    dict: { 'home.hi': 'Hello, {name}!' },
+    ctx: { name: 'World' },
+    basePath: '/',
+    pagePath: 'index.html',
+    allLocales: ['en', 'bg'],
+    defaultLocale: 'en',
+  });
+  assert.match(enTest, /Hello, World!/, 'sanity: EN interpolation works');
+
+  // Now drive writeBundle. BG's applyLocale throws at {name}. H6
+  // atomicity says: EN write MUST NOT have landed before BG threw.
   assert.throws(
     () => plugin.writeBundle({ dir: outDir }, bundle),
-    /i18n|entity|escape|RH3/i,
-    'BG pass throws with a diagnostic — H6 atomicity means EN write also does not land',
+    /missing context value \{name\}/i,
+    'BG applyLocale throws inside writeBundle — this is the mid-pass failure H6 defends against',
   );
-  // On-disk EN should be UNCHANGED — H6 atomicity guarantees we
-  // computed both locales before touching disk. If it changed, the
-  // next `vite build` would silently regenerate the bug.
-  const enAfter = await import('node:fs').then(({ readFileSync }) =>
-    readFileSync(join(outDir, 'index.html'), 'utf-8'),
+
+  // On-disk EN emit must be UNCHANGED (byte-for-byte) — H6 atomicity
+  // guarantees we compute BOTH locales before touching disk, so a BG
+  // throw aborts the page with no EN write having landed. Without the
+  // fix, EN would be overwritten to its marker-stripped form and the
+  // next `vite build` (without `rm -rf dist/`) would re-read that
+  // marker-free file and silently produce BG-in-EN copy on retry.
+  const enAfter = readFileSync(join(outDir, 'index.html'), 'utf-8');
+  assert.equal(
+    enAfter,
+    enBefore,
+    'H6: EN emit byte-unchanged after BG applyLocale throw',
   );
-  assert.equal(enAfter, enBefore, 'H6: EN emit unchanged after BG throw — atomic dual-locale writeBundle');
+
+  // And bundle.source must ALSO not have been mutated to the mid-
+  // transform EN result (H9 depends on H6 — if EN gets computed and
+  // stashed on bundle.source but never written, downstream plugins
+  // reading bundle.source see stale-in-a-different-direction data).
+  assert.equal(
+    bundle['index.html'].source,
+    src,
+    'H6+H9: bundle.source stays at pre-transform value when BG throws',
+  );
 });
