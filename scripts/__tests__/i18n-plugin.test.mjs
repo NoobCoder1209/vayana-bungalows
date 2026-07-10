@@ -556,40 +556,48 @@ test('applyLocale: NO pill-expected marker when source lacks .site-header__lang'
 });
 
 test('applyLocale: pill segments rewritten with is-active + aria-current + hreflang + absolute hrefs (R3-L1)', () => {
-  // Two segments with data-lang; EN pass should activate EN segment
-  // and point BG at the /bg/ locale prefix (absolute URL). Fixture
-  // gives EN segment stale href="./" + BG stale href="bg/" — the
-  // rewriter's job is to replace both with locale-aware absolute
-  // URLs regardless of what the source authored.
+  // Fixture matches PRODUCTION shape (index.html:119-124): EN segment
+  // pre-carries is-active + aria-current="true" so the BG-pass
+  // negative assertions actually verify a STRIP, not a no-op (R4-L1).
+  // A missing strip on the EN segment during the BG pass would leave
+  // the WRONG segment visually flagged as current — this test now
+  // locks that regression down.
   const src = `<!doctype html><html><head></head><body>
 <div class="site-header__lang">
-  <a class="site-header__lang-seg" href="./" data-lang="en">EN</a>
+  <a class="site-header__lang-seg is-active" href="./" data-lang="en" aria-current="true">EN</a>
   <a class="site-header__lang-seg" href="bg/" data-lang="bg">BG</a>
 </div>
 </body></html>`;
+
+  // ── EN pass: EN segment stays active; BG segment gets absolute /bg/ href
   const enOut = applyLocale(src, headOpts({ locale: 'en', dict: {} }));
-  // EN segment: is-active, aria-current="true", href = base URL for EN.
-  // Match by data-lang="en" first, then look for the specific attributes
-  // on the SAME element (any order — node-html-parser preserves author
-  // order but the assertions shouldn't be tied to that).
   const enSeg = enOut.match(/<a\b[^>]*data-lang="en"[^>]*>/i)?.[0] ?? '';
   const bgSeg = enOut.match(/<a\b[^>]*data-lang="bg"[^>]*>/i)?.[0] ?? '';
-  assert.match(enSeg, /\bis-active\b/, 'EN segment has is-active class on EN pass');
-  assert.match(enSeg, /aria-current="true"/, 'EN segment aria-current="true" on EN pass');
-  assert.match(enSeg, /hreflang="en"/, 'EN segment hreflang="en" stamped');
-  assert.match(enSeg, /href="\/vayana-bungalows\/"/, 'EN segment href points at EN URL on EN pass');
-  assert.match(bgSeg, /href="\/vayana-bungalows\/bg\//, 'BG segment href points at /bg/ absolute URL');
+  assert.match(enSeg, /\bis-active\b/, 'EN segment retains is-active on EN pass');
+  assert.match(enSeg, /aria-current="true"/, 'EN segment retains aria-current="true" on EN pass');
+  assert.match(enSeg, /hreflang="en"/, 'EN segment gets hreflang="en" stamped');
+  assert.match(enSeg, /href="\/vayana-bungalows\/"/, 'EN segment href is the EN URL on EN pass');
+  // R4-L4: closing " on the BG-href regex so a leaky suffix like
+  // /bg/leaked-suffix/" would fail this assertion. Symmetric with the
+  // EN-href assertion above.
+  assert.match(bgSeg, /href="\/vayana-bungalows\/bg\/"/, 'BG segment href is the absolute /bg/ URL on EN pass');
   assert.doesNotMatch(bgSeg, /\bis-active\b/, 'BG segment has no is-active on EN pass');
   assert.doesNotMatch(bgSeg, /aria-current=/, 'BG segment has no aria-current on EN pass');
 
-  // BG pass swaps: BG segment is active, EN segment points at EN URL.
+  // ── BG pass: BG becomes active; EN's pre-existing is-active +
+  // aria-current MUST be stripped. If the class-filter or the
+  // removeAttribute branch is ever deleted, THIS is the assertion
+  // pair that fires — the fixture guarantees the strip is a real
+  // transition, not a no-op.
   const bgOut = applyLocale(src, headOpts({ locale: 'bg', dict: {} }));
   const enSegBg = bgOut.match(/<a\b[^>]*data-lang="en"[^>]*>/i)?.[0] ?? '';
   const bgSegBg = bgOut.match(/<a\b[^>]*data-lang="bg"[^>]*>/i)?.[0] ?? '';
-  assert.match(bgSegBg, /aria-current="true"/, 'BG segment aria-current="true" on BG pass');
-  assert.match(bgSegBg, /\bis-active\b/, 'BG segment is-active on BG pass');
-  assert.doesNotMatch(enSegBg, /aria-current=/, 'EN segment has no aria-current on BG pass');
-  assert.doesNotMatch(enSegBg, /\bis-active\b/, 'EN segment has no is-active on BG pass');
+  assert.match(bgSegBg, /aria-current="true"/, 'BG segment gets aria-current="true" on BG pass');
+  assert.match(bgSegBg, /\bis-active\b/, 'BG segment gets is-active on BG pass');
+  assert.match(bgSegBg, /href="\/vayana-bungalows\/bg\/"/, 'BG segment href is the /bg/ URL on BG pass');
+  assert.doesNotMatch(enSegBg, /aria-current=/, 'BG pass STRIPS pre-existing aria-current from EN segment (R4-L1)');
+  assert.doesNotMatch(enSegBg, /\bis-active\b/, 'BG pass STRIPS pre-existing is-active from EN segment (R4-L1)');
+  assert.match(enSegBg, /href="\/vayana-bungalows\/"/, 'EN segment href swapped to /vayana-bungalows/ on BG pass');
 });
 
 test('applyLocale: hard-fails when .site-header__lang-seg is missing data-lang (R2-L1)', () => {
@@ -607,6 +615,38 @@ test('applyLocale: hard-fails when .site-header__lang-seg is missing data-lang (
     () => applyLocale(src, headOpts({ locale: 'en', dict: {} })),
     /site-header__lang-seg.*missing data-lang|pill invariant broken/i,
     'R2-L1 hard-fail must surface the "missing data-lang" diagnostic',
+  );
+});
+
+test('applyLocale: hard-fails on mixed-case pill (one segment with data-lang, one without) — production shape (R4-L2)', () => {
+  // Production shape has TWO segments. R2-L1 must fire even when
+  // only one segment is broken — a future refactor that (e.g.)
+  // wraps the throw in try/continue or short-circuits on first
+  // valid segment would regress against real markup but pass the
+  // single-segment R2-L1 test above. Exercise both orderings so
+  // no assumption sneaks in about "which iteration hits the throw".
+  const srcSecondBroken = `<!doctype html><html><head></head><body>
+<div class="site-header__lang">
+  <a class="site-header__lang-seg" href="./" data-lang="en">EN</a>
+  <a class="site-header__lang-seg" href="bg/">BG</a>
+</div>
+</body></html>`;
+  assert.throws(
+    () => applyLocale(srcSecondBroken, headOpts({ locale: 'en', dict: {} })),
+    /site-header__lang-seg.*missing data-lang|pill invariant broken/i,
+    'R4-L2: throws when second segment is missing data-lang (first ok)',
+  );
+
+  const srcFirstBroken = `<!doctype html><html><head></head><body>
+<div class="site-header__lang">
+  <a class="site-header__lang-seg" href="./">EN</a>
+  <a class="site-header__lang-seg" href="bg/" data-lang="bg">BG</a>
+</div>
+</body></html>`;
+  assert.throws(
+    () => applyLocale(srcFirstBroken, headOpts({ locale: 'en', dict: {} })),
+    /site-header__lang-seg.*missing data-lang|pill invariant broken/i,
+    'R4-L2: throws when first segment is missing data-lang (second ok)',
   );
 });
 
@@ -1797,5 +1837,63 @@ test('i18nPlugin: writeBundle is atomic — a BG applyLocale throw does not leav
     bundle['index.html'].source,
     src,
     'H6+H9: bundle.source stays at pre-transform value when BG throws',
+  );
+});
+
+test('i18nPlugin: writeBundle fs errors chain the original error via err.cause (R4-L3)', async (t) => {
+  const { mkdirSync } = await import('node:fs');
+  const { i18nPlugin } = await import('../i18n-plugin.js');
+  const dir = mkdtempSync(join(tmpdir(), 'i18n-hook-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const localesDir = join(dir, 'locales');
+  mkdirSync(localesDir, { recursive: true });
+  writeFileSync(
+    join(localesDir, 'en.json'),
+    JSON.stringify({ home: { hi: 'hello' } }),
+    'utf-8',
+  );
+  writeFileSync(
+    join(localesDir, 'bg.json'),
+    JSON.stringify({ home: { hi: 'здравей' } }),
+    'utf-8',
+  );
+
+  const plugin = i18nPlugin({
+    localesDir,
+    contextByLocale: { en: {}, bg: {} },
+    basePath: '/',
+    projectRoot: dir,
+    inputs: { home: join(dir, 'index.html') },
+  });
+  plugin.configResolved(mockResolvedConfig('build'));
+
+  // outDir has NO emitted file — readFileSync will throw ENOENT.
+  // R3-L4 wraps that in a diagnostic Error with {cause: e}; this
+  // test asserts the underlying err.cause.code is still reachable
+  // so downstream retry/reporting code can discriminate error kinds
+  // without parsing message strings.
+  const outDir = join(dir, 'dist');
+  mkdirSync(outDir, { recursive: true });
+  const bundle = {
+    'missing.html': { type: 'asset', fileName: 'missing.html', source: '' },
+  };
+
+  let caught = null;
+  try {
+    plugin.writeBundle({ dir: outDir }, bundle);
+  } catch (err) {
+    caught = err;
+  }
+  assert.ok(caught, 'writeBundle should throw when the emitted file is missing');
+  assert.match(
+    caught.message,
+    /cannot read emitted file/,
+    'diagnostic message has [i18n] prefix and context',
+  );
+  assert.ok(caught.cause, 'R3-L4: caught error must chain the original via err.cause');
+  assert.equal(
+    caught.cause.code,
+    'ENOENT',
+    'R3-L4: err.cause.code preserves the underlying fs error code (ENOENT here)',
   );
 });
