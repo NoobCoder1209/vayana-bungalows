@@ -1761,7 +1761,12 @@ test('i18nPlugin: writeBundle produces marker-stripped EN + translated BG from m
   assert.match(enOut, /Hello, World!/, 'EN emit must render EN dict value with context interpolation');
   assert.match(enOut, /href="\/base\/stay\/"/, 'H7: bare relative rewritten to root-absolute for EN');
   assert.match(enOut, /<html\s[^>]*lang="en"/, 'EN emit must set <html lang="en">');
-  assert.match(enOut, /data-i18n-locale-applied="en"/, 'H1: sentinel present on EN');
+  // Round-4 F3: writeBundle now STRIPS the data-i18n-locale-applied
+  // sentinel. It's a dev-mode re-entrancy guard for transformIndexHtml
+  // and has no reason to appear on the built artifact. The plugin's
+  // stripRuntimeSentinels=true flag on writeBundle removes it.
+  assert.doesNotMatch(enOut, /data-i18n-locale-applied=/, 'F3: runtime sentinel must be stripped from build output');
+  assert.doesNotMatch(enOut, /data-i18n-redirecting=/, 'F3: runtime sentinel must be stripped from build output');
 
   // BG emit — markers stripped, BULGARIAN text, /base/bg/-prefixed href.
   const bgOut = await import('node:fs').then(({ readFileSync }) =>
@@ -1771,7 +1776,8 @@ test('i18nPlugin: writeBundle produces marker-stripped EN + translated BG from m
   assert.match(bgOut, /Здравей, Свят!/, 'BG emit must render BG dict value with BG context');
   assert.match(bgOut, /href="\/base\/bg\/stay\/"/, 'H7: bare relative rewritten to /base/bg/ for BG');
   assert.match(bgOut, /<html\s[^>]*lang="bg"/, 'BG emit must set <html lang="bg">');
-  assert.match(bgOut, /data-i18n-locale-applied="bg"/, 'H1: sentinel present on BG');
+  assert.doesNotMatch(bgOut, /data-i18n-locale-applied=/, 'F3: runtime sentinel must be stripped from build output');
+  assert.doesNotMatch(bgOut, /data-i18n-redirecting=/, 'F3: runtime sentinel must be stripped from build output');
 
   // H9 — bundle.source updated in-place to match the EN on-disk output.
   assert.equal(

@@ -154,6 +154,15 @@
              — keep them in sync with assets/js/enquiry.js. -->
         <div class="container enquiry-page__form-wrap">
           <form class="enquiry-form" data-enquiry-form novalidate>
+            <!-- Hidden locale field. JS-mode: enquiry.js includes the same
+                 value in the JSON payload directly (site-config-driven).
+                 If a future revision wires this form for no-JS submission
+                 (adds action= / method=), the hidden input carries the
+                 emit-locale into the form-urlencoded body so the Worker's
+                 sniffLocale + locale-aware redirect actually activates.
+                 initEnquiry() populates the value at init time from
+                 <html lang>. -->
+            <input type="hidden" name="locale" value="" data-enquiry-locale>
             <!-- 1. Full name — full-row width (extended per spec).
                  Visible <label> hidden via .sr-only so screen readers
                  still announce the field; sighted users see the

@@ -19,11 +19,19 @@ function fpLocale() {
   return FLATPICKR_LOCALES[currentLocale()] || 'default';
 }
 
-// The dateFormat token string is a locale-neutral pattern. When Bulgarian
-// is active flatpickr will emit month names / weekday headers in Cyrillic
-// while keeping the same D-M-Y ordering. Tokens per flatpickr's format
-// reference: https://flatpickr.js.org/formatting/
-const DATE_FORMAT = 'M j, Y';
+// Locale-aware date format. EN keeps the source `M j, Y` (e.g. "Jul 15, 2027")
+// per the historical booking-page style. BG uses `d/m/Y` (e.g. "15/07/2027")
+// per the same reasoning that drove enquiry.js's choice — Bulgarian
+// audience reads day-first numeric. Falls back to the EN format for
+// unknown locales; the underlying flatpickr locale swap handles
+// month/weekday names in Cyrillic when locale='bg' is loaded.
+const DATE_FORMATS = {
+  en: 'M j, Y',
+  bg: 'd/m/Y',
+};
+function fpDateFormat() {
+  return DATE_FORMATS[currentLocale()] || DATE_FORMATS.en;
+}
 
 // Where bookings.json lives once Vite has applied the production base path.
 // In dev: /assets/data/bookings.json
@@ -139,7 +147,7 @@ export function initBooking() {
   const fpIn = flatpickr(checkin, {
     minDate: 'today',
     maxDate: seasonMaxDate(),
-    dateFormat: DATE_FORMAT,
+    dateFormat: fpDateFormat(),
     locale: fpLocale(),
     // The isOffSeason predicate greys out Oct..Apr; per-bungalow booked
     // dates get pushed in later via .set('disable', ...) once bookings.json
@@ -166,7 +174,7 @@ export function initBooking() {
   const fpOut = flatpickr(checkout, {
     minDate: tomorrow,
     maxDate: seasonMaxDate(),
-    dateFormat: DATE_FORMAT,
+    dateFormat: fpDateFormat(),
     locale: fpLocale(),
     disable: [isOffSeason],
     disableMobile: true,

@@ -35,6 +35,55 @@ npm test               # run all node:test suites (i18n plugin, lang.js, worker)
 npm run i18n:lint      # verify all data-i18n markers have keys + no orphans
 ```
 
+## Deployment
+
+The static site auto-deploys on push to `main` (GitHub Pages, base path
+`/vayana-bungalows/`). The Cloudflare Worker at `worker/` deploys via
+`.github/workflows/deploy-worker.yml` when `worker/**` changes.
+
+### Google Sheet schema (worker prerequisite)
+
+The Worker appends every enquiry as a row to a Google Sheet. Adding /
+removing columns in the Worker's `sheets.js` REQUIRES a manual schema
+change on the Sheet BEFORE the deploy — otherwise new rows land in
+header-less columns and analytics splitters silently drift.
+
+Current schema (column order in `worker/src/sheets.js`):
+
+| Col | Header       | Source                              |
+|-----|--------------|-------------------------------------|
+| A   | Timestamp    | ISO 8601 UTC                        |
+| B   | Ref          | Generated ref (see `lib/ref.js`)    |
+| C   | Name         | Trimmed, formula-neutralised        |
+| D   | Email        | Validated, trimmed                  |
+| E   | Phone        | Validated, trimmed                  |
+| F   | Check-in     | YYYY-MM-DD (local time)             |
+| G   | Check-out    | YYYY-MM-DD (local time)             |
+| H   | Adults       | 1..4                                |
+| I   | Children     | 0..4                                |
+| J   | Infants      | 0..4                                |
+| K   | Message      | Trimmed, formula-neutralised        |
+| L   | Consent      | Always "true" on stored rows        |
+| M   | Source IP hash | SHA-256(cf-connecting-ip + salt)  |
+| N   | **Locale**   | 'en' or 'bg' (added in Task #167)   |
+
+**Before deploying a Worker revision that changes the column count:**
+
+1. Open the "Enquires" tab of the sheet.
+2. Extend / adjust the header row so cell `<col-letter>1` matches the
+   new column's name (e.g. add "Locale" to `N1` when introducing column N).
+3. Verify `worker/src/sheets.js`'s `range` matches the new letter suffix
+   (e.g. `A:N` after adding column N).
+4. Deploy the Worker (`gh workflow run deploy-worker.yml` or a push to
+   `worker/**`).
+5. Post-deploy smoke: submit one form-mode + one JSON-mode enquiry and
+   verify the new column's value appears correctly in the sheet.
+
+Skipping step 2 lands new data in an un-labelled column; historical
+rows keep their old length so any pivot-table splitting by column
+count breaks silently. There is no automated check for this — the
+sheet schema is out-of-band from the Worker code.
+
 ## Structure
 
 ```

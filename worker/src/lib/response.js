@@ -64,7 +64,17 @@ export function jsonResponse(body, status, request, env) {
 export function redirectResponse(path, request, env, locale) {
   // 303 — "see other", makes the browser switch from POST to GET so the
   // user's reload of the thanks page doesn't resubmit the form.
-  const base = env.SITE_BASE || '';
+  //
+  // Normalize env.SITE_BASE by trimming a trailing slash before
+  // concatenation. Deployed config uses `/vayana-bungalows` (no
+  // trailing slash), but an operator typo of `/vayana-bungalows/`
+  // would otherwise emit `.../vayana-bungalows//bg/enquiries/thanks/`
+  // (double-slash between base and localePrefix). HTTP normalization
+  // may or may not fix this depending on server; a CDN treating
+  // `/x/` and `/x//` as different paths would break analytics.
+  // Cheap defense against a config typo.
+  const rawBase = env.SITE_BASE || '';
+  const base = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
   // Fallback origin — used when the request had no Origin header (e.g.
   // a classic non-CORS form POST from no-JS users). The hardcoded value
   // here pins this Worker to the current GitHub Pages hostname; CHANGE

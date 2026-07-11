@@ -185,6 +185,15 @@ export function initEnquiry() {
   // Markup check passed — claim the form so a re-init bails out early.
   form.dataset.enquiryInit = '1';
 
+  // Populate the hidden locale input from <html lang> so a no-JS form
+  // submission (if this form ever gains action=/method=) carries the
+  // emit-locale to the Worker, activating the locale-aware redirect
+  // (Task #167). JS-mode: the JSON payload builder below sends the
+  // same value directly from currentLocale(), so this line is
+  // defense-in-depth belt-and-braces — both paths agree.
+  const localeInput = form.querySelector('[data-enquiry-locale]');
+  if (localeInput) localeInput.value = currentLocale();
+
   // Enable the submit button only once JS has wired up validation.
   // The HTML ships it disabled (JS-disabled fallback: button stays
   // greyed, <noscript> mailto block is the call-to-action).

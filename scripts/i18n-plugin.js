@@ -324,6 +324,20 @@ function flatten(obj, prefix = '', out = {}, depth = 0) {
     if (typeof v === 'object') {
       flatten(v, key, out, depth + 1);
     } else if (typeof v === 'string') {
+      // Empty-string leaves ship as empty elements/attributes with no
+      // build error — a translator committing `"home.hero.title": ""`
+      // in bg.json would ship `<h1></h1>` invisibly. Documentation
+      // metadata keys are ALLOWED to be empty because a translator
+      // legitimately might want to omit them, so we exempt the
+      // `_note`-prefixed convention: any key whose last dotted
+      // segment starts with `_` is treated as metadata and may be
+      // empty. Everything else must be a non-empty string.
+      const lastSeg = k;
+      if (v.length === 0 && !lastSeg.startsWith('_')) {
+        throw new Error(
+          `[i18n] empty string value at "${key}" — leaves must be non-empty strings (metadata keys starting with "_" are exempt). Translator may have submitted an empty translation.`,
+        );
+      }
       // Defensive: if a caller somehow bypassed the dot check above and
       // produced a colliding flat key, hard-fail.
       if (hasOwn(out, key)) {
@@ -726,8 +740,29 @@ export function applyLocale(html, opts) {
     out = out.replace(HREFLANG_STRIP_RE, '').replace(BOOT_STRIP_RE, '');
     out = insertAfterHead(out, buildHeadBlock(opts));
   }
+  // Runtime-only sentinels strip (build-only). applyHead stamps
+  // data-i18n-locale-applied on <html> as a dev-mode re-entrancy guard
+  // (see docstring); it has no reason to appear on the built artifact.
+  // Also defensively strip data-i18n-redirecting — that flag is set by
+  // the runtime boot script only; a build-time appearance would ship
+  // permanently-redirecting pages.
+  //
+  // opts.stripRuntimeSentinels is set by writeBundle (build hook only);
+  // in dev the sentinels stay for the transformIndexHtml re-entry guard.
+  if (opts.stripRuntimeSentinels) {
+    out = out.replace(RUNTIME_SENTINELS_STRIP_RE, '');
+  }
   return out;
 }
+
+// Strip data-i18n-locale-applied="..." and data-i18n-redirecting="..."
+// off the <html> tag on production write. Handles both single/double
+// quotes and any locale value. Anchored to the opening <html tag so
+// we don't accidentally match a similarly-named attribute on some
+// nested element (there shouldn't be any, but the anchor is cheap).
+// Case-insensitive to match HTML's attribute-name normalization.
+const RUNTIME_SENTINELS_STRIP_RE =
+  /(\s+data-i18n-(?:locale-applied|redirecting)\s*=\s*(?:"[^"]*"|'[^']*'|\S+))/gi;
 
 /**
  * Walk a DOM subtree, resolving every data-i18n* marker found on any
@@ -2027,6 +2062,7 @@ export function i18nPlugin(options) {
           pagePath: fileName,
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
+          stripRuntimeSentinels: true,
         });
         const bg = applyLocale(rawHtml, {
           locale: 'bg',
@@ -2036,6 +2072,7 @@ export function i18nPlugin(options) {
           pagePath: fileName,
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
+          stripRuntimeSentinels: true,
         });
 
         // Writes are still ordered EN then BG; if the EN write fails

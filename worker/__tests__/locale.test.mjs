@@ -132,5 +132,42 @@ test('redirectResponse: error path (?err=captcha) with BG locale routes to /bg/e
 
 test('redirectResponse: returns status 303 (post-redirect-get)', async () => {
   const res = redirectResponse('/enquiries/thanks/', makeReq('https://example.test'), ENV, 'bg');
-  assert.equal(res.status, 303);
+  assert.equal(res.status, 303);});
+
+test('redirectResponse: SITE_BASE with trailing slash is normalized (no double-slash)', async () => {
+  // Round-4 F13 regression guard: an operator typo of SITE_BASE ending
+  // in a slash previously emitted `//bg/enquiries/thanks/` (double slash
+  // between base and locale prefix). redirectResponse now trims the
+  // trailing slash before concatenation.
+  const envWithTrailing = {
+    ALLOWED_ORIGINS: 'https://example.test',
+    SITE_BASE: '/vayana-bungalows/',
+  };
+  const res = redirectResponse(
+    '/enquiries/thanks/',
+    makeReq('https://example.test'),
+    envWithTrailing,
+    'bg',
+  );
+  assert.equal(
+    await locationOf(res),
+    'https://example.test/vayana-bungalows/bg/enquiries/thanks/',
+    'trailing-slash SITE_BASE must not emit //bg/ double-slash',
+  );
 });
+
+test('redirectResponse: SITE_BASE without trailing slash (canonical form) unchanged', async () => {
+  // Sanity check: the fix must not break the canonical no-trailing-slash
+  // config that ships in production wrangler.toml.
+  const res = redirectResponse(
+    '/enquiries/thanks/',
+    makeReq('https://example.test'),
+    ENV,
+    'bg',
+  );
+  assert.equal(
+    await locationOf(res),
+    'https://example.test/vayana-bungalows/bg/enquiries/thanks/',
+  );
+});
+

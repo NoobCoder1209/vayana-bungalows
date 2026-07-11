@@ -31,7 +31,7 @@
 // dist/index.html. Set env SKIP_SMOKE_BUILD=1 to force-skip the rebuild
 // (useful for a running `vite build --watch` in another terminal).
 
-import { test } from 'node:test';
+import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
@@ -63,12 +63,28 @@ function findSourceHtmlFiles() {
   const out = [];
   function walk(dir) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
+      const full = join(dir, entry.name);
+      // Symlinks-to-directories report isSymbolicLink()=true and
+      // isDirectory()=false (Node docs). A monorepo-style symlinked
+      // pages/ subtree would be silently skipped without the
+      // statSync fallback below — its HTML never contributes to
+      // staleness, so edits go undetected.
+      let isDir = entry.isDirectory();
+      if (!isDir && entry.isSymbolicLink()) {
+        try {
+          isDir = statSync(full).isDirectory();
+        } catch {
+          // Broken symlink or permission denied — treat as non-dir
+          // and skip. Not a source-HTML host.
+          isDir = false;
+        }
+      }
+      if (isDir) {
         if (['dist', 'node_modules', '.git', 'worker'].includes(entry.name)) continue;
-        walk(join(dir, entry.name));
+        walk(full);
         continue;
       }
-      if (entry.name.endsWith('.html')) out.push(join(dir, entry.name));
+      if (entry.name.endsWith('.html')) out.push(full);
     }
   }
   walk(REPO_ROOT);
@@ -97,29 +113,44 @@ function distIsStale() {
   return false;
 }
 
-// One-time build fixture — runs before all tests below.
-//
-// SKIP_SMOKE_BUILD=1 in the environment forces us to skip rebuild even
-// when dist/ is stale. Use when `vite build --watch` is already running
-// in another terminal (concurrent rebuilds fight each other) or when
-// running the smoke against a specific pre-built dist/ artifact.
-//
-// stdio: 'inherit' on rebuild so a build error surfaces the actual Vite
-// diagnostic instead of just "Command failed: npm run build".
-if (!process.env.SKIP_SMOKE_BUILD && distIsStale()) {
-  console.log('[smoke] dist/ is stale — rebuilding...');
-  try {
-    execSync('npm run build', { cwd: REPO_ROOT, stdio: 'inherit' });
-  } catch (err) {
-    // execSync already printed the error via inherited stderr. Re-throw
-    // with a clearer message so the failing test surfaces "rebuild
-    // failed" rather than a raw "Command failed" spawn error.
-    throw new Error(
-      `[smoke] npm run build failed during test setup — see stderr above. ${err.message}`,
-      { cause: err },
-    );
+// Lazy-populated by the `before()` fixture below. Kept at module scope
+// so every test can read the shared parsed-page cache. Populating this
+// INSIDE `before()` (rather than at module top level) means a missing
+// or malformed emitted HTML file surfaces as a single "before hook
+// failed" line pointing at the offending page — not "test file failed
+// to load" that hides which invariant broke.
+let pages = [];
+let enPages = [];
+let bgPages = [];
+
+before(() => {
+  // Run the rebuild guard inside the `before` fixture so build errors
+  // surface as a normal test-runner failure (attributed to the before
+  // hook) instead of a raw module-load exception with no context.
+  //
+  // Strict `=== '1'` check — any non-empty string (including '0' and
+  // 'false') is truthy in JS, so a plain truthiness gate would let
+  // `SKIP_SMOKE_BUILD=0` or `SKIP_SMOKE_BUILD=false` silently disable
+  // rebuild, which is the exact opposite of what the operator intended.
+  //
+  // stdio: 'inherit' on rebuild so a build error surfaces the actual
+  // Vite diagnostic instead of just "Command failed: npm run build".
+  if (process.env.SKIP_SMOKE_BUILD !== '1' && distIsStale()) {
+    console.log('[smoke] dist/ is stale — rebuilding...');
+    try {
+      execSync('npm run build', { cwd: REPO_ROOT, stdio: 'inherit' });
+    } catch (err) {
+      throw new Error(
+        `[smoke] npm run build failed during test setup — see stderr above. ${err.message}`,
+        { cause: err },
+      );
+    }
   }
-}
+
+  pages = collectPages(DIST_DIR);
+  enPages = pages.filter((p) => !p.relPath.startsWith('bg/'));
+  bgPages = pages.filter((p) => p.relPath.startsWith('bg/'));
+});
 
 // Walk dist/ for all *.html files and return them as { relativePath, doc }.
 // `relativePath` is relative to dist/ so we can compare EN vs BG paths.
@@ -128,7 +159,18 @@ function collectPages(root) {
   function walk(dir) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
-      if (entry.isDirectory()) {
+      // Same symlink-to-directory handling as findSourceHtmlFiles —
+      // isDirectory() returns false for symlinks; recurse via
+      // statSync for anything reported as a symlink.
+      let isDir = entry.isDirectory();
+      if (!isDir && entry.isSymbolicLink()) {
+        try {
+          isDir = statSync(full).isDirectory();
+        } catch {
+          isDir = false;
+        }
+      }
+      if (isDir) {
         // Skip Vite's asset chunks — they never contain our HTML pages
         // and reading them would slow the test for no coverage gain.
         if (entry.name === 'assets') continue;
@@ -145,10 +187,6 @@ function collectPages(root) {
   walk(root);
   return out;
 }
-
-const pages = collectPages(DIST_DIR);
-const enPages = pages.filter((p) => !p.relPath.startsWith('bg/'));
-const bgPages = pages.filter((p) => p.relPath.startsWith('bg/'));
 
 test('smoke: emitted at least 12 EN pages', () => {
   assert.ok(enPages.length >= 12, `expected ≥12 EN pages, got ${enPages.length}`);
@@ -203,13 +241,60 @@ test('smoke: every page carries a boot-redirect <script data-locale> with data-l
   }
 });
 
-test('smoke: every page has hreflang alternates for en + bg + x-default', () => {
+test('smoke: every page has hreflang alternates for en + bg + x-default (unique, correct href)', () => {
   for (const { relPath, doc } of pages) {
     const alternates = doc.querySelectorAll('link[rel="alternate"]');
     const langs = alternates.map((a) => a.getAttribute('hreflang'));
+
+    // Presence (Round-3 baseline).
     assert.ok(langs.includes('en'), `${relPath}: missing hreflang="en"`);
     assert.ok(langs.includes('bg'), `${relPath}: missing hreflang="bg"`);
     assert.ok(langs.includes('x-default'), `${relPath}: missing hreflang="x-default"`);
+
+    // Round-4 F8: assert COUNT — a duplicate hreflang="en" emit (author-
+    // written source alternate outside the plugin's marker comments, or
+    // a strip-regex regression) confuses search engines. Exactly one of
+    // each required hreflang code.
+    for (const code of ['en', 'bg', 'x-default']) {
+      const count = langs.filter((l) => l === code).length;
+      assert.equal(
+        count,
+        1,
+        `${relPath}: hreflang="${code}" should appear exactly once (got ${count})`,
+      );
+    }
+
+    // Round-4 F4: assert x-default's HREF is the DEFAULT-locale (EN)
+    // URL, not the /bg/ mirror. A one-char regression in buildHeadBlock
+    // pointing x-default at the emit locale would ship BG globally as
+    // the fallback — full SEO regression, previously invisible.
+    // For any page at relPath, the x-default URL is the EN URL for
+    // that relPath's sub-path (strip the leading `bg/` if present).
+    const enRelPath = relPath.startsWith('bg/') ? relPath.slice(3) : relPath;
+    const expectedDefaultUrl = expectedUrlForRelPath(enRelPath);
+    const xDefault = alternates.find((a) => a.getAttribute('hreflang') === 'x-default');
+    assert.ok(xDefault, `${relPath}: x-default alternate must exist`);
+    const xDefaultHref = xDefault.getAttribute('href') || '';
+    assert.ok(
+      xDefaultHref.endsWith(expectedDefaultUrl),
+      `${relPath}: x-default href "${xDefaultHref}" should end with "${expectedDefaultUrl}" (default-locale URL, NOT the mirror)`,
+    );
+
+    // Symmetric: assert en+bg alternate hrefs match their locale's URL
+    // for this page's sub-path. Catches a swap-regression where en and
+    // bg hrefs point at each other's URLs.
+    const enAlt = alternates.find((a) => a.getAttribute('hreflang') === 'en');
+    const bgAlt = alternates.find((a) => a.getAttribute('hreflang') === 'bg');
+    const expectedEnUrl = expectedUrlForRelPath(enRelPath);
+    const expectedBgUrl = expectedUrlForRelPath(`bg/${enRelPath}`);
+    assert.ok(
+      (enAlt.getAttribute('href') || '').endsWith(expectedEnUrl),
+      `${relPath}: hreflang="en" href should end with "${expectedEnUrl}"`,
+    );
+    assert.ok(
+      (bgAlt.getAttribute('href') || '').endsWith(expectedBgUrl),
+      `${relPath}: hreflang="bg" href should end with "${expectedBgUrl}"`,
+    );
   }
 });
 
@@ -252,16 +337,29 @@ test('smoke: sub-pages do NOT carry data-lang-pill-expected (source has no pill)
   }
 });
 
-test('smoke: NO emitted page carries any i18n marker (structural DOM walk, not regex)', () => {
+test('smoke: NO emitted page carries any i18n marker or runtime-only sentinel (structural DOM walk)', () => {
   // Use the parsed DOM to query each forbidden attribute — regex on
   // the raw source is vulnerable to false-negatives (marker split
   // across lines by a minifier) and false-positives (a JS string
   // literal `"data-i18n="` inside a <script> block).
+  //
+  // Two classes of forbidden attribute:
+  //   1. Build-time markers that MUST be resolved and stripped by the
+  //      plugin (`data-i18n`, `-attr`, `-meta`, `-html`).
+  //   2. Runtime-only sentinels that lang.js / the boot script stamp
+  //      at runtime — they have NO reason to appear on the built
+  //      artifact. `data-i18n-locale-applied` is applyHead's dev
+  //      re-entrancy guard; `data-i18n-redirecting` is set by the
+  //      boot script before location.replace(). Either appearing at
+  //      build time is a real regression that would break the pill
+  //      (redirecting) or ship bytes (locale-applied).
   const forbidden = [
     'data-i18n',
     'data-i18n-attr',
     'data-i18n-meta',
     'data-i18n-html',
+    'data-i18n-locale-applied',
+    'data-i18n-redirecting',
   ];
   for (const { relPath, doc } of pages) {
     for (const attr of forbidden) {
@@ -307,6 +405,65 @@ test('smoke: EN <head> contains NO Cyrillic (BG dict must not leak into EN emit)
     /[Ѐ-ӿ]/,
     'EN <head> must not contain Cyrillic — BG dict must not leak into EN emit',
   );
+});
+
+test('smoke: BG home meta description / og:description / twitter:description are Cyrillic (not EN fallback)', () => {
+  // Round-4 F9: previously the Cyrillic-anywhere assertion trivially
+  // passed because body copy is translated. Meta tags populated via
+  // data-i18n-meta markers are a separate pipe — if a source page
+  // loses its data-i18n-meta marker on <meta name="description">
+  // (refactor mistake dropping the attribute), the tag stays with
+  // its baked-in EN text. No unknown-key error fires (marker is gone,
+  // lookup() never runs). BG page ships English og:description under
+  // <html lang="bg">. Facebook/LinkedIn scrape English copy under
+  // a BG page — SEO/social preview bug only manual review catches.
+  //
+  // Scope: HOME PAGE ONLY for now. Sub-pages (stay/, terms/, ...) are
+  // stubbed as EN-only in en.json (`common._stub` orphans) — they
+  // ship EN copy under <html lang="bg"> by design until each sub-page
+  // gets its own translation pass. When those pages are keyed, expand
+  // this test to iterate all bgPages instead of just the home.
+  const bg = bgPages.find((p) => p.relPath === 'bg/index.html');
+  assert.ok(bg, 'BG home page must exist');
+  const metaSelectors = [
+    'meta[name="description"]',
+    'meta[property="og:description"]',
+    'meta[name="twitter:description"]',
+  ];
+  for (const sel of metaSelectors) {
+    const meta = bg.doc.querySelector(sel);
+    if (!meta) continue; // page doesn't ship this meta tag; not a coverage failure
+    const content = meta.getAttribute('content') || '';
+    if (content === '') continue; // empty content is caught by the empty-value guard in the plugin
+    assert.match(
+      content,
+      /[Ѐ-ӿ]/,
+      `bg/index.html: ${sel} content should contain Cyrillic (got "${content}")`,
+    );
+  }
+});
+
+test('smoke: EN home meta description / og:description / twitter:description contain NO Cyrillic', () => {
+  // Symmetric guard for the BG-meta translation check above. Scoped
+  // to the home page since it's the fully-translated page today.
+  const en = enPages.find((p) => p.relPath === 'index.html');
+  assert.ok(en, 'EN home page must exist');
+  const metaSelectors = [
+    'meta[name="description"]',
+    'meta[property="og:description"]',
+    'meta[name="twitter:description"]',
+  ];
+  for (const sel of metaSelectors) {
+    const meta = en.doc.querySelector(sel);
+    if (!meta) continue;
+    const content = meta.getAttribute('content') || '';
+    if (content === '') continue;
+    assert.doesNotMatch(
+      content,
+      /[Ѐ-ӿ]/,
+      `index.html: ${sel} content should NOT contain Cyrillic on the EN emit (got "${content}")`,
+    );
+  }
 });
 
 test('smoke: canonical / og:url / twitter:url point at THIS page\'s own emit URL (exact suffix match)', () => {
@@ -400,4 +557,40 @@ test('smoke: pill hrefs point to the correct mirror on BOTH EN and BG emits (sym
     '/vayana-bungalows/bg/',
     'BG home BG-pill href must be the /bg/ URL (self-link on active)',
   );
+});
+
+test('smoke: boot-redirect <script data-locale> appears BEFORE any <link rel="stylesheet"> in <head>', () => {
+  // Round-4 F10: the applyHead Phase-2 docstring (i18n-plugin.js) states
+  // "Boot script FIRST (must run before any stylesheet)". A blocking
+  // stylesheet load BEFORE the boot script would let a returning BG user
+  // on the EN root see ~100-500ms of English content flash before
+  // location.replace() fires (FOWL — flash of wrong locale).
+  //
+  // A future Vite plugin ordering change, a refactor moving the
+  // insert-point below Vite's asset injection, or a Vite version bump
+  // could silently swap the order.
+  //
+  // Compare raw-string indices — <head>.childNodes ordering in
+  // node-html-parser preserves source order, but string-index compare
+  // is cheaper and equivalent for HTML that ships in a single <head>
+  // block (which the plugin guarantees via insertAfterHead).
+  for (const { relPath, html } of pages) {
+    const bootIdx = html.search(/<script\b[^>]*\bdata-locale\s*=/i);
+    assert.ok(bootIdx !== -1, `${relPath}: boot-redirect <script data-locale> must exist`);
+
+    // Find the first stylesheet <link>. Match rel="stylesheet" with
+    // either quote style; the raw html attribute may be single- or
+    // double-quoted.
+    const styleIdx = html.search(/<link\b[^>]*\brel\s*=\s*["']stylesheet["']/i);
+    if (styleIdx === -1) {
+      // Some sub-pages might not ship a stylesheet in <head> (unlikely
+      // for this codebase but skip gracefully). No stylesheet means
+      // no ordering constraint to enforce.
+      continue;
+    }
+    assert.ok(
+      bootIdx < styleIdx,
+      `${relPath}: boot-redirect <script data-locale> (idx ${bootIdx}) must appear before <link rel="stylesheet"> (idx ${styleIdx}) — otherwise FOWL on returning BG users`,
+    );
+  }
 });
