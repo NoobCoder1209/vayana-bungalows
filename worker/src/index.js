@@ -31,10 +31,25 @@ import {
 import { generateRef } from './lib/ref.js';
 import { hashIp } from './lib/ip-hash.js';
 
-function bail(isJson, jsonBody, status, redirectPath, request, env) {
+// Locale sniff for the pre-validation error paths (rate-limit, body-parse
+// fail). The full validator in validation.js applies the same allowlist
+// with a default-locale fallback; this helper mirrors its acceptance
+// rules so the redirect URL matches whichever emit locale the client
+// declared, even when we bail before running the full validation. Both
+// callers must use the same allowlist — if a third locale is added,
+// update BOTH this constant AND validation.js's ALLOWED_LOCALES.
+const KNOWN_LOCALES = new Set(['en', 'bg']);
+const DEFAULT_LOCALE = 'en';
+function sniffLocale(body) {
+  if (!body || typeof body !== 'object') return DEFAULT_LOCALE;
+  const raw = typeof body.locale === 'string' ? body.locale.trim() : '';
+  return KNOWN_LOCALES.has(raw) ? raw : DEFAULT_LOCALE;
+}
+
+function bail(isJson, jsonBody, status, redirectPath, request, env, locale) {
   return isJson
     ? jsonResponse(jsonBody, status, request, env)
-    : redirectResponse(redirectPath, request, env);
+    : redirectResponse(redirectPath, request, env, locale);
 }
 
 export default {
@@ -142,6 +157,13 @@ export default {
       );
     }
     if (!checkRateLimit(ipHash)) {
+      // Rate-limit fires BEFORE we parse the body, so we don't know the
+      // client's declared locale yet — the redirect goes to the default
+      // locale's URL. Acceptable trade-off: rate-limited callers are
+      // usually abusive traffic where locale UX doesn't matter, and
+      // solving it would require parsing the body twice (once cheaply
+      // for locale, once fully after the rate-limit check) which is
+      // more surface for bugs than it's worth.
       return bail(
         isJson,
         { ok: false, error: 'rate-limit' },
@@ -149,6 +171,7 @@ export default {
         '/enquiries/?err=rate-limit',
         request,
         env,
+        DEFAULT_LOCALE,
       );
     }
 
@@ -169,6 +192,7 @@ export default {
         '/enquiries/?err=validation',
         request,
         env,
+        DEFAULT_LOCALE,
       );
     }
     if (!body || typeof body !== 'object') {
@@ -179,8 +203,15 @@ export default {
         '/enquiries/?err=validation',
         request,
         env,
+        DEFAULT_LOCALE,
       );
     }
+
+    // Sniff the client's declared locale from the raw body — used to
+    // build a locale-aware redirect on subsequent bail paths. Full
+    // validation happens below; sniffLocale mirrors the validator's
+    // allowlist so an invalid value degrades to the default here too.
+    const localeFromBody = sniffLocale(body);
 
     // 6. Server-side validation
     //    Must run BEFORE the honeypot trip — otherwise a bot that
@@ -201,8 +232,13 @@ export default {
         '/enquiries/?err=validation',
         request,
         env,
+        localeFromBody,
       );
     }
+    // From here on, validation.cleaned.locale is the authoritative locale
+    // (the sniffed value matches, but the cleaned version is what the
+    // Sheet write and later bail() calls should use).
+    const locale = validation.cleaned.locale;
 
     // 7. Honeypot — silently treat as success WITHOUT writing.
     //    Matches enquiry.js's client-side silent trip so bots can't
@@ -230,7 +266,7 @@ export default {
       const ref = generateRef();
       return isJson
         ? jsonResponse({ ok: true, ref }, 200, request, env)
-        : redirectResponse('/enquiries/thanks/', request, env);
+        : redirectResponse('/enquiries/thanks/', request, env, locale);
     }
 
     // 8. Turnstile verify
@@ -248,6 +284,7 @@ export default {
         '/enquiries/?err=captcha',
         request,
         env,
+        locale,
       );
     }
 
@@ -270,12 +307,13 @@ export default {
         '/enquiries/?err=downstream',
         request,
         env,
+        locale,
       );
     }
 
     // 10. Success
     return isJson
       ? jsonResponse({ ok: true, ref }, 200, request, env)
-      : redirectResponse('/enquiries/thanks/', request, env);
+      : redirectResponse('/enquiries/thanks/', request, env, locale);
   },
 };

@@ -7,22 +7,22 @@
          the JS-on hamburger doesn't flash invisible during the deferred
          module's load window. CSS uses html.no-js for the no-JS fallback. -->
     <script>document.documentElement.classList.replace('no-js','js-on');</script>
-    <title>Vayana Bungalows &mdash; Boutique Bungalows in Tsarevo, Bulgaria</title>
-    <meta name="description" content="Vayana Bungalows: a boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days." />
+    <title data-i18n="home.meta.title">Vayana Bungalows &mdash; Boutique Bungalows in Tsarevo, Bulgaria</title>
+    <meta name="description" data-i18n-meta="home.meta.description" content="Vayana Bungalows: a boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days." />
     <link rel="canonical" href="https://noobcoder1209.github.io/vayana-bungalows/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Vayana Bungalows — Boutique Bungalows in Tsarevo, Bulgaria" />
-    <meta property="og:description" content="A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days." />
+    <meta property="og:title" data-i18n-meta="home.meta.title" content="Vayana Bungalows — Boutique Bungalows in Tsarevo, Bulgaria" />
+    <meta property="og:description" data-i18n-meta="home.meta.og_description" content="A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days." />
     <meta property="og:url" content="https://noobcoder1209.github.io/vayana-bungalows/" />
     <meta property="og:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
     <meta property="og:site_name" content="Vayana Bungalows" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Vayana Bungalows — Boutique Bungalows in Tsarevo, Bulgaria" />
-    <meta name="twitter:description" content="A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days." />
+    <meta name="twitter:title" data-i18n-meta="home.meta.title" content="Vayana Bungalows — Boutique Bungalows in Tsarevo, Bulgaria" />
+    <meta name="twitter:description" data-i18n-meta="home.meta.og_description" content="A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days." />
     <meta name="twitter:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
 
     <meta name="theme-color" content="#0e0d0a" />
@@ -37,7 +37,7 @@
     <link rel="stylesheet" href="/assets/css/sections.css" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main" data-i18n="common.skip_link">Skip to content</a>
 
     <!-- Sticky header -->
     <div id="header-sentinel" aria-hidden="true"></div>
@@ -55,7 +55,11 @@
                - premier-oceanview-villa/index.html
                - deluxe-hilltop-residence/index.html
              (Vite multi-page build, no shared layout primitive yet.) -->
-        <button class="site-header__menu" type="button" aria-label="Open menu"
+        <button class="site-header__menu" type="button"
+                data-i18n-attr="aria-label:common.header.menu_open_aria; data-nav-label-open:common.header.menu_open_aria; data-nav-label-close:common.header.menu_close_aria"
+                aria-label="Open menu"
+                data-nav-label-open="Open menu"
+                data-nav-label-close="Close menu"
                 aria-controls="primary-nav" aria-expanded="false"
                 aria-haspopup="dialog" data-nav-toggle>
           <span></span><span></span><span></span>
@@ -64,26 +68,63 @@
         <!-- Center slot: brand -->
         <a href="#" class="site-logo">
           <span class="site-logo__mark" aria-hidden="true">V</span>
-          <span class="site-logo__word">Vayana Bungalows</span>
+          <span class="site-logo__word" data-i18n="meta.brand">Vayana Bungalows</span>
         </a>
 
-        <!-- Right slot: Call-me-back + Enquiries.
-             Both are real <a> elements so they keep working with JS disabled.
-             Hrefs are relative — Vite rewrites root-absolute paths only for
-             assets, not <a href>, so on GitHub Pages (base /vayana-bungalows/)
-             /enquiries/ would 404. From-root form: enquiries/.
-             Phone is hydrated from assets/js/site-config.js (#9). The
-             aria-label is left STATIC because it's read once by AT and
-             rarely re-read; ops update it manually if the number ever
-             changes (the visible span and tel: href will already update). -->
+        <!-- Right slot: Call-me-back + Enquiries + Language pill.
+             Both the phone and enquiries are real <a> elements so they keep
+             working with JS disabled. Hrefs are relative — Vite rewrites
+             root-absolute paths only for assets, not <a href>, so on GitHub
+             Pages (base /vayana-bungalows/) /enquiries/ would 404. From-root
+             form: enquiries/. Phone is hydrated from assets/js/site-config.js.
+
+             The call aria-label carries {phone} interpolated from
+             SITE_CONFIG.phone.display via the i18n context; the visible
+             number span still hydrates at runtime via data-site-config, so
+             on a locale-only rebuild the two stay in sync as long as the
+             SITE_CONFIG phone matches what the i18n context was seeded with.
+
+             The .site-header__lang pill's TWO <a> segments carry data-lang;
+             lang.js (issue #47 runtime module) reads them per-page-load and
+             rebuilds the pill's per-segment aria-labels + href from the
+             plugin-generated hreflang alternates. The four
+             common.header.lang_*_aria keys are consumed there — that's why
+             they show up as orphan in i18n:lint and why we DON'T mark them
+             with data-i18n-attr here. The GROUP aria-label IS marker-keyed
+             because it's static per locale.
+
+             KEEP IN SYNC across every top-level page. -->
         <div class="site-header__cta">
-          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call" aria-label="Call us at +359 88 888 8888" data-call-cta>
+          <a data-site-config-href="phone.href" href="tel:+359888888888"
+             data-i18n-attr="aria-label:common.header.call_aria"
+             class="site-header__call"
+             aria-label="Call us at +359 88 888 8888" data-call-cta>
             <span class="site-header__call-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
             </span>
             <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
           </a>
-          <a href="enquiries/" class="btn btn-primary site-header__enquiries">Enquiries</a>
+          <a href="enquiries/" class="btn btn-primary site-header__enquiries"
+             data-i18n="common.header.enquiries_cta">Enquiries</a>
+          <!-- Language toggle pill. Two <a> segments, one per locale.
+               data-lang identifies each segment; lang.js swaps hrefs to the
+               plugin-generated hreflang alternates and toggles .is-active
+               + aria-current on the correct segment per page load.
+               Static server-rendered fallback: EN active, BG points at the
+               /bg/ mirror. If lang.js never runs (JS-off), the hrefs still
+               work as plain navigation. -->
+          <div class="site-header__lang" role="group"
+               data-i18n-attr="aria-label:common.header.lang_group_aria"
+               aria-label="Language">
+            <a href="./" class="site-header__lang-seg is-active"
+               data-lang="en" aria-current="true"
+               data-i18n="common.header.lang_en_label"
+               data-i18n-attr="data-aria-current:common.header.lang_en_current_aria; data-aria-switch:common.header.lang_switch_to_en_aria">EN</a>
+            <a href="bg/" class="site-header__lang-seg"
+               data-lang="bg"
+               data-i18n="common.header.lang_bg_label"
+               data-i18n-attr="data-aria-current:common.header.lang_bg_current_aria; data-aria-switch:common.header.lang_switch_to_bg_aria">BG</a>
+          </div>
         </div>
       </div>
     </header>
@@ -95,33 +136,36 @@
          aria-modal is added by JS only while the drawer is open — some
          screen readers special-case the attribute on closed dialogs. -->
     <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
-    <nav id="primary-nav" class="primary-nav__panel" aria-label="Primary"
+    <nav id="primary-nav" class="primary-nav__panel"
+         data-i18n-attr="aria-label:common.drawer.primary_aria"
+         aria-label="Primary"
          role="dialog"
          aria-hidden="true" tabindex="-1" hidden>
       <button class="primary-nav__close" type="button"
+              data-i18n-attr="aria-label:common.header.menu_close_aria"
               aria-label="Close menu" data-nav-close>
         <span aria-hidden="true">&times;</span>
       </button>
 
       <div class="primary-nav__col">
-        <span class="primary-nav__eyebrow">Your bespoke stay</span>
+        <span class="primary-nav__eyebrow" data-i18n="common.drawer.col_left_eyebrow">Your bespoke stay</span>
         <ul class="primary-nav__list">
-          <li><a href="./" data-nav-link>Home</a></li>
-          <li><a href="stay/" data-nav-link>Stay</a></li>
-          <li><a href="destination/" data-nav-link>Destination</a></li>
-          <li><a href="contacts/" data-nav-link>Contacts</a></li>
+          <li><a href="./" data-nav-link data-i18n="common.drawer.nav_home">Home</a></li>
+          <li><a href="stay/" data-nav-link data-i18n="common.drawer.nav_stay">Stay</a></li>
+          <li><a href="destination/" data-nav-link data-i18n="common.drawer.nav_destination">Destination</a></li>
+          <li><a href="contacts/" data-nav-link data-i18n="common.drawer.nav_contacts">Contacts</a></li>
         </ul>
       </div>
 
       <a href="./" class="primary-nav__brand" data-nav-link>
         <span class="primary-nav__brand-mark" aria-hidden="true">V</span>
-        <span class="primary-nav__brand-word">Vayana Bungalows</span>
+        <span class="primary-nav__brand-word" data-i18n="meta.brand">Vayana Bungalows</span>
       </a>
 
       <div class="primary-nav__col">
-        <span class="primary-nav__eyebrow">Get in touch</span>
+        <span class="primary-nav__eyebrow" data-i18n="common.drawer.col_right_eyebrow">Get in touch</span>
         <ul class="primary-nav__list">
-          <li><a href="enquiries/" data-nav-link>Enquiries</a></li>
+          <li><a href="enquiries/" data-nav-link data-i18n="common.drawer.nav_enquiries">Enquiries</a></li>
           <li><a data-site-config-href="phone.href" href="tel:+359888888888" data-nav-link><span data-site-config="phone.display">+359 88 888 8888</span></a></li>
         </ul>
       </div>
@@ -131,12 +175,14 @@
          we surface the same 4 links inline here. Negative test #5 demands
          the site stays navigable when JS is off. -->
     <noscript>
-      <nav class="primary-nav__noscript" aria-label="Primary (no JavaScript)">
+      <nav class="primary-nav__noscript"
+           data-i18n-attr="aria-label:common.drawer.noscript_aria"
+           aria-label="Primary (no JavaScript)">
         <ul>
-          <li><a href="./">Home</a></li>
-          <li><a href="stay/">Stay</a></li>
-          <li><a href="destination/">Destination</a></li>
-          <li><a href="contacts/">Contacts</a></li>
+          <li><a href="./" data-i18n="common.drawer.nav_home">Home</a></li>
+          <li><a href="stay/" data-i18n="common.drawer.nav_stay">Stay</a></li>
+          <li><a href="destination/" data-i18n="common.drawer.nav_destination">Destination</a></li>
+          <li><a href="contacts/" data-i18n="common.drawer.nav_contacts">Contacts</a></li>
         </ul>
       </nav>
     </noscript>
@@ -147,9 +193,9 @@
         <div class="hero__media"></div>
         <div class="hero__overlay"></div>
         <div class="container hero__content">
-          <span class="eyebrow eyebrow--light">Welcome to Vayana Bungalows</span>
-          <h1 id="hero-title">Boutique Black Sea<br />Bungalows</h1>
-          <p class="hero__sub">Where the pines meet the coast and the days run on tide and appetite.</p>
+          <span class="eyebrow eyebrow--light" data-i18n="home.hero.eyebrow">Welcome to Vayana Bungalows</span>
+          <h1 id="hero-title" data-i18n-html="home.hero.title_html">Boutique Bungalows<br />on the Black Sea</h1>
+          <p class="hero__sub" data-i18n="home.hero.subtitle">Where the pines meet the coast and the days run on tide and appetite.</p>
         </div>
         <div class="hero__scroll" aria-hidden="true">
           <span></span>
@@ -160,11 +206,11 @@
       <section class="cta-strip" aria-labelledby="cta-strip-title">
         <div class="container cta-strip__inner">
           <div class="cta-strip__copy">
-            <span class="eyebrow">Reservations open</span>
-            <h2 id="cta-strip-title">Choose your bungalow, then book your stay.</h2>
-            <p>Twenty-eight villas across the island, each with its own character. Pick the one that calls you.</p>
+            <span class="eyebrow" data-i18n="home.cta_strip.eyebrow">Reservations open</span>
+            <h2 id="cta-strip-title" data-i18n="home.cta_strip.title">Choose your bungalow, then book your stay.</h2>
+            <p data-i18n="home.cta_strip.body">Twenty-eight bungalows across the resort, each with its own character. Pick the one that calls you.</p>
           </div>
-          <a href="#rooms" class="btn btn-primary">Explore the bungalows</a>
+          <a href="#rooms" class="btn btn-primary" data-i18n="home.cta_strip.cta">Explore the bungalows</a>
         </div>
       </section>
 
@@ -172,14 +218,16 @@
       <section class="intro section" id="about" aria-labelledby="intro-title">
         <div class="container intro__grid">
           <div class="intro__copy reveal">
-            <span class="eyebrow">Welcome to Vayana Bungalows</span>
-            <h2 id="intro-title">On the Black Sea coast, at the edge of the Strandzha forest.</h2>
-            <p>Vayana Bungalows is a small family-run retreat in Tsarevo, Bulgaria — a handful of hardwood bungalows tucked between the pines and the sea, hand-built and run with the same care we'd put into our own home.</p>
-            <p>Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the drive back.</p>
-            <a href="#" class="btn btn-outline-dark">Discover the resort</a>
+            <span class="eyebrow" data-i18n="home.intro.eyebrow">Welcome to Vayana Bungalows</span>
+            <h2 id="intro-title" data-i18n="home.intro.title">On the Black Sea coast, at the foot of the Strandzha mountains.</h2>
+            <p data-i18n="home.intro.body_para1">Vayana Bungalows is a small family-run retreat in Tsarevo, Bulgaria — a handful of hardwood bungalows tucked between the pines and the sea, hand-built and run with the same care we'd put into our own home.</p>
+            <p data-i18n="home.intro.body_para2">Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the drive back.</p>
+            <a href="#" class="btn btn-outline-dark" data-i18n="home.intro.cta">Discover the resort</a>
           </div>
           <div class="intro__media reveal">
-            <img src="/assets/img/intro-villa.jpg" alt="Wooden over-water villa at sunset" loading="lazy" />
+            <img src="/assets/img/intro-villa.jpg"
+                 data-i18n-attr="alt:home.intro.img_alt"
+                 alt="Wooden bungalow terrace at sunset" loading="lazy" />
           </div>
         </div>
       </section>
@@ -187,34 +235,42 @@
       <!-- 6. Gallery carousel -->
       <section class="gallery section" aria-labelledby="gallery-title">
         <div class="container gallery__head reveal">
-          <span class="eyebrow">A glimpse of the island</span>
-          <h3 id="gallery-title">Moments at Vayana Bungalows</h3>
+          <span class="eyebrow" data-i18n="home.gallery.eyebrow">A glimpse of the coast</span>
+          <h3 id="gallery-title" data-i18n="home.gallery.title">Moments at Vayana Bungalows</h3>
         </div>
         <div class="gallery__viewport">
-          <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous photos" data-slider-prev="gallery">
+          <button class="gallery__arrow gallery__arrow--prev"
+                  data-i18n-attr="aria-label:home.gallery.prev_aria"
+                  aria-label="Previous photos" data-slider-prev="gallery">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <div class="gallery__track" data-slider="gallery">
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-1.jpg" alt="Beach at golden hour" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-2.jpg" alt="Open-air villa terrace" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-3.jpg" alt="Pool deck overlooking the sea" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-4.jpg" alt="Tropical fine-dining table" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-5.jpg" alt="Palms over a turquoise lagoon" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-6.jpg" alt="Spa pavilion at dusk" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-7.jpg" alt="Sailboat anchored offshore" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-8.jpg" alt="Cocktail at the beach bar" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-1.jpg" data-i18n-attr="alt:home.gallery.img1_alt" alt="Beach at golden hour" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-2.jpg" data-i18n-attr="alt:home.gallery.img2_alt" alt="Open-air villa terrace" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-3.jpg" data-i18n-attr="alt:home.gallery.img3_alt" alt="Pool deck overlooking the sea" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-4.jpg" data-i18n-attr="alt:home.gallery.img4_alt" alt="Tropical fine-dining table" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-5.jpg" data-i18n-attr="alt:home.gallery.img5_alt" alt="Palms over a turquoise lagoon" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-6.jpg" data-i18n-attr="alt:home.gallery.img6_alt" alt="Spa pavilion at dusk" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-7.jpg" data-i18n-attr="alt:home.gallery.img7_alt" alt="Sailboat anchored offshore" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-8.jpg" data-i18n-attr="alt:home.gallery.img8_alt" alt="Cocktail at the beach bar" loading="lazy" /></a>
           </div>
-          <button class="gallery__arrow gallery__arrow--next" aria-label="Next photos" data-slider-next="gallery">
+          <button class="gallery__arrow gallery__arrow--next"
+                  data-i18n-attr="aria-label:home.gallery.next_aria"
+                  aria-label="Next photos" data-slider-next="gallery">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
           </button>
         </div>
       </section>
 
       <!-- 7. Parallax video band -->
-      <section class="video-band" aria-label="Resort video">
+      <section class="video-band"
+               data-i18n-attr="aria-label:home.video_band.aria"
+               aria-label="Resort video">
         <div class="video-band__media" data-parallax="0.25"></div>
         <div class="video-band__overlay"></div>
-        <button class="video-band__play" type="button" aria-label="Play resort video" data-video="https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=1">
+        <button class="video-band__play" type="button"
+                data-i18n-attr="aria-label:home.video_band.play_aria"
+                aria-label="Play resort video" data-video="https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=1">
           <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
         </button>
       </section>
@@ -222,40 +278,44 @@
       <!-- 8 + 9. Rooms intro + grid -->
       <section class="rooms section" id="rooms" aria-labelledby="rooms-title">
         <div class="container rooms__head reveal">
-          <span class="eyebrow">Enjoy a world-class stay</span>
-          <h3 id="rooms-title">The accommodations</h3>
+          <span class="eyebrow" data-i18n="home.rooms.eyebrow">Enjoy a world-class stay</span>
+          <h3 id="rooms-title" data-i18n="home.rooms.title">The accommodations</h3>
         </div>
         <div class="rooms__viewport">
-          <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous rooms" data-slider-prev="rooms">
+          <button class="gallery__arrow gallery__arrow--prev"
+                  data-i18n-attr="aria-label:home.rooms.prev_aria"
+                  aria-label="Previous rooms" data-slider-prev="rooms">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <div class="rooms__track" data-slider="rooms">
             <article class="room-card">
-              <a href="premier-oceanview-villa/" class="room-card__img"><img src="/assets/img/room-1.jpg" alt="Bungalow 1" loading="lazy" /></a>
+              <a href="premier-oceanview-villa/" class="room-card__img"><img src="/assets/img/room-1.jpg" data-i18n-attr="alt:home.rooms.card1_img_alt" alt="Bungalow 1" loading="lazy" /></a>
               <div class="room-card__body">
-                <h4>Bungalow 1</h4>
-                <p class="room-card__price">From <strong>$960</strong> / night</p>
-                <a href="premier-oceanview-villa/" class="room-card__more">Discover more <span aria-hidden="true">&rarr;</span></a>
+                <h4 data-i18n="home.rooms.card1_title">Bungalow 1</h4>
+                <p class="room-card__price" data-i18n-html="home.rooms.card1_price_html">From <strong>$960</strong> / night</p>
+                <a href="premier-oceanview-villa/" class="room-card__more" data-i18n="home.rooms.card_more">Discover more <span aria-hidden="true">&rarr;</span></a>
               </div>
             </article>
             <article class="room-card">
-              <a href="deluxe-hilltop-residence/" class="room-card__img"><img src="/assets/img/room-2.jpg" alt="Bungalow 2" loading="lazy" /></a>
+              <a href="deluxe-hilltop-residence/" class="room-card__img"><img src="/assets/img/room-2.jpg" data-i18n-attr="alt:home.rooms.card2_img_alt" alt="Bungalow 2" loading="lazy" /></a>
               <div class="room-card__body">
-                <h4>Bungalow 2</h4>
-                <p class="room-card__price">From <strong>$1,240</strong> / night</p>
-                <a href="deluxe-hilltop-residence/" class="room-card__more">Discover more <span aria-hidden="true">&rarr;</span></a>
+                <h4 data-i18n="home.rooms.card2_title">Bungalow 2</h4>
+                <p class="room-card__price" data-i18n-html="home.rooms.card2_price_html">From <strong>$1,240</strong> / night</p>
+                <a href="deluxe-hilltop-residence/" class="room-card__more" data-i18n="home.rooms.card_more">Discover more <span aria-hidden="true">&rarr;</span></a>
               </div>
             </article>
             <article class="room-card">
-              <a href="premier-beachfront-suite/" class="room-card__img"><img src="/assets/img/room-3.jpg" alt="Bungalow 3" loading="lazy" /></a>
+              <a href="premier-beachfront-suite/" class="room-card__img"><img src="/assets/img/room-3.jpg" data-i18n-attr="alt:home.rooms.card3_img_alt" alt="Bungalow 3" loading="lazy" /></a>
               <div class="room-card__body">
-                <h4>Bungalow 3</h4>
-                <p class="room-card__price">From <strong>$1,480</strong> / night</p>
-                <a href="premier-beachfront-suite/" class="room-card__more">Discover more <span aria-hidden="true">&rarr;</span></a>
+                <h4 data-i18n="home.rooms.card3_title">Bungalow 3</h4>
+                <p class="room-card__price" data-i18n-html="home.rooms.card3_price_html">From <strong>$1,480</strong> / night</p>
+                <a href="premier-beachfront-suite/" class="room-card__more" data-i18n="home.rooms.card_more">Discover more <span aria-hidden="true">&rarr;</span></a>
               </div>
             </article>
           </div>
-          <button class="gallery__arrow gallery__arrow--next" aria-label="Next rooms" data-slider-next="rooms">
+          <button class="gallery__arrow gallery__arrow--next"
+                  data-i18n-attr="aria-label:home.rooms.next_aria"
+                  aria-label="Next rooms" data-slider-next="rooms">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
           </button>
         </div>
@@ -266,23 +326,23 @@
         <div class="locations__bg" data-parallax="0.2"></div>
         <div class="locations__overlay"></div>
         <div class="container locations__content reveal">
-          <span class="eyebrow eyebrow--light">Unforgettable experience</span>
-          <h2 id="locations-title">One of the world's most desirable locations.</h2>
+          <span class="eyebrow eyebrow--light" data-i18n="home.locations.eyebrow">Unforgettable experience</span>
+          <h2 id="locations-title" data-i18n="home.locations.title">One of the world's most desirable locations.</h2>
           <div class="locations__cards">
             <article class="exp-card">
               <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3"/><circle cx="12" cy="12" r="3"/></svg>
-              <h5>Spa &amp; wellness</h5>
-              <p>Open-air pavilions, salt-water plunge pools, and treatments built around the island's botanicals.</p>
+              <h5 data-i18n="home.locations.spa_title">Spa &amp; wellness</h5>
+              <p data-i18n="home.locations.spa_body">Open-air pavilions, salt-water plunge pools, and treatments built around the coast's botanicals.</p>
             </article>
             <article class="exp-card">
               <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 18l4-8 4 5 3-7 7 10z"/><path d="M3 21h18"/></svg>
-              <h5>Island activities</h5>
-              <p>Reef snorkeling at first light, sunset paddleboards, guided hikes to the volcanic crater rim.</p>
+              <h5 data-i18n="home.locations.activities_title">Coastal activities</h5>
+              <p data-i18n="home.locations.activities_body">Diving at first light, sunset kayaking, guided hikes into the Strandzha nature park.</p>
             </article>
             <article class="exp-card">
               <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2v8a4 4 0 008 0V2"/><path d="M10 14v8"/><path d="M18 2c2 0 3 2 3 5s-1 5-3 5v10"/></svg>
-              <h5>Gastronomic dine</h5>
-              <p>Three restaurants from a single kitchen garden. Black Sea seafood, wood fire, no menu after seven.</p>
+              <h5 data-i18n="home.locations.dine_title">Gastronomic dine</h5>
+              <p data-i18n="home.locations.dine_body">Three restaurants from a single kitchen garden. Black Sea seafood, wood fire, no menu after seven.</p>
             </article>
           </div>
         </div>
@@ -292,13 +352,15 @@
       <section class="cta-block section" aria-labelledby="cta-title">
         <div class="container cta-block__inner reveal">
           <div class="cta-block__frame">
-            <img src="/assets/img/cta-pool.jpg" alt="Infinity pool overlooking the ocean" loading="lazy" />
+            <img src="/assets/img/cta-pool.jpg"
+                 data-i18n-attr="alt:home.cta_block.img_alt"
+                 alt="Infinity pool overlooking the ocean" loading="lazy" />
           </div>
           <div class="cta-block__copy">
-            <span class="eyebrow">A retreat for two</span>
-            <h3 id="cta-title">Stay four nights, the fifth is on us.</h3>
-            <p>An invitation to slow down, between June and September, in any of our bungalows.</p>
-            <a href="#" class="btn btn-primary">View the offer</a>
+            <span class="eyebrow" data-i18n="home.cta_block.eyebrow">A retreat for two</span>
+            <h3 id="cta-title" data-i18n="home.cta_block.title">Stay four nights, the fifth is on us.</h3>
+            <p data-i18n="home.cta_block.body">An invitation to slow down, between June and September, in any of our bungalows.</p>
+            <a href="#" class="btn btn-primary" data-i18n="home.cta_block.cta">View the offer</a>
           </div>
         </div>
       </section>
@@ -306,48 +368,48 @@
       <!-- 12. Testimonials -->
       <section class="testimonial section section-cream" aria-labelledby="testimonial-title">
         <div class="container reveal">
-          <span class="eyebrow">Voice from our guests</span>
-          <h2 id="testimonial-title" class="testimonial__quote">&ldquo;The kind of place where the days run on tide and appetite, and the staff seem to know what you need before you do.&rdquo;</h2>
-          <p class="testimonial__cite">&mdash; Travel + Leisure</p>
+          <span class="eyebrow" data-i18n="home.testimonial.eyebrow">Voice from our guests</span>
+          <h2 id="testimonial-title" class="testimonial__quote" data-i18n="home.testimonial.quote">&ldquo;The kind of place where the days run on tide and appetite, and the staff seem to know what you need before you do.&rdquo;</h2>
+          <p class="testimonial__cite" data-i18n="home.testimonial.cite">&mdash; Travel + Leisure</p>
         </div>
       </section>
 
       <!-- 13. Services grid -->
       <section class="services section" aria-labelledby="services-title">
         <div class="container services__head reveal">
-          <span class="eyebrow">Discover the services we offer</span>
-          <h3 id="services-title">All the essentials for a cozy and comfortable stay.</h3>
+          <span class="eyebrow" data-i18n="home.services.eyebrow">Discover the services we offer</span>
+          <h3 id="services-title" data-i18n="home.services.title">All the essentials for a cozy and comfortable stay.</h3>
         </div>
         <div class="container services__grid">
           <article class="service-tile">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 16l-7-2V6.5a2.5 2.5 0 00-5 0V14l-7 2v2l7-1.5V21l-2 1v1l3.5-.5L14 23v-1l-2-1v-4.5L21 18z"/></svg>
-            <h5>Airport pick-up</h5>
-            <p>Boat transfer included with every stay.</p>
+            <h5 data-i18n="home.services.airport_title">Transfer</h5>
+            <p data-i18n="home.services.airport_body">Boat transfer included with every stay.</p>
           </article>
           <article class="service-tile">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21V12h6v9"/></svg>
-            <h5>Housekeeper</h5>
-            <p>Twice-daily villa service, twenty-four-hour butler.</p>
+            <h5 data-i18n="home.services.housekeeper_title">Housekeeper</h5>
+            <p data-i18n="home.services.housekeeper_body">Twice-daily villa service, twenty-four-hour butler.</p>
           </article>
           <article class="service-tile">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M5 12.55a11 11 0 0114 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
-            <h5>Wifi &amp; internet</h5>
-            <p>Fibre across the island, even on the beach.</p>
+            <h5 data-i18n="home.services.wifi_title">Wifi &amp; internet</h5>
+            <p data-i18n="home.services.wifi_body">Fibre across the resort, even on the beach.</p>
           </article>
           <article class="service-tile">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="14" r="6"/><path d="M9 4h6v3H9z"/></svg>
-            <h5>Laundry</h5>
-            <p>Same-day pressing, hand-care for delicate fabrics.</p>
+            <h5 data-i18n="home.services.laundry_title">Laundry</h5>
+            <p data-i18n="home.services.laundry_body">Same-day pressing, hand-care for delicate fabrics.</p>
           </article>
           <article class="service-tile">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 8h13a4 4 0 010 8H3z"/><path d="M16 8V6a2 2 0 012-2h0a2 2 0 012 2v2"/><path d="M3 19h18"/></svg>
-            <h5>Breakfast in bed</h5>
-            <p>Tropical fruit, pressed juice, and pastries before sunrise.</p>
+            <h5 data-i18n="home.services.breakfast_title">Breakfast in bed</h5>
+            <p data-i18n="home.services.breakfast_body">Tropical fruit, pressed juice, and pastries before sunrise.</p>
           </article>
           <article class="service-tile">
             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 17c2 0 2-1.5 4-1.5S8 17 10 17s2-1.5 4-1.5S16 17 18 17s2-1.5 4-1.5"/><path d="M2 21c2 0 2-1.5 4-1.5S8 21 10 21s2-1.5 4-1.5S16 21 18 21s2-1.5 4-1.5"/><circle cx="17" cy="7" r="3"/></svg>
-            <h5>Swimming pool</h5>
-            <p>Three pools, including a fifty-metre lap at the beach club.</p>
+            <h5 data-i18n="home.services.pool_title">Swimming pool</h5>
+            <p data-i18n="home.services.pool_body">Three pools, including a fifty-metre lap at the beach club.</p>
           </article>
         </div>
       </section>
@@ -384,12 +446,13 @@
            Address + plus code below the iframe are visible regardless. -->
       <section id="location" class="section section-cream" aria-labelledby="location-title">
         <div class="container location__inner reveal">
-          <span class="eyebrow">Tsarevo, Bulgaria</span>
-          <h3 id="location-title">Find us</h3>
+          <span class="eyebrow" data-i18n="home.location.eyebrow">Tsarevo, Bulgaria</span>
+          <h3 id="location-title" data-i18n="home.location.title">Find us</h3>
           <div class="location__map">
-            <p class="location__fallback">Map unavailable &mdash; see address below.</p>
+            <p class="location__fallback" data-i18n="home.location.map_fallback">Map unavailable &mdash; see address below.</p>
             <iframe
               src="https://maps.google.com/maps?q=42.1885867,27.8350773&amp;z=17&amp;output=embed"
+              data-i18n-attr="title:home.location.map_title"
               title="Map showing Vayana Bungalows in Tsarevo, Bulgaria"
               loading="lazy"
               width="800" height="450"
@@ -400,15 +463,15 @@
             <p class="location__address">
               <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span><br />
               <span data-site-config="address.country">Bulgaria</span><br />
-              <span class="location__plus-code">Plus Code: <span class="location__plus-code-value" data-site-config="address.plusCode">5RQP+C2 Tsarevo</span></span>
+              <span class="location__plus-code"><span data-i18n="home.location.plus_code_prefix">Plus Code:</span> <span class="location__plus-code-value" data-site-config="address.plusCode">5RQP+C2 Tsarevo</span></span>
             </p>
             <a class="btn btn-outline-dark location__directions"
                data-site-config-href="address.directionsUrl"
                href="https://maps.app.goo.gl/szcFXV6f5Pgx2iFt5"
                target="_blank" rel="noopener noreferrer"
                data-location-directions>
-              Open in Google Maps
-              <span class="sr-only">(opens Google Maps in a new tab)</span>
+              <span data-i18n="home.location.directions_cta">Open in Google Maps</span>
+              <span class="sr-only" data-i18n="home.location.directions_sr">(opens Google Maps in a new tab)</span>
             </a>
           </div>
         </div>
@@ -424,13 +487,15 @@
         <div class="newsletter__bg" data-parallax="0.15"></div>
         <div class="newsletter__overlay"></div>
         <div class="container newsletter__content reveal">
-          <span class="eyebrow eyebrow--light">Notes from the bay</span>
-          <h4 id="newsletter-title">Stay with us</h4>
-          <p class="newsletter__lede">Quiet notes from the island &mdash; three or four a year, never more.</p>
+          <span class="eyebrow eyebrow--light" data-i18n="home.newsletter.eyebrow">Notes from the bay</span>
+          <h4 id="newsletter-title" data-i18n="home.newsletter.title">Stay with us</h4>
+          <p class="newsletter__lede" data-i18n="home.newsletter.lede">Quiet notes from the coast &mdash; three or four a year, never more.</p>
           <form class="newsletter__form" data-newsletter-form novalidate>
-            <label class="sr-only" for="nl-email">Email address</label>
+            <label class="sr-only" for="nl-email" data-i18n="home.newsletter.email_label">Email address</label>
             <input id="nl-email" name="email" type="email" required
-                   autocomplete="email" placeholder="Your email address"
+                   autocomplete="email"
+                   data-i18n-attr="placeholder:home.newsletter.email_placeholder"
+                   placeholder="Your email address"
                    data-newsletter-email />
             <!-- Honeypot: bots that auto-fill every field will trip this.
                  Hidden via CSS (off-screen, tabindex -1, aria-hidden) rather
@@ -441,24 +506,24 @@
                  request — so a bot diffing the page can't tell whether it
                  was honeypotted. -->
             <div class="newsletter__hp" aria-hidden="true">
-              <label for="nl-website">Website</label>
+              <label for="nl-website" data-i18n="home.newsletter.hp_label">Website</label>
               <input id="nl-website" name="website" type="text"
                      tabindex="-1" autocomplete="off"
                      data-newsletter-honeypot />
             </div>
             <button type="submit" class="btn btn-primary"
-                    data-newsletter-submit disabled>Subscribe</button>
+                    data-newsletter-submit disabled data-i18n="home.newsletter.submit">Subscribe</button>
             <p class="newsletter__error" data-newsletter-error
                aria-live="polite" hidden></p>
           </form>
           <label class="newsletter__consent">
             <input type="checkbox" required data-newsletter-consent />
-            <span>I agree to the
+            <span data-i18n-html="home.newsletter.consent_html">I agree to the
               <a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a>
               and consent to receiving occasional emails from Vayana Bungalows.</span>
           </label>
           <noscript>
-            <p class="newsletter__noscript">
+            <p class="newsletter__noscript" data-i18n-html="home.newsletter.noscript_html">
               Subscribe by emailing
               <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">contact@vayanabungalows.com</a>
               with the subject "Subscribe".
@@ -474,11 +539,13 @@
       <div class="modal" id="newsletter-modal" hidden role="dialog" aria-modal="true" aria-labelledby="newsletter-modal-title">
         <div class="modal__backdrop" data-modal-close></div>
         <div class="modal__panel">
-          <button class="modal__close" type="button" aria-label="Close" data-modal-close>&times;</button>
-          <span class="eyebrow">Subscribed</span>
-          <h3 id="newsletter-modal-title">Thank you &mdash; you're on the list.</h3>
-          <p>We'll send a quiet note when there's something worth sharing &mdash; no more than four a year.</p>
-          <button type="button" class="btn btn-primary" data-modal-close>Close</button>
+          <button class="modal__close" type="button"
+                  data-i18n-attr="aria-label:common.close_aria"
+                  aria-label="Close" data-modal-close>&times;</button>
+          <span class="eyebrow" data-i18n="home.newsletter.modal_eyebrow">Subscribed</span>
+          <h3 id="newsletter-modal-title" data-i18n="home.newsletter.modal_title">Thank you &mdash; you're on the list.</h3>
+          <p data-i18n="home.newsletter.modal_body">We'll send a quiet note when there's something worth sharing &mdash; no more than four a year.</p>
+          <button type="button" class="btn btn-primary" data-modal-close data-i18n="home.newsletter.modal_close">Close</button>
         </div>
       </div>
 
@@ -489,17 +556,17 @@
            a fuller version of the footer's line1/line2 (added to config as
            address.street + address.country). -->
       <section class="contact section" id="contact" aria-labelledby="contact-title">
-        <h2 id="contact-title" class="sr-only">Contact</h2>
+        <h2 id="contact-title" class="sr-only" data-i18n="home.contact.heading_sr">Contact</h2>
         <div class="container contact__grid">
           <div class="contact__col">
-            <span class="eyebrow">Address</span>
+            <span class="eyebrow" data-i18n="home.contact.address_eyebrow">Address</span>
             <p>
               <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span><br />
               <span data-site-config="address.country">Bulgaria</span>
             </p>
           </div>
           <div class="contact__col">
-            <span class="eyebrow">Phone</span>
+            <span class="eyebrow" data-i18n="home.contact.phone_eyebrow">Phone</span>
             <p>
               <a data-site-config-href="phone.href" href="tel:+359888888888">
                 <span data-site-config="phone.display">+359 88 888 8888</span>
@@ -507,7 +574,7 @@
             </p>
           </div>
           <div class="contact__col">
-            <span class="eyebrow">Email</span>
+            <span class="eyebrow" data-i18n="home.contact.email_eyebrow">Email</span>
             <p>
               <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">
                 <span data-site-config="email.display">contact@vayanabungalows.com</span>
@@ -523,6 +590,11 @@
       <div class="container site-footer__inner">
         <!-- Column 1 — Contact -->
         <div class="site-footer__col site-footer__col--contact">
+          <!-- Brand is a proper noun — no translation. data-site-config
+               owns hydration; the visible text ships from SITE_CONFIG.brand.
+               Deliberately NOT keyed via data-i18n to avoid a dual-writer
+               conflict (H5): both markers write textContent, and site-config
+               runtime hydration wins, silently discarding any locale value. -->
           <span class="eyebrow eyebrow--light" data-site-config="brand">Vayana Bungalows</span>
           <ul class="site-footer__contact">
             <li>
@@ -543,20 +615,26 @@
         </div>
         <!-- Column 2 — Follow us -->
         <div class="site-footer__col site-footer__col--social">
-          <span class="eyebrow eyebrow--light">Follow us</span>
+          <span class="eyebrow eyebrow--light" data-i18n="common.footer.follow_eyebrow">Follow us</span>
           <ul class="social-list">
             <li>
-              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer"
+                 data-i18n-attr="aria-label:common.footer.follow_facebook_aria"
+                 aria-label="Facebook">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg>
               </a>
             </li>
             <li>
-              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer"
+                 data-i18n-attr="aria-label:common.footer.follow_instagram_aria"
+                 aria-label="Instagram">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg>
               </a>
             </li>
             <li>
-              <a data-site-config-href="social.linkedin" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+              <a data-site-config-href="social.linkedin" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer"
+                 data-i18n-attr="aria-label:common.footer.follow_linkedin_aria"
+                 aria-label="LinkedIn">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4 4h4v16H4zM6 2.5A1.5 1.5 0 116 5.5 1.5 1.5 0 016 2.5zM10 8h3.8v2h.05A4.16 4.16 0 0117.6 8C21.4 8 22 10.4 22 13.6V20h-4v-5.7c0-1.4 0-3.1-1.9-3.1S14 12.6 14 14.2V20h-4z"/></svg>
               </a>
             </li>
@@ -569,28 +647,41 @@
              "Policies and enquiries" to acknowledge it without splitting
              the visual rhythm of the footer with a separate nav landmark.
              KEEP IN SYNC across all pages. -->
-        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies and enquiries">
-          <span class="eyebrow eyebrow--light">Policies</span>
+        <nav class="site-footer__col site-footer__col--policies"
+             data-i18n-attr="aria-label:common.footer.policies_aria"
+             aria-label="Policies and enquiries">
+          <span class="eyebrow eyebrow--light" data-i18n="common.footer.policies_eyebrow">Policies</span>
           <ul>
-            <li><a href="enquiries/" class="site-footer__enquire">Enquire</a></li>
-            <li><a data-site-config-path="policies.terms" href="/terms/">Terms &amp; Conditions</a></li>
-            <li><a data-site-config-path="policies.cancellation" href="/cancellation/">Cancellation Policy</a></li>
-            <li><a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a></li>
+            <li><a href="enquiries/" class="site-footer__enquire" data-i18n="common.footer.enquire">Enquire</a></li>
+            <li><a data-site-config-path="policies.terms" href="/terms/" data-i18n="common.footer.terms">Terms &amp; Conditions</a></li>
+            <li><a data-site-config-path="policies.cancellation" href="/cancellation/" data-i18n="common.footer.cancellation">Cancellation Policy</a></li>
+            <li><a data-site-config-path="policies.privacy" href="/privacy/" data-i18n="common.footer.privacy">Privacy Policy</a></li>
           </ul>
         </nav>
       </div>
       <div class="site-footer__bar">
         <div class="container site-footer__bar-inner">
-          <p data-site-config="copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
-          <p class="site-footer__license">License number: <span data-site-config="license">1327673</span></p>
+          <!-- Copyright text carries the localised value including the
+               {credit} interpolation. Runtime site-config-inject.js used to
+               hydrate this from SITE_CONFIG.copyright, but that overwrote
+               the BG string with an English literal (H5). Data attribute
+               dropped so i18n is the sole writer. If SITE_CONFIG.copyright
+               ever needs to change, update the locale JSONs and the
+               contextByLocale.{en,bg}.credit token in vite.config.js. -->
+          <p data-i18n="common.footer.copyright">&copy; 2026 Made with &#10084; by Vayana di Mare</p>
+          <p class="site-footer__license"><span data-i18n="common.footer.license_prefix">License number:</span> <span data-site-config="license">1327673</span></p>
         </div>
       </div>
     </footer>
 
     <!-- Video lightbox -->
-    <div class="video-modal" id="video-modal" hidden role="dialog" aria-modal="true" aria-label="Resort video">
+    <div class="video-modal" id="video-modal" hidden role="dialog" aria-modal="true"
+         data-i18n-attr="aria-label:common.video_modal_aria"
+         aria-label="Resort video">
       <div class="video-modal__backdrop" data-video-close></div>
-      <button class="video-modal__close" type="button" aria-label="Close video" data-video-close>&times;</button>
+      <button class="video-modal__close" type="button"
+              data-i18n-attr="aria-label:common.close_video_aria"
+              aria-label="Close video" data-video-close>&times;</button>
       <div class="video-modal__frame" id="video-modal-frame"></div>
     </div>
 

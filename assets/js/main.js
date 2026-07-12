@@ -1,4 +1,5 @@
 import { initHeader } from './header.js';
+import { initLang } from './lang.js';
 import { initReveal } from './reveal.js';
 import { initParallax } from './parallax.js';
 import { initSliders } from './slider.js';
@@ -30,6 +31,7 @@ window.addEventListener('resize', publishViewportWidth);
 const run = () => {
   initSiteConfig();
   initHeader();
+  initLang();
   initReveal();
   initParallax();
   initSliders();

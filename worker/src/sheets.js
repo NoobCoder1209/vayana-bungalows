@@ -112,7 +112,7 @@ export async function appendEnquiry(env, row) {
 
   const token = await getAccessToken(env);
   const range = encodeURIComponent(
-    `'${env.GSHEETS_ENQUIRES_TAB.replace(/'/g, "''")}'!A:M`,
+    `'${env.GSHEETS_ENQUIRES_TAB.replace(/'/g, "''")}'!A:N`,
   );
   const url =
     `${SHEETS_BASE}/${encodeURIComponent(env.GSHEETS_SHEET_ID)}` +
@@ -124,6 +124,13 @@ export async function appendEnquiry(env, row) {
   // (Note: no captcha_score column — Turnstile managed mode is binary
   // success/fail with no numeric score. A placeholder column N existed
   // briefly during planning and has been removed from the sheet header.)
+  //
+  // Task #167: added column N = Locale (row.locale, 'en' | 'bg'). The
+  // reply-back operator uses this to know which language to answer in.
+  // BEFORE DEPLOYING: extend the sheet's header row from column M to
+  // column N and add "Locale" as the N1 cell value — otherwise the
+  // first BG submit lands in a header-less column and the schema drifts
+  // silently.
   const values = [[
     row.timestamp,
     row.ref,
@@ -138,6 +145,7 @@ export async function appendEnquiry(env, row) {
     row.message,
     row.consent,
     row.source_ip_hash,
+    row.locale,
   ]];
 
   let res;

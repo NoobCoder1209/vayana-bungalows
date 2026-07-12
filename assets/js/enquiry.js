@@ -21,6 +21,20 @@
 // genuinely cannot post the form).
 
 import flatpickr from 'flatpickr';
+import { Bulgarian } from 'flatpickr/dist/l10n/bg.js';
+import { currentLocale } from './util/current-locale.js';
+
+// flatpickr locale objects keyed by our locale codes. `default` is EN
+// (baseline, needs no import). Mirror of assets/js/booking.js's map —
+// if the site adds a third locale, add the flatpickr l10n import in
+// both files (or extract to a shared util if the pattern grows).
+const FLATPICKR_LOCALES = {
+  en: 'default',
+  bg: Bulgarian,
+};
+function fpLocale() {
+  return FLATPICKR_LOCALES[currentLocale()] || 'default';
+}
 import { SITE_CONFIG } from './site-config.js';
 import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
 
@@ -100,7 +114,13 @@ const ERROR_MSGS = {
   network:    'Network error — please check your connection and try again.',
   default:    'Sorry, something went wrong. Please try again or email us directly.',
 };
-const SUBMIT_BUSY_TEXT = 'Sending…';
+// Submit button's "busy" state text. Populated from a data-busy-label
+// attribute on the button itself, which the i18n plugin bakes at build
+// time from the enquiries.form.submit_busy_label key. Fallback to the
+// English literal so a page that hasn't been keyed still renders
+// something readable. Assigning at init rather than module scope so a
+// runtime language swap (future work) can re-read the current DOM value.
+let SUBMIT_BUSY_TEXT = 'Sending…';
 
 // Bungalow allowlist for `?villa=<slug>` pre-fill. Anything not in this
 // set is silently ignored so an attacker can't craft a link that injects
@@ -171,6 +191,24 @@ export function initEnquiry() {
   // Markup check passed — claim the form so a re-init bails out early.
   form.dataset.enquiryInit = '1';
 
+  // Populate the hidden locale input from <html lang> so a no-JS form
+  // submission (if this form ever gains action=/method=) carries the
+  // emit-locale to the Worker, activating the locale-aware redirect
+  // (Task #167). JS-mode: the JSON payload builder below sends the
+  // same value directly from currentLocale(), so this line is
+  // defense-in-depth belt-and-braces — both paths agree.
+  const localeInput = form.querySelector('[data-enquiry-locale]');
+  if (localeInput) localeInput.value = currentLocale();
+
+  // Read the localized busy-state text off the submit button's
+  // data-busy-label attribute (baked at build time by the i18n plugin
+  // from enquiries.form.submit_busy_label). Falls back to the module-
+  // scope default when the attribute is missing (page not built with
+  // the plugin, or test fixture). Assigned at init so a future runtime
+  // language swap (see issue #47 follow-up) can re-read the DOM value.
+  const baked = submit.dataset.busyLabel;
+  if (baked) SUBMIT_BUSY_TEXT = baked;
+
   // Enable the submit button only once JS has wired up validation.
   // The HTML ships it disabled (JS-disabled fallback: button stays
   // greyed, <noscript> mailto block is the call-to-action).
@@ -195,6 +233,15 @@ export function initEnquiry() {
         sitekey: SITE_CONFIG.endpoints.turnstileSiteKey,
         theme: 'light',
         action: 'enquiry',
+        // Localise the widget's own UI copy ("I am human", verifying
+        // status, error messages) to match the emit locale. Turnstile
+        // accepts 'auto' (browser language) or an explicit code — we
+        // pass the emit locale so the widget matches the page's chosen
+        // language, not the browser's, which may differ (e.g. a BG-first
+        // user viewing the EN page still sees English widget copy).
+        // Turnstile's supported languages include 'en' and 'bg'; an
+        // unknown code falls back to English internally.
+        language: currentLocale(),
         // No callback — we read the token explicitly on submit via
         // turnstile.getResponse(widgetId). Avoids race between
         // callback-set state and the form's own submit handler.
@@ -234,6 +281,7 @@ export function initEnquiry() {
     maxDate: seasonMaxDate(),
     disable: [isOffSeason],
     dateFormat: 'd/m/Y',
+    locale: fpLocale(),
     onReady: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
@@ -255,6 +303,7 @@ export function initEnquiry() {
     maxDate: seasonMaxDate(),
     disable: [isOffSeason],
     dateFormat: 'd/m/Y',
+    locale: fpLocale(),
     onReady: attachYearDropdown,
   });
 
@@ -584,6 +633,11 @@ export function initEnquiry() {
       infants: infants.value,
       message: messageVal,
       consent: consentInput.checked ? 'true' : 'false',
+      // Emit-locale of the page the user submitted from. The Worker uses
+      // this to build a locale-aware redirect back (no-JS form path) AND
+      // to write a locale column on the Sheet so the reply-back operator
+      // knows which language to answer in.
+      locale: currentLocale(),
       'cf-turnstile-response': captchaToken,
     };
 

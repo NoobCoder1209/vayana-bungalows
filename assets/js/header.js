@@ -7,6 +7,8 @@
 //
 // Also owns the hamburger drawer (#8): open/close, focus trap, body scroll
 // lock, Esc/backdrop/link/× close paths, focus restoration to the toggle.
+import { isPrimaryClick } from './util/is-primary-click.js';
+
 export function initHeader() {
   const header = document.getElementById('site-header');
   const sentinel = document.getElementById('header-sentinel');
@@ -132,6 +134,20 @@ function initDrawer() {
   if (toggle.dataset.drawerInit === '1') return;
   toggle.dataset.drawerInit = '1';
 
+  // Localised aria-label strings for the drawer toggle. Read from
+  // data-* attributes on the toggle at wire-up time so they carry
+  // the emit-locale value (BG on /bg/ pages, EN elsewhere). We
+  // snapshot ONCE at init rather than reading per-transition so a
+  // future runtime i18n swap (issue #47's lang.js) can also swap
+  // these by re-invoking initDrawer.
+  //
+  // Fallback to the English literals if the data-* attributes are
+  // missing — matches the pre-i18n behaviour so a page that hasn't
+  // been through the plugin yet (unit test, direct source load)
+  // still renders sensibly.
+  const openLabel = toggle.dataset.navLabelOpen || 'Open menu';
+  const closeLabel = toggle.dataset.navLabelClose || 'Close menu';
+
   // Defensive: if the user reaches a page mid-load with the drawer somehow
   // left open in the DOM (shouldn't happen — server renders [hidden] —
   // but a future SSR or a stray HMR could), close it before we wire up.
@@ -219,7 +235,7 @@ function initDrawer() {
     panel.setAttribute('aria-hidden', 'false');
     panel.setAttribute('aria-modal', 'true');
     toggle.setAttribute('aria-expanded', 'true');
-    toggle.setAttribute('aria-label', 'Close menu');
+    toggle.setAttribute('aria-label', closeLabel);
 
     // Snapshot the breakpoint side at open-time; onResize closes the
     // drawer if the width crosses to the other side mid-open.
@@ -253,7 +269,7 @@ function initDrawer() {
     backdrop.dataset.state = 'closed';
     panel.removeAttribute('aria-modal');
     toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-label', 'Open menu');
+    toggle.setAttribute('aria-label', openLabel);
 
     // Restore body scroll BEFORE setting the page back to its prior Y.
     document.body.classList.remove('body--scroll-locked');
@@ -323,7 +339,7 @@ function initDrawer() {
     // closed dialog (some screen readers special-case the attribute).
     panel.removeAttribute('aria-modal');
     toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-label', 'Open menu');
+    toggle.setAttribute('aria-label', openLabel);
     panel.hidden = true;
     backdrop.hidden = true;
   }
@@ -350,8 +366,7 @@ function initDrawer() {
   // instead of yanking the user's context.
   panel.querySelectorAll('[data-nav-link]').forEach((link) => {
     link.addEventListener('click', (e) => {
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      if (e.button !== undefined && e.button !== 0) return;
+      if (!isPrimaryClick(e)) return;
       close();
     });
   });

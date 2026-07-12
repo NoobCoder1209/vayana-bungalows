@@ -1,0 +1,505 @@
+#!/usr/bin/env node
+/**
+ * i18n-lint — standalone validator for locale dictionaries and HTML markers.
+ *
+ * Scope: validates dict integrity (via loadDictionaries — symmetry, tokens,
+ * entities, symlinks, depth cap) + cross-references HTML `data-i18n*`
+ * markers against the dictionaries. It does NOT reproduce the plugin's
+ * markup-level checks (double-marker collisions, attribute-name allowlist,
+ * URL-scheme allowlist, <meta http-equiv> rejection, sanitiser rules) —
+ * those are transform-time concerns and the plugin owns them at build.
+ * The lint's job is the fast-feedback dict/marker cross-reference so
+ * broken keys don't require a full build to surface.
+ *
+ * Exit codes:
+ *   0 — clean (may print WARNINGS but nothing broken)
+ *   1 — errors found (missing keys / malformed markers / dict validation
+ *       failure)
+ *   2 — usage error
+ *
+ * Usage:
+ *   node scripts/i18n-lint.js [--locales-dir <path>] [--root <path>]
+ *                             [--strict-orphans]
+ *
+ * Options:
+ *   --locales-dir <path>   Where the locale JSONs live (default:
+ *                          <root>/locales, resolved after --root)
+ *   --root <path>          Root directory to scan for HTML files
+ *                          (default: the repo root that contains this
+ *                          script, NOT process.cwd())
+ *   --strict-orphans       Treat orphan keys (in dict, unused in HTML) as
+ *                          errors instead of warnings. Enable once every
+ *                          page has been keyed (post-Task #165).
+ *   --help                 Print this help and exit 0.
+ *
+ * The HTML scan is a lightweight regex sweep — it does NOT DOM-parse. To
+ * avoid false positives from marker-shaped substrings inside <script>
+ * template literals, <style> blocks, or HTML comments (which the DOM-
+ * parsing plugin never sees as attributes), we strip those regions from
+ * the source before matching. A DOM-parse would also work but doubles the
+ * bug surface for a linter that already fails-open on the plugin's own
+ * markup checks.
+ */
+
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+import { loadDictionaries, parseAttrPairs } from './i18n-plugin.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = resolve(__dirname, '..');
+
+// Marker regexes — anchor on the attribute NAME so we don't accidentally
+// match `data-i18n-attrs="…"` (with trailing s) or `data-i18nfoo="…"`.
+// The attribute name must be immediately followed by `=` (allowing
+// tolerant whitespace, though HTML5 disallows it). Value can be single-
+// or double-quoted. `[^"]*` and `[^']*` DO match newlines by default in
+// JavaScript regex, so multi-line attribute values work.
+//
+// The negative-lookahead `(?![\w-])` after each attribute name prevents
+// a false match on `data-i18nfoo="…"` or `data-i18n-html="…"` when we
+// were looking for `data-i18n`.
+//
+// The `i` flag is REQUIRED: HTML5 attribute names are ASCII case-
+// insensitive; parse5 (used by the plugin) normalises to lowercase on
+// DOM ingest, so `<p Data-I18N="x">` is a legitimate marker to the
+// plugin. Without `i` the lint regex misses it and the plugin/lint
+// contract breaks (M1).
+const RE_I18N_TEXT   = /\bdata-i18n(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/gi;
+const RE_I18N_HTML   = /\bdata-i18n-html(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/gi;
+const RE_I18N_ATTR   = /\bdata-i18n-attr(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/gi;
+const RE_I18N_META   = /\bdata-i18n-meta(?![\w-])\s*=\s*("([^"]*)"|'([^']*)')/gi;
+
+// Regions to blank out before marker extraction. `[\s\S]` is the
+// newline-inclusive "any char" idiom (regex `.` alone doesn't cross
+// newlines without the `s` flag, and even then some hosts have parsing
+// quirks). All patterns are non-greedy so nested tag-like content
+// doesn't over-consume.
+//
+// Script/style are handled in TWO parts: the opening tag is left
+// visible (so `<script data-i18n="...">` markers ON the element itself
+// are still seen by the marker regexes — the plugin's DOM parse finds
+// them, so lint must too, per the H3 fix), and only the CONTENT between
+// the tags is blanked.
+//
+// H1 fix: the opening-tag regex properly tokenises quoted attribute
+// values so a `>` inside a quoted attr doesn't truncate the match. The
+// naive `<script\b[^>]*>` and `<script\b[\s\S]*?>` are both wrong: the
+// first stops at the first `>` (truncates on quoted `>`); the second
+// stops at the first `>` too (non-greedy). This shape allows unquoted
+// content between attrs OR fully-quoted attr values via alternation.
+const RE_HTML_COMMENT   = /<!--[\s\S]*?-->/g;
+const RE_SCRIPT_OPEN    = /<script\b(?:"[^"]*"|'[^']*'|[^>"'])*>/gi;
+const RE_STYLE_OPEN     = /<style\b(?:"[^"]*"|'[^']*'|[^>"'])*>/gi;
+// H4 fix: close-tag search uses a case-insensitive regex with a proper
+// boundary check (`(?![\w-])`), so `</scriptzz` no longer matches as if
+// it were a real close tag. Anchored via `lastIndex` on the ORIGINAL
+// source (no `.toLowerCase()` allocation, no Unicode length-desync
+// hazard from H2).
+const RE_SCRIPT_CLOSE   = /<\/script(?![\w-])/gi;
+const RE_STYLE_CLOSE    = /<\/style(?![\w-])/gi;
+// H3 fix: attribute-value masking. Marker regexes must not false-match
+// on `data-i18n=` substrings that appear INSIDE another attribute's
+// value (e.g. `<div title="see data-i18n='ignored'">`). We mask ALL
+// attribute values in element-opening tags after scripts/styles have
+// been blanked. This regex captures a full attribute assignment
+// `name="value"` or `name='value'`; the replacement blanks only the
+// value portion, preserving the attribute name so the marker regex can
+// still find `data-i18n=` when it's the OUTER attribute.
+//
+// The negative-lookahead on `data-i18n(?![\w-])` (case-insensitive)
+// EXCLUDES the four marker attribute names themselves — otherwise this
+// pass would blank the very values we want to lint.
+const RE_ATTR_VALUE     = /(\s(?!data-i18n(?![\w-])|data-i18n-html(?![\w-])|data-i18n-attr(?![\w-])|data-i18n-meta(?![\w-]))[\w:-]+\s*=\s*)("[^"]*"|'[^']*')/gi;
+
+// Directories to skip when walking the tree. `dist/` is a build artefact
+// (it contains injected translations, which would fake-pass every check).
+// `node_modules/` is obvious. `__tests__/` contains fixtures with
+// intentionally-malformed dicts/HTML that would blow up the lint.
+// `.github`/`.claude`/`.husky` etc. all fall through the dotfile skip
+// below and don't need explicit entries here.
+const SKIP_DIRS = new Set([
+  'node_modules',
+  'dist',
+  '.git',
+  'coverage',
+  '__tests__',
+]);
+
+/**
+ * Recursively walk a directory, yielding every `.html` file path (absolute).
+ *
+ * Symlinks are NOT followed. With `withFileTypes: true`, Dirent.isDirectory()
+ * returns false for symlinks-to-directories (they satisfy isSymbolicLink()
+ * instead), so recursion never descends into them. This is deliberate —
+ * a repo checkout with adversarial symlinks would let a lint that follows
+ * them scan outside the tree it was pointed at.
+ */
+function* walkHtml(dir, rootDir) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch (err) {
+    // Missing dir is fatal only if it's the top-level scan root; a
+    // missing subdirectory during recursion means it disappeared
+    // mid-walk, which is fine to skip.
+    if (dir === rootDir) throw err;
+    return;
+  }
+  for (const entry of entries) {
+    // Skip all dotfiles/dotdirs — this covers `.git`, `.github`, `.claude`,
+    // `.vscode`, `.husky`, `.env*`, and anything else prefixed with a dot.
+    // None of these contain HTML the lint should be validating.
+    if (entry.name.startsWith('.')) continue;
+    if (SKIP_DIRS.has(entry.name)) continue;
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      yield* walkHtml(full, rootDir);
+    } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.html')) {
+      yield full;
+    }
+  }
+}
+
+/**
+ * Blank out `<script>` / `<style>` element CONTENT, HTML comments, and
+ * attribute values in the source so marker regexes can't false-match on
+ * template literals, CSS content, commented-out markup, or `data-i18n=`
+ * substrings that appear inside another attribute's value. Replacement
+ * is space-of-equal-length so subsequent regex offsets (if we ever add
+ * source-position reporting) stay meaningful.
+ *
+ * IMPORTANT ordering (H2 fix): script/style CONTENT is blanked FIRST,
+ * comments SECOND, attribute values THIRD. If comments were blanked
+ * first, a stray `<!--` inside a `<script>` string literal (e.g.
+ * `const t = '<!-- foo';`) would make the non-greedy comment regex
+ * consume across the script's closing tag up to any later `-->` on
+ * the page, eating legitimate markers in between.
+ *
+ * IMPORTANT masking granularity (H3 fix): we blank ONLY the content
+ * between opening and closing tags, leaving the opening tag visible so
+ * marker regexes can still find `<script data-i18n="…">` — the plugin's
+ * DOM parse sees those markers and enforces them at build; lint must
+ * too or it fails-open on JS-heavy pages that legitimately use markers
+ * on <script>/<style> elements.
+ *
+ * IMPORTANT close-tag search (H4/H2 fix): the close tag is found via a
+ * case-insensitive regex `<\/script(?![\w-])/gi` with `lastIndex` on
+ * the ORIGINAL source. This avoids two hazards:
+ *   1. `source.toLowerCase()` was NOT length-preserving on Unicode —
+ *      `İ` → `i̇` (1 code unit → 2), so `openEnd` from the original
+ *      source pointed to the wrong offset in the lowercased view.
+ *   2. Plain `indexOf('</script')` matched `</scriptzz>` as if it were
+ *      a real close tag. The `(?![\w-])` boundary rejects that.
+ *
+ * IMPORTANT attribute-value masking (H3 additional fix): AFTER scripts
+ * and styles are blanked, we walk the remaining markup and blank every
+ * quoted attribute value in every element opening tag. Prevents
+ * `<div title="see data-i18n='leak'">` from tricking the marker regex.
+ * Attribute NAMES are preserved so legitimate `data-i18n="key"` markers
+ * are still found.
+ */
+function maskNonMarkupRegions(html) {
+  const blank = (n) => ' '.repeat(n);
+  let out = html;
+
+  // Blank content of every <script>/<style> element. Opening tag is
+  // preserved (so its own attributes remain scannable for markers).
+  //
+  // The opening-tag regex (RE_SCRIPT_OPEN / RE_STYLE_OPEN) correctly
+  // handles `>` inside quoted attribute values via alternation between
+  // quoted-string chunks and non-quote/non-`>` characters (H1 fix).
+  const maskTagContent = (source, openRe, closeRe) => {
+    let result = '';
+    let cursor = 0;
+    openRe.lastIndex = 0;
+    let m;
+    while ((m = openRe.exec(source)) !== null) {
+      // Everything up to and including the opening tag stays as-is.
+      const openEnd = m.index + m[0].length;
+      result += source.slice(cursor, openEnd);
+      // Find the matching close tag via regex on the ORIGINAL source
+      // (no toLowerCase() copy — avoids Unicode length-desync from H2
+      // and the O(n·k) allocation cost). The `(?![\w-])` boundary
+      // rejects `</scriptzz` and similar partial-substring matches
+      // (H4).
+      closeRe.lastIndex = openEnd;
+      const closeMatch = closeRe.exec(source);
+      const contentEnd = closeMatch === null ? source.length : closeMatch.index;
+      result += blank(contentEnd - openEnd);
+      cursor = contentEnd;
+      // Advance the open-tag regex past the blanked span so the next
+      // exec doesn't re-scan inside now-blanked content.
+      openRe.lastIndex = contentEnd;
+    }
+    result += source.slice(cursor);
+    return result;
+  };
+
+  out = maskTagContent(out, RE_SCRIPT_OPEN, RE_SCRIPT_CLOSE);
+  out = maskTagContent(out, RE_STYLE_OPEN, RE_STYLE_CLOSE);
+
+  // Comments — anything comment-shaped that was inside a now-blanked
+  // script/style body is already spaces, so this pass only touches
+  // real HTML comments in the visible markup.
+  out = out.replace(RE_HTML_COMMENT, (m) => blank(m.length));
+
+  // Attribute values (H3): blank every quoted value while preserving
+  // the attribute name so legitimate `data-i18n="key"` outer markers
+  // remain scannable. This runs AFTER script/style/comment masking so
+  // it operates only on visible markup attributes.
+  out = out.replace(RE_ATTR_VALUE, (_, prefix, quoted) => {
+    // `quoted` includes the surrounding quotes. Preserve them (so the
+    // marker regex, which looks for `name="value"`, still sees the
+    // quotes) and blank only the interior.
+    const q = quoted[0];
+    return prefix + q + blank(quoted.length - 2) + q;
+  });
+
+  return out;
+}
+
+/**
+ * Extract all i18n marker references from a single HTML source. Returns a
+ * list of `{kind, key}` records; `kind` is one of `text | html | attr |
+ * meta` and `key` is the dot-path to look up in the dictionaries.
+ *
+ * For `data-i18n-attr` the raw value packs 1..N `attr:key` pairs
+ * separated by `;` — matches the plugin's `handleAttrMarker` semantics.
+ * Empty pairs (leading/trailing/duplicate `;`) are errors, matching the
+ * plugin's behaviour so the lint can catch them before build.
+ */
+function extractMarkers(html, relPath) {
+  const out = [];
+  const errors = [];
+
+  const source = maskNonMarkupRegions(html);
+  const capture = (match) => match[2] ?? match[3] ?? '';
+
+  for (const m of source.matchAll(RE_I18N_TEXT)) {
+    const val = capture(m).trim();
+    if (!val) {
+      errors.push(`${relPath}: empty data-i18n= value`);
+      continue;
+    }
+    out.push({ kind: 'text', key: val });
+  }
+
+  for (const m of source.matchAll(RE_I18N_HTML)) {
+    const val = capture(m).trim();
+    if (!val) {
+      errors.push(`${relPath}: empty data-i18n-html= value`);
+      continue;
+    }
+    out.push({ kind: 'html', key: val });
+  }
+
+  for (const m of source.matchAll(RE_I18N_ATTR)) {
+    const raw = capture(m);
+    // Use the shared parseAttrPairs from the plugin so lint and plugin
+    // can never drift on the pair-parsing contract (M4). The parser
+    // returns either `{pairs, error: null}` (all pairs valid) or
+    // `{pairs: [], error: {code, pair, message}}`. Lint prefixes the
+    // message with the file path; plugin prefixes with `[i18n] pagePath`.
+    const parsed = parseAttrPairs(raw);
+    if (parsed.error) {
+      // Use the SAME wording as the plugin (drop the `data-i18n-attr=`
+      // prefix since the file/rel-path already identifies the marker).
+      errors.push(
+        `${relPath}: data-i18n-attr="${raw}" ${parsed.error.message}`,
+      );
+      continue;
+    }
+    // All pairs valid — commit them atomically to the marker set.
+    for (const { attr, key } of parsed.pairs) {
+      out.push({ kind: 'attr', key, attr });
+    }
+  }
+
+  for (const m of source.matchAll(RE_I18N_META)) {
+    const val = capture(m).trim();
+    if (!val) {
+      errors.push(`${relPath}: empty data-i18n-meta= value`);
+      continue;
+    }
+    out.push({ kind: 'meta', key: val });
+  }
+
+  return { markers: out, errors };
+}
+
+/**
+ * Parse a simple long-flag CLI: `--flag`, `--flag value`. Returns null
+ * (with a message printed to stderr) on any usage error so main() can
+ * exit 2. Missing values for value-flags are explicit usage errors
+ * rather than crashes.
+ */
+function parseArgs(argv) {
+  const opts = {
+    localesDir: null,
+    strictOrphans: false,
+    root: PROJECT_ROOT,
+    help: false,
+  };
+  const requireValue = (flag, i) => {
+    if (i + 1 >= argv.length) {
+      console.error(`i18n-lint: missing value for ${flag}`);
+      return null;
+    }
+    return argv[i + 1];
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === '--help' || arg === '-h') {
+      opts.help = true;
+    } else if (arg === '--strict-orphans') {
+      opts.strictOrphans = true;
+    } else if (arg === '--locales-dir') {
+      const v = requireValue(arg, i);
+      if (v == null) return null;
+      opts.localesDir = v;
+      i++;
+    } else if (arg === '--root') {
+      const v = requireValue(arg, i);
+      if (v == null) return null;
+      opts.root = resolve(v);
+      i++;
+    } else {
+      console.error(`i18n-lint: unknown argument "${arg}"`);
+      return null;
+    }
+  }
+  if (!opts.localesDir) opts.localesDir = join(opts.root, 'locales');
+  return opts;
+}
+
+const HELP = `Usage: node scripts/i18n-lint.js [options]
+
+Validates locale dictionaries and HTML i18n markers.
+
+Options:
+  --locales-dir <path>   Locale JSONs directory (default: <root>/locales)
+  --root <path>          Directory tree to scan for HTML (default: repo root)
+  --strict-orphans       Treat unused dict keys as errors (default: warn)
+  -h, --help             Print this help and exit
+`;
+
+async function main() {
+  const opts = parseArgs(process.argv.slice(2));
+  if (!opts) return 2;
+  if (opts.help) {
+    process.stdout.write(HELP);
+    return 0;
+  }
+
+  // Sanity check the root — a missing root should be a usage error, not a
+  // crash halfway through the walk.
+  let rootStat;
+  try {
+    rootStat = statSync(opts.root);
+  } catch {
+    console.error(`i18n-lint: --root does not exist: ${opts.root}`);
+    return 2;
+  }
+  if (!rootStat.isDirectory()) {
+    console.error(`i18n-lint: --root is not a directory: ${opts.root}`);
+    return 2;
+  }
+
+  // 1. Load + validate dictionaries. Any structural problem throws.
+  let dictBundle;
+  try {
+    dictBundle = loadDictionaries(opts.localesDir);
+  } catch (err) {
+    console.error(`i18n-lint: dictionary validation failed`);
+    console.error(`  ${err.message}`);
+    return 1;
+  }
+  const { locales, dicts } = dictBundle;
+  // Reference key set — loadDictionaries has already enforced symmetry
+  // (every locale declares the same key set) and thrown if not, so
+  // sampling from locales[0] is safe.
+  const dictKeys = new Set(Object.keys(dicts[locales[0]]));
+
+  // 2. Walk HTML sources, extract markers, collect malformed-marker errors.
+  const usedKeys = new Set();
+  const missingKeys = new Map(); // key -> [relPath, ...]
+  const markerErrors = [];
+  let filesScanned = 0;
+
+  for (const file of walkHtml(opts.root, opts.root)) {
+    filesScanned++;
+    const rel = relative(opts.root, file);
+    let html;
+    try {
+      html = readFileSync(file, 'utf-8');
+    } catch (err) {
+      markerErrors.push(`${rel}: could not read (${err.message})`);
+      continue;
+    }
+    const { markers, errors } = extractMarkers(html, rel);
+    markerErrors.push(...errors);
+    for (const { key } of markers) {
+      usedKeys.add(key);
+      if (!dictKeys.has(key)) {
+        if (!missingKeys.has(key)) missingKeys.set(key, []);
+        missingKeys.get(key).push(rel);
+      }
+    }
+  }
+
+  // 3. Orphan keys — in dict, not used in HTML. During Task #165 rollout
+  //    most keys will look orphaned; downgrade to warning unless the
+  //    caller opts into strict mode.
+  const orphans = [];
+  for (const k of dictKeys) {
+    if (!usedKeys.has(k)) orphans.push(k);
+  }
+  orphans.sort();
+
+  // 4. Report.
+  console.log(
+    `i18n-lint: ${filesScanned} HTML file(s) scanned, ${dictKeys.size} key(s) in dict, ${usedKeys.size} used, ${orphans.length} orphan(s), ${missingKeys.size} missing`,
+  );
+
+  let hasErrors = false;
+
+  if (markerErrors.length) {
+    hasErrors = true;
+    console.error(`\n[ERROR] ${markerErrors.length} malformed marker(s):`);
+    for (const e of markerErrors) console.error(`  ${e}`);
+  }
+
+  if (missingKeys.size) {
+    hasErrors = true;
+    console.error(`\n[ERROR] ${missingKeys.size} missing key(s):`);
+    for (const [k, refs] of [...missingKeys.entries()].sort()) {
+      const preview = refs.slice(0, 3).join(', ');
+      const more = refs.length > 3 ? `, +${refs.length - 3} more` : '';
+      console.error(`  ${k}  (referenced by: ${preview}${more})`);
+    }
+  }
+
+  if (orphans.length) {
+    const label = opts.strictOrphans ? 'ERROR' : 'WARN';
+    if (opts.strictOrphans) hasErrors = true;
+    const stream = opts.strictOrphans ? console.error : console.warn;
+    stream(`\n[${label}] ${orphans.length} orphan key(s) (in dict, not used in any HTML):`);
+    for (const k of orphans.slice(0, 20)) stream(`  ${k}`);
+    if (orphans.length > 20) stream(`  ...+${orphans.length - 20} more`);
+  }
+
+  if (hasErrors) return 1;
+  console.log(`\ni18n-lint: OK`);
+  return 0;
+}
+
+main().then(
+  (code) => process.exit(code),
+  (err) => {
+    console.error('i18n-lint: unhandled exception');
+    console.error(err.stack || err.message);
+    process.exit(1);
+  },
+);
