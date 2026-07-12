@@ -191,7 +191,57 @@
     "_stub": "This section is filled by issue #48 — marketing pages."
   },
   "enquiries": {
-    "_stub": "This section is filled by issue #48 — marketing pages (form labels, errors, modal, thanks page)."
+    "meta": {
+      "title": "Enquiries — Vayana Bungalows",
+      "description": "Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests — we reply within 24-48 hours."
+    },
+    "hero": {
+      "eyebrow": "Plan your stay",
+      "title": "Send us an enquiry",
+      "lede": "Leave your contact information and we will reach out to you shortly."
+    },
+    "form": {
+      "name_placeholder": "FULL NAME*",
+      "checkin_placeholder": "CHECK-IN*",
+      "checkout_placeholder": "CHECK-OUT*",
+      "adults_placeholder": "ADULTS*",
+      "children_placeholder": "CHILDREN",
+      "infants_placeholder": "INFANTS",
+      "email_placeholder": "EMAIL*",
+      "phone_placeholder": "TELEPHONE*",
+      "message_placeholder": "MESSAGE (optional)",
+      "submit_label": "Send enquiry",
+      "submit_busy_label": "Sending…"
+    },
+    "a11y": {
+      "name_label": "Full name (required)",
+      "checkin_label": "Check-in date (required)",
+      "checkout_label": "Check-out date (required)",
+      "adults_label": "Adults (required)",
+      "children_label": "Children (optional)",
+      "infants_label": "Infants (optional)",
+      "email_label": "Email (required)",
+      "phone_label": "Telephone (required)",
+      "message_label": "Message (optional)",
+      "honeypot_label": "Website",
+      "honeypot_aria": "Leave this field empty"
+    },
+    "consent": {
+      "prefix": "I accept the",
+      "link_label": "Privacy Policy",
+      "suffix": "and consent to being contacted by Vayana Bungalows regarding my enquiry."
+    },
+    "noscript": {
+      "prefix": "JavaScript is disabled in your browser. To send an enquiry, email us at",
+      "suffix": "with your dates and a short note."
+    },
+    "modal": {
+      "close_aria": "Close",
+      "close_button": "Close",
+      "eyebrow": "Enquiry received",
+      "title": "Thank you — we'll be in touch.",
+      "body": "A member of the Vayana team will reply within 24-48 hours with availability and a tailored proposal for your stay."
+    }
   },
   "enquiries_thanks": {
     "_stub": "This section is filled by issue #48 — /enquiries/thanks/ landing page."

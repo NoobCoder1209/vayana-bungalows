@@ -114,7 +114,13 @@ const ERROR_MSGS = {
   network:    'Network error — please check your connection and try again.',
   default:    'Sorry, something went wrong. Please try again or email us directly.',
 };
-const SUBMIT_BUSY_TEXT = 'Sending…';
+// Submit button's "busy" state text. Populated from a data-busy-label
+// attribute on the button itself, which the i18n plugin bakes at build
+// time from the enquiries.form.submit_busy_label key. Fallback to the
+// English literal so a page that hasn't been keyed still renders
+// something readable. Assigning at init rather than module scope so a
+// runtime language swap (future work) can re-read the current DOM value.
+let SUBMIT_BUSY_TEXT = 'Sending…';
 
 // Bungalow allowlist for `?villa=<slug>` pre-fill. Anything not in this
 // set is silently ignored so an attacker can't craft a link that injects
@@ -193,6 +199,15 @@ export function initEnquiry() {
   // defense-in-depth belt-and-braces — both paths agree.
   const localeInput = form.querySelector('[data-enquiry-locale]');
   if (localeInput) localeInput.value = currentLocale();
+
+  // Read the localized busy-state text off the submit button's
+  // data-busy-label attribute (baked at build time by the i18n plugin
+  // from enquiries.form.submit_busy_label). Falls back to the module-
+  // scope default when the attribute is missing (page not built with
+  // the plugin, or test fixture). Assigned at init so a future runtime
+  // language swap (see issue #47 follow-up) can re-read the DOM value.
+  const baked = submit.dataset.busyLabel;
+  if (baked) SUBMIT_BUSY_TEXT = baked;
 
   // Enable the submit button only once JS has wired up validation.
   // The HTML ships it disabled (JS-disabled fallback: button stays

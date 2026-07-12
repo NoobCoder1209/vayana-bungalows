@@ -191,7 +191,57 @@
     "_stub": "This section is filled by issue #48 — marketing pages."
   },
   "enquiries": {
-    "_stub": "This section is filled by issue #48 — marketing pages (form labels, errors, modal, thanks page)."
+    "meta": {
+      "title": "Запитване — Ваяна бунгала",
+      "description": "Изпратете запитване към Ваяна бунгала в Царево, България. Кажете ни вашите дати, брой гости и специални желания — отговаряме в рамките на 24-48 часа."
+    },
+    "hero": {
+      "eyebrow": "Планирайте престоя си",
+      "title": "Изпратете ни запитване",
+      "lede": "Оставете вашите данни за контакт и ние ще се свържем с вас в най-кратък срок."
+    },
+    "form": {
+      "name_placeholder": "ПЪЛНО ИМЕ*",
+      "checkin_placeholder": "ПРИСТИГАНЕ*",
+      "checkout_placeholder": "ЗАМИНАВАНЕ*",
+      "adults_placeholder": "ВЪЗРАСТНИ*",
+      "children_placeholder": "ДЕЦА",
+      "infants_placeholder": "БЕБЕТА",
+      "email_placeholder": "ИМЕЙЛ*",
+      "phone_placeholder": "ТЕЛЕФОН*",
+      "message_placeholder": "СЪОБЩЕНИЕ (по избор)",
+      "submit_label": "Изпращане на запитване",
+      "submit_busy_label": "Изпращане…"
+    },
+    "a11y": {
+      "name_label": "Пълно име (задължително)",
+      "checkin_label": "Дата на пристигане (задължителна)",
+      "checkout_label": "Дата на заминаване (задължителна)",
+      "adults_label": "Възрастни (задължително)",
+      "children_label": "Деца (по избор)",
+      "infants_label": "Бебета (по избор)",
+      "email_label": "Имейл (задължителен)",
+      "phone_label": "Телефон (задължителен)",
+      "message_label": "Съобщение (по избор)",
+      "honeypot_label": "Уебсайт",
+      "honeypot_aria": "Оставете това поле празно"
+    },
+    "consent": {
+      "prefix": "Приемам",
+      "link_label": "Политиката за поверителност",
+      "suffix": "и се съгласявам да бъда контактиран/а от Ваяна бунгала във връзка със запитването ми."
+    },
+    "noscript": {
+      "prefix": "JavaScript е изключен във вашия браузър. За да изпратите запитване, пишете ни на",
+      "suffix": "с вашите дати и кратко съобщение."
+    },
+    "modal": {
+      "close_aria": "Затваряне",
+      "close_button": "Затваряне",
+      "eyebrow": "Запитването е получено",
+      "title": "Благодарим ви — ще се свържем с вас.",
+      "body": "Наш представител ще ви отговори в рамките на 24-48 часа с наличност и персонализирано предложение за вашия престой."
+    }
   },
   "enquiries_thanks": {
     "_stub": "This section is filled by issue #48 — /enquiries/thanks/ landing page."

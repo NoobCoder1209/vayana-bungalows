@@ -1572,6 +1572,53 @@
   border-radius: var(--radius-form);
 }
 
+/* Selects need an explicit appearance reset. Native <select> in Firefox
+   and Safari has intrinsic content-width sizing and its own dropdown
+   caret rendering, which together give the ADULTS/CHILDREN/INFANTS
+   selects a "small pill in a wide cell" look instead of matching the
+   full-width pills of the sibling text inputs. Reset appearance to none,
+   force width: 100%, and paint our own down-caret via a background SVG
+   so the visual matches the input pills exactly.
+   Non-EN locales are noticeably longer: EN "ADULTS*" (7 chars) vs BG
+   "ВЪЗРАСТНИ*" (10 chars, Cyrillic glyphs run wider). At the ~110-130px
+   collapsed-select cell width on mobile before the 1-column breakpoint,
+   the placeholder can collide with the chevron reserved by padding-right.
+   text-overflow: ellipsis + overflow: hidden + white-space: nowrap
+   handles overflow gracefully — the collapsed select renders "ВЪЗРАС…"
+   next to the chevron, while the OPEN picker shows the full text
+   (native <option> rendering ignores the parent select's text-overflow).
+   box-sizing: border-box is set globally by base.css but we assert it
+   here in case a future refactor breaks the reset. */
+.enquiry-form__field select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  /* Leave room on the right for the caret so long option labels don't
+     overlap it. */
+  padding-right: 2.5rem;
+  /* Overflow handling — non-EN locales with longer placeholders (BG's
+     ВЪЗРАСТНИ* etc) get an ellipsis in the collapsed state rather than
+     colliding with the chevron. */
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  /* The chevron SVG uses the muted-text token's fixed hex `%236f5e40`
+     — see tokens.css `--text-muted`. It does NOT auto-inherit a future
+     dark theme because the color is baked into the data-URL. If a dark
+     theme lands, switch this to `mask-image: url(...) + background-color:
+     var(--text-muted)` so the chevron inherits properly. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%236f5e40' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M1 1.5l5 5 5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 12px 8px;
+  cursor: pointer;
+}
+/* IE / old Edge remove-caret shim. Modern browsers ignore. */
+.enquiry-form__field select::-ms-expand {
+  display: none;
+}
+
 .enquiry-form__field textarea {
   min-height: 140px;
   resize: vertical;

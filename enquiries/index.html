@@ -7,8 +7,8 @@
          the JS-on hamburger doesn't flash invisible during the deferred
          module's load window. CSS uses html.no-js for the no-JS fallback. -->
     <script>document.documentElement.classList.replace('no-js','js-on');</script>
-    <title>Enquiries &mdash; Vayana Bungalows</title>
-    <meta name="description" content="Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests — we reply within 24-48 hours." />
+    <title data-i18n="enquiries.meta.title">Enquiries &mdash; Vayana Bungalows</title>
+    <meta name="description" content="Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests — we reply within 24-48 hours." data-i18n-meta="enquiries.meta.description" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
@@ -72,6 +72,24 @@
             <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
           </a>
           <a href="./" class="btn btn-primary site-header__enquiries" aria-current="page">Enquiries</a>
+          <!-- Language toggle pill. Two <a> segments, one per locale.
+               data-lang identifies each segment; lang.js swaps hrefs to the
+               plugin-generated hreflang alternates and toggles .is-active +
+               aria-current on the correct segment per page load. The plugin's
+               applyHead rewrites href + hreflang + is-active per emit, so the
+               source href is only a JS-off fallback. -->
+          <div class="site-header__lang" role="group"
+               data-i18n-attr="aria-label:common.header.lang_group_aria"
+               aria-label="Language">
+            <a href="../" class="site-header__lang-seg is-active"
+               data-lang="en" aria-current="true"
+               data-i18n="common.header.lang_en_label"
+               data-i18n-attr="data-aria-current:common.header.lang_en_current_aria; data-aria-switch:common.header.lang_switch_to_en_aria">EN</a>
+            <a href="../bg/enquiries/" class="site-header__lang-seg"
+               data-lang="bg"
+               data-i18n="common.header.lang_bg_label"
+               data-i18n-attr="data-aria-current:common.header.lang_bg_current_aria; data-aria-switch:common.header.lang_switch_to_bg_aria">BG</a>
+          </div>
         </div>
       </div>
     </header>
@@ -133,9 +151,9 @@
            utility page, not a marketing page. -->
       <section class="enquiry-page" aria-labelledby="enquiry-title">
         <div class="container enquiry-page__intro">
-          <span class="eyebrow">Plan your stay</span>
-          <h1 id="enquiry-title">Send us an enquiry</h1>
-          <p class="enquiry-page__lede">
+          <span class="eyebrow" data-i18n="enquiries.hero.eyebrow">Plan your stay</span>
+          <h1 id="enquiry-title" data-i18n="enquiries.hero.title">Send us an enquiry</h1>
+          <p class="enquiry-page__lede" data-i18n="enquiries.hero.lede">
             Leave your contact information and we will reach out to you shortly.
           </p>
         </div>
@@ -168,9 +186,10 @@
                  still announce the field; sighted users see the
                  placeholder act as the in-pill label. -->
             <div class="enquiry-form__field enquiry-form__field--full">
-              <label for="eq-name" class="sr-only">Full name (required)</label>
+              <label for="eq-name" class="sr-only" data-i18n="enquiries.a11y.name_label">Full name (required)</label>
               <input id="eq-name" name="name" type="text" required
                      placeholder="FULL NAME*"
+                     data-i18n-attr="placeholder:enquiries.form.name_placeholder"
                      autocomplete="name" maxlength="120"
                      data-enquiry-name />
             </div>
@@ -184,9 +203,10 @@
                  users, and SR users hear the same content as sighted
                  users would read (audio/visual parity). -->
             <div class="enquiry-form__field">
-              <label for="eq-checkin" class="sr-only">Check-in date (required)</label>
+              <label for="eq-checkin" class="sr-only" data-i18n="enquiries.a11y.checkin_label">Check-in date (required)</label>
               <input id="eq-checkin" name="checkin" type="text"
                      placeholder="CHECK-IN*"
+                     data-i18n-attr="placeholder:enquiries.form.checkin_placeholder"
                      autocomplete="off" required
                      data-enquiry-checkin />
             </div>
@@ -194,9 +214,10 @@
             <!-- 3. Check-out date — flatpickr, minDate re-anchors when
                  check-in changes (set in enquiry.js's onChange callback). -->
             <div class="enquiry-form__field">
-              <label for="eq-checkout" class="sr-only">Check-out date (required)</label>
+              <label for="eq-checkout" class="sr-only" data-i18n="enquiries.a11y.checkout_label">Check-out date (required)</label>
               <input id="eq-checkout" name="checkout" type="text"
                      placeholder="CHECK-OUT*"
+                     data-i18n-attr="placeholder:enquiries.form.checkout_placeholder"
                      autocomplete="off" required
                      data-enquiry-checkout />
             </div>
@@ -223,9 +244,9 @@
                    value so HTML required-validation rejects submit
                    when left untouched. -->
               <div class="enquiry-form__field">
-                <label for="eq-adults" class="sr-only">Adults (required)</label>
+                <label for="eq-adults" class="sr-only" data-i18n="enquiries.a11y.adults_label">Adults (required)</label>
                 <select id="eq-adults" name="adults" required data-enquiry-adults>
-                  <option value="" disabled selected hidden>ADULTS*</option>
+                  <option value="" disabled selected hidden data-i18n="enquiries.form.adults_placeholder">ADULTS*</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
@@ -237,9 +258,9 @@
                    meaning zero. Label-option lives separately as the
                    default-state placeholder. -->
               <div class="enquiry-form__field">
-                <label for="eq-children" class="sr-only">Children (optional)</label>
+                <label for="eq-children" class="sr-only" data-i18n="enquiries.a11y.children_label">Children (optional)</label>
                 <select id="eq-children" name="children" data-enquiry-children>
-                  <option value="" disabled selected hidden>CHILDREN</option>
+                  <option value="" disabled selected hidden data-i18n="enquiries.form.children_placeholder">CHILDREN</option>
                   <option value="-">-</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
@@ -250,9 +271,9 @@
 
               <!-- 6. Infants — optional, 0..4. Same pattern as Children. -->
               <div class="enquiry-form__field">
-                <label for="eq-infants" class="sr-only">Infants (optional)</label>
+                <label for="eq-infants" class="sr-only" data-i18n="enquiries.a11y.infants_label">Infants (optional)</label>
                 <select id="eq-infants" name="infants" data-enquiry-infants>
-                  <option value="" disabled selected hidden>INFANTS</option>
+                  <option value="" disabled selected hidden data-i18n="enquiries.form.infants_placeholder">INFANTS</option>
                   <option value="-">-</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
@@ -264,9 +285,10 @@
 
             <!-- 7. Email -->
             <div class="enquiry-form__field">
-              <label for="eq-email" class="sr-only">Email (required)</label>
+              <label for="eq-email" class="sr-only" data-i18n="enquiries.a11y.email_label">Email (required)</label>
               <input id="eq-email" name="email" type="email" required
                      placeholder="EMAIL*"
+                     data-i18n-attr="placeholder:enquiries.form.email_placeholder"
                      autocomplete="email" maxlength="254"
                      data-enquiry-email />
             </div>
@@ -274,9 +296,10 @@
             <!-- 8. Telephone — type=tel + loose regex (digits + symbols, 7+ chars).
                  No country selector / library — server (#15) will reformat. -->
             <div class="enquiry-form__field">
-              <label for="eq-phone" class="sr-only">Telephone (required)</label>
+              <label for="eq-phone" class="sr-only" data-i18n="enquiries.a11y.phone_label">Telephone (required)</label>
               <input id="eq-phone" name="phone" type="tel" required
                      placeholder="TELEPHONE*"
+                     data-i18n-attr="placeholder:enquiries.form.phone_placeholder"
                      autocomplete="tel" maxlength="40"
                      data-enquiry-phone />
             </div>
@@ -287,10 +310,11 @@
                  The placeholder says "(optional)" so the user knows they
                  can leave it blank. -->
             <div class="enquiry-form__field enquiry-form__field--full">
-              <label for="eq-message" class="sr-only">Message (optional)</label>
+              <label for="eq-message" class="sr-only" data-i18n="enquiries.a11y.message_label">Message (optional)</label>
               <textarea id="eq-message" name="message"
                         maxlength="2000" rows="5"
                         placeholder="MESSAGE (optional)"
+                        data-i18n-attr="placeholder:enquiries.form.message_placeholder"
                         data-enquiry-message></textarea>
             </div>
 
@@ -318,10 +342,11 @@
                      aria-hidden removes the whole subtree from the
                      accessibility tree. -->
             <div class="enquiry-form__hp" aria-hidden="true">
-              <label for="eq-alt-url">Website</label>
+              <label for="eq-alt-url" data-i18n="enquiries.a11y.honeypot_label">Website</label>
               <input id="eq-alt-url" name="alt_url" type="text"
                      tabindex="-1" autocomplete="off"
                      aria-label="Leave this field empty"
+                     data-i18n-attr="aria-label:enquiries.a11y.honeypot_aria"
                      data-enquiry-honeypot />
             </div>
 
@@ -350,7 +375,20 @@
                  the error message in the same commit. -->
             <label class="enquiry-form__consent">
               <input type="checkbox" required data-enquiry-consent />
-              <span>I accept the <a href="/privacy/" data-site-config-path="policies.privacy">Privacy Policy</a> and consent to being contacted by Vayana Bungalows regarding my enquiry.</span>
+              <!-- Consent line — GDPR Art. 7(2) requires the notice be in
+                   the user's language for "informed" consent to be valid.
+                   Split into three keyed pieces so the inline <a> can
+                   keep its data-site-config-path attribute (which the
+                   data-i18n-html sanitizer would strip). Translators can
+                   also reorder the phrasing (put the link at the start
+                   or end of the sentence) freely by adjusting the prefix
+                   / suffix values in the locale JSON. -->
+              <span>
+                <span data-i18n="enquiries.consent.prefix">I accept the</span>
+                <a href="/privacy/" data-site-config-path="policies.privacy"
+                   data-i18n="enquiries.consent.link_label">Privacy Policy</a>
+                <span data-i18n="enquiries.consent.suffix">and consent to being contacted by Vayana Bungalows regarding my enquiry.</span>
+              </span>
             </label>
 
             <!-- 11. Submit. Rendered disabled at HTML level; enquiry.js
@@ -360,6 +398,9 @@
                  newsletter form). -->
             <button type="submit"
                     class="btn btn-primary enquiry-form__submit"
+                    data-i18n="enquiries.form.submit_label"
+                    data-busy-label="Sending…"
+                    data-i18n-attr="data-busy-label:enquiries.form.submit_busy_label"
                     data-enquiry-submit disabled>Send enquiry</button>
 
             <!-- Error pill — aria-live assertive + hidden by default.
@@ -385,10 +426,14 @@
                accidentally "Subscribe button" from the newsletter.) -->
           <noscript>
             <p class="enquiry-form__noscript">
-              JavaScript is disabled in your browser. To send an enquiry,
-              email us at
+              <!-- Fallback shown only when JS is disabled. Split into
+                   prefix + link + suffix so the mailto <a> keeps its
+                   data-site-config-href attribute (data-i18n-html would
+                   strip it). Translators can reorder freely by editing
+                   the prefix/suffix values. -->
+              <span data-i18n="enquiries.noscript.prefix">JavaScript is disabled in your browser. To send an enquiry, email us at</span>
               <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">contact@vayanabungalows.com</a>
-              with your dates and a short note.
+              <span data-i18n="enquiries.noscript.suffix">with your dates and a short note.</span>
             </p>
           </noscript>
         </div>
@@ -401,11 +446,15 @@
       <div class="modal" id="enquiry-modal" hidden role="dialog" aria-modal="true" aria-labelledby="enquiry-modal-title">
         <div class="modal__backdrop" data-modal-close></div>
         <div class="modal__panel" tabindex="-1">
-          <button class="modal__close" type="button" aria-label="Close" data-modal-close>&times;</button>
-          <span class="eyebrow">Enquiry received</span>
-          <h3 id="enquiry-modal-title">Thank you &mdash; we'll be in touch.</h3>
-          <p>A member of the Vayana team will reply within 24-48 hours with availability and a tailored proposal for your stay.</p>
-          <button type="button" class="btn btn-primary" data-modal-close>Close</button>
+          <button class="modal__close" type="button" aria-label="Close"
+                  data-i18n-attr="aria-label:enquiries.modal.close_aria"
+                  data-modal-close>&times;</button>
+          <span class="eyebrow" data-i18n="enquiries.modal.eyebrow">Enquiry received</span>
+          <h3 id="enquiry-modal-title" data-i18n="enquiries.modal.title">Thank you &mdash; we'll be in touch.</h3>
+          <p data-i18n="enquiries.modal.body">A member of the Vayana team will reply within 24-48 hours with availability and a tailored proposal for your stay.</p>
+          <button type="button" class="btn btn-primary"
+                  data-i18n="enquiries.modal.close_button"
+                  data-modal-close>Close</button>
         </div>
       </div>
     </main>

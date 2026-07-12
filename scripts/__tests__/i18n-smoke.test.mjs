@@ -315,24 +315,22 @@ test('smoke: home page has data-lang-pill-expected="1" (source contains the pill
   );
 });
 
-test('smoke: sub-pages do NOT carry data-lang-pill-expected (source has no pill)', () => {
-  // Every page except the home. If a future edit adds the pill to a
-  // sub-page, this assertion will fire — that's a signal to lang.js
-  // that the pill is expected there too. Not an error, but should be
-  // an intentional decision.
+test('smoke: EVERY page carries data-lang-pill-expected="1" (pill on every header)', () => {
+  // The pill is now present on every page's header source (not just
+  // the home). The plugin's applyHead stamps data-lang-pill-expected
+  // on any page whose source contains .site-header__lang. lang.js
+  // reads the marker to decide whether "no pill in DOM" is a
+  // regression to warn about.
   //
-  // Strict test: the attribute must be ENTIRELY absent (not just
-  // empty-string). An empty-value emit (regression where the plugin
-  // stamps `data-lang-pill-expected=""` on a sub-page) is a distinct
-  // failure mode we want to catch, so we assert `undefined` explicitly
-  // rather than `!marker` (which would let an empty string through).
+  // A page missing this marker would silently ship a header without
+  // the language toggle — user has no way to switch. Assert every
+  // emitted page has it.
   for (const { relPath, doc } of pages) {
-    if (relPath === 'index.html' || relPath === 'bg/index.html') continue;
     const marker = doc.querySelector('html').getAttribute('data-lang-pill-expected');
     assert.equal(
       marker,
-      undefined,
-      `${relPath}: unexpected data-lang-pill-expected on sub-page (got "${marker}")`,
+      '1',
+      `${relPath}: data-lang-pill-expected must be "1" on every page (got "${marker}")`,
     );
   }
 });
@@ -520,43 +518,71 @@ test('smoke: BG home page has active-BG pill segment + inactive-EN pill segment'
   );
 });
 
-test('smoke: pill hrefs point to the correct mirror on BOTH EN and BG emits (symmetric)', () => {
-  const enHome = enPages.find((p) => p.relPath === 'index.html');
-  const bgHome = bgPages.find((p) => p.relPath === 'bg/index.html');
-  assert.ok(enHome, 'EN home page must exist');
-  assert.ok(bgHome, 'BG home page must exist');
+test('smoke: pill hrefs point to the correct mirror on EVERY page × emit (symmetric, cross-page)', () => {
+  // Pill is now on every page's header. For each page, both segments
+  // must exist and their hrefs must point at the correct locale-mirror
+  // URL for this page's sub-path (not the home!). A regression that
+  // dropped the plugin's pill href-rewrite pass, or mispaired locale ↔
+  // URL, would ship users to the wrong page when they toggle language
+  // on any sub-page (e.g., BG segment on /terms/ pointing at /bg/
+  // instead of /bg/terms/ = user loses their context).
+  for (const { relPath, doc } of pages) {
+    // Compute both locale-mirror URLs for this page.
+    const enRelPath = relPath.startsWith('bg/') ? relPath.slice(3) : relPath;
+    // Defensive invariant: after stripping the single leading `bg/`,
+    // enRelPath must not itself start with `bg/` — a `bg/bg/foo` emit
+    // would be a plugin bug (double-prefix) that silently passed the
+    // downstream `bg/${enRelPath}` construction. Assert loud so any
+    // future regression surfaces at this line rather than as a mis-
+    // computed URL comparison two lines below.
+    assert.ok(
+      !enRelPath.startsWith('bg/'),
+      `${relPath}: unexpected double-bg/ prefix after slice — plugin emit bug?`,
+    );
+    const bgRelPath = `bg/${enRelPath}`;
+    const enUrl = expectedUrlForRelPath(enRelPath);
+    const bgUrl = expectedUrlForRelPath(bgRelPath);
+    const isEnEmit = !relPath.startsWith('bg/');
 
-  // EN home: BG segment points at /bg/, EN segment points at root.
-  const bgSegOnEnHome = enHome.doc.querySelector('.site-header__lang-seg[data-lang="bg"]');
-  const enSegOnEnHome = enHome.doc.querySelector('.site-header__lang-seg[data-lang="en"]');
-  assert.ok(bgSegOnEnHome, 'EN home must have BG pill segment');
-  assert.ok(enSegOnEnHome, 'EN home must have EN pill segment');
-  assert.equal(
-    bgSegOnEnHome.getAttribute('href'),
-    '/vayana-bungalows/bg/',
-    'EN home BG-pill href must be the /bg/ mirror URL',
-  );
-  assert.equal(
-    enSegOnEnHome.getAttribute('href'),
-    '/vayana-bungalows/',
-    'EN home EN-pill href must be the EN root URL (self-link on active)',
-  );
+    const enSeg = doc.querySelector('.site-header__lang-seg[data-lang="en"]');
+    const bgSeg = doc.querySelector('.site-header__lang-seg[data-lang="bg"]');
+    assert.ok(enSeg, `${relPath}: must have EN pill segment`);
+    assert.ok(bgSeg, `${relPath}: must have BG pill segment`);
 
-  // BG home: EN segment points at root, BG segment points at /bg/.
-  const enSegOnBgHome = bgHome.doc.querySelector('.site-header__lang-seg[data-lang="en"]');
-  const bgSegOnBgHome = bgHome.doc.querySelector('.site-header__lang-seg[data-lang="bg"]');
-  assert.ok(enSegOnBgHome, 'BG home must have EN pill segment');
-  assert.ok(bgSegOnBgHome, 'BG home must have BG pill segment');
-  assert.equal(
-    enSegOnBgHome.getAttribute('href'),
-    '/vayana-bungalows/',
-    'BG home EN-pill href must be the EN root URL (round-trip target)',
-  );
-  assert.equal(
-    bgSegOnBgHome.getAttribute('href'),
-    '/vayana-bungalows/bg/',
-    'BG home BG-pill href must be the /bg/ URL (self-link on active)',
-  );
+    assert.equal(
+      enSeg.getAttribute('href'),
+      enUrl,
+      `${relPath}: EN pill href must be "${enUrl}"`,
+    );
+    assert.equal(
+      bgSeg.getAttribute('href'),
+      bgUrl,
+      `${relPath}: BG pill href must be "${bgUrl}"`,
+    );
+
+    // is-active + aria-current must be on the segment matching the emit locale.
+    const activeSeg = isEnEmit ? enSeg : bgSeg;
+    const inactiveSeg = isEnEmit ? bgSeg : enSeg;
+    assert.match(
+      activeSeg.getAttribute('class') || '',
+      /\bis-active\b/,
+      `${relPath}: active segment must carry is-active class`,
+    );
+    assert.equal(
+      activeSeg.getAttribute('aria-current'),
+      'true',
+      `${relPath}: active segment must have aria-current="true"`,
+    );
+    assert.doesNotMatch(
+      inactiveSeg.getAttribute('class') || '',
+      /\bis-active\b/,
+      `${relPath}: inactive segment must NOT carry is-active class`,
+    );
+    assert.ok(
+      !inactiveSeg.getAttribute('aria-current'),
+      `${relPath}: inactive segment must NOT have aria-current`,
+    );
+  }
 });
 
 test('smoke: boot-redirect <script data-locale> appears BEFORE any <link rel="stylesheet"> in <head>', () => {

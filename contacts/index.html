@@ -104,6 +104,24 @@
             <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
           </a>
           <a href="../enquiries/" class="btn btn-primary site-header__enquiries">Enquiries</a>
+          <!-- Language toggle pill. Two <a> segments, one per locale.
+               data-lang identifies each segment; lang.js swaps hrefs to the
+               plugin-generated hreflang alternates and toggles .is-active +
+               aria-current on the correct segment per page load. The plugin's
+               applyHead rewrites href + hreflang + is-active per emit, so the
+               source href is only a JS-off fallback. -->
+          <div class="site-header__lang" role="group"
+               data-i18n-attr="aria-label:common.header.lang_group_aria"
+               aria-label="Language">
+            <a href="../" class="site-header__lang-seg is-active"
+               data-lang="en" aria-current="true"
+               data-i18n="common.header.lang_en_label"
+               data-i18n-attr="data-aria-current:common.header.lang_en_current_aria; data-aria-switch:common.header.lang_switch_to_en_aria">EN</a>
+            <a href="../bg/contacts/" class="site-header__lang-seg"
+               data-lang="bg"
+               data-i18n="common.header.lang_bg_label"
+               data-i18n-attr="data-aria-current:common.header.lang_bg_current_aria; data-aria-switch:common.header.lang_switch_to_bg_aria">BG</a>
+          </div>
         </div>
       </div>
     </header>
