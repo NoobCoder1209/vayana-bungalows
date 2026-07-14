@@ -20,7 +20,7 @@ export const SITE_CONFIG = {
   // line without bloating the footer copy. If ops need a second
   // street-and-city line, add address.line3 here and reference it in HTML.
   //
-  // plusCode + directionsUrl + mapEmbed are the single source of truth for
+  // directionsUrl + mapEmbed are the single source of truth for
   // the homepage Location section (#10). If the property ever moves OR a
   // new embed URL is generated from Google's "Embed a map" dialog, edit
   // them here — the HTML hydrates them via [data-site-config*].
@@ -29,11 +29,9 @@ export const SITE_CONFIG = {
     line2: 'Bulgaria',
     street: 'ul. Kraybrezhna 1, Tsarevo',
     country: 'Bulgaria',
-    plusCode: '5RQP+C2 Tsarevo',
-    // Coordinate-anchored Google Maps query — the Plus Code resolves to a
-    // grid square; the lat/lng pin lands exactly on the property's centre.
-    // If you regenerate this from Google's "Embed a map" dialog you'll get
-    // a longer pb=… URL — just paste it in here.
+    // Coordinate-anchored Google Maps query — the lat/lng pin lands exactly
+    // on the property's centre. If you regenerate this from Google's
+    // "Embed a map" dialog you'll get a longer pb=… URL — just paste it in here.
     mapEmbed: 'https://maps.google.com/maps?q=42.1885867,27.8350773&z=17&output=embed',
     directionsUrl: 'https://maps.app.goo.gl/szcFXV6f5Pgx2iFt5',
   },
