@@ -5,10 +5,9 @@
 //   1. Hydrates the iframe src from SITE_CONFIG. The src needs a tighter
 //      allowlist than the generic site-config-inject helper (which accepts
 //      any https URL via SAFE_HREF), so we run a maps.google.com /
-//      www.google.com hostname check here before assigning. Plus code +
-//      directions URL hydrate via the generic helper in HTML — they
-//      already fit the existing data-site-config / data-site-config-href
-//      contracts.
+//      www.google.com hostname check here before assigning. The
+//      directions URL hydrates via the generic helper in HTML — it
+//      already fits the existing data-site-config-href contract.
 //   2. Listens for the iframe's `load` event and adds .is-loaded to the
 //      .location__map wrapper. CSS fades the iframe in at that point and
 //      enables pointer events; until then the fallback is what the user
