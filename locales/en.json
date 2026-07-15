@@ -208,7 +208,7 @@
       "infants_placeholder": "INFANTS",
       "email_placeholder": "EMAIL*",
       "phone_placeholder": "TELEPHONE*",
-      "message_placeholder": "MESSAGE (optional)",
+      "message_placeholder": "MESSAGE*",
       "submit_label": "Send enquiry",
       "submit_busy_label": "Sending…"
     },
@@ -221,7 +221,7 @@
       "infants_label": "Infants (optional)",
       "email_label": "Email (required)",
       "phone_label": "Telephone (required)",
-      "message_label": "Message (optional)",
+      "message_label": "Message (required)",
       "honeypot_label": "Website",
       "honeypot_aria": "Leave this field empty"
     },

@@ -307,16 +307,17 @@
                      data-enquiry-phone />
             </div>
 
-            <!-- 9. Message — optional, capped at 2000 chars (per spec).
+            <!-- 9. Message — required, capped at 2000 chars (per spec).
                  Pre-fill text is written by enquiry.js when ?villa=<slug> is
                  in the URL and <slug> is on the allowlist; otherwise empty.
-                 The placeholder says "(optional)" so the user knows they
-                 can leave it blank. -->
+                 The placeholder shows "MESSAGE*" (asterisk = required, same
+                 convention as ADULTS* / FULL NAME* / EMAIL* / TELEPHONE*). -->
             <div class="enquiry-form__field enquiry-form__field--full">
-              <label for="eq-message" class="sr-only" data-i18n="enquiries.a11y.message_label">Message (optional)</label>
+              <label for="eq-message" class="sr-only" data-i18n="enquiries.a11y.message_label">Message</label>
               <textarea id="eq-message" name="message"
                         maxlength="2000" rows="5"
-                        placeholder="MESSAGE (optional)"
+                        required aria-required="true"
+                        placeholder="MESSAGE*"
                         data-i18n-attr="placeholder:enquiries.form.message_placeholder"
                         data-enquiry-message></textarea>
             </div>
