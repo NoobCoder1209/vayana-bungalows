@@ -112,9 +112,37 @@
    underneath it visually), we make the lifted header pointer-transparent
    and re-enable pointer events on the toggle alone. We also hide the
    non-toggle slots (logo + CTA pills) so they don't render on top of the
-   full-screen drawer. */
+   full-screen drawer.
+
+   The scroll-lock JS pads body-right by the scrollbar gutter to prevent
+   layout shift; that same padding constrains the header's own width, so
+   its background stops short of the viewport edge and reveals the blurred
+   backdrop underneath (visual "notch" on the right). We compensate here
+   by projecting the header's opaque background to the viewport edge via a
+   ::before that ignores body's padding-right. */
 .body--scroll-locked .site-header {
   z-index: calc(var(--z-modal) + 1);
+  pointer-events: none;
+  position: relative;
+  /* Force the scrolled color scheme while locked. At top-of-page rest the
+     header uses color: var(--bg-light) (cream text/icons on the dark hero
+     bleed-through). Once we paint the ::before below with the cream --bg-light
+     backing, the still-visible hamburger toggle bars (background: currentColor)
+     would render cream-on-cream and disappear. Locking the color to
+     --text-dark keeps them visible against the pseudo's cream fill regardless
+     of scroll position when the drawer opens. */
+  color: var(--text-dark);
+}
+.body--scroll-locked .site-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Reach past body's padding-right (scrollbar gutter) to the true
+     viewport edge. Using 100vw here is safe: the sticky header always
+     spans full width; the pseudo just adds the missing right-side strip. */
+  right: calc(-1 * (100vw - 100%));
+  background: var(--bg-light);
+  z-index: -1;
   pointer-events: none;
 }
 .body--scroll-locked .site-header__menu {
@@ -403,6 +431,22 @@
     min-width: 38px;
     padding: 0 0.65rem;
   }
+
+  /* Tighten the header row itself so the 3-column grid (hamburger, brand,
+     CTA cluster) fits within the narrow viewport without pushing the CTA
+     pill past the right edge. Two levers:
+       - grid gap: --space-4 (2rem) → --space-2 (1rem) between columns
+       - .site-header__cta internal gap: --space-2 → 0.5rem between phone
+         and lang pill
+     Together this shaves ~24px off the row width at ≤540px so the pill
+     stays fully on-screen at 400px viewports. */
+  .site-header__inner {
+    gap: var(--space-2);
+  }
+
+  .site-header__cta {
+    gap: 0.5rem;
+  }
 }
 
 @media (max-width: 380px) {
@@ -430,12 +474,25 @@
    and the backdrop, and the .body--scroll-locked helper on <body>. The
    `hidden` HTML attribute on both elements is the closed default; JS clears
    it on open and re-applies it after the transition ends, so the panel
-   never sits in the keyboard-tab order while closed. */
+   never sits in the keyboard-tab order while closed.
+
+   The drawer is a narrow left-side panel (~1:5 of viewport on desktop, ~4:5
+   on mobile). The rest of the page stays visible behind a softly dimmed +
+   BLURRED backdrop so the site's context remains present while the menu
+   is open. Slides horizontally from the left edge. */
 
 .primary-nav__backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  /* Soft warm-tinted dim — reads through the blur without going pitch
+     black. Darker than the drawer's own tone so the panel still pops. */
+  background: rgba(30, 25, 20, 0.32);
+  /* Blur the page behind. Safari prefix for older builds; feature is
+     widely supported everywhere else. On UAs without backdrop-filter
+     support (e.g. Firefox with the pref off) the background dim alone
+     still separates the drawer from the page. */
+  -webkit-backdrop-filter: blur(6px) saturate(0.9);
+  backdrop-filter: blur(6px) saturate(0.9);
   opacity: 0;
   z-index: var(--z-modal);
   /* JS removes [hidden] before the transition, then we fade in; on close
@@ -450,41 +507,51 @@
 }
 
 /* The panel itself. position: fixed sits it above the rest of the page; the
-   transform: translateY(-100%) is the closed state. Keeping it transformed
-   (not display:none) is what lets the slide animate. The drawer is a
-   full-viewport overlay that drops from the top. */
+   transform: translateX(-100%) is the closed state. Keeping it transformed
+   (not display:none) is what lets the slide animate.
+
+   Width uses clamp() to hit ~20vw on typical desktop widths while never
+   collapsing below 280px (readable link column) or ballooning past 360px
+   (keeps the ~1:5 aspect the user asked for on ultra-wide displays).
+   The mobile fallback below opens it wider so short screens don't crowd
+   the type. */
 .primary-nav__panel {
   position: fixed;
-  top: 0;
+  /* Start BELOW the sticky header so the drawer's own wordmark isn't
+     hidden by the header row. The header is position: sticky (translated
+     via .body--scroll-locked but its height still occupies the top strip
+     visually), so anchoring the drawer at --header-height keeps the top
+     of the panel visible without overlapping the header CTA. */
+  top: var(--header-height);
   left: 0;
-  right: 0;
   bottom: 0;
-  width: 100vw;
-  max-width: 100vw;
-  height: 100vh;
-  height: 100dvh;
+  width: clamp(280px, 20vw, 360px);
+  height: calc(100vh - var(--header-height));
+  height: calc(100dvh - var(--header-height));
   background: var(--bg-light);
   color: var(--text-dark);
   z-index: var(--z-modal);
-  transform: translateY(-100%);
-  /* 450ms with a soft ease-out so the drop feels deliberate, not snappy.
-     Keep DRAWER_TRANSITION_MS in header.js in sync. */
-  transition: transform 450ms cubic-bezier(0.22, 0.61, 0.36, 1);
-  /* Internal layout: 3-column grid. Left column = "Your bespoke stay"
-     eyebrow + nav stack. Centre column = brand wordmark vertically
-     centred. Right column = "Get in touch" eyebrow + nav stack.
-     × close button is positioned absolutely in the top-left. */
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  /* Side columns are centred against the row; the right column then
-     stretches itself (.primary-nav__col + .primary-nav__col rule below)
-     to match the left column's height so both eyebrows land on the same
-     Y baseline. Centre column keeps the brand vertically centred. */
-  align-items: center;
-  /* Generous horizontal padding so the side columns sit well in from
-     the page edges. Vertical padding stays moderate so the brand has
-     room to breathe. */
-  padding: var(--space-12) 18rem;
+  transform: translateX(-100%);
+  /* Shadow lives only on the open state. In the closed state the panel is
+     translated fully offscreen (translateX(-100%)) but its box-shadow
+     paints in normal coordinate space — a 2px offset + 24px blur would
+     bleed a ~26px warm-tinted strip along the viewport-left, visible for
+     the 450ms close transition until [hidden] is re-applied. Keeping the
+     shadow scoped to [data-state='open'] (and transitioning it alongside
+     transform) means it fades out with the slide rather than lingering. */
+  box-shadow: none;
+  /* 450ms with a soft ease-out — matches the fade curve on the backdrop
+     so the two moves feel coordinated. Keep DRAWER_TRANSITION_MS in
+     header.js in sync. */
+  transition:
+    transform 450ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 450ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* Internal layout: single vertical column. Brand at top, nav links in
+     the middle, phone number at the bottom. Flex column with a spacer
+     between links and phone via margin-top: auto on the phone. */
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-6) var(--space-8);
   /* Panel becomes its own scroll container if content overflows on
      a short viewport. */
   overflow-y: auto;
@@ -492,96 +559,91 @@
 }
 
 .primary-nav__panel[data-state='open'] {
-  transform: translateY(0);
+  transform: translateX(0);
+  /* Soft shadow along the right edge, hinting the panel is a layer above
+     the blurred page. Only present while open so it doesn't leak into
+     the viewport during the close animation. */
+  box-shadow: 2px 0 24px rgba(30, 25, 20, 0.12);
 }
 
-/* On narrow viewports the 3-column grid collapses to a single column
-   stack: left nav, brand, right nav, in vertical order. */
-@media (max-width: 768px) {
+/* On narrow viewports open the drawer to ~4:5 of the screen so the type
+   has room to breathe on phones. Anything above 640px falls back to the
+   clamp() rule above. */
+@media (max-width: 640px) {
   .primary-nav__panel {
-    grid-template-columns: 1fr;
-    align-items: start;
-    padding: var(--space-12) var(--space-5);
-    gap: var(--space-6);
+    width: 80vw;
+    max-width: 320px;
+    padding: var(--space-6) var(--space-4) var(--space-6);
   }
 }
 
-/* × close button sits top-left of the panel, outside the grid flow. */
+/* × close button sits top-right of its OWN row above the brand, so the
+   wordmark can use the full panel width without colliding with the ×.
+   Rendered as a flex item at the top of the column (order: -1 in DOM
+   already since it's first in HTML). 44×44 hit target meets WCAG 2.5.5. */
 .primary-nav__close {
-  position: absolute;
-  top: var(--space-4);
-  left: var(--space-4);
+  align-self: flex-end;
+  margin-bottom: var(--space-3);
   width: 44px;
   height: 44px;
   background: transparent;
   border: 1px solid transparent;
+  border-radius: 50%;
   color: inherit;
   font-size: 1.75rem;
   line-height: 1;
   cursor: pointer;
   padding: 0;
-  transition: border-color var(--t-fast);
+  transition: border-color var(--t-fast), background-color var(--t-fast);
 }
 
 .primary-nav__close:hover,
 .primary-nav__close:focus-visible {
-  border-color: currentColor;
+  border-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(0, 0, 0, 0.03);
   outline: none;
 }
 
-/* Each nav column: eyebrow header above a vertical stack of links.
-   Eyebrow is uppercase + thin ruled underline, in the same warm-brown
-   that the rest of the site uses. align-self: start pins both side
-   columns to the panel's top inset; padding-top sets that inset to
-   roughly match where the left column sat when it was vertically
-   centred via align-items: center (i.e., a third of viewport down). */
-.primary-nav__col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-self: start;
-  padding-top: 22vh;
+/* Brand wordmark sits below the × row on its own line. No horizontal
+   collision with the × anymore, so no reserved padding-right. */
+.primary-nav__brand {
+  display: block;
+  margin: 0 0 var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--t-fast);
 }
 
-@media (max-width: 768px) {
-  .primary-nav__col {
-    padding-top: 0;
-  }
+.primary-nav__brand:hover,
+.primary-nav__brand:focus-visible {
+  color: var(--primary);
+  outline: none;
 }
 
-.primary-nav__eyebrow {
-  /* align-self: start makes the underline only as wide as the text +
-     padding, instead of stretching to fill the column. The trailing
-     padding-right adds 25% extra rule width so the underline runs
-     visibly past the end of the eyebrow text. */
-  align-self: start;
-  display: inline-block;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.55);
-  padding-bottom: var(--space-2);
-  padding-right: 25%;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  margin: 0;
-}
-
+/* Vertical nav stack. Left-aligned like the reference, generous line-height
+   so each link is a comfortable tap target. */
 .primary-nav__list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 2.625rem; /* var(--space-3) × 1.75 */
+  gap: 1.5rem;
 }
 
 .primary-nav__list a {
   display: block;
-  font-family: var(--font-heading);
-  font-size: 2.475rem; /* 2.25rem × 1.10 */
-  letter-spacing: 0.01em;
-  line-height: 1.1;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
   color: inherit;
   text-decoration: none;
   transition: color var(--t-fast);
@@ -610,63 +672,29 @@
      as "this is where you are" rather than "this is hoverable". */
   color: var(--primary);
   text-decoration: underline;
-  text-underline-offset: 0.18em;
+  text-underline-offset: 0.24em;
   text-decoration-thickness: 1px;
 }
 
-@media (max-width: 540px) {
-  .primary-nav__list a {
-    font-size: 1.925rem; /* 1.75rem × 1.10 */
-  }
-}
-
-/* Brand wordmark in the centre column. The parent grid is align-items:
-   start so the side columns top-align; the brand uses align-self: center
-   to stay vertically centred against the columns + a min-height taking
-   up the full row to anchor centring against the panel height. */
-.primary-nav__brand {
-  align-self: center;
-  justify-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: var(--font-heading);
-  font-size: 2rem;
-  letter-spacing: 0.04em;
+/* Phone number at the bottom of the panel. margin-top: auto pushes it
+   to the bottom of the flex column even when nav is short. Small icon-
+   free treatment — just the number in the brand voice. */
+.primary-nav__phone {
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  letter-spacing: 0.03em;
   color: inherit;
   text-decoration: none;
-  white-space: nowrap;
-  /* Stretch vertically against the row so the brand sits roughly mid-
-     viewport rather than mid-text-block. */
-  min-height: 50vh;
-  min-height: 50dvh;
-  justify-content: center;
+  transition: color var(--t-fast);
 }
 
-.primary-nav__brand:hover {
+.primary-nav__phone:hover,
+.primary-nav__phone:focus-visible {
   color: var(--primary);
-}
-
-.primary-nav__brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border: 1px solid currentColor;
-  font-size: 1.5rem;
-}
-
-@media (max-width: 768px) {
-  .primary-nav__brand {
-    font-size: 1.5rem;
-  }
-  .primary-nav__brand-mark {
-    width: 44px;
-    height: 44px;
-    font-size: 1.2rem;
-  }
+  outline: none;
 }
 
 /* Body scroll lock helper. Used while the drawer is open. position: fixed
