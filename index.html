@@ -625,19 +625,15 @@
             </li>
           </ul>
         </div>
-        <!-- Column 3 — Policies + Enquire (Enquire link is the new entry
-             point added under #11. We park it at the TOP of the policies
-             list and style it as the prominent item — semantically not a
-             policy, but the column's aria-label is broadened to
-             "Policies and enquiries" to acknowledge it without splitting
-             the visual rhythm of the footer with a separate nav landmark.
-             KEEP IN SYNC across all pages. -->
+        <!-- Column 3 — Policies. Terms / Cancellation / Privacy links
+             only; the Enquire entry that used to live here has moved to
+             the header CTA + drawer, so the column carries a clean
+             "Policies" aria-label. KEEP IN SYNC across all pages. -->
         <nav class="site-footer__col site-footer__col--policies"
              data-i18n-attr="aria-label:common.footer.policies_aria"
-             aria-label="Policies and enquiries">
+             aria-label="Policies">
           <span class="eyebrow eyebrow--light" data-i18n="common.footer.policies_eyebrow">Policies</span>
           <ul>
-            <li><a href="enquiries/" class="site-footer__enquire" data-i18n="common.footer.enquire">Enquire</a></li>
             <li><a data-site-config-path="policies.terms" href="/terms/" data-i18n="common.footer.terms">Terms &amp; Conditions</a></li>
             <li><a data-site-config-path="policies.cancellation" href="/cancellation/" data-i18n="common.footer.cancellation">Cancellation Policy</a></li>
             <li><a data-site-config-path="policies.privacy" href="/privacy/" data-i18n="common.footer.privacy">Privacy Policy</a></li>

@@ -1752,18 +1752,6 @@
   text-decoration: underline;
 }
 
-/* Footer "Enquire" link — bolder than the other policies links so it
-   reads as the primary action in the column. Inherits the column's
-   light-on-dark colour from .site-footer; primary-soft underline pulls
-   the eye without shouting. */
-.site-footer__enquire {
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: var(--primary);
-}
-
 /* Per-bungalow CTA block — sits between gallery and </main> on each
    bungalow page. Wraps a heading + lede + CTA button. */
 .bungalow-cta {
