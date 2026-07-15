@@ -21,8 +21,6 @@
       "_note_DO_NOT_TRANSLATE_lang_aria_keys": "The four lang_*_aria keys above (lang_en_current_aria, lang_bg_current_aria, lang_switch_to_en_aria, lang_switch_to_bg_aria) are referenced by index.html's .site-header__lang segments via data-i18n-attr (data-aria-current / data-aria-switch). The i18n plugin bakes both strings onto each segment; assets/js/lang.js promotes the correct one to aria-label based on the segment's is-active state. If you delete a segment's data-i18n-attr marker these will orphan — leave them keyed. This _note key itself is orphan by design; leave it here as future-editor guidance. This note key's value is kept identical across all locales — do NOT translate it, or a future dev reading a translated identifier list will not be able to grep for the identifiers in code."
     },
     "drawer": {
-      "col_left_eyebrow": "Вашият престой",
-      "col_right_eyebrow": "Свържете се с нас",
       "nav_home": "Начало",
       "nav_stay": "Настаняване",
       "nav_destination": "Дестинация",
