@@ -50,9 +50,12 @@
           <span></span><span></span><span></span>
         </button>
 
-        <!-- Center slot: brand. Logo links back to the homepage. -->
+        <!-- Center slot: brand. Logo links back to the homepage.
+             On /enquiries/ the "V" mark is intentionally omitted — the
+             page is a focused conversion surface, so the header is
+             stripped down to the wordmark. All other pages keep the
+             mark; see ../index.html and siblings. -->
         <a href="../" class="site-logo">
-          <span class="site-logo__mark" aria-hidden="true">V</span>
           <span class="site-logo__word">Vayana Bungalows</span>
         </a>
 
@@ -304,16 +307,17 @@
                      data-enquiry-phone />
             </div>
 
-            <!-- 9. Message — optional, capped at 2000 chars (per spec).
+            <!-- 9. Message — required, capped at 2000 chars (per spec).
                  Pre-fill text is written by enquiry.js when ?villa=<slug> is
                  in the URL and <slug> is on the allowlist; otherwise empty.
-                 The placeholder says "(optional)" so the user knows they
-                 can leave it blank. -->
+                 The placeholder shows "MESSAGE*" (asterisk = required, same
+                 convention as ADULTS* / FULL NAME* / EMAIL* / TELEPHONE*). -->
             <div class="enquiry-form__field enquiry-form__field--full">
-              <label for="eq-message" class="sr-only" data-i18n="enquiries.a11y.message_label">Message (optional)</label>
+              <label for="eq-message" class="sr-only" data-i18n="enquiries.a11y.message_label">Message</label>
               <textarea id="eq-message" name="message"
                         maxlength="2000" rows="5"
-                        placeholder="MESSAGE (optional)"
+                        required aria-required="true"
+                        placeholder="MESSAGE*"
                         data-i18n-attr="placeholder:enquiries.form.message_placeholder"
                         data-enquiry-message></textarea>
             </div>

@@ -1439,7 +1439,13 @@
    form and footer fields. */
 .enquiry-page {
   background: var(--bg-cream);
-  padding: var(--section-pad-y) 0;
+  /* Top padding is trimmed to ~75% of the global --section-pad-y so the
+     "Already have a plan" eyebrow and the h1 sit closer to the header —
+     without --section-pad-y, the empty cream strip above the eyebrow was
+     doing no visual work and pushed the whole form below the fold on
+     14-15" laptops. Bottom padding stays at the full token so the form
+     still breathes above the footer. */
+  padding: clamp(3rem, 6vw, 5.25rem) 0 var(--section-pad-y);
   color: var(--text-dark);
 }
 
@@ -1593,7 +1599,14 @@
      var(--text-muted)` so the chevron inherits properly. */
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%236f5e40' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M1 1.5l5 5 5-5'/></svg>");
   background-repeat: no-repeat;
-  background-position: right 1rem center;
+  /* Chevron right inset matches the label's left inset optically.
+     `padding-right: 2.5rem` above reserves the space; the SVG is
+     12px wide, so `right 1.25rem` (20px) puts the chevron's right
+     edge 20px from the pill edge — which lines the chevron's centre
+     up with roughly the same optical distance as the ADULTS/CHILDREN/
+     INFANTS label baselines sit from their left edge (padding-left
+     1rem = 16px + small optical offset for the letter stems). */
+  background-position: right 1.25rem center;
   background-size: 12px 8px;
   cursor: pointer;
 }

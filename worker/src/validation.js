@@ -181,12 +181,19 @@ export function validateBody(body) {
     cleaned.infants = normaliseOptionalCount(infantsRaw);
   }
 
-  // Message — optional, length-capped.
+  // Message — required, length-capped. Empty (after trim) is rejected
+  // so a completed enquiry always carries the guest's intent, not just
+  // dates + party size. The client-side check in assets/js/enquiry.js
+  // gives a friendly inline error; this is the belt-and-braces server
+  // pass for anyone bypassing the browser.
   const messageRaw = typeof body.message === 'string' ? body.message : '';
-  if (messageRaw.length > MAX_MESSAGE_LEN) {
+  const messageTrimmed = messageRaw.trim();
+  if (!messageTrimmed) {
+    invalid.push('message');
+  } else if (messageRaw.length > MAX_MESSAGE_LEN) {
     invalid.push('message');
   } else {
-    cleaned.message = neutraliseFormula(messageRaw.trim());
+    cleaned.message = neutraliseFormula(messageTrimmed);
   }
 
   // Consent — required, must be truthy ("true" / "on" / true).

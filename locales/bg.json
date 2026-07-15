@@ -208,7 +208,7 @@
       "infants_placeholder": "БЕБЕТА",
       "email_placeholder": "ИМЕЙЛ*",
       "phone_placeholder": "ТЕЛЕФОН*",
-      "message_placeholder": "СЪОБЩЕНИЕ (по избор)",
+      "message_placeholder": "СЪОБЩЕНИЕ*",
       "submit_label": "Изпращане на запитване",
       "submit_busy_label": "Изпращане…"
     },
@@ -221,7 +221,7 @@
       "infants_label": "Бебета (по избор)",
       "email_label": "Имейл (задължителен)",
       "phone_label": "Телефон (задължителен)",
-      "message_label": "Съобщение (по избор)",
+      "message_label": "Съобщение (задължително)",
       "honeypot_label": "Уебсайт",
       "honeypot_aria": "Оставете това поле празно"
     },
