@@ -717,23 +717,6 @@
   color: var(--text-dark);
 }
 
-.location__plus-code {
-  display: inline-block;
-  margin-top: var(--space-1);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
-}
-
-.location__plus-code-value {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.95em;
-  background: rgba(0, 0, 0, 0.04);
-  padding: 0.1em 0.4em;
-  border-radius: 2px;
-}
-
 @media (max-width: 560px) {
   .location__map {
     aspect-ratio: 4 / 3;
