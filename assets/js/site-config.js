@@ -38,7 +38,6 @@ export const SITE_CONFIG = {
   social: {
     facebook: 'https://www.youtube.com/',
     instagram: 'https://www.youtube.com/',
-    linkedin: 'https://www.youtube.com/',
   },
   // Policy paths are RELATIVE TO THE SITE BASE. The inject helper prepends
   // import.meta.env.BASE_URL via [data-site-config-path] so that these resolve

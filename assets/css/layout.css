@@ -734,11 +734,31 @@ html.no-js .site-header__menu {
 }
 
 .site-footer__inner {
+  /* Three equal columns: contact / social / policies. All three tracks
+     are the same width so the columns space out evenly across the
+     footer. Per-column content alignment is handled by the rule below
+     — every column centres its content inside its own grid track so
+     no column hugs the outer page edge. */
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: var(--space-8);
   padding-bottom: var(--space-8);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* All three columns centre their content INSIDE THEIR OWN GRID TRACK
+   (rather than the outer two pinning to the page edges). The three
+   tracks are equal-width, so the contact column sits midway between
+   the left rail and the icons, and the policies column sits midway
+   between the icons and the right rail. This gives a balanced,
+   evenly-distributed footer instead of a corner-heavy one. */
+.site-footer__col--contact,
+.site-footer__col--social,
+.site-footer__col--policies {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .site-footer__col .eyebrow {
@@ -816,11 +836,16 @@ html.no-js .site-header__menu {
 }
 
 .site-footer__bar-inner {
+  /* Stack copyright + license vertically and centre both. Previously
+     the two lines sat on a single row with `space-between` (© on left,
+     license on right); the new arrangement puts them one above the
+     other in the footer's optical middle. Small gap so they read as
+     paired lines rather than a run-on paragraph. */
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  text-align: center;
+  gap: 0.35rem;
   padding-top: var(--space-3);
   padding-bottom: var(--space-3);
 }
@@ -842,7 +867,7 @@ html.no-js .site-header__menu {
     grid-template-columns: 1fr;
     gap: var(--space-6);
   }
-  .site-footer__bar-inner {
-    justify-content: flex-start;
-  }
+  /* Columns are already centred at desktop; the single-column
+     collapse below 768px just stacks them vertically. No per-column
+     override needed. */
 }
