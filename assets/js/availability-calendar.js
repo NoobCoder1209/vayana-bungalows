@@ -171,6 +171,10 @@ function renderInstance(inst) {
         classes.push('is-booked');
         stateLabel = 'already booked';
       }
+    } else {
+      // Future, in-season (the shown month is always in-season — navigation
+      // is clamped), and not booked → genuinely available.
+      classes.push('is-available');
     }
 
     const label = `${new Intl.DateTimeFormat(currentLocale(), {

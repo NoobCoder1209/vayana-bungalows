@@ -1273,18 +1273,28 @@
   background: transparent;
 }
 
-/* Booked night — cream + strikethrough, matching .flatpickr-day.is-booked
-   and the legend's "Already booked" swatch. */
-.avail-cal__day.is-booked {
-  background: var(--bg-cream);
-  color: var(--text-muted);
-  text-decoration: line-through;
-  text-decoration-thickness: 1px;
-  text-decoration-color: var(--text-muted);
-  border-color: var(--border-soft);
+/* Available night — soft sage tint + muted green text (default in-season,
+   future, unbooked day). Tagged .is-available by availability-calendar.js. */
+.avail-cal__day.is-available {
+  background: var(--avail-free-bg);
+  color: var(--avail-free);
+  border-color: var(--avail-free-border);
 }
 
-/* Turnover day — cream, no strike, primary corner triangle: check-out only. */
+/* Booked night — soft rose tint + muted rose text + strikethrough. Matches
+   the legend's "Already booked" swatch. */
+.avail-cal__day.is-booked {
+  background: var(--avail-booked-bg);
+  color: var(--avail-booked);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--avail-booked);
+  border-color: var(--avail-booked-border);
+}
+
+/* Turnover day — check-out only (outgoing guest leaves). Neither fully free
+   nor fully blocked, so it keeps the neutral cream + primary corner triangle
+   to read as a distinct third state rather than green or red. */
 .avail-cal__day.is-checkout-only {
   background: var(--bg-cream);
   color: var(--text-dark);
@@ -1590,6 +1600,24 @@
   border-style: solid;
   border-width: 0 6px 6px 0;
   border-color: transparent var(--primary) transparent transparent;
+}
+
+/* /stay/ availability legend — recolor the Available / Already-booked swatches
+   to the soft green / rose used by the read-only calendars below. Scoped to
+   the `--availability` modifier so the (legacy) detail-page booking legends,
+   which key off the cream/strike flatpickr day styles, are unaffected. */
+.booking-legend--availability .booking-legend__swatch--available {
+  background: var(--avail-free-bg);
+  border: 1px solid var(--avail-free-border);
+}
+
+.booking-legend--availability .booking-legend__swatch--booked {
+  background: var(--avail-booked-bg);
+  border: 1px solid var(--avail-booked-border);
+}
+
+.booking-legend--availability .booking-legend__swatch--booked::after {
+  background: var(--avail-booked);
 }
 
 /* ========== Enquiry page (#11) ==========
