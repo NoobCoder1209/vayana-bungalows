@@ -202,23 +202,32 @@ test('smoke: every EN page has a matching BG mirror at the same relative subpath
   }
 });
 
-test('smoke: /stay/ carries three per-bungalow booking widgets (EN + BG mirror)', () => {
-  // The consolidated /stay/ page hosts one live-availability booking form
-  // per bungalow (data-bungalow-key="B1"|"B2"|"B3"), each keyed to its own
-  // dates in bookings.json. booking.js selects them via
-  // querySelectorAll('form[data-bungalow-key]'); this asserts the markup
-  // the JS depends on survives the build on BOTH the EN page and its BG
-  // mirror. Selecting `form[...]` (not `[...]`) means the explanatory HTML
-  // comment that also mentions the attribute is correctly ignored.
+test('smoke: /stay/ carries the top enquiry-link bar + three read-only availability calendars (EN + BG mirror)', () => {
+  // The /stay/ page has ONE top booking bar in enquiry-link mode
+  // (data-booking-mode="enquiry-link", no data-bungalow-key — booking.js
+  // wires it as a link-builder, not a live widget) and THREE read-only
+  // availability-calendar containers, one per bungalow
+  // (data-avail-cal + data-bungalow-key="B1"|"B2"|"B3", filled by
+  // availability-calendar.js). This asserts the markup both scripts depend
+  // on survives the build on the EN page and its BG mirror. Crucially there
+  // must be NO live booking form (form[data-bungalow-key]) on /stay/ — those
+  // now live only on the legacy detail pages.
   for (const rel of ['stay/index.html', 'bg/stay/index.html']) {
     const page = pages.find((p) => p.relPath === rel);
     assert.ok(page, `expected emitted page ${rel}`);
-    const forms = page.doc.querySelectorAll('form[data-bungalow-key]');
-    const keys = forms.map((f) => f.getAttribute('data-bungalow-key')).sort();
+
+    const topBar = page.doc.querySelectorAll('form[data-booking-mode="enquiry-link"]');
+    assert.equal(topBar.length, 1, `${rel}: expected exactly 1 enquiry-link booking bar, got ${topBar.length}`);
+
+    const liveForms = page.doc.querySelectorAll('form[data-bungalow-key]');
+    assert.equal(liveForms.length, 0, `${rel}: /stay/ must have no live per-bungalow booking forms, got ${liveForms.length}`);
+
+    const cals = page.doc.querySelectorAll('[data-avail-cal][data-bungalow-key]');
+    const keys = cals.map((c) => c.getAttribute('data-bungalow-key')).sort();
     assert.deepEqual(
       keys,
       ['B1', 'B2', 'B3'],
-      `${rel}: expected exactly 3 booking forms keyed B1/B2/B3, got [${keys.join(', ')}]`,
+      `${rel}: expected exactly 3 availability calendars keyed B1/B2/B3, got [${keys.join(', ')}]`,
     );
   }
 });

@@ -1144,43 +1144,168 @@
   }
 }
 
-/* Per-bungalow block on the consolidated /stay/ page — a heading + a photo +
-   the live-availability booking widget. Three of these stack below the shared
-   specs strip. The nested `.booking` uses `margin-top: -52px` to pull up under
-   a hero on the detail pages; here it sits under a photo, so we cancel that
-   negative margin (via the `.bungalow-block .booking` override below) and let
-   the block's own padding own the vertical rhythm. */
-.bungalow-block {
+/* ===== /stay/ per-bungalow split: square photo + read-only calendar =====
+   Three of these stack below the shared specs strip. Two-column on desktop
+   (photo left, availability calendar right), stacked on narrow screens. */
+.bungalow-split {
   padding-top: var(--space-8);
   padding-bottom: var(--space-8);
 }
 
-.bungalow-block__head {
+.bungalow-split__head {
   text-align: center;
   margin-bottom: var(--space-6);
 }
 
-.bungalow-block__head h2 {
+.bungalow-split__head h2 {
   font-size: var(--fs-h3);
   margin: 0;
 }
 
-.bungalow-block__photo {
-  margin: 0 0 var(--space-6);
+.bungalow-split__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  align-items: stretch;
+}
+
+/* Square photo (aspect-ratio 1) that fills its column. */
+.bungalow-split__photo {
+  margin: 0;
   overflow: hidden;
 }
 
-.bungalow-block__photo img {
+.bungalow-split__photo img {
   display: block;
   width: 100%;
-  height: clamp(240px, 42vw, 520px);
+  height: 100%;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
 }
 
-/* Cancel the hero-overlap pull-up: inside a block the booking widget follows
-   the photo with the block's normal spacing, not a negative offset. */
-.bungalow-block .booking {
-  margin-top: 0;
+@media (max-width: 768px) {
+  .bungalow-split__grid {
+    grid-template-columns: 1fr;
+  }
+  /* Keep the photo a sensible height when stacked (no longer forced square
+     against a tall calendar). */
+  .bungalow-split__photo img {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* ===== Read-only availability calendar (availability-calendar.js) =====
+   A displayed month grid — never a picker. Day colours mirror the booking
+   widget's flatpickr day states (see .flatpickr-day.is-booked /
+   .is-checkout-only below) so the shared legend reads the same for both. */
+.avail-cal {
+  border: 1px solid var(--border);
+  background: var(--bg-light);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.avail-cal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.avail-cal__month {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h6);
+  color: var(--text-dark);
+}
+
+.avail-cal__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.avail-cal__nav:hover:not([disabled]) {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.avail-cal__nav[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.avail-cal__weekdays,
+.avail-cal__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.avail-cal__weekday {
+  text-align: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.4rem 0;
+}
+
+.avail-cal__day {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  background: var(--bg-light);
+  border: 1px solid transparent;
+}
+
+.avail-cal__day--blank {
+  background: transparent;
+}
+
+/* Booked night — cream + strikethrough, matching .flatpickr-day.is-booked
+   and the legend's "Already booked" swatch. */
+.avail-cal__day.is-booked {
+  background: var(--bg-cream);
+  color: var(--text-muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--text-muted);
+  border-color: var(--border-soft);
+}
+
+/* Turnover day — cream, no strike, primary corner triangle: check-out only. */
+.avail-cal__day.is-checkout-only {
+  background: var(--bg-cream);
+  color: var(--text-dark);
+  border-color: var(--primary-soft);
+  position: relative;
+}
+
+.avail-cal__day.is-checkout-only::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-style: solid;
+  border-width: 0 7px 7px 0;
+  border-color: transparent var(--primary) transparent transparent;
+}
+
+/* Past day — muted, matching the legend's "Past dates" swatch. */
+.avail-cal__day.is-past {
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
 /* Long-form description */

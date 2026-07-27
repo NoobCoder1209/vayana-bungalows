@@ -161,6 +161,69 @@
         </div>
       </section>
 
+      <!-- Top booking bar — one shared enquiry entry point (NOT per bungalow).
+           Plain season-aware date pickers with NO availability blocking: the
+           per-bungalow availability lives in the read-only calendars below.
+           `data-booking-mode="enquiry-link"` tells booking.js to wire this as
+           a link-builder (no bookings.json, no modal) — on submit it navigates
+           to ../enquiries/?checkin=&checkout= so the enquiry form pre-fills
+           the chosen dates. The legend underneath is the shared key for the
+           three availability calendars further down the page. -->
+      <section class="booking" id="booking" aria-labelledby="booking-title">
+        <div class="container">
+          <h2 id="booking-title" class="sr-only">Check dates and enquire</h2>
+          <form class="booking__form" id="booking-form" data-booking-mode="enquiry-link" novalidate>
+            <div class="booking__field">
+              <label for="bk-checkin">Check-in</label>
+              <input type="text" id="bk-checkin" name="checkin" placeholder="Add date" autocomplete="off" />
+            </div>
+            <div class="booking__field">
+              <label for="bk-checkout">Check-out</label>
+              <input type="text" id="bk-checkout" name="checkout" placeholder="Add date" autocomplete="off" />
+            </div>
+            <div class="booking__field">
+              <label for="bk-rooms">Rooms</label>
+              <select id="bk-rooms" name="rooms">
+                <option>1 room</option>
+                <option>2 rooms</option>
+                <option>3 rooms</option>
+                <option>4 rooms</option>
+              </select>
+            </div>
+            <div class="booking__field">
+              <label for="bk-guests">Guests</label>
+              <select id="bk-guests" name="guests">
+                <option>1 adult</option>
+                <option>2 adults</option>
+                <option>2 adults, 1 child</option>
+                <option>2 adults, 2 children</option>
+                <option>3 adults</option>
+                <option>4 adults</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary booking__submit">Book Now</button>
+          </form>
+          <div class="booking-legend" aria-label="Availability legend for the calendars below">
+            <span class="booking-legend__item">
+              <span class="booking-legend__swatch booking-legend__swatch--available" aria-hidden="true"></span>
+              Available
+            </span>
+            <span class="booking-legend__item">
+              <span class="booking-legend__swatch booking-legend__swatch--booked" aria-hidden="true"></span>
+              Already booked
+            </span>
+            <span class="booking-legend__item">
+              <span class="booking-legend__swatch booking-legend__swatch--turnover" aria-hidden="true"></span>
+              Turnover (check-out only)
+            </span>
+            <span class="booking-legend__item">
+              <span class="booking-legend__swatch booking-legend__swatch--past" aria-hidden="true"></span>
+              Past dates
+            </span>
+          </div>
+        </div>
+      </section>
+
       <!-- Shared specs strip. All three bungalows are identical in spec, so
            a single strip (Bungalow 1's values) sits above the per-bungalow
            booking blocks. Reuses the `.bungalow-specs` rules from
@@ -195,219 +258,66 @@
         </div>
       </section>
 
-      <!-- ===== Per-bungalow blocks =====================================
-           Three blocks, one per bungalow. Each = a heading + a photo +
-           the live-availability booking widget keyed to that bungalow
-           (data-bungalow-key="B1|B2|B3"). The three widgets share one
-           bookings.json fetch and one #booking-modal (see booking.js), but
-           each reads its own bungalow's dates, so the calendars fill
-           independently. Photos are web placeholders — owner will swap the
-           `src`/`alt` for real bungalow photography later. Widget input IDs
-           are suffixed with the bungalow key for valid <label for> a11y;
-           the JS resolves inputs scoped to each form, not by global ID. -->
+      <!-- ===== Per-bungalow sections ===================================
+           Three two-column sections, one per bungalow: a SQUARE photo on the
+           left and a READ-ONLY availability calendar on the right. The
+           calendar container `[data-avail-cal][data-bungalow-key]` is filled
+           by availability-calendar.js, which renders one month coloured from
+           that bungalow's dates in bookings.json (shared fetch with the
+           booking widget). The three calendars share ONE visible month —
+           paging any one pages all three (see availability-calendar.js).
+           Photos are web placeholders — owner will swap src/alt for real
+           bungalow photography later. -->
 
       <!-- Bungalow 1 -->
-      <section class="bungalow-block" aria-labelledby="bungalow-1-title">
+      <section class="bungalow-split" aria-labelledby="bungalow-1-title">
         <div class="container">
-          <div class="bungalow-block__head reveal">
+          <div class="bungalow-split__head reveal">
             <span class="eyebrow">The three villas</span>
             <h2 id="bungalow-1-title">Bungalow 1</h2>
           </div>
-          <figure class="bungalow-block__photo reveal">
-            <img src="https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=1600&q=80" alt="Placeholder — Bungalow 1 exterior with sea view (owner to replace)" loading="lazy" />
-          </figure>
-        </div>
-        <section class="booking" id="booking-B1" aria-labelledby="booking-title-B1">
-          <div class="container">
-            <h3 id="booking-title-B1" class="sr-only">Check availability for Bungalow 1</h3>
-            <form class="booking__form" id="booking-form-B1" data-bungalow-key="B1" novalidate>
-              <input type="hidden" name="bungalow" value="Bungalow 1" />
-              <div class="booking__field">
-                <label for="bk-checkin-B1">Check-in</label>
-                <input type="text" id="bk-checkin-B1" name="checkin" placeholder="Add date" autocomplete="off" />
-              </div>
-              <div class="booking__field">
-                <label for="bk-checkout-B1">Check-out</label>
-                <input type="text" id="bk-checkout-B1" name="checkout" placeholder="Add date" autocomplete="off" />
-              </div>
-              <div class="booking__field">
-                <label for="bk-rooms-B1">Rooms</label>
-                <select id="bk-rooms-B1" name="rooms">
-                  <option>1 room</option>
-                  <option>2 rooms</option>
-                  <option>3 rooms</option>
-                  <option>4 rooms</option>
-                </select>
-              </div>
-              <div class="booking__field">
-                <label for="bk-guests-B1">Guests</label>
-                <select id="bk-guests-B1" name="guests">
-                  <option>1 adult</option>
-                  <option>2 adults</option>
-                  <option>2 adults, 1 child</option>
-                  <option>2 adults, 2 children</option>
-                  <option>3 adults</option>
-                  <option>4 adults</option>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary booking__submit">Book Now</button>
-            </form>
-            <div class="booking-legend" aria-label="Date availability legend">
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--available" aria-hidden="true"></span>
-                Available
-              </span>
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--booked" aria-hidden="true"></span>
-                Already booked
-              </span>
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--turnover" aria-hidden="true"></span>
-                Turnover (check-out only)
-              </span>
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--past" aria-hidden="true"></span>
-                Past dates
-              </span>
-            </div>
+          <div class="bungalow-split__grid">
+            <figure class="bungalow-split__photo reveal">
+              <img src="https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=1200&q=80" alt="Bungalow 1 exterior with sea view" loading="lazy" />
+            </figure>
+            <div class="bungalow-split__cal reveal" data-avail-cal data-bungalow-key="B1"
+                 role="group" aria-label="Bungalow 1 availability calendar"></div>
           </div>
-        </section>
+        </div>
       </section>
 
       <!-- Bungalow 2 -->
-      <section class="bungalow-block" aria-labelledby="bungalow-2-title">
+      <section class="bungalow-split" aria-labelledby="bungalow-2-title">
         <div class="container">
-          <div class="bungalow-block__head reveal">
+          <div class="bungalow-split__head reveal">
             <span class="eyebrow">The three villas</span>
             <h2 id="bungalow-2-title">Bungalow 2</h2>
           </div>
-          <figure class="bungalow-block__photo reveal">
-            <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1600&q=80" alt="Placeholder — Bungalow 2 terrace overlooking the bay (owner to replace)" loading="lazy" />
-          </figure>
-        </div>
-        <section class="booking" id="booking-B2" aria-labelledby="booking-title-B2">
-          <div class="container">
-            <h3 id="booking-title-B2" class="sr-only">Check availability for Bungalow 2</h3>
-            <form class="booking__form" id="booking-form-B2" data-bungalow-key="B2" novalidate>
-              <input type="hidden" name="bungalow" value="Bungalow 2" />
-              <div class="booking__field">
-                <label for="bk-checkin-B2">Check-in</label>
-                <input type="text" id="bk-checkin-B2" name="checkin" placeholder="Add date" autocomplete="off" />
-              </div>
-              <div class="booking__field">
-                <label for="bk-checkout-B2">Check-out</label>
-                <input type="text" id="bk-checkout-B2" name="checkout" placeholder="Add date" autocomplete="off" />
-              </div>
-              <div class="booking__field">
-                <label for="bk-rooms-B2">Rooms</label>
-                <select id="bk-rooms-B2" name="rooms">
-                  <option>1 room</option>
-                  <option>2 rooms</option>
-                  <option>3 rooms</option>
-                  <option>4 rooms</option>
-                </select>
-              </div>
-              <div class="booking__field">
-                <label for="bk-guests-B2">Guests</label>
-                <select id="bk-guests-B2" name="guests">
-                  <option>1 adult</option>
-                  <option>2 adults</option>
-                  <option>2 adults, 1 child</option>
-                  <option>2 adults, 2 children</option>
-                  <option>3 adults</option>
-                  <option>4 adults</option>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary booking__submit">Book Now</button>
-            </form>
-            <div class="booking-legend" aria-label="Date availability legend">
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--available" aria-hidden="true"></span>
-                Available
-              </span>
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--booked" aria-hidden="true"></span>
-                Already booked
-              </span>
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--turnover" aria-hidden="true"></span>
-                Turnover (check-out only)
-              </span>
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--past" aria-hidden="true"></span>
-                Past dates
-              </span>
-            </div>
+          <div class="bungalow-split__grid">
+            <figure class="bungalow-split__photo reveal">
+              <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1200&q=80" alt="Bungalow 2 terrace overlooking the bay" loading="lazy" />
+            </figure>
+            <div class="bungalow-split__cal reveal" data-avail-cal data-bungalow-key="B2"
+                 role="group" aria-label="Bungalow 2 availability calendar"></div>
           </div>
-        </section>
+        </div>
       </section>
 
       <!-- Bungalow 3 -->
-      <section class="bungalow-block" aria-labelledby="bungalow-3-title">
+      <section class="bungalow-split" aria-labelledby="bungalow-3-title">
         <div class="container">
-          <div class="bungalow-block__head reveal">
+          <div class="bungalow-split__head reveal">
             <span class="eyebrow">The three villas</span>
             <h2 id="bungalow-3-title">Bungalow 3</h2>
           </div>
-          <figure class="bungalow-block__photo reveal">
-            <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1600&q=80" alt="Placeholder — Bungalow 3 by the beach (owner to replace)" loading="lazy" />
-          </figure>
-        </div>
-        <section class="booking" id="booking-B3" aria-labelledby="booking-title-B3">
-          <div class="container">
-            <h3 id="booking-title-B3" class="sr-only">Check availability for Bungalow 3</h3>
-            <form class="booking__form" id="booking-form-B3" data-bungalow-key="B3" novalidate>
-              <input type="hidden" name="bungalow" value="Bungalow 3" />
-              <div class="booking__field">
-                <label for="bk-checkin-B3">Check-in</label>
-                <input type="text" id="bk-checkin-B3" name="checkin" placeholder="Add date" autocomplete="off" />
-              </div>
-              <div class="booking__field">
-                <label for="bk-checkout-B3">Check-out</label>
-                <input type="text" id="bk-checkout-B3" name="checkout" placeholder="Add date" autocomplete="off" />
-              </div>
-              <div class="booking__field">
-                <label for="bk-rooms-B3">Rooms</label>
-                <select id="bk-rooms-B3" name="rooms">
-                  <option>1 room</option>
-                  <option>2 rooms</option>
-                  <option>3 rooms</option>
-                  <option>4 rooms</option>
-                </select>
-              </div>
-              <div class="booking__field">
-                <label for="bk-guests-B3">Guests</label>
-                <select id="bk-guests-B3" name="guests">
-                  <option>1 adult</option>
-                  <option>2 adults</option>
-                  <option>2 adults, 1 child</option>
-                  <option>2 adults, 2 children</option>
-                  <option>3 adults</option>
-                  <option>4 adults</option>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary booking__submit">Book Now</button>
-            </form>
-            <div class="booking-legend" aria-label="Date availability legend">
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--available" aria-hidden="true"></span>
-                Available
-              </span>
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--booked" aria-hidden="true"></span>
-                Already booked
-              </span>
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--turnover" aria-hidden="true"></span>
-                Turnover (check-out only)
-              </span>
-              <span class="booking-legend__item">
-                <span class="booking-legend__swatch booking-legend__swatch--past" aria-hidden="true"></span>
-                Past dates
-              </span>
-            </div>
+          <div class="bungalow-split__grid">
+            <figure class="bungalow-split__photo reveal">
+              <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80" alt="Bungalow 3 by the beach" loading="lazy" />
+            </figure>
+            <div class="bungalow-split__cal reveal" data-avail-cal data-bungalow-key="B3"
+                 role="group" aria-label="Bungalow 3 availability calendar"></div>
           </div>
-        </section>
+        </div>
       </section>
 
       <!-- Amenities — shared across all three bungalows (they're identical
