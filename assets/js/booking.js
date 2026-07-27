@@ -86,13 +86,40 @@ const parseIso = (iso) => {
   return new Date(y, m - 1, d);
 };
 
+// Wire up every booking widget on the page. Each widget is a
+// `<form data-bungalow-key="B1|B2|B3">`; the `/stay/` page carries three,
+// the (legacy) detail pages carry one. All widgets share ONE `#booking-modal`
+// and ONE bookings.json fetch (cached at module scope via loadBookings()).
 export function initBooking() {
-  const checkin = document.getElementById('bk-checkin');
-  const checkout = document.getElementById('bk-checkout');
-  const form = document.getElementById('booking-form');
   const modal = document.getElementById('booking-modal');
+  if (!modal) return;
 
-  if (!checkin || !checkout || !form || !modal) return;
+  // Modal-level wiring is done ONCE here (not per form): the modal is shared
+  // by every booking widget on the page, so its close handlers and the
+  // document-level Escape listener must not be registered once per form —
+  // that would stack N identical listeners on a single shared modal.
+  modal.querySelectorAll('[data-modal-close]').forEach((el) => {
+    el.addEventListener('click', () => closeModal(modal));
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.hidden) closeModal(modal);
+  });
+
+  const forms = document.querySelectorAll('form[data-bungalow-key]');
+  forms.forEach((form) => setupBookingForm(form, modal));
+}
+
+// Set up a single booking widget: its two flatpickr pickers, the per-bungalow
+// availability patch, and the submit handler. Called once per form so multiple
+// widgets can coexist on one page, each keyed to its own bungalow's dates.
+function setupBookingForm(form, modal) {
+  // Inputs are resolved scoped to THIS form (not by global ID) so the three
+  // widgets on /stay/ don't collide. IDs in markup stay unique for valid
+  // <label for> a11y, but the JS no longer depends on them being unique.
+  const checkin = form.querySelector('[name="checkin"]');
+  const checkout = form.querySelector('[name="checkout"]');
+
+  if (!checkin || !checkout) return;
 
   const today = new Date();
   const tomorrow = new Date();
@@ -248,8 +275,15 @@ export function initBooking() {
   // Hidden bungalow tag — set on per-bungalow pages so the modal copy can
   // mention which bungalow the request is for. Read at submit time so the
   // modal reflects the current value if a future flow ever changes it.
+  // The modal is SHARED across all widgets on the page, so we capture its
+  // authored default copy once and always reassign on submit — either the
+  // per-bungalow copy (when the hidden input is present) or the default
+  // (otherwise) — so a widget without a bungalow name can never inherit the
+  // previous submission's stale bungalow copy from another widget.
   const modalBody = modal.querySelector('#modal-body');
   const modalTitle = modal.querySelector('#modal-title');
+  const defaultBody = modalBody?.textContent ?? '';
+  const defaultTitle = modalTitle?.textContent ?? '';
 
   // Open modal on submit
   form.addEventListener('submit', (e) => {
@@ -294,22 +328,17 @@ export function initBooking() {
     }
 
     const bungalow = form.querySelector('input[name="bungalow"]')?.value?.trim();
-    if (bungalow && modalBody) {
-      modalBody.textContent =
-        `A reservations specialist will follow up within twenty-four hours to confirm availability for ${bungalow} and tailor your stay.`;
+    if (modalBody) {
+      modalBody.textContent = bungalow
+        ? `A reservations specialist will follow up within twenty-four hours to confirm availability for ${bungalow} and tailor your stay.`
+        : defaultBody;
     }
-    if (bungalow && modalTitle) {
-      modalTitle.textContent = `Thank you — your ${bungalow} request is in.`;
+    if (modalTitle) {
+      modalTitle.textContent = bungalow
+        ? `Thank you — your ${bungalow} request is in.`
+        : defaultTitle;
     }
     openModal(modal);
-  });
-
-  // Close modal handlers
-  modal.querySelectorAll('[data-modal-close]').forEach((el) => {
-    el.addEventListener('click', () => closeModal(modal));
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !modal.hidden) closeModal(modal);
   });
 }
 

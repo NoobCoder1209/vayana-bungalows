@@ -1144,6 +1144,45 @@
   }
 }
 
+/* Per-bungalow block on the consolidated /stay/ page — a heading + a photo +
+   the live-availability booking widget. Three of these stack below the shared
+   specs strip. The nested `.booking` uses `margin-top: -52px` to pull up under
+   a hero on the detail pages; here it sits under a photo, so we cancel that
+   negative margin (via the `.bungalow-block .booking` override below) and let
+   the block's own padding own the vertical rhythm. */
+.bungalow-block {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-8);
+}
+
+.bungalow-block__head {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.bungalow-block__head h2 {
+  font-size: var(--fs-h3);
+  margin: 0;
+}
+
+.bungalow-block__photo {
+  margin: 0 0 var(--space-6);
+  overflow: hidden;
+}
+
+.bungalow-block__photo img {
+  display: block;
+  width: 100%;
+  height: clamp(240px, 42vw, 520px);
+  object-fit: cover;
+}
+
+/* Cancel the hero-overlap pull-up: inside a block the booking widget follows
+   the photo with the block's normal spacing, not a negative offset. */
+.bungalow-block .booking {
+  margin-top: 0;
+}
+
 /* Long-form description */
 .bungalow-description {
   padding-bottom: var(--space-12);

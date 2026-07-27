@@ -202,6 +202,27 @@ test('smoke: every EN page has a matching BG mirror at the same relative subpath
   }
 });
 
+test('smoke: /stay/ carries three per-bungalow booking widgets (EN + BG mirror)', () => {
+  // The consolidated /stay/ page hosts one live-availability booking form
+  // per bungalow (data-bungalow-key="B1"|"B2"|"B3"), each keyed to its own
+  // dates in bookings.json. booking.js selects them via
+  // querySelectorAll('form[data-bungalow-key]'); this asserts the markup
+  // the JS depends on survives the build on BOTH the EN page and its BG
+  // mirror. Selecting `form[...]` (not `[...]`) means the explanatory HTML
+  // comment that also mentions the attribute is correctly ignored.
+  for (const rel of ['stay/index.html', 'bg/stay/index.html']) {
+    const page = pages.find((p) => p.relPath === rel);
+    assert.ok(page, `expected emitted page ${rel}`);
+    const forms = page.doc.querySelectorAll('form[data-bungalow-key]');
+    const keys = forms.map((f) => f.getAttribute('data-bungalow-key')).sort();
+    assert.deepEqual(
+      keys,
+      ['B1', 'B2', 'B3'],
+      `${rel}: expected exactly 3 booking forms keyed B1/B2/B3, got [${keys.join(', ')}]`,
+    );
+  }
+});
+
 test('smoke: every page emits <html lang> matching its emit locale', () => {
   for (const { relPath, doc } of pages) {
     const html = doc.querySelector('html');
