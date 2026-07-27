@@ -196,15 +196,20 @@ function renderInstance(inst) {
 
   root.innerHTML = `
     <div class="avail-cal__header">
-      <button class="avail-cal__nav avail-cal__nav--prev" type="button"
-              aria-label="Previous month"${atFloor ? ' disabled' : ''}>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <span class="avail-cal__month" aria-live="polite">${monthLabel(currentMonth)}</span>
-      <button class="avail-cal__nav avail-cal__nav--next" type="button"
-              aria-label="Next month"${atCeil ? ' disabled' : ''}>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-      </button>
+      <span class="avail-cal__title">
+        <span class="avail-cal__eyebrow">Availability</span>
+        <span class="avail-cal__month" aria-live="polite">${monthLabel(currentMonth)}</span>
+      </span>
+      <span class="avail-cal__nav-group">
+        <button class="avail-cal__nav avail-cal__nav--prev" type="button"
+                aria-label="Previous month"${atFloor ? ' disabled' : ''}>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="avail-cal__nav avail-cal__nav--next" type="button"
+                aria-label="Next month"${atCeil ? ' disabled' : ''}>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </span>
     </div>
     <!-- Read-only display, not an interactive grid: we deliberately do NOT use
          role="grid"/gridcell (which would require full row/cell navigation
