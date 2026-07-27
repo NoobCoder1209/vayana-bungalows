@@ -1265,8 +1265,20 @@
   justify-content: center;
   font-size: 0.9rem;
   color: var(--text-dark);
-  background: var(--bg-light);
+}
+
+/* The date number sits inside a small circle (~55% of the cell) rather than
+   filling the whole square — the cell keeps its square footprint for grid
+   alignment, but the coloured state is a circular chip centred in it. */
+.avail-cal__day span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 55%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
   border: 1px solid transparent;
+  line-height: 1;
 }
 
 .avail-cal__day--blank {
@@ -1275,7 +1287,7 @@
 
 /* Available night — soft sage tint + muted green text (default in-season,
    future, unbooked day). Tagged .is-available by availability-calendar.js. */
-.avail-cal__day.is-available {
+.avail-cal__day.is-available span {
   background: var(--avail-free-bg);
   color: var(--avail-free);
   border-color: var(--avail-free-border);
@@ -1283,7 +1295,7 @@
 
 /* Booked night — soft rose tint + muted rose text + strikethrough. Matches
    the legend's "Already booked" swatch. */
-.avail-cal__day.is-booked {
+.avail-cal__day.is-booked span {
   background: var(--avail-booked-bg);
   color: var(--avail-booked);
   text-decoration: line-through;
@@ -1293,23 +1305,12 @@
 }
 
 /* Turnover day — check-out only (outgoing guest leaves). Neither fully free
-   nor fully blocked, so it keeps the neutral cream + primary corner triangle
+   nor fully blocked, so it keeps the neutral cream circle + a primary dot
    to read as a distinct third state rather than green or red. */
-.avail-cal__day.is-checkout-only {
+.avail-cal__day.is-checkout-only span {
   background: var(--bg-cream);
   color: var(--text-dark);
-  border-color: var(--primary-soft);
-  position: relative;
-}
-
-.avail-cal__day.is-checkout-only::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  border-style: solid;
-  border-width: 0 7px 7px 0;
-  border-color: transparent var(--primary) transparent transparent;
+  border-color: var(--primary);
 }
 
 /* Past day — muted, matching the legend's "Past dates" swatch. */
