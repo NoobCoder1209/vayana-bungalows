@@ -63,6 +63,19 @@
   align-items: center;
   gap: var(--space-4);
   min-height: var(--header-height);
+  /* Override the .container cap/padding for the header so the hamburger
+     (left) and phone/Enquiries/EN-BG cluster (right) sit near the page
+     edges instead of being inset by the container max-width + clamp pad.
+     The padding CAP matches the header's own top/bottom gap: the 44px
+     controls are vertically centred in --header-height, so that gap is
+     (--header-height - 44px)/2 = 22px. On wide screens the padding lands
+     there, making all four "outer" gaps visually uniform; the clamp still
+     shrinks it toward 1rem on narrow viewports (never exceeding the old
+     --container-pad, so the ≤540px CTA row that was tuned to fit at ~400px
+     keeps at least as much room as before). */
+  max-width: none;
+  padding-left: clamp(1rem, 4vw, calc((var(--header-height) - 44px) / 2));
+  padding-right: clamp(1rem, 4vw, calc((var(--header-height) - 44px) / 2));
 }
 
 /* Left and right clusters each fill their column and align their
