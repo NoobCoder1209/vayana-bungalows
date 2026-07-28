@@ -141,14 +141,6 @@
       "pool_title": "Swimming pool",
       "pool_body": "Three pools, including a fifty-metre lap at the beach club."
     },
-    "location": {
-      "eyebrow": "Tsarevo, Bulgaria",
-      "title": "Find us",
-      "map_title": "Map showing Vayana Bungalows in Tsarevo, Bulgaria",
-      "map_fallback": "Map unavailable — see address below.",
-      "directions_cta": "Open in Google Maps",
-      "directions_sr": "(opens Google Maps in a new tab)"
-    },
     "newsletter": {
       "eyebrow": "Notes from the bay",
       "title": "Stay with us",

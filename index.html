@@ -397,68 +397,6 @@
         </div>
       </section>
 
-      <!-- 14. Location (map) — #10.
-           Iframe is lazy-loaded so the map doesn't block LCP and only fetches
-           when scrolled near. The sandbox attribute is set tight on purpose:
-           - allow-scripts: Google Maps embed needs JS to render tiles
-           - allow-same-origin: needed so allow-scripts isn't a null-origin
-             escape hatch (without it, Maps would still load but the embed
-             would treat itself as a unique origin, breaking deep links).
-             Combining the two intentionally gives the iframe normal cross-
-             origin iframe access — i.e. it can run JS in maps.google.com's
-             own origin and read maps.google.com cookies/storage. It cannot
-             touch our DOM, cookies, or storage. The residual trust is the
-             same we'd have embedding any Google product (cf. YouTube): a
-             compromised maps.google.com can run JS in its own origin.
-           - allow-popups: the "View larger map" link inside the embed opens
-             a new tab; without this it's silently swallowed. Note: this
-             allows popups but NOT allow-popups-to-escape-sandbox, so any
-             popup INHERITS the sandbox restrictions.
-           Notably absent: allow-top-navigation, allow-forms, allow-modals,
-           allow-popups-to-escape-sandbox, allow-pointer-lock. A compromised
-           Maps embed cannot navigate this page, submit forms, or pop dialogs.
-           referrerpolicy="strict-origin-when-cross-origin" matches the modern
-           browser default — only the origin (no path / query) leaks to
-           maps.google.com. Pinning it makes the intent explicit for future
-           readers and guards against older browsers' looser defaults.
-
-           Graceful degradation (negative test #4): the iframe is opacity:0
-           until JS adds .is-loaded to .location__map (assets/js/location.js).
-           If google.com is blocked / aborted / never loads, .is-loaded is
-           never added and the .location__fallback paragraph stays visible.
-           Address below the iframe is visible regardless. -->
-      <section id="location" class="section section-cream" aria-labelledby="location-title">
-        <div class="container location__inner reveal">
-          <span class="eyebrow" data-i18n="home.location.eyebrow">Tsarevo, Bulgaria</span>
-          <h3 id="location-title" data-i18n="home.location.title">Find us</h3>
-          <div class="location__map">
-            <p class="location__fallback" data-i18n="home.location.map_fallback">Map unavailable &mdash; see address below.</p>
-            <iframe
-              src="https://maps.google.com/maps?q=42.1885867,27.8350773&amp;z=17&amp;output=embed"
-              data-i18n-attr="title:home.location.map_title"
-              title="Map showing Vayana Bungalows in Tsarevo, Bulgaria"
-              loading="lazy"
-              width="800" height="450"
-              referrerpolicy="strict-origin-when-cross-origin"
-              sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-          </div>
-          <div class="location__details">
-            <p class="location__address">
-              <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span><br />
-              <span data-site-config="address.country">Bulgaria</span>
-            </p>
-            <a class="btn btn-outline-dark location__directions"
-               data-site-config-href="address.directionsUrl"
-               href="https://maps.app.goo.gl/szcFXV6f5Pgx2iFt5"
-               target="_blank" rel="noopener noreferrer"
-               data-location-directions>
-              <span data-i18n="home.location.directions_cta">Open in Google Maps</span>
-              <span class="sr-only" data-i18n="home.location.directions_sr">(opens Google Maps in a new tab)</span>
-            </a>
-          </div>
-        </div>
-      </section>
-
       <!-- 15. Newsletter band — "Stay with us" (#10).
            Stub-only in v1: the form has full JS validation and a honeypot,
            but submit just opens a "Thank you" .modal — no network request
