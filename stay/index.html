@@ -30,6 +30,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
     <link rel="preload" as="image" href="/assets/img/intro-villa.jpg" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <link rel="stylesheet" href="/assets/css/tokens.css" />
     <link rel="stylesheet" href="/assets/css/base.css" />
     <link rel="stylesheet" href="/assets/css/layout.css" />
@@ -149,108 +150,221 @@
     <main id="main">
       <!-- Hero — uses intro-villa.jpg (already a site image, preloaded
            above) with a dark overlay for legibility. Same `background-image`
-           technique as `.bungalow-hero` on the bungalow detail pages.
+           technique as `.bungalow-hero` on the (legacy) bungalow detail pages.
            h1 is the page title; eyebrow gives section, subhead is one
            tight line. -->
       <section class="stay-hero" aria-labelledby="stay-title" style="background-image: url('/assets/img/intro-villa.jpg');">
         <div class="container">
           <span class="eyebrow eyebrow--light">The bungalows</span>
-          <h1 id="stay-title">Stay with us</h1>
-          <p class="stay-hero__sub">Three handcrafted villas on the Tsarevo coast &mdash; oceanview, hilltop, and beachfront. Pick the one that fits your stay.</p>
+          <h1 id="stay-title">Our Bungalows</h1>
+          <p class="stay-hero__sub">Three handcrafted villas on the Tsarevo coast &mdash; each with its own live availability. Pick your dates below.</p>
         </div>
       </section>
 
-      <!-- Prose intro.
-           PLACEHOLDER COPY — to be replaced before launch.
-           User decision (issue #12 planning): the page ships with a
-           TODO block here that you fill in with the real brand voice.
-           Keep the structure (2-3 short paragraphs) so layout doesn't
-           shift when the real copy lands. The placeholder text is
-           generic enough not to embarrass us if it accidentally goes
-           live, but specific enough that nobody mistakes it for real
-           content. -->
-      <section class="stay-intro" aria-labelledby="stay-intro-title">
-        <div class="container stay-intro__inner">
-          <h2 id="stay-intro-title" class="sr-only">About the bungalows</h2>
-          <!-- TODO(content): Replace with real 2-3 paragraph intro.
-               Suggested beats:
-                 1. Location + setting (Black Sea, Tsarevo, what makes the
-                    Strandzha coast distinct).
-                 2. Architecture + style (handcrafted, materials, what each
-                    bungalow's personality is in one line).
-                 3. Hospitality model (private, quiet, slow — counter-positioning
-                    against high-volume resorts).
-               Voice references: the homepage hero ("Boutique Black Sea
-               Bungalows"), the bungalow detail subheads, and the
-               newsletter section ("Quiet notes from the bay"). -->
-          <p class="stay-intro__lede">A handful of villas on a quiet stretch of the Bulgarian Black Sea coast, each with its own light and its own view.</p>
-          <p>The three Vayana bungalows share a coastline but are framed by very different landscapes &mdash; one looking out to the open sea, one tucked into the pine ridge, one a step from the sand. Each is hand-finished in local materials and styled for slow days: long mornings on the terrace, evenings that end early, salt air through every open window.</p>
-          <p>Pick the one whose view you'd rather wake up to. If you'd like a recommendation, just send an enquiry &mdash; we'll help you choose.</p>
-        </div>
-      </section>
-
-      <!-- Bungalow cards.
-           Reuses the existing .room-card pattern from the homepage's
-           rooms section, but in a stable 3-up grid (no carousel) since
-           this IS the index page — every card should be visible at
-           once. Grid collapses 3 → 2 → 1 on tablet/mobile.
-           URL slugs are intentionally unchanged from the homepage
-           cards: pre-existing inbound links must keep working
-           (per spec, ref PR #5). -->
-      <section class="stay-cards" aria-labelledby="stay-cards-title">
+      <!-- Top booking bar — one shared enquiry entry point (NOT per bungalow).
+           Plain season-aware date pickers with NO availability blocking: the
+           per-bungalow availability lives in the read-only calendars below.
+           `data-booking-mode="enquiry-link"` tells booking.js to wire this as
+           a link-builder (no bookings.json, no modal) — on submit it navigates
+           to ../enquiries/?checkin=&checkout= so the enquiry form pre-fills
+           the chosen dates. The legend underneath is the shared key for the
+           three availability calendars further down the page. -->
+      <section class="booking" id="booking" aria-labelledby="booking-title">
         <div class="container">
-          <div class="stay-cards__head reveal">
-            <span class="eyebrow">The three villas</span>
-            <h2 id="stay-cards-title">Choose your bungalow</h2>
-          </div>
-          <!-- Note: the 3 cards below intentionally do NOT carry .reveal.
-               This is an index page — the cards ARE the page, and a user
-               scrolling down expects to see them immediately rather than
-               wait for an animation. Only the section head reveals so the
-               eye is led down to the cards. Round-1 review finding N4. -->
-          <div class="stay-cards__grid">
-            <article class="room-card">
-              <a href="../premier-oceanview-villa/" class="room-card__img">
-                <img src="/assets/img/room-1.jpg" alt="A hardwood villa wrapped in trade winds, with an uninterrupted line to the horizon" loading="lazy" />
-              </a>
-              <div class="room-card__body">
-                <h3>Bungalow 1</h3>
-                <p class="room-card__lede">Oceanview villa &mdash; private terrace, plunge pool, full horizon line.</p>
-                <p class="room-card__price">From <strong>$960</strong> / night</p>
-                <a href="../premier-oceanview-villa/" class="room-card__more">View bungalow <span aria-hidden="true">&rarr;</span></a>
-              </div>
-            </article>
-            <article class="room-card">
-              <a href="../deluxe-hilltop-residence/" class="room-card__img">
-                <img src="/assets/img/room-2.jpg" alt="A pine-shaded hilltop residence with a large stone terrace and views over the bay" loading="lazy" />
-              </a>
-              <div class="room-card__body">
-                <h3>Bungalow 2</h3>
-                <p class="room-card__lede">Hilltop residence &mdash; pine-shaded terrace, bay views, the quietest of the three.</p>
-                <p class="room-card__price">From <strong>$1,240</strong> / night</p>
-                <a href="../deluxe-hilltop-residence/" class="room-card__more">View bungalow <span aria-hidden="true">&rarr;</span></a>
-              </div>
-            </article>
-            <article class="room-card">
-              <a href="../premier-beachfront-suite/" class="room-card__img">
-                <img src="/assets/img/room-3.jpg" alt="A beachfront suite that opens directly onto the sand, with an outdoor shower and beach cabana" loading="lazy" />
-              </a>
-              <div class="room-card__body">
-                <h3>Bungalow 3</h3>
-                <p class="room-card__lede">Beachfront suite &mdash; sand at the door, outdoor shower, private cabana.</p>
-                <p class="room-card__price">From <strong>$1,480</strong> / night</p>
-                <a href="../premier-beachfront-suite/" class="room-card__more">View bungalow <span aria-hidden="true">&rarr;</span></a>
-              </div>
-            </article>
+          <h2 id="booking-title" class="sr-only">Check dates and enquire</h2>
+          <form class="booking__form" id="booking-form" data-booking-mode="enquiry-link" novalidate>
+            <div class="booking__field">
+              <label for="bk-checkin">Check-in</label>
+              <input type="text" id="bk-checkin" name="checkin" placeholder="Add date" autocomplete="off" />
+            </div>
+            <div class="booking__field">
+              <label for="bk-checkout">Check-out</label>
+              <input type="text" id="bk-checkout" name="checkout" placeholder="Add date" autocomplete="off" />
+            </div>
+            <div class="booking__field">
+              <label for="bk-rooms">Rooms</label>
+              <select id="bk-rooms" name="rooms">
+                <option>1 room</option>
+                <option>2 rooms</option>
+                <option>3 rooms</option>
+                <option>4 rooms</option>
+              </select>
+            </div>
+            <div class="booking__field">
+              <label for="bk-guests">Guests</label>
+              <select id="bk-guests" name="guests">
+                <option>1 adult</option>
+                <option>2 adults</option>
+                <option>2 adults, 1 child</option>
+                <option>2 adults, 2 children</option>
+                <option>3 adults</option>
+                <option>4 adults</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary booking__submit">Book Now</button>
+          </form>
+          <div class="booking-legend booking-legend--availability" aria-label="Availability legend for the calendars below">
+            <span class="booking-legend__item">
+              <span class="booking-legend__swatch booking-legend__swatch--available" aria-hidden="true"></span>
+              Available
+            </span>
+            <span class="booking-legend__item">
+              <span class="booking-legend__swatch booking-legend__swatch--booked" aria-hidden="true"></span>
+              Already booked
+            </span>
+            <span class="booking-legend__item">
+              <span class="booking-legend__swatch booking-legend__swatch--past" aria-hidden="true"></span>
+              Past dates
+            </span>
           </div>
         </div>
       </section>
 
-      <!-- CTA strip — mirrors the .bungalow-cta block we shipped on
-           each bungalow detail page under #11. Section-cream background,
-           one-line lede, primary "Send an enquiry" button. The href is
-           plain `../enquiries/` (no ?villa= param — the user hasn't
-           picked a villa yet at this point). -->
+      <!-- Shared specs strip. All three bungalows are identical in spec, so
+           a single strip (Bungalow 1's values) sits above the per-bungalow
+           booking blocks. Reuses the `.bungalow-specs` rules from
+           sections.css (originally built for the detail pages). No data-i18n
+           here — this marketing copy is hardcoded EN like the rest of the
+           page (the i18n `stay` section is a stub). -->
+      <section class="bungalow-specs section" aria-labelledby="specs-title">
+        <div class="container">
+          <h2 id="specs-title" class="sr-only">Bungalow specifications</h2>
+          <div class="bungalow-specs__grid">
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">Size</span>
+              <strong>110 m&sup2;</strong>
+            </div>
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">Occupancy</span>
+              <strong>2 adults</strong>
+            </div>
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">Bed</span>
+              <strong>King</strong>
+            </div>
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">View</span>
+              <strong>Ocean</strong>
+            </div>
+            <div class="bungalow-specs__cell">
+              <span class="eyebrow">Floor</span>
+              <strong>Single level</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Per-bungalow sections ===================================
+           Three two-column sections, one per bungalow: a SQUARE photo on the
+           left and a READ-ONLY availability calendar on the right. The
+           calendar container `[data-avail-cal][data-bungalow-key]` is filled
+           by availability-calendar.js, which renders one month coloured from
+           that bungalow's dates in bookings.json (shared fetch with the
+           booking widget). The three calendars share ONE visible month —
+           paging any one pages all three (see availability-calendar.js).
+           Photos are web placeholders — owner will swap src/alt for real
+           bungalow photography later. -->
+
+      <!-- Bungalow 1 -->
+      <section class="bungalow-split" aria-labelledby="bungalow-1-title">
+        <div class="container">
+          <div class="bungalow-split__head reveal">
+            <span class="eyebrow">The three villas</span>
+            <h2 id="bungalow-1-title">Bungalow 1</h2>
+          </div>
+          <div class="bungalow-split__grid">
+            <figure class="bungalow-split__photo reveal">
+              <img src="https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=1200&q=80" alt="Bungalow 1 exterior with sea view" loading="lazy" />
+            </figure>
+            <div class="bungalow-split__cal reveal" data-avail-cal data-bungalow-key="B1"
+                 role="group" aria-label="Bungalow 1 availability calendar"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bungalow 2 -->
+      <section class="bungalow-split" aria-labelledby="bungalow-2-title">
+        <div class="container">
+          <div class="bungalow-split__head reveal">
+            <span class="eyebrow">The three villas</span>
+            <h2 id="bungalow-2-title">Bungalow 2</h2>
+          </div>
+          <div class="bungalow-split__grid">
+            <figure class="bungalow-split__photo reveal">
+              <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1200&q=80" alt="Bungalow 2 terrace overlooking the bay" loading="lazy" />
+            </figure>
+            <div class="bungalow-split__cal reveal" data-avail-cal data-bungalow-key="B2"
+                 role="group" aria-label="Bungalow 2 availability calendar"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bungalow 3 -->
+      <section class="bungalow-split" aria-labelledby="bungalow-3-title">
+        <div class="container">
+          <div class="bungalow-split__head reveal">
+            <span class="eyebrow">The three villas</span>
+            <h2 id="bungalow-3-title">Bungalow 3</h2>
+          </div>
+          <div class="bungalow-split__grid">
+            <figure class="bungalow-split__photo reveal">
+              <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80" alt="Bungalow 3 by the beach" loading="lazy" />
+            </figure>
+            <div class="bungalow-split__cal reveal" data-avail-cal data-bungalow-key="B3"
+                 role="group" aria-label="Bungalow 3 availability calendar"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Amenities — shared across all three bungalows (they're identical
+           in spec). Copied verbatim from the detail-page amenities grid. -->
+      <section class="bungalow-amenities" aria-labelledby="amenities-title">
+        <div class="container">
+          <div class="bungalow-amenities__head reveal">
+            <span class="eyebrow">In every bungalow</span>
+            <h3 id="amenities-title">Amenities</h3>
+          </div>
+          <div class="bungalow-amenities__grid">
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 18v-6a4 4 0 014-4h10a4 4 0 014 4v6"/><path d="M3 22h18"/><path d="M3 14h18"/></svg><span>King-size bed</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 17c2 0 2-1.5 4-1.5S8 17 10 17s2-1.5 4-1.5S16 17 18 17s2-1.5 4-1.5"/><path d="M2 21c2 0 2-1.5 4-1.5S8 21 10 21s2-1.5 4-1.5S16 21 18 21s2-1.5 4-1.5"/></svg><span>Private plunge pool</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18"/><path d="M12 3a14 14 0 000 18"/></svg><span>Ocean view</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12.55a11 11 0 0114 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg><span>Fibre Wi-Fi</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg><span>24-hour butler</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h13a4 4 0 010 8H3z"/><path d="M16 8V6a2 2 0 012-2h0a2 2 0 012 2v2"/></svg><span>Breakfast in bed</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="6" width="16" height="12" rx="1"/><path d="M4 10h16"/></svg><span>Mini-bar</span></div>
+            <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 18l4-8 4 5 3-7 7 10z"/><path d="M3 21h18"/></svg><span>Private deck</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Image gallery — shared glimpse of the bungalows. Copied from the
+           detail-page gallery; slider id kept as a single track here. -->
+      <section class="gallery section" aria-labelledby="gallery-title">
+        <div class="container gallery__head reveal">
+          <span class="eyebrow">A glimpse of the bungalows</span>
+          <h3 id="gallery-title">Gallery</h3>
+        </div>
+        <div class="gallery__viewport">
+          <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous photos" data-slider-prev="stay-gallery">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="gallery__track" data-slider="stay-gallery">
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-1.jpg" alt="Beach at golden hour" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-2.jpg" alt="Open-air villa terrace" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-3.jpg" alt="Pool deck overlooking the sea" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-5.jpg" alt="Palms over a turquoise lagoon" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-6.jpg" alt="Spa pavilion at dusk" loading="lazy" /></a>
+          </div>
+          <button class="gallery__arrow gallery__arrow--next" aria-label="Next photos" data-slider-next="stay-gallery">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- CTA strip — mirrors the .bungalow-cta block on the detail pages.
+           Section-cream background, one-line lede, primary "Send an enquiry"
+           button. The href is plain `../enquiries/` (no ?villa= param — the
+           user hasn't picked a specific villa at this point). -->
       <section class="bungalow-cta" aria-labelledby="stay-cta-title">
         <div class="container bungalow-cta__inner">
           <span class="eyebrow">Already have a plan</span>

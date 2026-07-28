@@ -1,7 +1,8 @@
-import flatpickr from 'flatpickr';
 import { Bulgarian } from 'flatpickr/dist/l10n/bg.js';
-import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
+import { isOffSeason } from './season.js';
 import { currentLocale } from './util/current-locale.js';
+import { loadBookings, toIso, parseIso, availabilityFor } from './bookings-data.js';
+import { makeSeasonPicker } from './season-picker.js';
 
 // flatpickr locale objects keyed by our locale codes. `default` is the
 // baseline (English) — no import needed. Bulgarian is imported above.
@@ -33,66 +34,116 @@ function fpDateFormat() {
   return DATE_FORMATS[currentLocale()] || DATE_FORMATS.en;
 }
 
-// Where bookings.json lives once Vite has applied the production base path.
-// In dev: /assets/data/bookings.json
-// In prod: /vayana-bungalows/assets/data/bookings.json
-// The `?v=<build-id>` query is set at build time from VITE_BUILD_ID and
-// rotates every deploy so Fastly's edge cache picks up the new file
-// immediately instead of serving the previous deploy's bookings.json
-// for up to its TTL.
-const BUILD_ID = import.meta.env.VITE_BUILD_ID || 'dev';
-const BOOKINGS_URL = `${import.meta.env.BASE_URL}assets/data/bookings.json?v=${BUILD_ID}`;
+// Wire up every booking widget on the page. Two kinds of widget exist:
+//
+//   1. Live-availability widgets — `<form data-bungalow-key="B1|B2|B3">`.
+//      The (legacy) bungalow detail pages carry one. These block booked
+//      dates from bookings.json and open the shared `#booking-modal` on
+//      submit. All such widgets share ONE bookings.json fetch (cached in
+//      bookings-data.js) and ONE modal.
+//
+//   2. Enquiry-link bar — `<form data-booking-mode="enquiry-link">`. The
+//      /stay/ page carries one at the top. It does NOT read bookings.json
+//      and does NOT block dates; on submit it navigates to /enquiries/ with
+//      the chosen dates as query params (no modal). See setupEnquiryLinkForm.
+export function initBooking() {
+  // Enquiry-link bar (may exist independently of any live widget/modal).
+  document
+    .querySelectorAll('form[data-booking-mode="enquiry-link"]')
+    .forEach((form) => setupEnquiryLinkForm(form));
 
-// Cache the bookings load so multiple calls in one page reuse the same fetch.
-let bookingsPromise = null;
+  const liveForms = document.querySelectorAll('form[data-bungalow-key]');
+  if (!liveForms.length) return;
 
-function loadBookings() {
-  if (!bookingsPromise) {
-    bookingsPromise = fetch(BOOKINGS_URL, { cache: 'no-cache' })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .catch((err) => {
-        // Don't break the page if the file is missing or malformed — flatpickr
-        // will simply mark no dates as disabled and the user falls back to
-        // submitting a request that we'll cross-check manually.
-        console.warn('[booking] could not load bookings.json:', err.message);
-        return null;
-      });
-  }
-  return bookingsPromise;
+  // Live widgets need the shared modal. Modal-level wiring is done ONCE here
+  // (not per form): the modal is shared by every live widget on the page, so
+  // its close handlers and the document-level Escape listener must not be
+  // registered once per form — that would stack N identical listeners on a
+  // single shared modal.
+  const modal = document.getElementById('booking-modal');
+  if (!modal) return;
+
+  modal.querySelectorAll('[data-modal-close]').forEach((el) => {
+    el.addEventListener('click', () => closeModal(modal));
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.hidden) closeModal(modal);
+  });
+
+  liveForms.forEach((form) => setupBookingForm(form, modal));
 }
 
-// Local-time YYYY-MM-DD. Using `.toISOString()` would shift the date back
-// for UTC+ users (the bulk of our likely audience): a Date constructed at
-// local midnight serialises as 22:00 UTC the previous day, so the slice(0,10)
-// would produce the wrong key. Reservations in bookings.json are also keyed
-// by local calendar date, so this stays in sync.
-const toIso = (d) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-};
+// Wire the /stay/ top booking bar: plain season-aware date pickers (no
+// bookings.json blocking), and on submit navigate to /enquiries/ carrying
+// the chosen check-in/check-out so enquiry.js can pre-fill its own pickers.
+// The Rooms/Guests selects are decorative here (the enquiry form collects
+// party size separately) — only the dates are forwarded.
+function setupEnquiryLinkForm(form) {
+  const checkin = form.querySelector('[name="checkin"]');
+  const checkout = form.querySelector('[name="checkout"]');
+  if (!checkin || !checkout) return;
 
-// Convert a YYYY-MM-DD ISO string to a Date at local midnight. We pass these
-// to flatpickr's `disable` array because flatpickr's string parsing depends
-// on the picker's `dateFormat` (here 'M j, Y'), and it can silently fail to
-// match an ISO string against that format — leaving the disable list empty
-// and letting users select booked dates. Date objects are unambiguous.
-const parseIso = (iso) => {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d);
-};
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
-export function initBooking() {
-  const checkin = document.getElementById('bk-checkin');
-  const checkout = document.getElementById('bk-checkout');
-  const form = document.getElementById('booking-form');
-  const modal = document.getElementById('booking-modal');
+  // Season-only pickers (shared factory) — isOffSeason greys Oct..Apr, minDate
+  // blocks the past, maxDate caps the year, disableMobile forces the grid. NO
+  // per-bungalow booked-day disabling: this bar is an enquiry entry point, not
+  // an availability check.
+  const fpIn = makeSeasonPicker(checkin, {
+    minDate: 'today',
+    dateFormat: fpDateFormat(),
+    locale: fpLocale(),
+    disableMobile: true,
+    onChange: (selected) => {
+      if (selected[0]) {
+        const d = new Date(selected[0]);
+        d.setDate(d.getDate() + 1);
+        fpOut.set('minDate', d);
+        // If a check-out was already picked and now sits on/before the new
+        // check-in, clear it — set('minDate') moves the picker floor but does
+        // NOT drop an out-of-range selection, so without this the bar would
+        // still display (and forward to /enquiries/) a reversed date pair.
+        const out = fpOut.selectedDates[0];
+        if (out && out <= selected[0]) {
+          fpOut.clear();
+        }
+      }
+    },
+  });
 
-  if (!checkin || !checkout || !form || !modal) return;
+  const fpOut = makeSeasonPicker(checkout, {
+    minDate: tomorrow,
+    dateFormat: fpDateFormat(),
+    locale: fpLocale(),
+    disableMobile: true,
+  });
+
+  // Resolve /enquiries/ relative to this page so it works under the GitHub
+  // Pages base path (/vayana-bungalows/) and in dev (/) alike. From /stay/
+  // the sibling is ../enquiries/.
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const url = new URL('../enquiries/', window.location.href);
+    // Pass dates as unambiguous ISO (YYYY-MM-DD) regardless of the picker's
+    // locale display format; enquiry.js parses them back with parseIso.
+    if (fpIn.selectedDates[0]) url.searchParams.set('checkin', toIso(fpIn.selectedDates[0]));
+    if (fpOut.selectedDates[0]) url.searchParams.set('checkout', toIso(fpOut.selectedDates[0]));
+    window.location.assign(url.toString());
+  });
+}
+
+// Set up a single booking widget: its two flatpickr pickers, the per-bungalow
+// availability patch, and the submit handler. Called once per form so multiple
+// widgets can coexist on one page, each keyed to its own bungalow's dates.
+function setupBookingForm(form, modal) {
+  // Inputs are resolved scoped to THIS form (not by global ID) so the three
+  // widgets on /stay/ don't collide. IDs in markup stay unique for valid
+  // <label for> a11y, but the JS no longer depends on them being unique.
+  const checkin = form.querySelector('[name="checkin"]');
+  const checkout = form.querySelector('[name="checkout"]');
+
+  if (!checkin || !checkout) return;
 
   const today = new Date();
   const tomorrow = new Date();
@@ -144,24 +195,20 @@ export function initBooking() {
     dayElem.setAttribute('aria-label', `${base} — already booked`);
   };
 
-  const fpIn = flatpickr(checkin, {
+  const fpIn = makeSeasonPicker(checkin, {
     minDate: 'today',
-    maxDate: seasonMaxDate(),
     dateFormat: fpDateFormat(),
     locale: fpLocale(),
-    // The isOffSeason predicate greys out Oct..Apr; per-bungalow booked
-    // dates get pushed in later via .set('disable', ...) once bookings.json
-    // resolves (see loadBookings().then below). We seed with the season
-    // predicate so first paint is already season-aware — booked-day
-    // decoration comes second.
-    disable: [isOffSeason],
-    // Force the flatpickr calendar grid even on mobile UAs. Without this,
-    // flatpickr falls back to a native <input type="date"> which doesn't
-    // honour our disable list, never fires onDayCreate (so .is-booked never
-    // lands), and makes the legend underneath misleading.
+    // isOffSeason (added by the factory) greys out Oct..Apr; per-bungalow
+    // booked dates get pushed in later via .set('disable', ...) once
+    // bookings.json resolves (see loadBookings().then below). First paint is
+    // already season-aware — booked-day decoration comes second.
+    // disableMobile forces the flatpickr grid even on mobile UAs — without it
+    // flatpickr falls back to a native <input type="date"> that ignores our
+    // disable list, never fires onDayCreate (so .is-booked never lands), and
+    // makes the legend underneath misleading.
     disableMobile: true,
     onDayCreate: tagBookedDay('in'),
-    onReady: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -171,15 +218,12 @@ export function initBooking() {
     },
   });
 
-  const fpOut = flatpickr(checkout, {
+  const fpOut = makeSeasonPicker(checkout, {
     minDate: tomorrow,
-    maxDate: seasonMaxDate(),
     dateFormat: fpDateFormat(),
     locale: fpLocale(),
-    disable: [isOffSeason],
     disableMobile: true,
     onDayCreate: tagBookedDay('out'),
-    onReady: attachYearDropdown,
   });
 
   // Pull the per-page bungalow key (B1 / B2 / B3) and patch in the
@@ -187,26 +231,15 @@ export function initBooking() {
   const bungalowKey = form.dataset.bungalowKey;
   if (bungalowKey) {
     loadBookings().then((bookings) => {
-      const entry = bookings?.bungalows?.[bungalowKey];
-      // Defensive: if bookings.json is the OLD array shape (cached from a
-      // previous deploy by a stale worker, or because somebody downgraded
-      // fetch-bookings.mjs), treat it as empty. ?v=BUILD_ID + cache:no-cache
-      // already cover this in practice, but a console.warn surfaces any
-      // schema regression that does slip through.
-      if (Array.isArray(entry)) {
-        console.warn(
-          `[booking] ${bungalowKey}: bookings.json is in the legacy array shape; treating as empty.`,
-        );
-      }
-      const unavailable = entry?.unavailable ?? [];
-      const checkInDays = entry?.checkIn ?? [];
+      // Shared parse + legacy-array guard (bookings-data.js). Returns Sets.
+      const entry = availabilityFor(bookings, bungalowKey);
+      unavailableSet = entry.unavailable;
+      checkInSet = entry.checkIn;
+      const unavailable = [...unavailableSet];
 
       if (bookings && unavailable.length === 0) {
         console.info(`[booking] no unavailable dates listed for ${bungalowKey}`);
       }
-
-      unavailableSet = new Set(unavailable);
-      checkInSet = new Set(checkInDays);
 
       // Check-out is allowed on a check-in day (turnover day), so subtract
       // the check-in days from fpOut's disable list.
@@ -248,8 +281,15 @@ export function initBooking() {
   // Hidden bungalow tag — set on per-bungalow pages so the modal copy can
   // mention which bungalow the request is for. Read at submit time so the
   // modal reflects the current value if a future flow ever changes it.
+  // The modal is SHARED across all widgets on the page, so we capture its
+  // authored default copy once and always reassign on submit — either the
+  // per-bungalow copy (when the hidden input is present) or the default
+  // (otherwise) — so a widget without a bungalow name can never inherit the
+  // previous submission's stale bungalow copy from another widget.
   const modalBody = modal.querySelector('#modal-body');
   const modalTitle = modal.querySelector('#modal-title');
+  const defaultBody = modalBody?.textContent ?? '';
+  const defaultTitle = modalTitle?.textContent ?? '';
 
   // Open modal on submit
   form.addEventListener('submit', (e) => {
@@ -294,22 +334,17 @@ export function initBooking() {
     }
 
     const bungalow = form.querySelector('input[name="bungalow"]')?.value?.trim();
-    if (bungalow && modalBody) {
-      modalBody.textContent =
-        `A reservations specialist will follow up within twenty-four hours to confirm availability for ${bungalow} and tailor your stay.`;
+    if (modalBody) {
+      modalBody.textContent = bungalow
+        ? `A reservations specialist will follow up within twenty-four hours to confirm availability for ${bungalow} and tailor your stay.`
+        : defaultBody;
     }
-    if (bungalow && modalTitle) {
-      modalTitle.textContent = `Thank you — your ${bungalow} request is in.`;
+    if (modalTitle) {
+      modalTitle.textContent = bungalow
+        ? `Thank you — your ${bungalow} request is in.`
+        : defaultTitle;
     }
     openModal(modal);
-  });
-
-  // Close modal handlers
-  modal.querySelectorAll('[data-modal-close]').forEach((el) => {
-    el.addEventListener('click', () => closeModal(modal));
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !modal.hidden) closeModal(modal);
   });
 }
 

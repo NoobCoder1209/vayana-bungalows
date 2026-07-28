@@ -20,7 +20,6 @@
 // Worker requires Turnstile, which itself requires JS, so no-JS users
 // genuinely cannot post the form).
 
-import flatpickr from 'flatpickr';
 import { Bulgarian } from 'flatpickr/dist/l10n/bg.js';
 import { currentLocale } from './util/current-locale.js';
 
@@ -36,7 +35,9 @@ function fpLocale() {
   return FLATPICKR_LOCALES[currentLocale()] || 'default';
 }
 import { SITE_CONFIG } from './site-config.js';
-import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
+import { isOffSeason } from './season.js';
+import { parseIso } from './bookings-data.js';
+import { makeSeasonPicker } from './season-picker.js';
 
 // Stricter than HTML5's `type=email` (which accepts "a@b" with no TLD).
 // The form ships with `novalidate` so HTML5 enforcement is disabled by
@@ -277,13 +278,10 @@ export function initEnquiry() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const fpCheckin = flatpickr(checkinEl, {
+  const fpCheckin = makeSeasonPicker(checkinEl, {
     minDate: 'today',
-    maxDate: seasonMaxDate(),
-    disable: [isOffSeason],
     dateFormat: 'd/m/Y',
     locale: fpLocale(),
-    onReady: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -299,13 +297,10 @@ export function initEnquiry() {
     },
   });
 
-  const fpCheckout = flatpickr(checkoutEl, {
+  const fpCheckout = makeSeasonPicker(checkoutEl, {
     minDate: tomorrow,
-    maxDate: seasonMaxDate(),
-    disable: [isOffSeason],
     dateFormat: 'd/m/Y',
     locale: fpLocale(),
-    onReady: attachYearDropdown,
   });
 
   // URL-param pre-fill: `?villa=<slug>` populates the message textarea
@@ -326,6 +321,43 @@ export function initEnquiry() {
     const villaName = BUNGALOW_SLUGS[villaSlug];
     if (!message.value.trim()) {
       message.value = `Hello, I'd like to enquire about the ${villaName}.`;
+    }
+  }
+
+  // URL-param pre-fill: `?checkin=&checkout=` (ISO YYYY-MM-DD) pre-populate
+  // the date pickers. The /stay/ top booking bar links here carrying the
+  // dates the visitor chose there. We validate defensively — a value only
+  // pre-fills if it parses to a real date that also passes the SAME guards
+  // the pickers enforce (not in the past, in the open season). Junk, past,
+  // or off-season values are silently ignored (mirrors the villa-slug
+  // allowlist's fail-safe posture). Check-out additionally must be after
+  // check-in. Dates are set as Date objects (not strings) so flatpickr's
+  // format parser isn't involved, and with triggerChange=false so we drive
+  // fpCheckout's minDate explicitly rather than via the onChange cascade.
+  const isValidPrefill = (iso) => /^\d{4}-\d{2}-\d{2}$/.test(iso || '');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const checkinParam = params.get('checkin');
+  let prefilledCheckin = null;
+  if (isValidPrefill(checkinParam)) {
+    const d = parseIso(checkinParam);
+    if (!Number.isNaN(d.getTime()) && d >= today && !isOffSeason(d)) {
+      fpCheckin.setDate(d, false);
+      prefilledCheckin = d;
+      // Keep fpCheckout's floor consistent with the chosen check-in + 1.
+      const min = new Date(d);
+      min.setDate(min.getDate() + 1);
+      fpCheckout.set('minDate', min);
+    }
+  }
+
+  const checkoutParam = params.get('checkout');
+  if (isValidPrefill(checkoutParam)) {
+    const d = parseIso(checkoutParam);
+    const afterCheckin = prefilledCheckin ? d > prefilledCheckin : d >= today;
+    if (!Number.isNaN(d.getTime()) && afterCheckin && !isOffSeason(d)) {
+      fpCheckout.setDate(d, false);
     }
   }
 

@@ -25,6 +25,17 @@
      against --bg-light, ~4.7:1 against the dark newsletter overlay. */
   --danger: #c0392b;
 
+  /* Availability calendar day states (/stay/). Soft sage green = free,
+     soft dusty rose = booked — deliberately muted (not saturated) so the
+     month grid stays calm and on-brand rather than shouting. Text tones are
+     desaturated but still clear the AA bar against their own light tints. */
+  --avail-free: #5a7d63;          /* muted sage-green text — available */
+  --avail-free-bg: #eef3ee;       /* very light sage tint */
+  --avail-free-border: #cfe0d3;   /* soft green edge */
+  --avail-booked: #a86a63;        /* muted dusty-rose text — booked */
+  --avail-booked-bg: #f6edeb;     /* very light rose tint */
+  --avail-booked-border: #e6d0cc; /* soft rose edge */
+
   /* Typography */
   --font-heading: 'Marcellus', 'Times New Roman', serif;
   --font-body: 'Jost', system-ui, sans-serif;
