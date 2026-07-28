@@ -123,7 +123,19 @@
 .body--scroll-locked .site-header {
   z-index: calc(var(--z-modal) + 1);
   pointer-events: none;
-  position: relative;
+  /* While the drawer is open the JS locks <body> to position:fixed and
+     offsets it by -scrollY. A sticky/relative header is anchored inside
+     that shifted body, so it gets dragged up off the viewport (leaving an
+     awkward gap where it used to be, or a bare strip at the top). Pin the
+     header to the viewport with position:fixed so it stays at the top
+     regardless of the frozen scroll offset. left/right:0 makes it span the
+     full width so its background reaches both edges (no scrollbar-gutter
+     notch — the ::before below is kept as a belt-and-braces for the exact
+     gutter strip). */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   /* Force the scrolled color scheme while locked. At top-of-page rest the
      header uses color: var(--bg-light) (cream text/icons on the dark hero
      bleed-through). Once we paint the ::before below with the cream --bg-light
@@ -148,10 +160,12 @@
 .body--scroll-locked .site-header__menu {
   pointer-events: auto;
 }
-.body--scroll-locked .site-logo,
-.body--scroll-locked .site-header__cta {
-  visibility: hidden;
-}
+/* Keep the logo + CTA visible while the drawer is open so the header still
+   reads as a complete bar (previously hidden, which left a bare strip with
+   only the hamburger/×). The drawer panel anchors at top:var(--header-height)
+   — i.e. BELOW this row — so it never overlaps them. They stay [inert] +
+   pointer-events:none (from the locked header) so the drawer keeps sole
+   focus/interaction; these slots are display-only while open. */
 
 .site-header__menu span {
   display: block;
