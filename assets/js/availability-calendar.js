@@ -164,16 +164,13 @@ function renderInstance(inst) {
       classes.push('is-past');
       stateLabel = 'past';
     } else if (avail.unavailable.has(iso)) {
-      if (avail.checkIn.has(iso)) {
-        classes.push('is-checkout-only');
-        stateLabel = 'turnover, check-out only';
-      } else {
-        classes.push('is-booked');
-        stateLabel = 'already booked';
-      }
+      // Simple binary: any unavailable night is "booked" (red). We no longer
+      // distinguish turnover / check-out-only days — a booked date is booked.
+      classes.push('is-booked');
+      stateLabel = 'already booked';
     } else {
       // Future, in-season (the shown month is always in-season — navigation
-      // is clamped), and not booked → genuinely available.
+      // is clamped), and not booked → available (green).
       classes.push('is-available');
     }
 

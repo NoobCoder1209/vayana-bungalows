@@ -1324,13 +1324,16 @@
   min-height: 38px;
 }
 
-/* Available — muted sage text, no fill: keeps the grid calm and lets the
-   booked/turnover pills stand out. */
+/* Available — soft sage-tinted pill (green). */
 .avail-cal__day.is-available span {
+  background: var(--avail-free-bg);
   color: var(--avail-free);
+  border-color: var(--avail-free-border);
 }
 
-/* Booked — soft rose pill + rose text + strikethrough. */
+/* Booked — soft rose pill + rose text + strikethrough (red). Turnover days
+   are treated as booked too: availability is a simple binary (booked = red,
+   free = green), no separate check-out-only state. */
 .avail-cal__day.is-booked span {
   background: var(--avail-booked-bg);
   color: var(--avail-booked);
@@ -1338,12 +1341,6 @@
   text-decoration: line-through;
   text-decoration-thickness: 1px;
   text-decoration-color: var(--avail-booked);
-}
-
-/* Turnover (check-out only) — solid tan pill, the design's signature accent. */
-.avail-cal__day.is-checkout-only span {
-  background: var(--primary);
-  color: var(--bg-light);
 }
 
 /* Past day — muted, no pill. */
@@ -1654,17 +1651,6 @@
 
 .booking-legend--availability .booking-legend__swatch--booked::after {
   background: var(--avail-booked);
-}
-
-/* Turnover — solid tan pill matching the calendar's check-out-only days.
-   Override the base swatch's corner-triangle look. */
-.booking-legend--availability .booking-legend__swatch--turnover {
-  background: var(--primary);
-  border-radius: 4px;
-}
-
-.booking-legend--availability .booking-legend__swatch--turnover::after {
-  content: none;
 }
 
 /* ========== Enquiry page (#11) ==========
