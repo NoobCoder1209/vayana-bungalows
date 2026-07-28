@@ -1,8 +1,8 @@
-import flatpickr from 'flatpickr';
 import { Bulgarian } from 'flatpickr/dist/l10n/bg.js';
-import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
+import { isOffSeason } from './season.js';
 import { currentLocale } from './util/current-locale.js';
-import { loadBookings, toIso, parseIso } from './bookings-data.js';
+import { loadBookings, toIso, parseIso, availabilityFor } from './bookings-data.js';
+import { makeSeasonPicker } from './season-picker.js';
 
 // flatpickr locale objects keyed by our locale codes. `default` is the
 // baseline (English) — no import needed. Bulgarian is imported above.
@@ -86,18 +86,15 @@ function setupEnquiryLinkForm(form) {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  // Season-only pickers — same constraints as the enquiry form (isOffSeason
-  // greys Oct..Apr, minDate blocks the past, maxDate caps the year), but NO
-  // per-bungalow booked-day disabling: this bar is an enquiry entry point,
-  // not an availability check.
-  const fpIn = flatpickr(checkin, {
+  // Season-only pickers (shared factory) — isOffSeason greys Oct..Apr, minDate
+  // blocks the past, maxDate caps the year, disableMobile forces the grid. NO
+  // per-bungalow booked-day disabling: this bar is an enquiry entry point, not
+  // an availability check.
+  const fpIn = makeSeasonPicker(checkin, {
     minDate: 'today',
-    maxDate: seasonMaxDate(),
     dateFormat: fpDateFormat(),
     locale: fpLocale(),
-    disable: [isOffSeason],
     disableMobile: true,
-    onReady: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -115,14 +112,11 @@ function setupEnquiryLinkForm(form) {
     },
   });
 
-  const fpOut = flatpickr(checkout, {
+  const fpOut = makeSeasonPicker(checkout, {
     minDate: tomorrow,
-    maxDate: seasonMaxDate(),
     dateFormat: fpDateFormat(),
     locale: fpLocale(),
-    disable: [isOffSeason],
     disableMobile: true,
-    onReady: attachYearDropdown,
   });
 
   // Resolve /enquiries/ relative to this page so it works under the GitHub
@@ -201,24 +195,20 @@ function setupBookingForm(form, modal) {
     dayElem.setAttribute('aria-label', `${base} — already booked`);
   };
 
-  const fpIn = flatpickr(checkin, {
+  const fpIn = makeSeasonPicker(checkin, {
     minDate: 'today',
-    maxDate: seasonMaxDate(),
     dateFormat: fpDateFormat(),
     locale: fpLocale(),
-    // The isOffSeason predicate greys out Oct..Apr; per-bungalow booked
-    // dates get pushed in later via .set('disable', ...) once bookings.json
-    // resolves (see loadBookings().then below). We seed with the season
-    // predicate so first paint is already season-aware — booked-day
-    // decoration comes second.
-    disable: [isOffSeason],
-    // Force the flatpickr calendar grid even on mobile UAs. Without this,
-    // flatpickr falls back to a native <input type="date"> which doesn't
-    // honour our disable list, never fires onDayCreate (so .is-booked never
-    // lands), and makes the legend underneath misleading.
+    // isOffSeason (added by the factory) greys out Oct..Apr; per-bungalow
+    // booked dates get pushed in later via .set('disable', ...) once
+    // bookings.json resolves (see loadBookings().then below). First paint is
+    // already season-aware — booked-day decoration comes second.
+    // disableMobile forces the flatpickr grid even on mobile UAs — without it
+    // flatpickr falls back to a native <input type="date"> that ignores our
+    // disable list, never fires onDayCreate (so .is-booked never lands), and
+    // makes the legend underneath misleading.
     disableMobile: true,
     onDayCreate: tagBookedDay('in'),
-    onReady: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -228,15 +218,12 @@ function setupBookingForm(form, modal) {
     },
   });
 
-  const fpOut = flatpickr(checkout, {
+  const fpOut = makeSeasonPicker(checkout, {
     minDate: tomorrow,
-    maxDate: seasonMaxDate(),
     dateFormat: fpDateFormat(),
     locale: fpLocale(),
-    disable: [isOffSeason],
     disableMobile: true,
     onDayCreate: tagBookedDay('out'),
-    onReady: attachYearDropdown,
   });
 
   // Pull the per-page bungalow key (B1 / B2 / B3) and patch in the
@@ -244,26 +231,15 @@ function setupBookingForm(form, modal) {
   const bungalowKey = form.dataset.bungalowKey;
   if (bungalowKey) {
     loadBookings().then((bookings) => {
-      const entry = bookings?.bungalows?.[bungalowKey];
-      // Defensive: if bookings.json is the OLD array shape (cached from a
-      // previous deploy by a stale worker, or because somebody downgraded
-      // fetch-bookings.mjs), treat it as empty. ?v=BUILD_ID + cache:no-cache
-      // already cover this in practice, but a console.warn surfaces any
-      // schema regression that does slip through.
-      if (Array.isArray(entry)) {
-        console.warn(
-          `[booking] ${bungalowKey}: bookings.json is in the legacy array shape; treating as empty.`,
-        );
-      }
-      const unavailable = entry?.unavailable ?? [];
-      const checkInDays = entry?.checkIn ?? [];
+      // Shared parse + legacy-array guard (bookings-data.js). Returns Sets.
+      const entry = availabilityFor(bookings, bungalowKey);
+      unavailableSet = entry.unavailable;
+      checkInSet = entry.checkIn;
+      const unavailable = [...unavailableSet];
 
       if (bookings && unavailable.length === 0) {
         console.info(`[booking] no unavailable dates listed for ${bungalowKey}`);
       }
-
-      unavailableSet = new Set(unavailable);
-      checkInSet = new Set(checkInDays);
 
       // Check-out is allowed on a check-in day (turnover day), so subtract
       // the check-in days from fpOut's disable list.

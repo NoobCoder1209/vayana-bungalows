@@ -15,9 +15,10 @@
 // Bookings come from the shared bookings-data.js cache, so this reuses the
 // SAME fetch as the (legacy) booking widget — one network request per page.
 
-import { loadBookings, toIso, parseIso } from './bookings-data.js';
+import { loadBookings, toIso, availabilityFor } from './bookings-data.js';
 import { isOffSeason, seasonMaxDate } from './season.js';
 import { currentLocale } from './util/current-locale.js';
+import { observeReveal } from './reveal.js';
 
 // Monday-first weekday order (EU convention; matches the site's audience and
 // flatpickr's BG locale). Index 0 = Monday .. 6 = Sunday.
@@ -59,28 +60,30 @@ function todayMidnight() {
   return new Date(n.getFullYear(), n.getMonth(), n.getDate());
 }
 
+// Advance a month-anchored Date by whole months in `delta` direction until it
+// lands on an in-season (May–Sep) month. Shared by the floor/ceil derivation
+// and the month stepper — one place for the "skip off-season months" walk.
+// (Caller applies any range clamping; this only skips off-season.)
+function stepUntilInSeason(month, delta) {
+  let m = month;
+  while (isOffSeason(m)) {
+    m = new Date(m.getFullYear(), m.getMonth() + delta, 1);
+  }
+  return m;
+}
+
 // The earliest month a calendar may show: the first open-season month that is
 // not entirely in the past. If today is in-season, that's this month;
 // otherwise it's the next May at/after today.
 function seasonFloorMonth() {
-  let m = firstOfMonth(todayMidnight());
-  // Advance until the month is in the open season (isOffSeason checks a Date;
-  // day-1 of the month is representative since seasons are month-granular).
-  while (isOffSeason(m)) {
-    m = new Date(m.getFullYear(), m.getMonth() + 1, 1);
-  }
-  return m;
+  return stepUntilInSeason(firstOfMonth(todayMidnight()), 1);
 }
 
 // The latest month a calendar may show: the open-season month containing the
 // season ceiling (seasonMaxDate is Dec 31 of currentYear+5; step back to the
 // last in-season month at/onbefore it).
 function seasonCeilMonth() {
-  let m = firstOfMonth(seasonMaxDate());
-  while (isOffSeason(m)) {
-    m = new Date(m.getFullYear(), m.getMonth() - 1, 1);
-  }
-  return m;
+  return stepUntilInSeason(firstOfMonth(seasonMaxDate()), -1);
 }
 
 // Compare two month-anchored Dates (ignoring day).
@@ -104,39 +107,15 @@ function seasonBounds() {
 // clamp to [floor, ceil]. Returns true if the month actually changed.
 function stepMonth(delta) {
   const { floor, ceil } = seasonBounds();
-  let m = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1);
-  // Skip off-season months in the direction of travel.
-  while (isOffSeason(m) && monthCmp(m, floor) >= 0 && monthCmp(m, ceil) <= 0) {
-    m = new Date(m.getFullYear(), m.getMonth() + delta, 1);
-  }
+  // One step in the travel direction, then skip any off-season months the
+  // same way the bounds are derived. `stepUntilInSeason` won't run past the
+  // range because ceil/floor are themselves in-season, and the range check
+  // below rejects anything that overshoots.
+  const first = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1);
+  const m = stepUntilInSeason(first, delta);
   if (monthCmp(m, floor) < 0 || monthCmp(m, ceil) > 0) return false; // out of range
   currentMonth = m;
   return true;
-}
-
-// Build the availability lookup for one bungalow from the loaded bookings.
-// Returns { unavailable:Set<iso> } — an empty set when data is missing or
-// malformed, so the calendar renders everything as available. (Only
-// `unavailable` is needed: the display is a binary booked/free — the sheet's
-// `checkIn` turnover column is not rendered here.)
-function availabilityFor(bookings, key) {
-  const entry = bookings?.bungalows?.[key];
-  if (Array.isArray(entry)) {
-    // Legacy array shape (a schema regression, e.g. a downgraded
-    // fetch-bookings.mjs or a stale cached file). Fail SAFE for a booking
-    // site — treat as fully available — but warn so the drift is diagnosable
-    // rather than silently showing an all-open calendar. Mirrors booking.js.
-    console.warn(
-      `[avail-cal] ${key}: bookings.json is in the legacy array shape; treating as empty.`,
-    );
-    return { unavailable: new Set() };
-  }
-  if (!entry) {
-    return { unavailable: new Set() };
-  }
-  return {
-    unavailable: new Set(entry.unavailable ?? []),
-  };
 }
 
 // Render one calendar instance for the shared currentMonth.
@@ -282,15 +261,6 @@ export function initAvailabilityCalendars() {
   _seasonBounds = null; // re-derive floor/ceil (e.g. across a midnight/season rollover)
   currentMonth = seasonBounds().floor;
 
-  // The calendar containers carry `.reveal` (opacity:0 until the
-  // IntersectionObserver adds `.is-visible`). Because we populate them with
-  // JS *after* initReveal() has already observed the empty boxes, the observer
-  // can settle its decision against a collapsed 0-height container and never
-  // re-fire once content inflates the height — leaving the calendar stuck
-  // invisible. Force them visible here: they're always meant to show, and
-  // the fade-in isn't worth risking a permanently blank calendar.
-  roots.forEach((root) => root.classList.add('is-visible'));
-
   // Placeholder render (before data arrives) so the month grid is visible
   // immediately; availability classes get painted once bookings resolve.
   const emptyAvail = { unavailable: new Set() };
@@ -298,6 +268,12 @@ export function initAvailabilityCalendars() {
     instances.push({ root, key: root.dataset.bungalowKey, avail: emptyAvail });
   });
   renderAll();
+
+  // Register the (now-populated, real-height) `.reveal` containers with the
+  // reveal observer. We render FIRST so observeReveal measures the inflated
+  // box — registering while the container was an empty 0-height div is exactly
+  // what would leave it stuck invisible (see reveal.js:observeReveal).
+  roots.forEach((root) => observeReveal(root));
 
   loadBookings().then((bookings) => {
     instances.forEach((inst) => {

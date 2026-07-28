@@ -20,7 +20,6 @@
 // Worker requires Turnstile, which itself requires JS, so no-JS users
 // genuinely cannot post the form).
 
-import flatpickr from 'flatpickr';
 import { Bulgarian } from 'flatpickr/dist/l10n/bg.js';
 import { currentLocale } from './util/current-locale.js';
 
@@ -36,8 +35,9 @@ function fpLocale() {
   return FLATPICKR_LOCALES[currentLocale()] || 'default';
 }
 import { SITE_CONFIG } from './site-config.js';
-import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
+import { isOffSeason } from './season.js';
 import { parseIso } from './bookings-data.js';
+import { makeSeasonPicker } from './season-picker.js';
 
 // Stricter than HTML5's `type=email` (which accepts "a@b" with no TLD).
 // The form ships with `novalidate` so HTML5 enforcement is disabled by
@@ -278,13 +278,10 @@ export function initEnquiry() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const fpCheckin = flatpickr(checkinEl, {
+  const fpCheckin = makeSeasonPicker(checkinEl, {
     minDate: 'today',
-    maxDate: seasonMaxDate(),
-    disable: [isOffSeason],
     dateFormat: 'd/m/Y',
     locale: fpLocale(),
-    onReady: attachYearDropdown,
     onChange: (selected) => {
       if (selected[0]) {
         const d = new Date(selected[0]);
@@ -300,13 +297,10 @@ export function initEnquiry() {
     },
   });
 
-  const fpCheckout = flatpickr(checkoutEl, {
+  const fpCheckout = makeSeasonPicker(checkoutEl, {
     minDate: tomorrow,
-    maxDate: seasonMaxDate(),
-    disable: [isOffSeason],
     dateFormat: 'd/m/Y',
     locale: fpLocale(),
-    onReady: attachYearDropdown,
   });
 
   // URL-param pre-fill: `?villa=<slug>` populates the message textarea
