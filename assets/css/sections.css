@@ -344,6 +344,10 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
+  /* Centre the cards when they fit the row (desktop, 3 cards); `safe`
+     falls back to flex-start when they overflow (mobile) so the first
+     card isn't clipped in the horizontal scroll. */
+  justify-content: safe center;
 }
 
 .rooms__track::-webkit-scrollbar {
