@@ -375,6 +375,12 @@
    At <=540px the pill shrinks (font + padding) but keeps its labels
    visible — 'EN' and 'BG' are already 2ch, so the labels effectively
    ARE the icons. No sr-only fallback needed. */
+/* Language switcher — collapsed to a 44px circle showing ONLY the current
+   language (matches the .site-header__call phone circle beside it). On
+   hover/focus it grows into a pill revealing the OTHER language as a
+   clickable switch, exactly like the phone control expands to reveal the
+   number. The active language always sits first (see `order` below) so the
+   current locale is the face of the circle on both EN and BG pages. */
 .site-header__lang {
   display: inline-flex;
   align-items: stretch;
@@ -388,6 +394,11 @@
   font-weight: 500;
   letter-spacing: 0.04em;
   line-height: 1;
+  /* Collapsed width = a single 44px circle. Expands to fit both segments
+     on reveal; transitioning width (not the container's children alone)
+     keeps the border/rounded shape animating as one piece. */
+  width: 44px;
+  transition: width var(--t-fast);
 }
 
 .site-header__lang-seg {
@@ -399,40 +410,66 @@
   color: inherit;
   text-decoration: none;
   background: transparent;
-  transition: background var(--t-fast), color var(--t-fast);
+  white-space: nowrap;
+  transition: background var(--t-fast), color var(--t-fast),
+    max-width var(--t-fast), opacity var(--t-fast), padding var(--t-fast),
+    min-width var(--t-fast);
 }
 
-/* Seam between segments — fixed warm-brown alpha so a hovered inactive
-   segment doesn't turn its half of the seam near-white (H13). */
-.site-header__lang-seg + .site-header__lang-seg {
+/* Active segment = the always-visible circle face. `order: 0` pulls it to
+   the front regardless of DOM order (DOM is always EN-then-BG, so on /bg/
+   the active BG segment is the 2nd child — order flips it to the front).
+   Same warm-brown fill as .site-header__enquiries so it reads as the
+   current mode; its click is a no-op in lang.js, hence cursor:default. */
+.site-header__lang-seg:is(.is-active, [aria-current="true"]) {
+  order: 0;
+  background: #6f5e40;
+  color: var(--bg-light);
+  cursor: default;
+}
+
+/* Inactive segment = collapsed by default (max-width:0 + opacity:0, like
+   .site-header__call-number), revealed when the pill is hovered/focused.
+   overflow:hidden on the container clips it while collapsed. */
+.site-header__lang-seg:not(:is(.is-active, [aria-current="true"])) {
+  order: 1;
+  max-width: 0;
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  opacity: 0;
+}
+
+/* Reveal on hover OR focus-within so keyboard (tab) and touch (tap→focus)
+   users can reach the second language too — not hover-only. */
+.site-header__lang:hover,
+.site-header__lang:focus-within {
+  width: auto;
+}
+.site-header__lang:hover .site-header__lang-seg:not(:is(.is-active, [aria-current="true"])),
+.site-header__lang:focus-within .site-header__lang-seg:not(:is(.is-active, [aria-current="true"])) {
+  max-width: 6ch;
+  min-width: 44px;
+  padding-left: 0.9rem;
+  padding-right: 0.9rem;
+  opacity: 1;
+}
+
+/* Seam between the two segments once the pill is open. Placed on the
+   INACTIVE (revealed) segment's leading edge; fixed warm-brown alpha so it
+   doesn't wash out against either fill (H13). Hidden while collapsed
+   because the segment has zero width then. */
+.site-header__lang-seg:not(:is(.is-active, [aria-current="true"])) {
   border-left: 1px solid rgba(111, 94, 64, 0.35);
 }
 
-/* Hover only applies to the INACTIVE segment (H14). :is() collapses
-   the .is-active + [aria-current='true'] pair to one selector and
-   :not() keeps the hover styling from re-applying on the already-
-   active segment — the active fill is the same colour, so the
-   visual effect is nil, but the cursor:default and the redundant
-   rule block are both dropped. */
-.site-header__lang-seg:not(:is(.is-active, [aria-current="true"])):hover,
+/* Hover fill on the revealed (inactive) segment — same warm-brown as the
+   phone pill's hover so the affordance matches. */
+.site-header__lang:hover .site-header__lang-seg:not(:is(.is-active, [aria-current="true"])):hover,
 .site-header__lang-seg:not(:is(.is-active, [aria-current="true"])):focus-visible {
   background: #6f5e40;
   color: var(--bg-light);
   outline: none;
-}
-
-/* Active segment — same warm-brown as .site-header__enquiries so the
-   active language reads as "this is the current mode", not a hover state.
-   :is() collapses .is-active (JS-toggle) and [aria-current="true"]
-   (server-rendered) into one selector — the applyHead pill-rewriter
-   sets BOTH so a future refactor dropping either doesn't break the
-   look, but the rule body still lives in one place (H14). */
-.site-header__lang-seg:is(.is-active, [aria-current="true"]) {
-  background: #6f5e40;
-  color: var(--bg-light);
-  /* Non-interactive by convention — the click on the active segment is a
-     no-op in lang.js. cursor:default communicates that visually. */
-  cursor: default;
 }
 
 @media (max-width: 540px) {
@@ -450,13 +487,12 @@
      collapse is enough to share the row with the phone icon at 320px
      without pushing the brand under the hamburger. No sr-only trick
      needed; the labels ARE the icons. */
+  /* The lang switcher is now a single collapsed circle (one glyph), so the
+     old "shrink both segments to share the row" tightening is unneeded —
+     just nudge the font down a touch. The circle-grows-to-pill reveal is
+     unchanged; the base collapsed/reveal rules above still apply. */
   .site-header__lang {
     font-size: 0.8rem;
-  }
-
-  .site-header__lang-seg {
-    min-width: 38px;
-    padding: 0 0.65rem;
   }
 
   /* Tighten the header row itself so the 3-column grid (hamburger, brand,
