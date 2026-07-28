@@ -434,21 +434,6 @@
       </div>
     </footer>
 
-    <!-- Booking confirmation modal — shared by all three booking widgets.
-         The submit handler in booking.js reads the submitting form's hidden
-         input[name="bungalow"] and rewrites the title/body per bungalow, so
-         one modal serves all three. -->
-    <div class="modal" id="booking-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal__backdrop" data-modal-close></div>
-      <div class="modal__panel">
-        <button class="modal__close" type="button" aria-label="Close" data-modal-close>&times;</button>
-        <span class="eyebrow">Reservation request received</span>
-        <h3 id="modal-title">Thank you &mdash; we'll be in touch.</h3>
-        <p id="modal-body">A reservations specialist will follow up within twenty-four hours to confirm availability and tailor your stay.</p>
-        <button type="button" class="btn btn-primary" data-modal-close>Close</button>
-      </div>
-    </div>
-
     <script type="module" src="/assets/js/main.js"></script>
   </body>
 </html>

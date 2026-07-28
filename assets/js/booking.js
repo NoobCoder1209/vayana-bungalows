@@ -103,6 +103,14 @@ function setupEnquiryLinkForm(form) {
         const d = new Date(selected[0]);
         d.setDate(d.getDate() + 1);
         fpOut.set('minDate', d);
+        // If a check-out was already picked and now sits on/before the new
+        // check-in, clear it — set('minDate') moves the picker floor but does
+        // NOT drop an out-of-range selection, so without this the bar would
+        // still display (and forward to /enquiries/) a reversed date pair.
+        const out = fpOut.selectedDates[0];
+        if (out && out <= selected[0]) {
+          fpOut.clear();
+        }
       }
     },
   });

@@ -2,12 +2,10 @@
 //
 // Each `[data-avail-cal][data-bungalow-key="B1|B2|B3"]` node renders a
 // one-month grid that DISPLAYS (never lets you pick) that bungalow's
-// availability, coloured from bookings.json:
-//   - .is-booked        — an occupied night (in `unavailable`, not a check-in day)
-//   - .is-checkout-only  — a turnover day (in `unavailable` AND a check-in day):
-//                          the outgoing guest leaves, so it reads as "check-out only"
-//   - .is-past           — before today
-//   - .is-offseason      — outside the May..Sep open season
+// availability, coloured from bookings.json. Day states are binary:
+//   - .is-booked     — an occupied night (in `unavailable`)
+//   - .is-available  — a free, future, in-season night
+//   - .is-past       — before today (muted, no pill)
 //
 // All calendars on the page share ONE visible month. Paging any calendar's
 // prev/next arrow moves EVERY calendar to the same month (owner request:
@@ -90,11 +88,22 @@ function monthCmp(a, b) {
   return a.getFullYear() * 12 + a.getMonth() - (b.getFullYear() * 12 + b.getMonth());
 }
 
+// Memoized season bounds. floor/ceil are constant for a page session (they
+// derive from today's month + the fixed season ceiling), so compute the two
+// off-season-walk loops ONCE rather than on every render and every step.
+// initAvailabilityCalendars() resets this so a re-init re-derives them.
+let _seasonBounds = null;
+function seasonBounds() {
+  if (!_seasonBounds) {
+    _seasonBounds = { floor: seasonFloorMonth(), ceil: seasonCeilMonth() };
+  }
+  return _seasonBounds;
+}
+
 // Step currentMonth by whole months, skipping fully off-season months, and
 // clamp to [floor, ceil]. Returns true if the month actually changed.
 function stepMonth(delta) {
-  const floor = seasonFloorMonth();
-  const ceil = seasonCeilMonth();
+  const { floor, ceil } = seasonBounds();
   let m = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1);
   // Skip off-season months in the direction of travel.
   while (isOffSeason(m) && monthCmp(m, floor) >= 0 && monthCmp(m, ceil) <= 0) {
@@ -106,8 +115,10 @@ function stepMonth(delta) {
 }
 
 // Build the availability lookup for one bungalow from the loaded bookings.
-// Returns { unavailable:Set<iso>, checkIn:Set<iso> } — empty sets when data
-// is missing/malformed so the calendar renders everything as available.
+// Returns { unavailable:Set<iso> } — an empty set when data is missing or
+// malformed, so the calendar renders everything as available. (Only
+// `unavailable` is needed: the display is a binary booked/free — the sheet's
+// `checkIn` turnover column is not rendered here.)
 function availabilityFor(bookings, key) {
   const entry = bookings?.bungalows?.[key];
   if (Array.isArray(entry)) {
@@ -118,14 +129,13 @@ function availabilityFor(bookings, key) {
     console.warn(
       `[avail-cal] ${key}: bookings.json is in the legacy array shape; treating as empty.`,
     );
-    return { unavailable: new Set(), checkIn: new Set() };
+    return { unavailable: new Set() };
   }
   if (!entry) {
-    return { unavailable: new Set(), checkIn: new Set() };
+    return { unavailable: new Set() };
   }
   return {
     unavailable: new Set(entry.unavailable ?? []),
-    checkIn: new Set(entry.checkIn ?? []),
   };
 }
 
@@ -143,16 +153,29 @@ function renderInstance(inst) {
   // JS getDay(): 0=Sun..6=Sat. Map to Monday-first index 0..6.
   const firstWeekdayMon = (monthStart.getDay() + 6) % 7;
 
-  const floor = seasonFloorMonth();
-  const ceil = seasonCeilMonth();
+  // Season floor/ceil are constant for the page session — read the memoized
+  // values instead of re-walking the off-season loops on every render.
+  const { floor, ceil } = seasonBounds();
   const atFloor = monthCmp(currentMonth, floor) <= 0;
   const atCeil = monthCmp(currentMonth, ceil) >= 0;
 
   const weekdays = weekdayShortNames();
 
-  const cells = [];
+  // One date formatter (and one locale read) per render, reused for every day
+  // cell's aria-label — not a fresh Intl.DateTimeFormat per cell.
+  const dayFormatter = new Intl.DateTimeFormat(currentLocale(), {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  // Build the day cells, grouped into week rows. The grid uses real ARIA grid
+  // semantics (grid → row → gridcell) so the per-cell aria-label (which carries
+  // the booked/available/past state) is actually announced — an aria-label on
+  // a roleless <div> is ignored by most screen readers.
+  const cellHtml = [];
   for (let i = 0; i < firstWeekdayMon; i += 1) {
-    cells.push('<div class="avail-cal__day avail-cal__day--blank" aria-hidden="true"></div>');
+    cellHtml.push('<div class="avail-cal__day avail-cal__day--blank" role="gridcell" aria-hidden="true"></div>');
   }
   for (let day = 1; day <= daysInMonth; day += 1) {
     const date = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
@@ -174,28 +197,33 @@ function renderInstance(inst) {
       classes.push('is-available');
     }
 
-    const label = `${new Intl.DateTimeFormat(currentLocale(), {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(date)} — ${stateLabel}`;
+    const label = `${dayFormatter.format(date)} — ${stateLabel}`;
 
-    cells.push(
-      `<div class="${classes.join(' ')}" aria-label="${label}"`
+    cellHtml.push(
+      `<div class="${classes.join(' ')}" role="gridcell" aria-label="${label}"`
         + `${stateLabel === 'available' ? '' : ' aria-disabled="true"'}>`
         + `<span aria-hidden="true">${day}</span></div>`,
     );
   }
 
+  // Chunk the flat cell list into 7-cell week rows for role="row".
+  const rows = [];
+  for (let i = 0; i < cellHtml.length; i += 7) {
+    rows.push(`<div class="avail-cal__week" role="row">${cellHtml.slice(i, i + 7).join('')}</div>`);
+  }
+  const daysMarkup = rows.join('');
+
   const weekdayRow = weekdays
-    .map((w) => `<div class="avail-cal__weekday" aria-hidden="true">${w}</div>`)
+    .map((w) => `<div class="avail-cal__weekday" role="columnheader">${w}</div>`)
     .join('');
+
+  const monthName = monthLabel(currentMonth);
 
   root.innerHTML = `
     <div class="avail-cal__header">
       <span class="avail-cal__title">
         <span class="avail-cal__eyebrow">Availability</span>
-        <span class="avail-cal__month" aria-live="polite">${monthLabel(currentMonth)}</span>
+        <span class="avail-cal__month" aria-live="polite">${monthName}</span>
       </span>
       <span class="avail-cal__nav-group">
         <button class="avail-cal__nav avail-cal__nav--prev" type="button"
@@ -208,15 +236,18 @@ function renderInstance(inst) {
         </button>
       </span>
     </div>
-    <!-- Read-only display, not an interactive grid: we deliberately do NOT use
-         role="grid"/gridcell (which would require full row/cell navigation
-         semantics). Each day cell carries a descriptive aria-label
-         ("15 August 2026 — already booked"), and the weekday header letters
-         are aria-hidden decoration. Screen readers read the cells as a plain
-         labelled list of days, which is the right model for a display. -->
-    <div class="avail-cal__grid">
-      <div class="avail-cal__weekdays">${weekdayRow}</div>
-      <div class="avail-cal__days">${cells.join('')}</div>
+    <!-- Read-only availability display using ARIA grid semantics so each day
+         cell's aria-label ("15 August 2026 — already booked") is announced:
+         grid → row → gridcell. The visible day number and weekday letters are
+         decorative (the gridcell's aria-label carries the full date + state). -->
+    <div class="avail-cal__grid" role="grid" aria-label="${monthName} availability">
+      <div class="avail-cal__weekdays" role="row">${weekdayRow}</div>
+      <div class="avail-cal__days">${daysMarkup}</div>
+    </div>
+    <div class="avail-cal__key" aria-hidden="true">
+      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--free"></span>Available</span>
+      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--booked"></span>Booked</span>
+      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--past"></span>Past</span>
     </div>
   `;
 
@@ -248,7 +279,8 @@ export function initAvailabilityCalendars() {
   // future re-init) rebuilds cleanly instead of stacking duplicate instances
   // on the same roots (which would double-bind arrow handlers → double-step).
   instances.length = 0;
-  currentMonth = seasonFloorMonth();
+  _seasonBounds = null; // re-derive floor/ceil (e.g. across a midnight/season rollover)
+  currentMonth = seasonBounds().floor;
 
   // The calendar containers carry `.reveal` (opacity:0 until the
   // IntersectionObserver adds `.is-visible`). Because we populate them with
@@ -261,7 +293,7 @@ export function initAvailabilityCalendars() {
 
   // Placeholder render (before data arrives) so the month grid is visible
   // immediately; availability classes get painted once bookings resolve.
-  const emptyAvail = { unavailable: new Set(), checkIn: new Set() };
+  const emptyAvail = { unavailable: new Set() };
   roots.forEach((root) => {
     instances.push({ root, key: root.dataset.bungalowKey, avail: emptyAvail });
   });

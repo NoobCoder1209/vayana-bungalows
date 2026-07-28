@@ -1284,9 +1284,15 @@
 }
 
 .avail-cal__days {
+  display: flex;
+  flex-direction: column;
+  row-gap: 6px;
+}
+
+/* Each week is the 7-column row (role="row"); .avail-cal__days stacks them. */
+.avail-cal__week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  row-gap: 6px;
 }
 
 .avail-cal__weekday {
@@ -1347,6 +1353,46 @@
 .avail-cal__day.is-past {
   color: var(--text-muted);
   opacity: 0.45;
+}
+
+/* Day legend — dots + labels, centred at the bottom of each calendar. Sits
+   inside the calendar card (rendered by availability-calendar.js after the
+   grid) so it aligns to the calendar width and survives month paging. */
+.avail-cal__key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: center;
+  margin-top: var(--space-4);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.avail-cal__key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.avail-cal__key-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+}
+
+.avail-cal__key-dot--free {
+  background: var(--avail-free-bg);
+  border-color: var(--avail-free-border);
+}
+
+.avail-cal__key-dot--booked {
+  background: var(--avail-booked-bg);
+  border-color: var(--avail-booked-border);
+}
+
+.avail-cal__key-dot--past {
+  background: rgba(57, 57, 57, 0.12);
 }
 
 /* Long-form description */
@@ -1633,15 +1679,14 @@
   border-color: transparent var(--primary) transparent transparent;
 }
 
-/* /stay/ availability legend — recolor swatches to match the design #9
-   pill calendar below: available = soft sage ring (no fill, like the calm
-   unfilled available pills), booked = soft rose pill, turnover = solid tan
-   pill. Scoped to the `--availability` modifier so the (legacy) detail-page
-   booking legends, which key off the cream/strike flatpickr day styles, are
-   unaffected. */
+/* /stay/ availability legend — recolor swatches to match the pill calendar
+   below: available = soft sage pill, booked = soft rose pill. Binary states
+   only (no turnover). Scoped to the `--availability` modifier so the (legacy)
+   detail-page booking legends, which key off the cream/strike flatpickr day
+   styles, are unaffected. */
 .booking-legend--availability .booking-legend__swatch--available {
-  background: var(--bg-light);
-  border: 1px solid var(--avail-free);
+  background: var(--avail-free-bg);
+  border: 1px solid var(--avail-free-border);
 }
 
 .booking-legend--availability .booking-legend__swatch--booked {
@@ -2086,115 +2131,6 @@
   max-width: 640px;
   margin: 0;
   opacity: 0.94;
-}
-
-/* Prose intro (above the cards). Section-cream background gives the
-   page a calm reading band between the dark hero and the white card
-   grid. */
-.stay-intro {
-  background: var(--bg-cream);
-  padding: var(--section-pad-y) 0;
-  color: var(--text-dark);
-}
-
-.stay-intro__inner {
-  max-width: 720px;
-  /* Center the prose under the centered cards section below it. */
-  margin: 0 auto;
-  text-align: center;
-}
-
-.stay-intro__lede {
-  font-family: var(--font-heading);
-  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
-  line-height: 1.5;
-  margin-bottom: var(--space-4);
-  color: var(--text-dark);
-}
-
-.stay-intro p {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: var(--text-muted);
-  margin-bottom: var(--space-3);
-}
-
-.stay-intro p:last-child {
-  margin-bottom: 0;
-}
-
-/* Card grid — 3 columns on wide, 2 on tablet, 1 on mobile. Important:
-   .room-card on the homepage uses `flex: 0 0 auto` + an explicit
-   `width: clamp(...)` because it lives inside a horizontal flex
-   scroller. In a CSS grid, `flex` shorthand is ignored, but the
-   explicit `width` would override the grid track sizing. Reset it
-   here so grid columns can size the cards naturally. */
-.stay-cards {
-  padding: var(--section-pad-y) 0;
-  background: var(--bg-light);
-}
-
-.stay-cards__head {
-  text-align: center;
-  max-width: 640px;
-  margin: 0 auto var(--space-6);
-}
-
-.stay-cards__head h2 {
-  margin-bottom: 0;
-}
-
-.stay-cards__grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-5);
-}
-
-.stay-cards__grid .room-card {
-  /* Reset the homepage scroller-specific width so the grid track owns
-     the card's horizontal size. */
-  width: auto;
-  flex: initial;
-}
-
-/* The .room-card__body rules above style <h4> for the homepage
-   scroller. On /stay/ the cards use <h3> (proper heading-level
-   nesting: page <h1>, section <h2>, card <h3>). The visual weight
-   we need is identical to the <h4> rule above (line 379); we don't
-   re-declare font-family because base.css's `h1, h2, h3, h4, h5, h6`
-   rule already sets var(--font-heading) globally (round-1 review
-   finding I3; round-2 R2-3 swaps the line-number reference for a
-   selector reference because comment line numbers rot). Scoped to
-   the grid so the homepage <h4> rules stay untouched. */
-.stay-cards__grid .room-card__body h3 {
-  margin-bottom: 0.4rem;
-  font-size: var(--fs-h5);
-}
-
-/* .room-card__lede is intentionally page-scoped under .stay-cards__grid:
-   the homepage's .room-card pattern uses only an h4 + price + CTA, so
-   "lede" wouldn't ever render unstyled there. If this class moves
-   anywhere outside /stay/ later, lift the rule out of the grid scope.
-   Round-1 review finding N1. */
-.stay-cards__grid .room-card__lede {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin-bottom: 0.6rem;
-  padding: 0 var(--space-2);
-}
-
-@media (max-width: 960px) {
-  .stay-cards__grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .stay-cards__grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
-  }
 }
 
 /* ========== Destination page (issue #13) ========== */
