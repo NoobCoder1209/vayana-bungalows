@@ -65,7 +65,9 @@ export const SITE_CONFIG = {
     enquiry: 'https://vayana-enquiries.vayana.workers.dev/submit',
     turnstileSiteKey: '0x4AAAAAADpxs0HIUft5BY7_',
   },
-  // The heart glyph is a literal U+2764 — must match `&#10084;` in HTML so
-  // the textContent rewrite at hydration is a no-op (no visible flicker).
-  copyright: '© 2026 Made with ❤ by Vayana di Mare',
+  // The heart glyph is U+2764 followed by the U+FE0F emoji variation
+  // selector (❤️) so it renders in red emoji presentation, matching the
+  // home page's i18n copyright string. Must match `&#10084;&#65039;` in HTML
+  // so the textContent rewrite at hydration is a no-op (no visible flicker).
+  copyright: '© 2026 Made with ❤️ by Vayana di Mare',
 };
