@@ -337,6 +337,7 @@
   background: var(--bg-light);
   color: var(--text-dark);
   border: 1px solid var(--border);
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
