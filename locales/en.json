@@ -42,9 +42,7 @@
       "copyright": "© 2026 Made with ❤️ by {credit}",
       "license_prefix": "License number:"
     },
-    "video_modal_aria": "Resort video",
-    "close_aria": "Close",
-    "close_video_aria": "Close video"
+    "close_aria": "Close"
   },
   "home": {
     "meta": {
@@ -56,12 +54,6 @@
       "eyebrow": "Welcome to Vayana Bungalows",
       "title_html": "Boutique Bungalows<br />on the Black Sea",
       "subtitle": "Where the pines meet the coast and the days run on tide and appetite."
-    },
-    "cta_strip": {
-      "eyebrow": "Reservations open",
-      "title": "Choose your bungalow, then book your stay.",
-      "body": "Twenty-eight bungalows across the resort, each with its own character. Pick the one that calls you.",
-      "cta": "Explore the bungalows"
     },
     "intro": {
       "eyebrow": "Welcome to Vayana Bungalows",
@@ -84,10 +76,6 @@
       "img6_alt": "Spa pavilion at dusk",
       "img7_alt": "Sailboat anchored offshore",
       "img8_alt": "Cocktail at the beach bar"
-    },
-    "video_band": {
-      "aria": "Resort video",
-      "play_aria": "Play resort video"
     },
     "rooms": {
       "eyebrow": "Enjoy a world-class stay",
@@ -140,12 +128,6 @@
       "modal_title": "Thank you — you’re on the list.",
       "modal_body": "We’ll send a quiet note when there’s something worth sharing — no more than four a year.",
       "modal_close": "Close"
-    },
-    "contact": {
-      "heading_sr": "Contact",
-      "address_eyebrow": "Address",
-      "phone_eyebrow": "Phone",
-      "email_eyebrow": "Email"
     }
   },
   "stay": {

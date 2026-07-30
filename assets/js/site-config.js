@@ -15,9 +15,10 @@ export const SITE_CONFIG = {
   email: { display: 'contact@vayanabungalows.com', href: 'mailto:contact@vayanabungalows.com' },
   // Address has two display levels:
   //   - short:  used in the compact footer column ("Tsarevo, Bulgaria")
-  //   - full:   used in the dedicated #contact section (street + city + country)
-  // Splitting them up front so the contact section can show the street
-  // line without bloating the footer copy. If ops need a second
+  //   - full:   used by the contacts / destination / privacy / terms /
+  //             cancellation pages (street + city + country)
+  // Splitting them up front so those pages can show the street line
+  // without bloating the footer copy. If ops need a second
   // street-and-city line, add address.line3 here and reference it in HTML.
   //
   // directionsUrl + mapEmbed are the single source of truth for

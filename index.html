@@ -195,18 +195,6 @@
         </div>
       </section>
 
-      <!-- 4. Book-your-stay CTA strip -->
-      <section class="cta-strip" aria-labelledby="cta-strip-title">
-        <div class="container cta-strip__inner">
-          <div class="cta-strip__copy">
-            <span class="eyebrow" data-i18n="home.cta_strip.eyebrow">Reservations open</span>
-            <h2 id="cta-strip-title" data-i18n="home.cta_strip.title">Choose your bungalow, then book your stay.</h2>
-            <p data-i18n="home.cta_strip.body">Twenty-eight bungalows across the resort, each with its own character. Pick the one that calls you.</p>
-          </div>
-          <a href="#rooms" class="btn btn-primary" data-i18n="home.cta_strip.cta">Explore the bungalows</a>
-        </div>
-      </section>
-
       <!-- 5. Intro split -->
       <section class="intro section" id="about" aria-labelledby="intro-title">
         <div class="container intro__grid">
@@ -253,19 +241,6 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
           </button>
         </div>
-      </section>
-
-      <!-- 7. Parallax video band -->
-      <section class="video-band"
-               data-i18n-attr="aria-label:home.video_band.aria"
-               aria-label="Resort video">
-        <div class="video-band__media" data-parallax="0.25"></div>
-        <div class="video-band__overlay"></div>
-        <button class="video-band__play" type="button"
-                data-i18n-attr="aria-label:home.video_band.play_aria"
-                aria-label="Play resort video" data-video="https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=1">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        </button>
       </section>
 
       <!-- 8 + 9. Rooms intro + grid -->
@@ -432,41 +407,6 @@
           <button type="button" class="btn btn-primary" data-modal-close data-i18n="home.newsletter.modal_close">Close</button>
         </div>
       </div>
-
-      <!-- 16. Contact info row.
-           Phone / email / address all hydrate from assets/js/site-config.js
-           via [data-site-config*] attributes (#9). The phone and email are
-           shared with the footer + header / drawer; the street address is
-           a fuller version of the footer's line1/line2 (added to config as
-           address.street + address.country). -->
-      <section class="contact section" id="contact" aria-labelledby="contact-title">
-        <h2 id="contact-title" class="sr-only" data-i18n="home.contact.heading_sr">Contact</h2>
-        <div class="container contact__grid">
-          <div class="contact__col">
-            <span class="eyebrow" data-i18n="home.contact.address_eyebrow">Address</span>
-            <p>
-              <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span><br />
-              <span data-site-config="address.country">Bulgaria</span>
-            </p>
-          </div>
-          <div class="contact__col">
-            <span class="eyebrow" data-i18n="home.contact.phone_eyebrow">Phone</span>
-            <p>
-              <a data-site-config-href="phone.href" href="tel:+359888888888">
-                <span data-site-config="phone.display">+359 88 888 8888</span>
-              </a>
-            </p>
-          </div>
-          <div class="contact__col">
-            <span class="eyebrow" data-i18n="home.contact.email_eyebrow">Email</span>
-            <p>
-              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com">
-                <span data-site-config="email.display">contact@vayanabungalows.com</span>
-              </a>
-            </p>
-          </div>
-        </div>
-      </section>
     </main>
 
     <!-- 17. Footer -->
@@ -546,17 +486,6 @@
         </div>
       </div>
     </footer>
-
-    <!-- Video lightbox -->
-    <div class="video-modal" id="video-modal" hidden role="dialog" aria-modal="true"
-         data-i18n-attr="aria-label:common.video_modal_aria"
-         aria-label="Resort video">
-      <div class="video-modal__backdrop" data-video-close></div>
-      <button class="video-modal__close" type="button"
-              data-i18n-attr="aria-label:common.close_video_aria"
-              aria-label="Close video" data-video-close>&times;</button>
-      <div class="video-modal__frame" id="video-modal-frame"></div>
-    </div>
 
     <script type="module" src="/assets/js/main.js"></script>
   </body>
