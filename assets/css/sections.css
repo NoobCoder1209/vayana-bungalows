@@ -212,6 +212,10 @@
   min-height: 104px;
   padding: 0 2.25rem;
   font-size: 1rem;
+  /* Keep the Book Now button sharp-cornered (it spans the full height of the
+     booking bar and reads better squared off), overriding the global
+     --radius-button. */
+  border-radius: 0;
 }
 
 @media (max-width: 960px) {
@@ -253,6 +257,7 @@
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
+  border-radius: var(--radius-card);
 }
 
 @media (max-width: 768px) {
@@ -291,6 +296,7 @@
   scroll-snap-align: start;
   overflow: hidden;
   position: relative;
+  border-radius: var(--radius-card);
 }
 
 .gallery__item img {
@@ -371,6 +377,7 @@
   display: block;
   overflow: hidden;
   aspect-ratio: 1 / 1;
+  border-radius: var(--radius-card);
 }
 
 .room-card__img img {
@@ -529,6 +536,7 @@
   position: absolute;
   inset: 0;
   border: 1px solid var(--primary);
+  border-radius: var(--radius-card);
   transform: translate(18px, 18px);
   z-index: 0;
   transition: transform var(--t-base);
@@ -544,6 +552,7 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+  border-radius: var(--radius-card);
   transition: transform var(--t-base);
 }
 
@@ -597,8 +606,15 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
-  border-top: 1px solid var(--border-soft);
-  border-left: 1px solid var(--border-soft);
+  /* Full outer border so all four rounded corners are drawn by the container.
+     The tiles draw their right/bottom seams for the INTERNAL grid lines only;
+     the seam borders on the outer edges are dropped per column-count (see the
+     .service-tile:nth-* rules below, scoped by breakpoint) so they don't
+     double up with this container border. overflow:hidden clips the tile
+     content to the rounded box. */
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  overflow: hidden;
 }
 
 .service-tile {
@@ -607,6 +623,23 @@
   border-bottom: 1px solid var(--border-soft);
   text-align: center;
   transition: background var(--t-fast);
+}
+
+/* Drop the seam border on the outer edges so it doesn't double up with the
+   container's rounded border (the "two lines at the right corner" artifact).
+   Scoped per column-count so it stays correct across the responsive
+   breakpoints below. These default rules are scoped to min-width:769px (the
+   3-column range) — WITHOUT the media guard their (0,2,0) specificity would
+   beat the plain-`.service-tile` seam-restore in the ≤768px/≤480px blocks
+   (media queries add no specificity), leaving missing internal seams on
+   mobile. */
+@media (min-width: 769px) {
+  .service-tile:nth-child(3n) {
+    border-right: 0; /* right column — container draws the right edge */
+  }
+  .service-tile:nth-last-child(-n + 3) {
+    border-bottom: 0; /* bottom row (last 3) — container draws the bottom edge */
+  }
 }
 
 .service-tile:hover {
@@ -629,15 +662,38 @@
   margin: 0;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 481px) and (max-width: 768px) {
   .services__grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  /* Re-derive the outer-edge border resets for a 2-column layout: restore
+     all seams first, then drop the right column (2n) and bottom row (last 2).
+     Scoped with a min-width lower bound so these (0,2,0) nth rules don't bleed
+     into the 1-column range below (where they'd zero tile 5's bottom seam). */
+  .service-tile {
+    border-right: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .service-tile:nth-child(2n) {
+    border-right: 0;
+  }
+  .service-tile:nth-last-child(-n + 2) {
+    border-bottom: 0;
   }
 }
 
 @media (max-width: 480px) {
   .services__grid {
     grid-template-columns: 1fr;
+  }
+  /* Single column: no vertical seams; only the last tile drops its bottom
+     border (the container draws the bottom edge). */
+  .service-tile {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .service-tile:last-child {
+    border-bottom: 0;
   }
 }
 
@@ -789,6 +845,10 @@
   gap: 0;
   background: var(--bg-light);
   padding: 0;
+  /* Round the whole white bar (input + Subscribe button) as one pill; overflow
+     clips the flush input/button to the rounded container. */
+  border-radius: var(--radius-card);
+  overflow: hidden;
 }
 
 .newsletter__form input[type="email"] {
@@ -811,6 +871,10 @@
   min-height: 56px;
   padding: 0 1.75rem;
   flex-shrink: 0;
+  /* Square the button's own corners; the rounded .newsletter__form container
+     (overflow:hidden) supplies the rounded RIGHT edge, while the LEFT edge
+     stays square where it meets the email input. */
+  border-radius: 0;
 }
 
 /* Honeypot: invisible to humans, present in the DOM for naive bots.
@@ -1075,6 +1139,7 @@
 .bungalow-split__photo {
   margin: 0;
   overflow: hidden;
+  border-radius: var(--radius-card);
 }
 
 .bungalow-split__photo img {
@@ -1356,6 +1421,7 @@
   padding: var(--space-3);
   background: var(--bg-light);
   border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
 }
 
 .amenity svg {
@@ -2150,6 +2216,7 @@
      that it doesn't look incidental next to the text column. */
   aspect-ratio: 4 / 3;
   overflow: hidden;
+  border-radius: var(--radius-card);
 }
 
 .destination-guide__photo img {
@@ -2356,6 +2423,7 @@
   padding: var(--space-6) var(--space-4);
   background: var(--bg-cream);
   border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
   /* Only border-color animates on hover/focus-within — `transform` was
      in this transition list initially but never animated. Round-2
      review finding N-C. */

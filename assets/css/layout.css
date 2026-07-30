@@ -858,6 +858,7 @@ html.no-js .site-header__menu {
   width: 40px;
   height: 40px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-card);
   color: var(--text-light);
   transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
 }
