@@ -15,13 +15,70 @@
   overflow: hidden;
 }
 
-.hero__media {
+/* Hero photo carousel. Eight full-bleed slides stacked absolutely; JS
+   (hero-carousel.js) rotates them every ~3s. The active slide sits at
+   translateX(0); the rest wait offscreen-right. On advance, the outgoing
+   slide moves to -(100% + gap) and the incoming from +(100% + gap) → 0, so
+   both travel left together like a filmstrip with a thin white seam between
+   them. --hero-gap is that seam (5px); the white shows because .hero__carousel
+   is painted white behind the slides. Same cover/centre framing as the old
+   single background-image. */
+.hero__carousel {
   position: absolute;
   inset: 0;
-  background-image: url('../img/hero-beach.jpg');
-  background-size: cover;
-  background-position: center;
   z-index: 0;
+  overflow: hidden;
+  background: #fff;
+  --hero-gap: 5px;
+}
+
+.hero__slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  /* Default resting position: offscreen to the right (+gap), invisible to
+     the slide flow until JS promotes it. */
+  transform: translateX(calc(100% + var(--hero-gap)));
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* The slide currently on screen. */
+.hero__slide.is-active {
+  transform: translateX(0);
+}
+
+/* The slide leaving to the left as a new one enters. */
+.hero__slide.is-leaving {
+  transform: translateX(calc(-100% - var(--hero-gap)));
+}
+
+/* Instant snap back to the offscreen-right rest position after a slide-out,
+   with NO transition — otherwise removing .is-leaving would animate the slide
+   left→right across the whole viewport (a visible stray motion, most obvious
+   at the 8→1 wrap). JS adds this for one frame while it resets position. */
+.hero__slide.is-resetting {
+  transition: none;
+  transform: translateX(calc(100% + var(--hero-gap)));
+}
+
+/* Reduced motion: no filmstrip slide — the active slide simply appears,
+   others stay hidden. hero-carousel.js also skips the animation timing and
+   does an instant swap when reduce is set. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__slide {
+    transition: none;
+    transform: translateX(100%);
+  }
+  .hero__slide.is-active {
+    transform: translateX(0);
+  }
+  .hero__slide.is-leaving {
+    transform: translateX(100%);
+  }
 }
 
 .hero__overlay {

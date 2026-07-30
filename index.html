@@ -29,7 +29,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
-    <link rel="preload" as="image" href="/assets/img/hero-beach.jpg" />
+    <link rel="preload" as="image" href="/assets/img/hero-1.jpg" fetchpriority="high" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <link rel="stylesheet" href="/assets/css/tokens.css" />
     <link rel="stylesheet" href="/assets/css/base.css" />
@@ -177,7 +177,21 @@
     <main id="main">
       <!-- 3. Hero -->
       <section class="hero" aria-labelledby="hero-title">
-        <div class="hero__media"></div>
+        <!-- Auto-rotating photo carousel (decorative — the hero's meaning
+             lives in the h1/eyebrow/sub below). Slide 1 loads eagerly so
+             first paint is instant; 2–8 lazy-load in the background while
+             the earlier slides are on screen. Rotation + slide animation
+             owned by assets/js/hero-carousel.js. -->
+        <div class="hero__carousel" data-hero-carousel aria-hidden="true">
+          <img class="hero__slide is-active" src="/assets/img/hero-1.jpg" alt="" fetchpriority="high" />
+          <img class="hero__slide" src="/assets/img/hero-2.jpg" alt="" loading="lazy" />
+          <img class="hero__slide" src="/assets/img/hero-3.jpg" alt="" loading="lazy" />
+          <img class="hero__slide" src="/assets/img/hero-4.jpg" alt="" loading="lazy" />
+          <img class="hero__slide" src="/assets/img/hero-5.jpg" alt="" loading="lazy" />
+          <img class="hero__slide" src="/assets/img/hero-6.jpg" alt="" loading="lazy" />
+          <img class="hero__slide" src="/assets/img/hero-7.jpg" alt="" loading="lazy" />
+          <img class="hero__slide" src="/assets/img/hero-8.jpg" alt="" loading="lazy" />
+        </div>
         <div class="hero__overlay"></div>
         <div class="container hero__content">
           <span class="eyebrow eyebrow--light" data-i18n="home.hero.eyebrow">Welcome to Vayana Bungalows</span>
