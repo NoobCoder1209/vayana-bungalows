@@ -1,6 +1,7 @@
 import { initHeader } from './header.js';
 import { initLang } from './lang.js';
 import { initReveal } from './reveal.js';
+import { initHeroCarousel } from './hero-carousel.js';
 import { initParallax } from './parallax.js';
 import { initSliders } from './slider.js';
 import { initBooking } from './booking.js';
@@ -19,6 +20,7 @@ const run = () => {
   initSiteConfig();
   initHeader();
   initLang();
+  initHeroCarousel();
   initReveal();
   initParallax();
   initSliders();
