@@ -607,9 +607,11 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
   /* Full outer border so all four rounded corners are drawn by the container.
-     The tiles still draw their right/bottom seams for the internal grid lines;
-     overflow:hidden clips the outermost tile borders to the rounded box (they
-     sit on the same 1px line as the container border, so no visible doubling). */
+     The tiles draw their right/bottom seams for the INTERNAL grid lines only;
+     the seam borders on the outer edges are dropped per column-count (see the
+     .service-tile:nth-* rules below, scoped by breakpoint) so they don't
+     double up with this container border. overflow:hidden clips the tile
+     content to the rounded box. */
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-card);
   overflow: hidden;
@@ -626,12 +628,18 @@
 /* Drop the seam border on the outer edges so it doesn't double up with the
    container's rounded border (the "two lines at the right corner" artifact).
    Scoped per column-count so it stays correct across the responsive
-   breakpoints below. Default = 3 columns. */
-.service-tile:nth-child(3n) {
-  border-right: 0; /* right column — container draws the right edge */
-}
-.service-tile:nth-last-child(-n + 3) {
-  border-bottom: 0; /* bottom row (last 3) — container draws the bottom edge */
+   breakpoints below. These default rules are scoped to min-width:769px (the
+   3-column range) — WITHOUT the media guard their (0,2,0) specificity would
+   beat the plain-`.service-tile` seam-restore in the ≤768px/≤480px blocks
+   (media queries add no specificity), leaving missing internal seams on
+   mobile. */
+@media (min-width: 769px) {
+  .service-tile:nth-child(3n) {
+    border-right: 0; /* right column — container draws the right edge */
+  }
+  .service-tile:nth-last-child(-n + 3) {
+    border-bottom: 0; /* bottom row (last 3) — container draws the bottom edge */
+  }
 }
 
 .service-tile:hover {
@@ -654,12 +662,14 @@
   margin: 0;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 481px) and (max-width: 768px) {
   .services__grid {
     grid-template-columns: repeat(2, 1fr);
   }
   /* Re-derive the outer-edge border resets for a 2-column layout: restore
-     all seams first, then drop the right column (2n) and bottom row (last 2). */
+     all seams first, then drop the right column (2n) and bottom row (last 2).
+     Scoped with a min-width lower bound so these (0,2,0) nth rules don't bleed
+     into the 1-column range below (where they'd zero tile 5's bottom seam). */
   .service-tile {
     border-right: 1px solid var(--border-soft);
     border-bottom: 1px solid var(--border-soft);
