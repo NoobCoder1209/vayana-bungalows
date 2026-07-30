@@ -640,35 +640,7 @@
   }
 }
 
-/* × close button sits top-right of its OWN row above the brand, so the
-   wordmark can use the full panel width without colliding with the ×.
-   Rendered as a flex item at the top of the column (order: -1 in DOM
-   already since it's first in HTML). 44×44 hit target meets WCAG 2.5.5. */
-.primary-nav__close {
-  align-self: flex-end;
-  margin-bottom: var(--space-3);
-  width: 44px;
-  height: 44px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 50%;
-  color: inherit;
-  font-size: 1.75rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  transition: border-color var(--t-fast), background-color var(--t-fast);
-}
-
-.primary-nav__close:hover,
-.primary-nav__close:focus-visible {
-  border-color: rgba(0, 0, 0, 0.15);
-  background-color: rgba(0, 0, 0, 0.03);
-  outline: none;
-}
-
-/* Brand wordmark sits below the × row on its own line. No horizontal
-   collision with the × anymore, so no reserved padding-right. */
+/* Brand wordmark sits at the top of the drawer on its own line. */
 .primary-nav__brand {
   display: block;
   margin: 0 0 var(--space-6);
