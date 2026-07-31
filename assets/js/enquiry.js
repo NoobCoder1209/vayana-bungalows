@@ -85,7 +85,6 @@ const DATE_ERROR_MSG = 'Please pick check-in and check-out dates.';
 const DATE_ORDER_ERROR_MSG = 'Check-out must be after check-in.';
 const PAST_DATE_ERROR_MSG = 'Check-in cannot be in the past.';
 const MESSAGE_TOO_LONG_MSG = 'Your message is too long (max 2000 characters).';
-const MESSAGE_ERROR_MSG = 'Please tell us a bit about your stay.';
 // The consent label on /enquiries/ links to /privacy/ (shipped in #16)
 // and reads "I accept the Privacy Policy and consent to being contacted
 // by Vayana Bungalows regarding my enquiry." The error string therefore
@@ -592,16 +591,11 @@ export function initEnquiry() {
       return;
     }
 
-    // Message — required, capped at MAX_MESSAGE_LEN.
-    // The textarea has maxlength=2000 in HTML, but DevTools can drop
-    // that attribute, so we re-check length at submit time. Empty is
-    // rejected here (client-side) and again in the Worker.
+    // Message — OPTIONAL. Empty is allowed; only enforce the length cap
+    // when the guest actually typed something. The textarea has
+    // maxlength=2000 in HTML, but DevTools can drop that attribute, so we
+    // re-check length at submit time.
     const messageVal = (message.value || '');
-    if (!messageVal.trim()) {
-      showError(MESSAGE_ERROR_MSG, message);
-      message.focus();
-      return;
-    }
     if (messageVal.length > MAX_MESSAGE_LEN) {
       showError(MESSAGE_TOO_LONG_MSG, message);
       message.focus();
