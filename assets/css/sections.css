@@ -1360,24 +1360,26 @@
   padding: var(--space-6) var(--space-6) var(--space-4);
   display: flex;
   flex-direction: column;
-  max-width: 460px;
-  margin: 0 auto;
   width: 100%;
+}
+
+/* Two month grids side by side. */
+.avail-cal__months {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.avail-cal__month-grid {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .avail-cal__header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
-}
-
-/* Eyebrow + serif month title stacked, like the site's section heads. */
-.avail-cal__title {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
 }
 
 .avail-cal__eyebrow {
@@ -1389,12 +1391,16 @@
   color: var(--primary);
 }
 
+/* Per-month serif label, centered above each of the two grids. */
 .avail-cal__month {
+  display: block;
+  text-align: center;
   font-family: var(--font-heading);
-  font-size: var(--fs-h5, 1.5rem);
+  font-size: var(--fs-h6, 1.15rem);
   font-weight: 400;
   line-height: 1;
   color: var(--text-dark);
+  margin-bottom: var(--space-3);
 }
 
 .avail-cal__nav-group {
@@ -1457,56 +1463,65 @@
   color: var(--text-muted);
 }
 
-/* Cells are short (not tall squares) so the month reads compact. */
+/* Cells are short + compact so two months fit side by side. */
 .avail-cal__day {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
-  font-size: 0.85rem;
+  min-height: 32px;
+  font-size: 0.8rem;
   color: var(--text-dark);
 }
 
-/* The date number lives in a rounded pill filling most of the cell width. */
+/* The date number lives in a circle (not a pill) — saves horizontal space
+   for the two-month layout. */
 .avail-cal__day span {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  margin: 0 3px;
-  min-height: 32px;
-  border-radius: 16px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
   border: 1px solid transparent;
   line-height: 1;
 }
 
 .avail-cal__day--blank {
-  min-height: 38px;
+  min-height: 32px;
 }
 
-/* Available — soft sage-tinted pill (green). */
+/* Available — soft sage-tinted circle (green). */
 .avail-cal__day.is-available span {
   background: var(--avail-free-bg);
   color: var(--avail-free);
   border-color: var(--avail-free-border);
 }
 
-/* Booked — soft rose pill + rose text + strikethrough (red). Turnover days
-   are treated as booked too: availability is a simple binary (booked = red,
-   free = green), no separate check-out-only state. */
+/* Booked — soft rose circle + rose text (red), no strikethrough. Turnover
+   days are treated as booked too: availability is a simple binary
+   (booked = red, free = green), no separate check-out-only state. */
 .avail-cal__day.is-booked span {
   background: var(--avail-booked-bg);
   color: var(--avail-booked);
   border-color: var(--avail-booked-border);
-  text-decoration: line-through;
-  text-decoration-thickness: 1px;
-  text-decoration-color: var(--avail-booked);
 }
 
-/* Past day — muted, no pill. */
+/* Past day — muted, no circle. */
 .avail-cal__day.is-past {
   color: var(--text-muted);
   opacity: 0.45;
+}
+
+/* Off-season day (outside the May–Sep open window) — greyed + muted, no
+   circle fill, non-bookable. Distinct from past: these are future dates the
+   resort simply isn't open for. */
+.avail-cal__day.is-offseason {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+.avail-cal__day.is-offseason span {
+  background: transparent;
+  border-color: transparent;
 }
 
 /* Day legend — dots + labels, centred at the bottom of each calendar. Sits
@@ -1547,6 +1562,15 @@
 
 .avail-cal__key-dot--past {
   background: rgba(57, 57, 57, 0.12);
+}
+
+/* On narrow screens two months won't fit side by side (the bungalow column
+   is already stacked under the photo there) — stack the two grids. */
+@media (max-width: 768px) {
+  .avail-cal__months {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
 }
 
 /* Long-form description */

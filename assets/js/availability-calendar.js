@@ -1,16 +1,21 @@
 // Read-only, month-synced availability calendars for /stay/.
 //
-// Each `[data-avail-cal][data-bungalow-key="B1|B2|B3"]` node renders a
-// one-month grid that DISPLAYS (never lets you pick) that bungalow's
-// availability, coloured from bookings.json. Day states are binary:
-//   - .is-booked     — an occupied night (in `unavailable`)
-//   - .is-available  — a free, future, in-season night
-//   - .is-past       — before today (muted, no pill)
+// Each `[data-avail-cal][data-bungalow-key="B1|B2|B3"]` node renders TWO
+// months side by side (the visible month + the next) that DISPLAY (never let
+// you pick) that bungalow's availability, coloured from bookings.json. Day
+// states:
+//   - .is-booked     — an occupied night (in `unavailable`), red circle
+//   - .is-available  — a free, future, in-season night, green circle
+//   - .is-past       — before today (muted, no circle)
+//   - .is-offseason  — a future date outside the open May–Sep season
+//                      (greyed, non-bookable)
 //
-// All calendars on the page share ONE visible month. Paging any calendar's
-// prev/next arrow moves EVERY calendar to the same month (owner request:
-// "if on B1 I change the month, all three switch"). Month navigation is
-// clamped to the open season — you can't page into a fully off-season month.
+// All calendars on the page share ONE visible (left) month. Paging any
+// calendar's prev/next arrow moves EVERY calendar to the same month (owner
+// request: "if on B1 I change the month, all three switch"). Navigation spans
+// ALL 12 months — it is NOT clamped to the open season; off-season days simply
+// render greyed. It's bounded to [this month, month-of-seasonMaxDate], with
+// next disabled once the right-hand month reaches the ceiling.
 //
 // Bookings come from the shared bookings-data.js cache, so this reuses the
 // SAME fetch as the (legacy) booking widget — one network request per page.
@@ -60,98 +65,56 @@ function todayMidnight() {
   return new Date(n.getFullYear(), n.getMonth(), n.getDate());
 }
 
-// Advance a month-anchored Date by whole months in `delta` direction until it
-// lands on an in-season (May–Sep) month. Shared by the floor/ceil derivation
-// and the month stepper — one place for the "skip off-season months" walk.
-// (Caller applies any range clamping; this only skips off-season.)
-function stepUntilInSeason(month, delta) {
-  let m = month;
-  while (isOffSeason(m)) {
-    m = new Date(m.getFullYear(), m.getMonth() + delta, 1);
-  }
-  return m;
-}
-
-// The earliest month a calendar may show: the first open-season month that is
-// not entirely in the past. If today is in-season, that's this month;
-// otherwise it's the next May at/after today.
-function seasonFloorMonth() {
-  return stepUntilInSeason(firstOfMonth(todayMidnight()), 1);
-}
-
-// The latest month a calendar may show: the open-season month containing the
-// season ceiling (seasonMaxDate is Dec 31 of currentYear+5; step back to the
-// last in-season month at/onbefore it).
-function seasonCeilMonth() {
-  return stepUntilInSeason(firstOfMonth(seasonMaxDate()), -1);
-}
-
 // Compare two month-anchored Dates (ignoring day).
 function monthCmp(a, b) {
   return a.getFullYear() * 12 + a.getMonth() - (b.getFullYear() * 12 + b.getMonth());
 }
 
-// Memoized season bounds. floor/ceil are constant for a page session (they
-// derive from today's month + the fixed season ceiling), so compute the two
-// off-season-walk loops ONCE rather than on every render and every step.
-// initAvailabilityCalendars() resets this so a re-init re-derives them.
-let _seasonBounds = null;
-function seasonBounds() {
-  if (!_seasonBounds) {
-    _seasonBounds = { floor: seasonFloorMonth(), ceil: seasonCeilMonth() };
+// Navigation bounds for the two-month view. Unlike the old single-month
+// calendar, paging is NOT clamped to the open season — every month Jan–Dec is
+// reachable; off-season days just render greyed (see buildMonthGrid). The
+// FLOOR is this month (don't page into fully-past months); the CEIL is the
+// month containing seasonMaxDate (Dec of currentYear+5), and since two months
+// show at once we stop paging when the SECOND month would pass it.
+// Memoized for the page session; reset on init.
+let _navBounds = null;
+function navBounds() {
+  if (!_navBounds) {
+    _navBounds = {
+      floor: firstOfMonth(todayMidnight()),
+      ceil: firstOfMonth(seasonMaxDate()),
+    };
   }
-  return _seasonBounds;
+  return _navBounds;
 }
 
-// Step currentMonth by whole months, skipping fully off-season months, and
-// clamp to [floor, ceil]. Returns true if the month actually changed.
+// Step currentMonth (the LEFT of the two shown months) by whole months,
+// clamped so prev never goes before floor and next never lets the RIGHT month
+// pass the ceil. Returns true if the month actually changed.
 function stepMonth(delta) {
-  const { floor, ceil } = seasonBounds();
-  // One step in the travel direction, then skip any off-season months the
-  // same way the bounds are derived. `stepUntilInSeason` won't run past the
-  // range because ceil/floor are themselves in-season, and the range check
-  // below rejects anything that overshoots.
+  const { floor, ceil } = navBounds();
   const first = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1);
-  const m = stepUntilInSeason(first, delta);
-  if (monthCmp(m, floor) < 0 || monthCmp(m, ceil) > 0) return false; // out of range
-  currentMonth = m;
+  // The right-hand month is first + 1; keep it within the ceiling.
+  const right = new Date(first.getFullYear(), first.getMonth() + 1, 1);
+  if (monthCmp(first, floor) < 0) return false; // before this month
+  if (monthCmp(right, ceil) > 0) return false; // 2nd month would pass the ceiling
+  currentMonth = first;
   return true;
 }
 
-// Render one calendar instance for the shared currentMonth.
-function renderInstance(inst) {
-  const { root, avail } = inst;
-  const today = todayMidnight();
-  const monthStart = firstOfMonth(currentMonth);
+// Build ONE month's grid markup (weekday header row + day cells in week rows)
+// for the given month + availability. Returns { label, gridHtml }. Off-season
+// days (outside the open May–Sep season) render greyed/non-selectable; past
+// days muted; booked red; available green.
+function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays) {
   const daysInMonth = new Date(
     monthStart.getFullYear(),
     monthStart.getMonth() + 1,
     0,
   ).getDate();
-  // Leading blanks: how many cells before day 1 (Monday-first).
-  // JS getDay(): 0=Sun..6=Sat. Map to Monday-first index 0..6.
+  // Leading blanks before day 1 (Monday-first): JS getDay 0=Sun..6=Sat → 0..6.
   const firstWeekdayMon = (monthStart.getDay() + 6) % 7;
 
-  // Season floor/ceil are constant for the page session — read the memoized
-  // values instead of re-walking the off-season loops on every render.
-  const { floor, ceil } = seasonBounds();
-  const atFloor = monthCmp(currentMonth, floor) <= 0;
-  const atCeil = monthCmp(currentMonth, ceil) >= 0;
-
-  const weekdays = weekdayShortNames();
-
-  // One date formatter (and one locale read) per render, reused for every day
-  // cell's aria-label — not a fresh Intl.DateTimeFormat per cell.
-  const dayFormatter = new Intl.DateTimeFormat(currentLocale(), {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
-  // Build the day cells, grouped into week rows. The grid uses real ARIA grid
-  // semantics (grid → row → gridcell) so the per-cell aria-label (which carries
-  // the booked/available/past state) is actually announced — an aria-label on
-  // a roleless <div> is ignored by most screen readers.
   const cellHtml = [];
   for (let i = 0; i < firstWeekdayMon; i += 1) {
     cellHtml.push('<div class="avail-cal__day avail-cal__day--blank" role="gridcell" aria-hidden="true"></div>');
@@ -162,22 +125,24 @@ function renderInstance(inst) {
     const classes = ['avail-cal__day'];
     let stateLabel = 'available';
 
+    // Precedence: past → off-season → booked → available. Off-season is a
+    // greyed, non-bookable state now that navigation spans all 12 months
+    // (the open season is May–Sep; isOffSeason() covers Oct–Apr).
     if (date < today) {
       classes.push('is-past');
       stateLabel = 'past';
+    } else if (isOffSeason(date)) {
+      classes.push('is-offseason');
+      stateLabel = 'closed (off-season)';
     } else if (avail.unavailable.has(iso)) {
-      // Simple binary: any unavailable night is "booked" (red). We no longer
-      // distinguish turnover / check-out-only days — a booked date is booked.
+      // Simple binary: any unavailable night is "booked" (red).
       classes.push('is-booked');
       stateLabel = 'already booked';
     } else {
-      // Future, in-season (the shown month is always in-season — navigation
-      // is clamped), and not booked → available (green).
       classes.push('is-available');
     }
 
     const label = `${dayFormatter.format(date)} — ${stateLabel}`;
-
     cellHtml.push(
       `<div class="${classes.join(' ')}" role="gridcell" aria-label="${label}"`
         + `${stateLabel === 'available' ? '' : ' aria-disabled="true"'}>`
@@ -185,25 +150,54 @@ function renderInstance(inst) {
     );
   }
 
-  // Chunk the flat cell list into 7-cell week rows for role="row".
   const rows = [];
   for (let i = 0; i < cellHtml.length; i += 7) {
     rows.push(`<div class="avail-cal__week" role="row">${cellHtml.slice(i, i + 7).join('')}</div>`);
   }
-  const daysMarkup = rows.join('');
-
   const weekdayRow = weekdays
     .map((w) => `<div class="avail-cal__weekday" role="columnheader">${w}</div>`)
     .join('');
+  const label = monthLabel(monthStart);
 
-  const monthName = monthLabel(currentMonth);
+  const gridHtml = `
+    <div class="avail-cal__month-grid">
+      <span class="avail-cal__month" aria-live="polite">${label}</span>
+      <div class="avail-cal__grid" role="grid" aria-label="${label} availability">
+        <div class="avail-cal__weekdays" role="row">${weekdayRow}</div>
+        <div class="avail-cal__days">${rows.join('')}</div>
+      </div>
+    </div>`;
+  return { label, gridHtml };
+}
+
+// Render one calendar instance: TWO months side by side (currentMonth and the
+// next month), on the shared currentMonth. Nav steps both by one month and
+// spans all 12 months (off-season days grey, not skipped).
+function renderInstance(inst) {
+  const { root, avail } = inst;
+  const today = todayMidnight();
+  const left = firstOfMonth(currentMonth);
+  const right = new Date(left.getFullYear(), left.getMonth() + 1, 1);
+
+  const { floor, ceil } = navBounds();
+  const atFloor = monthCmp(left, floor) <= 0;
+  // next is disabled when the RIGHT month is already at the ceiling (stepping
+  // would push the right month past it).
+  const atCeil = monthCmp(right, ceil) >= 0;
+
+  const weekdays = weekdayShortNames();
+  const dayFormatter = new Intl.DateTimeFormat(currentLocale(), {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const g1 = buildMonthGrid(left, avail, today, dayFormatter, weekdays);
+  const g2 = buildMonthGrid(right, avail, today, dayFormatter, weekdays);
 
   root.innerHTML = `
     <div class="avail-cal__header">
-      <span class="avail-cal__title">
-        <span class="avail-cal__eyebrow">Availability</span>
-        <span class="avail-cal__month" aria-live="polite">${monthName}</span>
-      </span>
+      <span class="avail-cal__eyebrow">Availability</span>
       <span class="avail-cal__nav-group">
         <button class="avail-cal__nav avail-cal__nav--prev" type="button"
                 aria-label="Previous month"${atFloor ? ' disabled' : ''}>
@@ -215,13 +209,12 @@ function renderInstance(inst) {
         </button>
       </span>
     </div>
-    <!-- Read-only availability display using ARIA grid semantics so each day
-         cell's aria-label ("15 August 2026 — already booked") is announced:
-         grid → row → gridcell. The visible day number and weekday letters are
-         decorative (the gridcell's aria-label carries the full date + state). -->
-    <div class="avail-cal__grid" role="grid" aria-label="${monthName} availability">
-      <div class="avail-cal__weekdays" role="row">${weekdayRow}</div>
-      <div class="avail-cal__days">${daysMarkup}</div>
+    <!-- Two month grids side by side. Each uses ARIA grid semantics
+         (grid → row → gridcell) so each day cell's aria-label
+         ("15 August 2026 — already booked") is announced. -->
+    <div class="avail-cal__months">
+      ${g1.gridHtml}
+      ${g2.gridHtml}
     </div>
     <div class="avail-cal__key" aria-hidden="true">
       <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--free"></span>Available</span>
@@ -258,8 +251,8 @@ export function initAvailabilityCalendars() {
   // future re-init) rebuilds cleanly instead of stacking duplicate instances
   // on the same roots (which would double-bind arrow handlers → double-step).
   instances.length = 0;
-  _seasonBounds = null; // re-derive floor/ceil (e.g. across a midnight/season rollover)
-  currentMonth = seasonBounds().floor;
+  _navBounds = null; // re-derive floor/ceil (e.g. across a midnight rollover)
+  currentMonth = navBounds().floor;
 
   // Placeholder render (before data arrives) so the month grid is visible
   // immediately; availability classes get painted once bookings resolve.

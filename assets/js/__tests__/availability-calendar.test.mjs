@@ -38,22 +38,21 @@ function sliceFn(src, name) {
   return src.slice(start, end + 2);
 }
 
-// Build the season-stepping helpers into one scope with isOffSeason +
-// seasonMaxDate injected, and a controllable `todayMidnight` (so floor tests
-// don't depend on the real clock).
-function loadSeasonHelpers(today) {
+// Build the calendar's nav helpers into one scope with seasonMaxDate injected
+// and a controllable `todayMidnight` (so floor tests don't depend on the real
+// clock). The two-month calendar navigates all 12 months: floor = today's
+// month, ceil = the month containing seasonMaxDate.
+function loadNavHelpers(today) {
   const body = [
-    sliceFn(CAL_SRC, 'stepUntilInSeason'),
+    'let _navBounds = null;', // module-level memo the sliced navBounds() closes over
     sliceFn(CAL_SRC, 'firstOfMonth'),
     sliceFn(CAL_SRC, 'monthCmp'),
-    sliceFn(CAL_SRC, 'seasonCeilMonth'),
-    // seasonFloorMonth uses todayMidnight(); inject a fixed one for determinism.
     'function todayMidnight() { return INJECTED_TODAY; }',
-    sliceFn(CAL_SRC, 'seasonFloorMonth'),
-    'return { stepUntilInSeason, firstOfMonth, monthCmp, seasonFloorMonth, seasonCeilMonth };',
+    sliceFn(CAL_SRC, 'navBounds'),
+    'return { firstOfMonth, monthCmp, navBounds };',
   ].join('\n\n');
-  const factory = new Function('isOffSeason', 'seasonMaxDate', 'INJECTED_TODAY', body);
-  return factory(isOffSeason, seasonMaxDate, today);
+  const factory = new Function('seasonMaxDate', 'INJECTED_TODAY', body);
+  return factory(seasonMaxDate, today);
 }
 
 function loadAvailabilityFor() {
@@ -63,45 +62,37 @@ function loadAvailabilityFor() {
 
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
-// ── season stepping ────────────────────────────────────────────────────────
+// ── nav bounds + off-season classification ──────────────────────────────────
 
-test('stepUntilInSeason: an in-season month is returned unchanged', () => {
-  const { stepUntilInSeason } = loadSeasonHelpers(new Date(2026, 6, 1));
-  const jul = new Date(2026, 6, 1); // July — in season
-  assert.equal(iso(stepUntilInSeason(jul, 1)), '2026-07');
-  assert.equal(iso(stepUntilInSeason(jul, -1)), '2026-07');
+test('navBounds: floor is the current month (paging is not season-clamped)', () => {
+  // Feb (off-season) → floor is still Feb, since all 12 months are navigable
+  // now (off-season days just render greyed, not skipped).
+  const { navBounds } = loadNavHelpers(new Date(2026, 1, 10)); // Feb 10
+  assert.equal(iso(navBounds().floor), '2026-02');
 });
 
-test('stepUntilInSeason: forward from off-season lands on the next May', () => {
-  const { stepUntilInSeason } = loadSeasonHelpers(new Date(2026, 0, 1));
-  // Nov 2026 (off-season) stepping +1 → skips Dec/Jan…Apr → May 2027.
-  const nov = new Date(2026, 10, 1);
-  assert.equal(iso(stepUntilInSeason(nov, 1)), '2027-05');
+test('navBounds: floor tracks an in-season "today" too', () => {
+  const { navBounds } = loadNavHelpers(new Date(2026, 6, 15)); // Jul 15
+  assert.equal(iso(navBounds().floor), '2026-07');
 });
 
-test('stepUntilInSeason: backward from off-season lands on the previous September', () => {
-  const { stepUntilInSeason } = loadSeasonHelpers(new Date(2026, 0, 1));
-  // Feb 2027 (off-season) stepping -1 → skips Jan → back to Sep 2026.
-  const feb = new Date(2027, 1, 1);
-  assert.equal(iso(stepUntilInSeason(feb, -1)), '2026-09');
+test('navBounds: ceil is the month of seasonMaxDate (Dec of currentYear+5)', () => {
+  const { navBounds } = loadNavHelpers(new Date(2026, 6, 1));
+  const ceil = navBounds().ceil;
+  const max = seasonMaxDate();
+  assert.equal(ceil.getMonth(), max.getMonth(), 'ceil month matches seasonMaxDate month');
+  assert.equal(ceil.getFullYear(), max.getFullYear());
 });
 
-test('seasonFloorMonth: in-season "today" floors to this month', () => {
-  const { seasonFloorMonth } = loadSeasonHelpers(new Date(2026, 6, 15)); // Jul 15
-  assert.equal(iso(seasonFloorMonth()), '2026-07');
-});
-
-test('seasonFloorMonth: off-season "today" floors to the next open May', () => {
-  const { seasonFloorMonth } = loadSeasonHelpers(new Date(2026, 1, 10)); // Feb 10
-  assert.equal(iso(seasonFloorMonth()), '2026-05');
-});
-
-test('seasonCeilMonth: ceiling is the September of seasonMaxDate\'s year', () => {
-  const { seasonCeilMonth } = loadSeasonHelpers(new Date(2026, 6, 1));
-  const ceil = seasonCeilMonth();
-  // seasonMaxDate() is Dec 31 of currentYear+5 → step back to that year's Sep.
-  assert.equal(ceil.getMonth(), 8, 'ceil month should be September (index 8)');
-  assert.equal(ceil.getFullYear(), seasonMaxDate().getFullYear());
+test('isOffSeason: May–Sep are open; Oct–Apr are off-season (greyed in the grid)', () => {
+  // Open season (returns false = in season)
+  for (const m of [4, 5, 6, 7, 8]) { // May..Sep
+    assert.equal(isOffSeason(new Date(2026, m, 15)), false, `month ${m} should be open`);
+  }
+  // Off season (returns true = greyed)
+  for (const m of [0, 1, 2, 3, 9, 10, 11]) { // Jan..Apr, Oct..Dec
+    assert.equal(isOffSeason(new Date(2026, m, 15)), true, `month ${m} should be off-season`);
+  }
 });
 
 // ── availabilityFor shape guard ──────────────────────────────────────────────
