@@ -1271,29 +1271,80 @@
   align-items: stretch;
 }
 
-/* Square photo (aspect-ratio 1) that fills its column. */
-.bungalow-split__photo {
-  margin: 0;
+/* Bungalow photo carousel — one 4:3 rectangle photo per view filling the
+   left column, with prev/next arrows + infinite loop (slider.js) and
+   click-to-open lightbox (lightbox.js). Each bungalow has its own
+   independently-named [data-slider], so advancing one doesn't move the
+   others. Distinct from the home "Moments" gallery, which is a
+   multi-card portrait (4:5) strip — hence the scoped overrides here. */
+.bungalow-split__gallery {
+  position: relative;
   overflow: hidden;
   border-radius: var(--radius-card);
 }
 
-.bungalow-split__photo img {
+/* Slightly smaller nav arrows on the bungalow carousels (0.75× the 52px
+   .gallery__arrow used by the home gallery) — the bungalow column is
+   narrower, so the default arrows read a touch large here. */
+.bungalow-split__gallery .gallery__arrow {
+  width: 39px;
+  height: 39px;
+}
+.bungalow-split__gallery .gallery__arrow svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Feathered variant (Bungalow 1): instead of a crisp rounded frame, the
+   photo's edges fade to transparent so it blends into the page background
+   with no visible boundary line. A gentle ~36px feather on all four sides
+   via a soft-edged mask; the rounded corners are dropped since the fade
+   supersedes them. Page background behind is white (--bg-light), so the
+   faded edge reads as the photo melting into the page. Purely visual —
+   the carousel, arrows, and lightbox are unaffected.
+   The arrows sit above the mask (the mask applies to the gallery box; the
+   buttons are positioned children and still fully visible). */
+.bungalow-split__gallery--feather {
+  border-radius: 0;
+  --feather: 36px;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, #000 var(--feather), #000 calc(100% - var(--feather)), transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 var(--feather), #000 calc(100% - var(--feather)), transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 var(--feather), #000 calc(100% - var(--feather)), transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 var(--feather), #000 calc(100% - var(--feather)), transparent 100%);
+  mask-composite: intersect;
+}
+
+/* One photo per view: each item fills the whole carousel width at 4:3. */
+.bungalow-split__gallery .gallery__item {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  scroll-snap-align: start;
+  overflow: hidden;
+  /* The wrapper already rounds + clips; keep the item square-cornered so the
+     rounded corners come from .bungalow-split__gallery, not each slide. */
+  border-radius: 0;
+}
+
+.bungalow-split__gallery .gallery__item img {
   display: block;
   width: 100%;
   height: 100%;
-  aspect-ratio: 1 / 1;
   object-fit: cover;
+}
+
+/* The track has no side padding here (the carousel fills its column edge to
+   edge), overriding the home gallery's container padding. */
+.bungalow-split__gallery .gallery__track {
+  padding: 0;
+  gap: 0;
 }
 
 @media (max-width: 768px) {
   .bungalow-split__grid {
     grid-template-columns: 1fr;
-  }
-  /* Keep the photo a sensible height when stacked (no longer forced square
-     against a tall calendar). */
-  .bungalow-split__photo img {
-    aspect-ratio: 4 / 3;
   }
 }
 
