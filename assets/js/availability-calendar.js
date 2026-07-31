@@ -1,16 +1,21 @@
 // Read-only, month-synced availability calendars for /stay/.
 //
-// Each `[data-avail-cal][data-bungalow-key="B1|B2|B3"]` node renders a
-// one-month grid that DISPLAYS (never lets you pick) that bungalow's
-// availability, coloured from bookings.json. Day states are binary:
-//   - .is-booked     — an occupied night (in `unavailable`)
-//   - .is-available  — a free, future, in-season night
-//   - .is-past       — before today (muted, no pill)
+// Each `[data-avail-cal][data-bungalow-key="B1|B2|B3"]` node renders TWO
+// months side by side (the visible month + the next) that DISPLAY (never let
+// you pick) that bungalow's availability, coloured from bookings.json. Day
+// states:
+//   - .is-booked     — an occupied night (in `unavailable`), red circle
+//   - .is-available  — a free, future, in-season night, green circle
+//   - .is-past       — before today (muted, no circle)
+//   - .is-offseason  — a future date outside the open May–Sep season
+//                      (greyed, non-bookable)
 //
-// All calendars on the page share ONE visible month. Paging any calendar's
-// prev/next arrow moves EVERY calendar to the same month (owner request:
-// "if on B1 I change the month, all three switch"). Month navigation is
-// clamped to the open season — you can't page into a fully off-season month.
+// All calendars on the page share ONE visible (left) month. Paging any
+// calendar's prev/next arrow moves EVERY calendar to the same month (owner
+// request: "if on B1 I change the month, all three switch"). Navigation spans
+// ALL 12 months — it is NOT clamped to the open season; off-season days simply
+// render greyed. It's bounded to [this month, month-of-seasonMaxDate], with
+// next disabled once the right-hand month reaches the ceiling.
 //
 // Bookings come from the shared bookings-data.js cache, so this reuses the
 // SAME fetch as the (legacy) booking widget — one network request per page.
