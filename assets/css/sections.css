@@ -1497,16 +1497,13 @@
   border-color: var(--avail-free-border);
 }
 
-/* Booked — soft rose circle + rose text + strikethrough (red). Turnover days
-   are treated as booked too: availability is a simple binary (booked = red,
-   free = green), no separate check-out-only state. */
+/* Booked — soft rose circle + rose text (red), no strikethrough. Turnover
+   days are treated as booked too: availability is a simple binary
+   (booked = red, free = green), no separate check-out-only state. */
 .avail-cal__day.is-booked span {
   background: var(--avail-booked-bg);
   color: var(--avail-booked);
   border-color: var(--avail-booked-border);
-  text-decoration: line-through;
-  text-decoration-thickness: 1px;
-  text-decoration-color: var(--avail-booked);
 }
 
 /* Past day — muted, no circle. */
