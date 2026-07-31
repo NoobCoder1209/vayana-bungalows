@@ -1271,29 +1271,46 @@
   align-items: stretch;
 }
 
-/* Square photo (aspect-ratio 1) that fills its column. */
-.bungalow-split__photo {
-  margin: 0;
+/* Bungalow photo carousel — one 4:3 rectangle photo per view filling the
+   left column, with prev/next arrows + infinite loop (slider.js) and
+   click-to-open lightbox (lightbox.js). Each bungalow has its own
+   independently-named [data-slider], so advancing one doesn't move the
+   others. Distinct from the home "Moments" gallery, which is a
+   multi-card portrait (4:5) strip — hence the scoped overrides here. */
+.bungalow-split__gallery {
+  position: relative;
   overflow: hidden;
   border-radius: var(--radius-card);
 }
 
-.bungalow-split__photo img {
+/* One photo per view: each item fills the whole carousel width at 4:3. */
+.bungalow-split__gallery .gallery__item {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  scroll-snap-align: start;
+  overflow: hidden;
+  /* The wrapper already rounds + clips; keep the item square-cornered so the
+     rounded corners come from .bungalow-split__gallery, not each slide. */
+  border-radius: 0;
+}
+
+.bungalow-split__gallery .gallery__item img {
   display: block;
   width: 100%;
   height: 100%;
-  aspect-ratio: 1 / 1;
   object-fit: cover;
+}
+
+/* The track has no side padding here (the carousel fills its column edge to
+   edge), overriding the home gallery's container padding. */
+.bungalow-split__gallery .gallery__track {
+  padding: 0;
+  gap: 0;
 }
 
 @media (max-width: 768px) {
   .bungalow-split__grid {
     grid-template-columns: 1fr;
-  }
-  /* Keep the photo a sensible height when stacked (no longer forced square
-     against a tall calendar). */
-  .bungalow-split__photo img {
-    aspect-ratio: 4 / 3;
   }
 }
 
