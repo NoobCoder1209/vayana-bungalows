@@ -285,6 +285,24 @@
   scrollbar-width: none;
 }
 
+/* Desktop (where the prev/next arrows show, >768px): drive the gallery as a
+   transform-based stepper for seamless infinite looping (slider.js rotates
+   DOM items + translateX). Mobile keeps the native-scroll + snap above so
+   touch-swipe still works there (arrows are hidden <=768px). The viewport
+   clips the transformed track. */
+@media (min-width: 769px) {
+  .gallery__viewport {
+    overflow: hidden;
+  }
+  .gallery__track {
+    overflow-x: visible;
+    scroll-snap-type: none;
+    /* transition is applied/removed inline by slider.js per step so the
+       DOM-rotation reset can happen instantly. */
+    will-change: transform;
+  }
+}
+
 .gallery__track::-webkit-scrollbar {
   display: none;
 }
@@ -319,6 +337,7 @@
   background: var(--bg-light);
   color: var(--text-dark);
   border: 1px solid var(--border);
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
