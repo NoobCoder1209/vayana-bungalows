@@ -4,6 +4,7 @@ import { initReveal } from './reveal.js';
 import { initHeroCarousel } from './hero-carousel.js';
 import { initParallax } from './parallax.js';
 import { initSliders } from './slider.js';
+import { initLightbox } from './lightbox.js';
 import { initBooking } from './booking.js';
 import { initAvailabilityCalendars } from './availability-calendar.js';
 import { initSiteConfig } from './site-config-inject.js';
@@ -24,6 +25,7 @@ const run = () => {
   initReveal();
   initParallax();
   initSliders();
+  initLightbox();
   initBooking();
   initAvailabilityCalendars();
   initNewsletter();

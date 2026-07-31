@@ -358,6 +358,123 @@
   .gallery__arrow { display: none; }
 }
 
+/* ========== Gallery lightbox ========== */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-modal) + 10); /* above the sticky header + drawer */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bg-light);
+}
+
+.lightbox[hidden] {
+  display: none;
+}
+
+.lightbox__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 13, 10, 0.94);
+  border: 0;
+  cursor: zoom-out;
+}
+
+/* The photo, uncropped at its natural ratio, scaled to fit the viewport. */
+.lightbox__stage {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+}
+
+.lightbox__stage img {
+  max-width: 90vw;
+  max-height: 85vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-card);
+}
+
+.lightbox__close {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.5rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.25rem;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: opacity var(--t-fast);
+}
+
+.lightbox__close:hover,
+.lightbox__close:focus-visible {
+  opacity: 1;
+  outline: none;
+}
+
+.lightbox__counter {
+  position: absolute;
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
+}
+
+.lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid rgba(238, 238, 238, 0.5);
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+
+.lightbox__nav:hover,
+.lightbox__nav:focus-visible {
+  background: rgba(238, 238, 238, 0.15);
+  border-color: var(--bg-light);
+  outline: none;
+}
+
+.lightbox__nav--prev { left: 1.5rem; }
+.lightbox__nav--next { right: 1.5rem; }
+
+@media (max-width: 768px) {
+  .lightbox__nav { width: 44px; height: 44px; }
+  .lightbox__nav--prev { left: 0.5rem; }
+  .lightbox__nav--next { right: 0.5rem; }
+  .lightbox__stage,
+  .lightbox__stage img { max-width: 92vw; max-height: 80vh; }
+}
+
 /* ========== Rooms ========== */
 .rooms__head {
   text-align: center;
