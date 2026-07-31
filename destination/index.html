@@ -49,14 +49,12 @@
       1. .destination-hero  → real lede about the setting
       2. .destination-guide__intro  → 2-3 real paragraphs on Tsarevo,
          its history, climate, character, and any distance/access facts
-         we want to surface above the fold (BOJ/SOF are in §2).
+         we want to surface above the fold.
       3. .destination-guide__row (×4) — Beach / Food / Hiking / Culture:
          each row's paragraph needs a real 2-3 sentence write-up. The
          photo alt text should also be updated to describe the real
-         photo once final assets land (see §5).
-      4. .destination-directions  → confirm parking note (current text
-         is a placeholder pending confirmation from ops).
-      5. /assets/img/  → source 4 Tsarevo-specific photos (beach,
+         photo once final assets land (see §4).
+      4. /assets/img/  → source 4 Tsarevo-specific photos (beach,
          food/restaurant, Strandzha hiking, nearby village) and swap
          the existing room/gallery photos currently in use.
 
@@ -281,73 +279,6 @@
               <p>Sinemorets and Ahtopol are short drives down the coast, each with its own character &mdash; Sinemorets quieter and built around its river-mouth beach, Ahtopol with a working harbour and a small old town on a headland. Inland, Strandzha villages keep older traditions alive, including the fire-dancing rituals that the region is known for.</p>
             </div>
           </article>
-        </div>
-      </section>
-
-      <!-- Section 2 — Map & directions.
-           Reuses the homepage `.location` section verbatim (same iframe
-           src, same sandbox, same data-site-config hooks), plus a new
-           `.destination-directions` sub-block underneath with route notes
-           from BOJ and SOF and a parking note.
-           assets/js/location.js owns the iframe load + `.is-loaded` flip.
-           If the iframe never loads (CSP block, network failure, etc.),
-           `.location__fallback` stays visible — negative test #1. -->
-      <section id="location" class="section section-cream" aria-labelledby="destination-map-title">
-        <div class="container location__inner reveal">
-          <span class="eyebrow">Find us</span>
-          <h2 id="destination-map-title">Map &amp; directions</h2>
-          <div class="location__map">
-            <p class="location__fallback">Map unavailable &mdash; see address below.</p>
-            <iframe
-              src="https://maps.google.com/maps?q=42.1885867,27.8350773&amp;z=17&amp;output=embed"
-              title="Map showing Vayana Bungalows in Tsarevo, Bulgaria"
-              loading="lazy"
-              width="800" height="450"
-              referrerpolicy="strict-origin-when-cross-origin"
-              sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-          </div>
-          <div class="location__details">
-            <p class="location__address">
-              <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span><br />
-              <span data-site-config="address.country">Bulgaria</span>
-            </p>
-            <a class="btn btn-outline-dark location__directions"
-               data-site-config-href="address.directionsUrl"
-               href="https://maps.app.goo.gl/szcFXV6f5Pgx2iFt5"
-               target="_blank" rel="noopener noreferrer"
-               data-location-directions>
-              Open in Google Maps
-              <span class="sr-only">(opens Google Maps in a new tab)</span>
-            </a>
-          </div>
-
-          <!-- Directions sub-block. The three rows (BOJ, SOF, parking)
-               give a one-line route summary each. Distances and times are
-               verified facts from the issue spec; the route notes
-               themselves are short placeholders pending real on-the-ground
-               directions. -->
-          <div class="destination-directions">
-            <h3 class="destination-directions__heading">Getting here</h3>
-            <dl class="destination-directions__list">
-              <div class="destination-directions__row">
-                <dt>From Burgas Airport <abbr title="Burgas Airport IATA code">(BOJ)</abbr></dt>
-                <!-- TODO(content): replace route note with real driving
-                     directions once confirmed (coastal road numbers,
-                     exit details). Distance/time stay as-is. -->
-                <dd>~85 km &mdash; about 1h15 by car. Head south on the coast road; the route stays close to the sea most of the way down.</dd>
-              </div>
-              <div class="destination-directions__row">
-                <dt>From Sofia Airport <abbr title="Sofia Airport IATA code">(SOF)</abbr></dt>
-                <!-- TODO(content): real driving directions from Sofia. -->
-                <dd>~410 km &mdash; about 5 hours by car. The straightforward route is via the Trakia motorway to Burgas, then south on the coast road.</dd>
-              </div>
-              <div class="destination-directions__row">
-                <dt>Parking</dt>
-                <!-- TODO(content): confirm parking note with ops. -->
-                <dd>On-site parking is available for guests; please let us know your arrival window in advance and we'll keep a space.</dd>
-              </div>
-            </dl>
-          </div>
         </div>
       </section>
 

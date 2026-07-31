@@ -153,7 +153,7 @@
       "infants_placeholder": "INFANTS",
       "email_placeholder": "EMAIL*",
       "phone_placeholder": "TELEPHONE*",
-      "message_placeholder": "MESSAGE*",
+      "message_placeholder": "MESSAGE",
       "submit_label": "Send enquiry",
       "submit_busy_label": "Sending…"
     },
@@ -166,7 +166,7 @@
       "infants_label": "Infants (optional)",
       "email_label": "Email (required)",
       "phone_label": "Telephone (required)",
-      "message_label": "Message (required)",
+      "message_label": "Message",
       "honeypot_label": "Website",
       "honeypot_aria": "Leave this field empty"
     },
