@@ -1283,6 +1283,28 @@
   border-radius: var(--radius-card);
 }
 
+/* Feathered variant (Bungalow 1): instead of a crisp rounded frame, the
+   photo's edges fade to transparent so it blends into the page background
+   with no visible boundary line. A gentle ~36px feather on all four sides
+   via a soft-edged mask; the rounded corners are dropped since the fade
+   supersedes them. Page background behind is white (--bg-light), so the
+   faded edge reads as the photo melting into the page. Purely visual —
+   the carousel, arrows, and lightbox are unaffected.
+   The arrows sit above the mask (the mask applies to the gallery box; the
+   buttons are positioned children and still fully visible). */
+.bungalow-split__gallery--feather {
+  border-radius: 0;
+  --feather: 36px;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, #000 var(--feather), #000 calc(100% - var(--feather)), transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 var(--feather), #000 calc(100% - var(--feather)), transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 var(--feather), #000 calc(100% - var(--feather)), transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 var(--feather), #000 calc(100% - var(--feather)), transparent 100%);
+  mask-composite: intersect;
+}
+
 /* One photo per view: each item fills the whole carousel width at 4:3. */
 .bungalow-split__gallery .gallery__item {
   width: 100%;
