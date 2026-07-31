@@ -1283,6 +1283,18 @@
   border-radius: var(--radius-card);
 }
 
+/* Slightly smaller nav arrows on the bungalow carousels (0.75× the 52px
+   .gallery__arrow used by the home gallery) — the bungalow column is
+   narrower, so the default arrows read a touch large here. */
+.bungalow-split__gallery .gallery__arrow {
+  width: 39px;
+  height: 39px;
+}
+.bungalow-split__gallery .gallery__arrow svg {
+  width: 15px;
+  height: 15px;
+}
+
 /* Feathered variant (Bungalow 1): instead of a crisp rounded frame, the
    photo's edges fade to transparent so it blends into the page background
    with no visible boundary line. A gentle ~36px feather on all four sides
