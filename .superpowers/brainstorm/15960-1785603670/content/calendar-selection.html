@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calendar selection mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Real tokens copied from assets/css/tokens.css */
+    --primary:#b99d75; --primary-soft:rgba(185,157,117,.3); --primary-deep:#8a7551;
+    --bg-light:#fff; --bg-cream:#f7f4ee; --text-dark:#333632; --text-muted:#6b6b66;
+    --border:#b5bbb3; --border-soft:rgba(0,0,0,.08);
+    --avail-free:#5a7d63; --avail-free-bg:#eef3ee; --avail-free-border:#cfe0d3;
+    --avail-booked:#a86a63; --avail-booked-bg:#f6edeb; --avail-booked-border:#e6d0cc;
+    --gold:#6f5e40; --gold-hover:#5a4c34;
+    --radius-button:20px; --radius-form:999px;
+    --font-heading:'Marcellus',serif; --font-body:'Jost',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#14140f;color:var(--text-dark);font-family:var(--font-body);padding:28px 20px 120px}
+  h1{font-family:var(--font-heading);color:#f3ede1;font-weight:400;text-align:center;font-size:1.8rem;margin:.2em 0}
+  .sub{text-align:center;color:#b6ad9b;margin:0 0 26px;font-size:.95rem}
+  .grid{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;align-items:flex-start;max-width:1180px;margin:0 auto}
+  .demo{background:var(--bg-light);border:1px solid var(--border);border-radius:12px;padding:20px 20px 16px;width:540px;max-width:100%}
+  .demo h2{font-family:var(--font-heading);font-weight:400;font-size:1.15rem;margin:.1em 0 .1em;color:var(--text-dark)}
+  .demo .tag{display:inline-block;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--primary);margin-bottom:14px}
+  .cal__months{display:flex;gap:24px}
+  .mgrid{flex:1 1 0;min-width:0}
+  .mlabel{font-family:var(--font-heading);text-align:center;display:block;font-size:1.05rem;margin-bottom:10px;color:var(--text-dark)}
+  .wk{display:grid;grid-template-columns:repeat(7,1fr);padding-bottom:.5rem;margin-bottom:.4rem;border-bottom:1px solid var(--border-soft)}
+  .wk span{text-align:center;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted)}
+  .days{display:flex;flex-direction:column;row-gap:6px}
+  .week{display:grid;grid-template-columns:repeat(7,1fr)}
+  .day{display:flex;align-items:center;justify-content:center;min-height:32px;font-size:.8rem;position:relative}
+  .day i{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:1px solid transparent;line-height:1;font-style:normal;position:relative;z-index:1}
+  .day.blank{min-height:32px}
+  .avail i{background:var(--avail-free-bg);color:var(--avail-free);border-color:var(--avail-free-border);cursor:pointer}
+  .booked i{background:var(--avail-booked-bg);color:var(--avail-booked);border-color:var(--avail-booked-border)}
+  .past{color:var(--text-muted);opacity:.45}
+  .off{color:var(--text-muted);opacity:.4}
+  .off i{background:transparent;border-color:transparent}
+
+  /* ---- Treatment 1: full gold range (endpoints + gold band across the middle) ---- */
+  .t1 .end i{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .t1 .mid i{background:var(--primary-soft);color:var(--primary-deep);border-color:transparent;border-radius:0}
+  .t1 .mid{background:var(--primary-soft)}
+  .t1 .end.start{border-top-left-radius:50%;border-bottom-left-radius:50%}
+  .t1 .end.finish{border-top-right-radius:50%;border-bottom-right-radius:50%}
+
+  /* ---- Treatment 2: gold endpoints + soft tinted band ---- */
+  .t2 .end i{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .t2 .mid i{background:transparent;color:var(--text-dark);border-color:transparent}
+  .t2 .mid{background:rgba(185,157,117,.14)}
+
+  /* legend */
+  .key{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:16px;font-size:.72rem;color:var(--text-muted)}
+  .key span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .dot.free{background:var(--avail-free-bg);border:1px solid var(--avail-free-border)}
+  .dot.bk{background:var(--avail-booked-bg);border:1px solid var(--avail-booked-border)}
+  .dot.pt{background:rgba(57,57,57,.12)}
+  .dot.sel{background:var(--primary)}
+
+  /* the gold pill button */
+  .pillwrap{margin-top:16px;text-align:center;min-height:52px}
+  .pill{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:48px;padding:.6rem 2rem;
+        font-family:var(--font-heading);font-size:1rem;letter-spacing:.04em;border-radius:var(--radius-form);
+        background:var(--gold);color:#fff;border:1px solid var(--gold);cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+  .pill:hover{background:var(--gold-hover);border-color:var(--gold-hover)}
+
+  /* the red error dock (fixed bottom) — uses the muted Booked rose */
+  .dock{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:50;
+        display:inline-flex;align-items:center;gap:.6rem;
+        background:var(--avail-booked-bg);color:var(--avail-booked);
+        border:1px solid var(--avail-booked-border);border-radius:var(--radius-form);
+        padding:.7rem 1.4rem;font-size:.95rem;box-shadow:0 18px 50px rgba(0,0,0,.28)}
+  .dock .icn{width:18px;height:18px;border-radius:50%;background:var(--avail-booked);color:var(--avail-booked-bg);
+             display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
+  .note{max-width:1180px;margin:22px auto 0;color:#b6ad9b;font-size:.86rem;line-height:1.5;text-align:center}
+  .caption{text-align:center;color:var(--text-muted);font-size:.78rem;margin-top:10px}
+</style>
+</head>
+<body>
+  <h1>Selected-date treatments — live tokens</h1>
+  <p class="sub">Both show the same pick: <strong>June 10 → June 15 (5 nights)</strong>, with June 4–9 booked (red) so you can see the range sitting next to a blocked stretch.</p>
+
+  <div class="grid">
+    <!-- Treatment 1 -->
+    <div class="demo t1">
+      <span class="tag">The three villas</span>
+      <h2>Bungalow 1 — Treatment&nbsp;1: full gold range</h2>
+      <div class="cal__months">
+        <!-- June -->
+        <div class="mgrid">
+          <span class="mlabel">June 2026</span>
+          <div class="wk"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="days">
+            <div class="week">
+              <div class="day past"><i>1</i></div><div class="day past"><i>2</i></div><div class="day past"><i>3</i></div>
+              <div class="day booked"><i>4</i></div><div class="day booked"><i>5</i></div><div class="day booked"><i>6</i></div><div class="day booked"><i>7</i></div>
+            </div>
+            <div class="week">
+              <div class="day booked"><i>8</i></div><div class="day booked"><i>9</i></div>
+              <div class="day avail end start"><i>10</i></div><div class="day avail mid"><i>11</i></div><div class="day avail mid"><i>12</i></div><div class="day avail mid"><i>13</i></div><div class="day avail mid"><i>14</i></div>
+            </div>
+            <div class="week">
+              <div class="day avail end finish"><i>15</i></div><div class="day avail"><i>16</i></div><div class="day avail"><i>17</i></div><div class="day avail"><i>18</i></div><div class="day avail"><i>19</i></div><div class="day avail"><i>20</i></div><div class="day avail"><i>21</i></div>
+            </div>
+            <div class="week">
+              <div class="day avail"><i>22</i></div><div class="day avail"><i>23</i></div><div class="day avail"><i>24</i></div><div class="day avail"><i>25</i></div><div class="day avail"><i>26</i></div><div class="day avail"><i>27</i></div><div class="day avail"><i>28</i></div>
+            </div>
+            <div class="week">
+              <div class="day avail"><i>29</i></div><div class="day avail"><i>30</i></div><div class="day blank"></div><div class="day blank"></div><div class="day blank"></div><div class="day blank"></div><div class="day blank"></div>
+            </div>
+          </div>
+        </div>
+        <!-- July -->
+        <div class="mgrid">
+          <span class="mlabel">July 2026</span>
+          <div class="wk"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="days">
+            <div class="week"><div class="day blank"></div><div class="day blank"></div><div class="day avail"><i>1</i></div><div class="day avail"><i>2</i></div><div class="day avail"><i>3</i></div><div class="day avail"><i>4</i></div><div class="day avail"><i>5</i></div></div>
+            <div class="week"><div class="day avail"><i>6</i></div><div class="day avail"><i>7</i></div><div class="day avail"><i>8</i></div><div class="day avail"><i>9</i></div><div class="day avail"><i>10</i></div><div class="day avail"><i>11</i></div><div class="day avail"><i>12</i></div></div>
+            <div class="week"><div class="day avail"><i>13</i></div><div class="day avail"><i>14</i></div><div class="day avail"><i>15</i></div><div class="day avail"><i>16</i></div><div class="day avail"><i>17</i></div><div class="day avail"><i>18</i></div><div class="day avail"><i>19</i></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="key">
+        <span><i class="dot free"></i>Available</span>
+        <span><i class="dot bk"></i>Booked</span>
+        <span><i class="dot pt"></i>Past</span>
+        <span><i class="dot sel"></i>Selected</span>
+      </div>
+      <div class="pillwrap"><button class="pill">Stay with us only for 500€</button></div>
+      <p class="caption">Endpoints solid gold, the nights between filled with a gold band.</p>
+    </div>
+
+    <!-- Treatment 2 -->
+    <div class="demo t2">
+      <span class="tag">The three villas</span>
+      <h2>Bungalows 2 &amp; 3 — Treatment&nbsp;2: endpoints + soft band</h2>
+      <div class="cal__months">
+        <div class="mgrid">
+          <span class="mlabel">June 2026</span>
+          <div class="wk"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="days">
+            <div class="week">
+              <div class="day past"><i>1</i></div><div class="day past"><i>2</i></div><div class="day past"><i>3</i></div>
+              <div class="day booked"><i>4</i></div><div class="day booked"><i>5</i></div><div class="day booked"><i>6</i></div><div class="day booked"><i>7</i></div>
+            </div>
+            <div class="week">
+              <div class="day booked"><i>8</i></div><div class="day booked"><i>9</i></div>
+              <div class="day avail end start"><i>10</i></div><div class="day avail mid"><i>11</i></div><div class="day avail mid"><i>12</i></div><div class="day avail mid"><i>13</i></div><div class="day avail mid"><i>14</i></div>
+            </div>
+            <div class="week">
+              <div class="day avail end finish"><i>15</i></div><div class="day avail"><i>16</i></div><div class="day avail"><i>17</i></div><div class="day avail"><i>18</i></div><div class="day avail"><i>19</i></div><div class="day avail"><i>20</i></div><div class="day avail"><i>21</i></div>
+            </div>
+            <div class="week">
+              <div class="day avail"><i>22</i></div><div class="day avail"><i>23</i></div><div class="day avail"><i>24</i></div><div class="day avail"><i>25</i></div><div class="day avail"><i>26</i></div><div class="day avail"><i>27</i></div><div class="day avail"><i>28</i></div>
+            </div>
+            <div class="week">
+              <div class="day avail"><i>29</i></div><div class="day avail"><i>30</i></div><div class="day blank"></div><div class="day blank"></div><div class="day blank"></div><div class="day blank"></div><div class="day blank"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mgrid">
+          <span class="mlabel">July 2026</span>
+          <div class="wk"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="days">
+            <div class="week"><div class="day blank"></div><div class="day blank"></div><div class="day avail"><i>1</i></div><div class="day avail"><i>2</i></div><div class="day avail"><i>3</i></div><div class="day avail"><i>4</i></div><div class="day avail"><i>5</i></div></div>
+            <div class="week"><div class="day avail"><i>6</i></div><div class="day avail"><i>7</i></div><div class="day avail"><i>8</i></div><div class="day avail"><i>9</i></div><div class="day avail"><i>10</i></div><div class="day avail"><i>11</i></div><div class="day avail"><i>12</i></div></div>
+            <div class="week"><div class="day avail"><i>13</i></div><div class="day avail"><i>14</i></div><div class="day avail"><i>15</i></div><div class="day avail"><i>16</i></div><div class="day avail"><i>17</i></div><div class="day avail"><i>18</i></div><div class="day avail"><i>19</i></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="key">
+        <span><i class="dot free"></i>Available</span>
+        <span><i class="dot bk"></i>Booked</span>
+        <span><i class="dot pt"></i>Past</span>
+        <span><i class="dot sel"></i>Selected</span>
+      </div>
+      <div class="pillwrap"><button class="pill">Stay with us only for 500€</button></div>
+      <p class="caption">Endpoints solid gold, the nights between only lightly tinted.</p>
+    </div>
+  </div>
+
+  <p class="note">
+    Both use the real site colors. The gold pill is the exact <strong>#6f5e40</strong> of the header "Enquiries" button (pill radius 999px).<br>
+    The red error dock below uses the muted "Booked" rose (<strong>#a86a63 on #f6edeb</strong>) — same as the calendar's booked days, as you chose.<br>
+    Tell me in the terminal which treatment you prefer for the endpoints/range fill.
+  </p>
+
+  <!-- error dock preview (what shows at <5 nights) -->
+  <div class="dock"><span class="icn">!</span>At least 5 nights required for a reservation</div>
+</body>
+</html>
