@@ -34,6 +34,32 @@ const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 let currentMonth = null;
 const instances = [];
 
+// Selection overlay hook. The read-only calendar draws the grid; the selection
+// layer (calendar-selection.js) owns which days are the check-in / check-out /
+// in-between of an in-progress range. Rather than have the selection layer poke
+// the DOM directly (and risk desyncing on a month-page re-render), it registers
+// a lookup here: given a bungalow key + ISO day, return '' | 'start' | 'end' |
+// 'mid'. The default returns '' so the calendar is inert until the selection
+// layer initializes. buildMonthGrid consults it per available cell.
+let selectionLookup = () => '';
+
+/**
+ * Register the selection-state lookup used while painting available day cells.
+ * Called once by calendar-selection.js. Passing nothing resets to inert.
+ */
+export function setSelectionLookup(fn) {
+  selectionLookup = typeof fn === 'function' ? fn : () => '';
+}
+
+/**
+ * Repaint every calendar instance on the current shared month. The selection
+ * layer calls this after a click changes the range, so the new start/end/mid
+ * classes are applied without duplicating render logic.
+ */
+export function rerenderCalendars() {
+  renderAll();
+}
+
 // Locale-aware month + weekday names via Intl (no extra dep). Falls back to
 // the browser default if the locale is unknown.
 function monthLabel(date) {
@@ -106,7 +132,7 @@ function stepMonth(delta) {
 // for the given month + availability. Returns { label, gridHtml }. Off-season
 // days (outside the open May–Sep season) render greyed/non-selectable; past
 // days muted; booked red; available green.
-function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays) {
+function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungalowKey) {
   const daysInMonth = new Date(
     monthStart.getFullYear(),
     monthStart.getMonth() + 1,
@@ -124,6 +150,7 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays) {
     const iso = toIso(date);
     const classes = ['avail-cal__day'];
     let stateLabel = 'available';
+    let selState = ''; // '' | 'start' | 'end' | 'mid' — only set for available
 
     // Precedence: past → off-season → booked → available. Off-season is a
     // greyed, non-bookable state now that navigation spans all 12 months
@@ -140,12 +167,29 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays) {
       stateLabel = 'already booked';
     } else {
       classes.push('is-available');
+      // Only available cells can carry a selection state. The selection layer
+      // maps (bungalowKey, iso) → '' | 'start' | 'end' | 'mid'; anything else
+      // stays plainly available. Endpoints/middle get their own classes so CSS
+      // can paint gold circles without the selection layer touching the DOM.
+      selState = selectionLookup(bungalowKey, iso);
+      if (selState === 'start') classes.push('is-sel-start');
+      else if (selState === 'end') classes.push('is-sel-end');
+      else if (selState === 'mid') classes.push('is-sel-mid');
     }
 
+    const isAvailable = stateLabel === 'available';
+    // Available cells are the page's interactive booking control: make them
+    // focusable (tabindex=0) with button semantics + aria-selected so keyboard
+    // and screen-reader users can select a range, not just mouse users. Blocked
+    // days stay plain gridcells with aria-disabled (not focusable).
     const label = `${dayFormatter.format(date)} — ${stateLabel}`;
+    const attrs = isAvailable
+      ? ` role="gridcell" aria-label="${label}" data-iso="${iso}"`
+        + ' tabindex="0"'
+        + ` aria-selected="${selState ? 'true' : 'false'}"`
+      : ` role="gridcell" aria-label="${label}" data-iso="${iso}" aria-disabled="true"`;
     cellHtml.push(
-      `<div class="${classes.join(' ')}" role="gridcell" aria-label="${label}"`
-        + `${stateLabel === 'available' ? '' : ' aria-disabled="true"'}>`
+      `<div class="${classes.join(' ')}"${attrs}>`
         + `<span aria-hidden="true">${day}</span></div>`,
     );
   }
@@ -174,7 +218,7 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays) {
 // next month), on the shared currentMonth. Nav steps both by one month and
 // spans all 12 months (off-season days grey, not skipped).
 function renderInstance(inst) {
-  const { root, avail } = inst;
+  const { root, avail, key } = inst;
   const today = todayMidnight();
   const left = firstOfMonth(currentMonth);
   const right = new Date(left.getFullYear(), left.getMonth() + 1, 1);
@@ -192,8 +236,8 @@ function renderInstance(inst) {
     year: 'numeric',
   });
 
-  const g1 = buildMonthGrid(left, avail, today, dayFormatter, weekdays);
-  const g2 = buildMonthGrid(right, avail, today, dayFormatter, weekdays);
+  const g1 = buildMonthGrid(left, avail, today, dayFormatter, weekdays, key);
+  const g2 = buildMonthGrid(right, avail, today, dayFormatter, weekdays, key);
 
   root.innerHTML = `
     <div class="avail-cal__header">
@@ -222,6 +266,7 @@ function renderInstance(inst) {
       <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--free"></span>Available</span>
       <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--booked"></span>Booked</span>
       <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--past"></span>Past</span>
+      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--selected"></span>Selected</span>
     </div>
   `;
 

@@ -7,6 +7,7 @@ import { initSliders } from './slider.js';
 import { initLightbox } from './lightbox.js';
 import { initBooking } from './booking.js';
 import { initAvailabilityCalendars } from './availability-calendar.js';
+import { initCalendarSelection } from './calendar-selection.js';
 import { initSiteConfig } from './site-config-inject.js';
 import { initNewsletter } from './newsletter.js';
 import { initLocation } from './location.js';
@@ -28,6 +29,7 @@ const run = () => {
   initLightbox();
   initBooking();
   initAvailabilityCalendars();
+  initCalendarSelection();
   initNewsletter();
   initLocation();
   initEnquiry();
