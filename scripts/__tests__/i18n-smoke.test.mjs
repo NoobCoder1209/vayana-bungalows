@@ -202,22 +202,19 @@ test('smoke: every EN page has a matching BG mirror at the same relative subpath
   }
 });
 
-test('smoke: /stay/ carries the top enquiry-link bar + three read-only availability calendars (EN + BG mirror)', () => {
-  // The /stay/ page has ONE top booking bar in enquiry-link mode
-  // (data-booking-mode="enquiry-link", no data-bungalow-key — booking.js
-  // wires it as a link-builder, not a live widget) and THREE read-only
-  // availability-calendar containers, one per bungalow
-  // (data-avail-cal + data-bungalow-key="B1"|"B2"|"B3", filled by
-  // availability-calendar.js). This asserts the markup both scripts depend
-  // on survives the build on the EN page and its BG mirror. Crucially there
-  // must be NO live booking form (form[data-bungalow-key]) on /stay/ — those
-  // now live only on the legacy detail pages.
+test('smoke: /stay/ has the three read-only availability calendars and NO booking form; the availability dock now lives on the home page (EN + BG mirror)', () => {
+  // The booking bar was moved OFF /stay/ into a floating dock on the home
+  // page. So /stay/ now carries only the THREE read-only availability-calendar
+  // containers (data-avail-cal + data-bungalow-key="B1"|"B2"|"B3") and NO
+  // booking form of any kind. The dock (data-booking-mode="availability-link",
+  // which booking.js wires to navigate to /stay/) must appear exactly once on
+  // the home page and its BG mirror.
   for (const rel of ['stay/index.html', 'bg/stay/index.html']) {
     const page = pages.find((p) => p.relPath === rel);
     assert.ok(page, `expected emitted page ${rel}`);
 
-    const topBar = page.doc.querySelectorAll('form[data-booking-mode="enquiry-link"]');
-    assert.equal(topBar.length, 1, `${rel}: expected exactly 1 enquiry-link booking bar, got ${topBar.length}`);
+    const anyLinkBar = page.doc.querySelectorAll('form[data-booking-mode="enquiry-link"], form[data-booking-mode="availability-link"]');
+    assert.equal(anyLinkBar.length, 0, `${rel}: /stay/ must no longer carry a link-mode booking bar, got ${anyLinkBar.length}`);
 
     const liveForms = page.doc.querySelectorAll('form[data-bungalow-key]');
     assert.equal(liveForms.length, 0, `${rel}: /stay/ must have no live per-bungalow booking forms, got ${liveForms.length}`);
@@ -229,6 +226,14 @@ test('smoke: /stay/ carries the top enquiry-link bar + three read-only availabil
       ['B1', 'B2', 'B3'],
       `${rel}: expected exactly 3 availability calendars keyed B1/B2/B3, got [${keys.join(', ')}]`,
     );
+  }
+
+  // The floating dock lives on the home page (EN + BG mirror), exactly once.
+  for (const rel of ['index.html', 'bg/index.html']) {
+    const page = pages.find((p) => p.relPath === rel);
+    assert.ok(page, `expected emitted page ${rel}`);
+    const dock = page.doc.querySelectorAll('form[data-booking-mode="availability-link"]');
+    assert.equal(dock.length, 1, `${rel}: home page should carry exactly 1 availability-link booking dock, got ${dock.length}`);
   }
 });
 

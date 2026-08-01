@@ -1,6 +1,6 @@
 import { Bulgarian } from 'flatpickr/dist/l10n/bg.js';
 import { isOffSeason } from './season.js';
-import { currentLocale } from './util/current-locale.js';
+import { currentLocale, isDefaultLocale } from './util/current-locale.js';
 import { loadBookings, toIso, parseIso, availabilityFor } from './bookings-data.js';
 import { makeSeasonPicker } from './season-picker.js';
 
@@ -42,15 +42,20 @@ function fpDateFormat() {
 //      submit. All such widgets share ONE bookings.json fetch (cached in
 //      bookings-data.js) and ONE modal.
 //
-//   2. Enquiry-link bar — `<form data-booking-mode="enquiry-link">`. The
-//      /stay/ page carries one at the top. It does NOT read bookings.json
-//      and does NOT block dates; on submit it navigates to /enquiries/ with
-//      the chosen dates as query params (no modal). See setupEnquiryLinkForm.
+//   2. Link-mode bar — `<form data-booking-mode="availability-link">`. The
+//      home page carries one (the floating booking dock). It does NOT read
+//      bookings.json and does NOT block dates; on submit it navigates to
+//      /stay/ with the chosen dates as query params (no modal). See
+//      setupLinkForm — it takes a target path, so the same helper can drive
+//      other link destinations (e.g. /enquiries/) if one is ever added.
 export function initBooking() {
-  // Enquiry-link bar (may exist independently of any live widget/modal).
+  // Link-mode booking bars (may exist independently of any live widget/modal).
+  // Currently only the home floating dock uses this — availability-link →
+  // /stay/. setupLinkForm is target-parameterised so a future bar pointing at
+  // a different page (e.g. /enquiries/) just needs another selector here.
   document
-    .querySelectorAll('form[data-booking-mode="enquiry-link"]')
-    .forEach((form) => setupEnquiryLinkForm(form));
+    .querySelectorAll('form[data-booking-mode="availability-link"]')
+    .forEach((form) => setupLinkForm(form, 'stay/'));
 
   const liveForms = document.querySelectorAll('form[data-bungalow-key]');
   if (!liveForms.length) return;
@@ -73,12 +78,13 @@ export function initBooking() {
   liveForms.forEach((form) => setupBookingForm(form, modal));
 }
 
-// Wire the /stay/ top booking bar: plain season-aware date pickers (no
-// bookings.json blocking), and on submit navigate to /enquiries/ carrying
-// the chosen check-in/check-out so enquiry.js can pre-fill its own pickers.
-// The Rooms/Guests selects are decorative here (the enquiry form collects
-// party size separately) — only the dates are forwarded.
-function setupEnquiryLinkForm(form) {
+// Wire a link-mode booking bar: plain season-aware date pickers (no
+// bookings.json blocking), and on submit navigate to `targetPath` (relative to
+// the Vite base) carrying the chosen check-in/check-out as ?checkin=&checkout=.
+// Used by the /enquiries/ bar (legacy detail pages) and the home floating dock
+// (→ /stay/). The Rooms/Guests selects are decorative here — only the dates
+// are forwarded.
+function setupLinkForm(form, targetPath) {
   const checkin = form.querySelector('[name="checkin"]');
   const checkout = form.querySelector('[name="checkout"]');
   if (!checkin || !checkout) return;
@@ -119,12 +125,16 @@ function setupEnquiryLinkForm(form) {
     disableMobile: true,
   });
 
-  // Resolve /enquiries/ relative to this page so it works under the GitHub
-  // Pages base path (/vayana-bungalows/) and in dev (/) alike. From /stay/
-  // the sibling is ../enquiries/.
+  // Resolve the target (enquiries/ or stay/) via the Vite base path so it
+  // works from ANY page depth under the GitHub Pages base (/vayana-bungalows/)
+  // and in dev (/). Keep the LOCALE: on a /bg/ page, target /bg/<path> so a
+  // Bulgarian visitor stays in Bulgarian (matches how the plugin rewrites the
+  // static hrefs). BASE_URL is locale-agnostic, so we add the bg/ segment
+  // ourselves when not on the default locale.
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const url = new URL('../enquiries/', window.location.href);
+    const localePrefix = isDefaultLocale() ? '' : `${currentLocale()}/`;
+    const url = new URL(`${import.meta.env.BASE_URL}${localePrefix}${targetPath}`, window.location.origin);
     // Pass dates as unambiguous ISO (YYYY-MM-DD) regardless of the picker's
     // locale display format; enquiry.js parses them back with parseIso.
     if (fpIn.selectedDates[0]) url.searchParams.set('checkin', toIso(fpIn.selectedDates[0]));

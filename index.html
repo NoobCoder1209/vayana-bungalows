@@ -463,6 +463,50 @@
       </div>
     </main>
 
+    <!-- Floating booking dock (home only). A pill-shaped bar fixed to the
+         bottom-centre with the availability-link form (Check-in / Check-out /
+         Rooms / Guests / Check Availability). booking.js wires it via
+         data-booking-mode="availability-link" (season pickers + Check
+         Availability → /stay/?checkin=&checkout=). On mobile the full pill is
+         hidden and a single "Check Availability" pill link to /stay/ shows
+         instead. -->
+    <div class="booking-dock" data-booking-dock>
+      <form class="booking-dock__form" data-booking-mode="availability-link" novalidate>
+        <div class="booking-dock__field">
+          <label for="dock-checkin">Check-in</label>
+          <input type="text" id="dock-checkin" name="checkin" placeholder="Add date" autocomplete="off" />
+        </div>
+        <div class="booking-dock__field">
+          <label for="dock-checkout">Check-out</label>
+          <input type="text" id="dock-checkout" name="checkout" placeholder="Add date" autocomplete="off" />
+        </div>
+        <div class="booking-dock__field">
+          <label for="dock-rooms">Rooms</label>
+          <select id="dock-rooms" name="rooms">
+            <option>1 room</option>
+            <option>2 rooms</option>
+            <option>3 rooms</option>
+            <option>4 rooms</option>
+          </select>
+        </div>
+        <div class="booking-dock__field">
+          <label for="dock-guests">Guests</label>
+          <select id="dock-guests" name="guests">
+            <option>1 adult</option>
+            <option>2 adults</option>
+            <option>2 adults, 1 child</option>
+            <option>2 adults, 2 children</option>
+            <option>3 adults</option>
+            <option>4 adults</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary booking-dock__submit">Check Availability</button>
+      </form>
+      <!-- Mobile fallback: the multi-field pill can't fit, so show a single
+           Check Availability pill linking to the stay page. -->
+      <a class="booking-dock__mobile-cta" href="stay/">Check Availability</a>
+    </div>
+
     <!-- 17. Footer -->
     <footer class="site-footer">
       <div class="container site-footer__inner">

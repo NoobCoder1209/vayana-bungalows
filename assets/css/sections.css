@@ -237,6 +237,110 @@
   }
 }
 
+/* ========== Floating booking dock (home page) ========== */
+/* A pill-shaped bar fixed to the bottom-centre of the viewport carrying the
+   enquiry-link form. Sits above page content but BELOW modals/lightbox
+   (--z-sticky range). On mobile the multi-field pill is hidden and a single
+   "Book Now" pill link shows instead. */
+.booking-dock {
+  position: fixed;
+  left: 50%;
+  /* Float the dock clear of the viewport bottom (lifted off the very bottom
+     edge; tuned by eye). Footer left untouched. */
+  bottom: 85px;
+  transform: translateX(-50%);
+  z-index: var(--z-sticky);
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+}
+
+.booking-dock__form {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  padding-left: 0.5rem;
+}
+
+.booking-dock__field {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.7rem 1.25rem;
+  min-width: 0;
+  /* Thin separators between fields (not before the first). */
+  border-left: 1px solid var(--border);
+}
+.booking-dock__field:first-child {
+  border-left: 0;
+}
+
+.booking-dock__field label {
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.booking-dock__field input,
+.booking-dock__field select {
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  font-size: 0.95rem;
+  font-family: var(--font-heading);
+  background: transparent;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+.booking-dock__field input:focus,
+.booking-dock__field select:focus {
+  outline: none;
+}
+
+/* Book Now — the filled pill end. Round only the right side so it hugs the
+   container's pill edge; the left stays square where it meets the last field
+   (the container's overflow:hidden + border-radius rounds the outer corner). */
+.booking-dock__submit {
+  border-radius: 0;
+  padding: 0 2rem;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Mobile Book Now pill — hidden on desktop; shown when the full form is
+   hidden below the breakpoint. */
+.booking-dock__mobile-cta {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .booking-dock__form {
+    display: none;
+  }
+  .booking-dock__mobile-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 2.5rem;
+    background: #6f5e40;
+    color: var(--bg-light);
+    border-radius: 999px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+    font-family: var(--font-body);
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+}
+
 /* ========== Intro split ========== */
 .intro__grid {
   display: grid;

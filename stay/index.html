@@ -152,66 +152,7 @@
         <div class="container">
           <span class="eyebrow eyebrow--light">The bungalows</span>
           <h1 id="stay-title">Our Bungalows</h1>
-          <p class="stay-hero__sub">Three handcrafted villas on the Tsarevo coast &mdash; each with its own live availability. Pick your dates below.</p>
-        </div>
-      </section>
-
-      <!-- Top booking bar — one shared enquiry entry point (NOT per bungalow).
-           Plain season-aware date pickers with NO availability blocking: the
-           per-bungalow availability lives in the read-only calendars below.
-           `data-booking-mode="enquiry-link"` tells booking.js to wire this as
-           a link-builder (no bookings.json, no modal) — on submit it navigates
-           to ../enquiries/?checkin=&checkout= so the enquiry form pre-fills
-           the chosen dates. The legend underneath is the shared key for the
-           three availability calendars further down the page. -->
-      <section class="booking" id="booking" aria-labelledby="booking-title">
-        <div class="container">
-          <h2 id="booking-title" class="sr-only">Check dates and enquire</h2>
-          <form class="booking__form" id="booking-form" data-booking-mode="enquiry-link" novalidate>
-            <div class="booking__field">
-              <label for="bk-checkin">Check-in</label>
-              <input type="text" id="bk-checkin" name="checkin" placeholder="Add date" autocomplete="off" />
-            </div>
-            <div class="booking__field">
-              <label for="bk-checkout">Check-out</label>
-              <input type="text" id="bk-checkout" name="checkout" placeholder="Add date" autocomplete="off" />
-            </div>
-            <div class="booking__field">
-              <label for="bk-rooms">Rooms</label>
-              <select id="bk-rooms" name="rooms">
-                <option>1 room</option>
-                <option>2 rooms</option>
-                <option>3 rooms</option>
-                <option>4 rooms</option>
-              </select>
-            </div>
-            <div class="booking__field">
-              <label for="bk-guests">Guests</label>
-              <select id="bk-guests" name="guests">
-                <option>1 adult</option>
-                <option>2 adults</option>
-                <option>2 adults, 1 child</option>
-                <option>2 adults, 2 children</option>
-                <option>3 adults</option>
-                <option>4 adults</option>
-              </select>
-            </div>
-            <button type="submit" class="btn btn-primary booking__submit">Book Now</button>
-          </form>
-          <div class="booking-legend booking-legend--availability" aria-label="Availability legend for the calendars below">
-            <span class="booking-legend__item">
-              <span class="booking-legend__swatch booking-legend__swatch--available" aria-hidden="true"></span>
-              Available
-            </span>
-            <span class="booking-legend__item">
-              <span class="booking-legend__swatch booking-legend__swatch--booked" aria-hidden="true"></span>
-              Already booked
-            </span>
-            <span class="booking-legend__item">
-              <span class="booking-legend__swatch booking-legend__swatch--past" aria-hidden="true"></span>
-              Past dates
-            </span>
-          </div>
+          <p class="stay-hero__sub">Three handcrafted villas on the Tsarevo coast &mdash; each with its own live availability.</p>
         </div>
       </section>
 
