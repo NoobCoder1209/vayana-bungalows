@@ -1467,15 +1467,47 @@
   width: 100%;
 }
 
-/* Two month grids side by side. */
+/* Two month grids side by side. Wider gap so the two months read as clearly
+   separate calendars — not one continuous 14-column grid. The vertical divider
+   (below) is centered in this gap, so each month's weekday underline keeps a
+   visible distance from the line.
+   NOTE: the previous value here was `--space-5`, which is NOT a defined token
+   (tokens.css only ships 1,2,3,4,6,8,12,16) — it resolved to 0, so the two
+   months were touching. `--space-6` (3rem) both fixes that zero-gap and gives
+   the divider room to breathe. */
 .avail-cal__months {
   display: flex;
-  gap: var(--space-5);
+  gap: var(--space-6);
 }
 
+/* Equal-height columns (flex default `align-items: stretch`) mean both month
+   grids share the taller month's height, so the divider — anchored to the
+   second grid — always spans the full shared height regardless of whether a
+   month has 5 or 6 week-rows. No per-month height mismatch. */
 .avail-cal__month-grid {
   flex: 1 1 0;
   min-width: 0;
+}
+
+/* Hairline divider between the two months, drawn as a pseudo-element on the
+   second grid so we control its exact span. It is INSET from the top (starts
+   a little below the month label, not at the very top) and centered in the
+   inter-month gap, sitting midway between the two grids' edges rather than
+   flush against either. Flips to a top border when the grids stack on mobile
+   (see the max-width block below). */
+.avail-cal__month-grid + .avail-cal__month-grid {
+  position: relative;
+}
+.avail-cal__month-grid + .avail-cal__month-grid::before {
+  content: "";
+  position: absolute;
+  /* Shorten from the top: start below the month label / first rows. */
+  top: var(--space-6);
+  bottom: 0;
+  /* Center the line in the flex gap (half of --space-6 to the left). */
+  left: calc(var(--space-6) / -2);
+  width: 1px;
+  background: var(--border);
 }
 
 .avail-cal__header {
@@ -1706,6 +1738,16 @@
   .avail-cal__months {
     flex-direction: column;
     gap: var(--space-4);
+  }
+  /* Stacked: the vertical divider becomes a horizontal rule above the second
+     month, spanning its full width (no top inset needed when horizontal). */
+  .avail-cal__month-grid + .avail-cal__month-grid::before {
+    top: calc(var(--space-4) / -2);
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: 1px;
   }
 }
 
