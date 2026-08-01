@@ -1,19 +1,27 @@
 // Gallery slider.
 //
-// Two modes, split at the 769px breakpoint (matching the CSS + the arrow
-// visibility):
-//   - Mobile (<=768px): arrows are hidden and the track is a native
-//     scroll-snap container (see sections.css) — touch-swipe scrolls it.
-//     This module does nothing there.
-//   - Desktop (>=769px): the track is a transform-driven stepper. prev/next
-//     move exactly one card with the same animation every time, and the ends
-//     wrap SEAMLESSLY: stepping past the last card slides the first in from
-//     the right (and vice-versa) as a normal one-card slide — achieved by
+// Two modes, split by INPUT CAPABILITY (not screen width — width was the old
+// proxy for "desktop = mouse", which wrongly put wide tablets in arrows-only
+// mode). The split matches the CSS in sections.css exactly so layout and JS
+// never desync:
+//   - Pure-mouse (bucket A: hover + fine pointer, no touch digitizer):
+//     the track is a transform-driven stepper. prev/next move exactly one card
+//     with the same animation every time, and the ends wrap SEAMLESSLY by
 //     rotating DOM items through the track so there is no first/last edge.
+//   - Touch-capable (buckets B & C: tablets, phones, touch-laptops): the track
+//     is a native scroll-snap container (see sections.css) — touch-swipe scrolls
+//     it at any width. Where arrows are also shown (touch-laptops), they drive
+//     native scrollBy-by-one-card (scrollNext/scrollPrev) instead of the
+//     transform stepper — the two are mutually exclusive on one track. Arrows
+//     are hidden on pure-touch (phones/tablets) via CSS; there swipe is the only
+//     control.
 //
 // Rooms and any arrowless [data-slider] are untouched (no prev/next → skipped).
 
-const DESKTOP_MQ = '(min-width: 769px)';
+// "Pure mouse" — the ONLY case that gets the transform stepper. Everything else
+// (any touch digitizer present) uses native scroll so swipe works. Kept
+// byte-identical to the stepper @media condition in sections.css.
+const STEPPER_MQ = '(hover: hover) and (pointer: fine) and (not (any-pointer: coarse))';
 const SLIDE_MS = 500; // must match the inline transition duration below
 
 export function initSliders() {
@@ -96,32 +104,53 @@ export function initSliders() {
       window.setTimeout(() => { if (animating) done(); }, SLIDE_MS + 80);
     };
 
-    // Enable/disable the stepper with the desktop media query. On mobile we
-    // remove any inline transform so the native scroll container is clean.
-    const mq = window.matchMedia(DESKTOP_MQ);
-    let wired = false;
-    const onPrev = () => goPrev();
-    const onNext = () => goNext();
+    // Native-scroll arrow handlers (buckets B & C). The track is a real
+    // scroll-snap container here, so scrollBy by one card lands on a snapped
+    // slide automatically; at the ends we WRAP by jumping scrollLeft to the
+    // other extreme (no seamless DOM rotation — that fights the native scroll).
+    // -1/+1 px tolerances absorb sub-pixel scrollWidth rounding.
+    const scrollBehavior = () => (reduced ? 'auto' : 'smooth');
+    const scrollNext = () => {
+      const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 1;
+      if (atEnd) track.scrollTo({ left: 0, behavior: scrollBehavior() });
+      else track.scrollBy({ left: stepDistance(), behavior: scrollBehavior() });
+    };
+    const scrollPrev = () => {
+      const atStart = track.scrollLeft <= 1;
+      if (atStart) track.scrollTo({ left: track.scrollWidth, behavior: scrollBehavior() });
+      else track.scrollBy({ left: -stepDistance(), behavior: scrollBehavior() });
+    };
 
-    const enable = () => {
+    // The arrow handlers are wired ONCE and self-branch on the live mode: in
+    // pure-mouse (stepper) mode they run the transform stepper; otherwise they
+    // drive native scroll. Reading mq.matches per click keeps them correct
+    // across mode changes (plugging a mouse, DevTools device emulation) with no
+    // rebinding. Arrows may be hidden by CSS (bucket B) — then they simply never
+    // fire.
+    const mq = window.matchMedia(STEPPER_MQ);
+    let wired = false;
+    const onPrev = () => (mq.matches ? goPrev() : scrollPrev());
+    const onNext = () => (mq.matches ? goNext() : scrollNext());
+
+    const wire = () => {
       if (wired) return;
       prev?.addEventListener('click', onPrev);
       next?.addEventListener('click', onNext);
       wired = true;
     };
-    const disable = () => {
-      if (!wired) return;
-      prev?.removeEventListener('click', onPrev);
-      next?.removeEventListener('click', onNext);
-      // Reset any inline transform/transition so the native-scroll mobile
-      // layout is pristine.
-      track.style.transition = '';
-      track.style.transform = '';
-      animating = false;
-      wired = false;
+
+    // On leaving stepper mode, strip the inline transform/transition the stepper
+    // left behind so the native scroll container is pristine. Nothing to do
+    // entering stepper mode (goNext/goPrev set their own inline styles).
+    const sync = () => {
+      if (!mq.matches) {
+        track.style.transition = '';
+        track.style.transform = '';
+        animating = false;
+      }
     };
 
-    const sync = () => (mq.matches ? enable() : disable());
+    wire();
     sync();
     mq.addEventListener('change', sync);
   });

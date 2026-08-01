@@ -389,12 +389,17 @@
   scrollbar-width: none;
 }
 
-/* Desktop (where the prev/next arrows show, >768px): drive the gallery as a
-   transform-based stepper for seamless infinite looping (slider.js rotates
-   DOM items + translateX). Mobile keeps the native-scroll + snap above so
-   touch-swipe still works there (arrows are hidden <=768px). The viewport
-   clips the transformed track. */
-@media (min-width: 769px) {
+/* Pure-mouse devices (bucket A: hover + fine primary pointer AND no touch
+   digitizer at all): drive the gallery as a transform-based stepper for
+   seamless infinite looping (slider.js rotates DOM items + translateX). The
+   `not (any-pointer: coarse)` clause is what excludes touch-laptops — a Surface
+   has a fine primary pointer + hover but also a touchscreen, so it (correctly)
+   falls through to the base native-scroll below and gets swipe. Touch devices
+   (tablets, phones, touch-laptops) keep the native-scroll + snap base rule so
+   touch-swipe works at ANY width — the previous `min-width:769px` gate wrongly
+   put wide tablets in stepper (arrows-only) mode. The viewport clips the
+   transformed track. */
+@media (hover: hover) and (pointer: fine) and (not (any-pointer: coarse)) {
   .gallery__viewport {
     overflow: hidden;
   }
@@ -458,7 +463,11 @@
 .gallery__arrow--prev { left: 1rem; }
 .gallery__arrow--next { right: 1rem; }
 
-@media (max-width: 768px) {
+/* Hide the arrows only on pure-touch devices (bucket B: no hover-capable fine
+   pointer) — phones and pure tablets swipe instead. Devices that CAN hover with
+   a fine pointer (desktop mouse = bucket A, touch-laptops = bucket C) keep the
+   arrows. Touch-laptops thus get both swipe AND arrows. */
+@media not all and (hover: hover) and (pointer: fine) {
   .gallery__arrow { display: none; }
 }
 
