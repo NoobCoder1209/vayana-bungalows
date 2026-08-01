@@ -245,7 +245,9 @@
 .booking-dock {
   position: fixed;
   left: 50%;
-  bottom: clamp(1rem, 3vw, 1.75rem);
+  /* Float the dock clear of the viewport bottom (lifted off the very bottom
+     edge; tuned by eye). Footer left untouched. */
+  bottom: 85px;
   transform: translateX(-50%);
   z-index: var(--z-sticky);
   width: max-content;
