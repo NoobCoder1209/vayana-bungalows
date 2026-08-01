@@ -1405,8 +1405,40 @@
 
 .avail-cal__nav-group {
   display: inline-flex;
+  align-items: center;
   gap: 6px;
   flex-shrink: 0;
+}
+
+/* "Today" button — sits left of the arrows, same 38px height + outline
+   treatment, but auto-width with the label. Jumps back to the current
+   month (+ next); disabled when already showing it. */
+.avail-cal__today {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background var(--t-fast, 0.2s ease), border-color var(--t-fast, 0.2s ease), color var(--t-fast, 0.2s ease), opacity 0.2s ease;
+}
+
+.avail-cal__today:hover:not([disabled]) {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--bg-light);
+}
+
+.avail-cal__today[disabled] {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* Square nav buttons matching the site's un-rounded button language. */
