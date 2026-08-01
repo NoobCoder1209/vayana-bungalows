@@ -47,10 +47,17 @@ function fpDateFormat() {
 //      and does NOT block dates; on submit it navigates to /enquiries/ with
 //      the chosen dates as query params (no modal). See setupEnquiryLinkForm.
 export function initBooking() {
-  // Enquiry-link bar (may exist independently of any live widget/modal).
+  // Link-mode booking bars (may exist independently of any live widget/modal):
+  //   - enquiry-link      → navigates to /enquiries/ (legacy detail pages)
+  //   - availability-link → navigates to /stay/ (the home floating dock)
+  // Both build the target URL from the Vite base + carry the chosen dates as
+  // ?checkin=&checkout=; only the destination path differs.
   document
     .querySelectorAll('form[data-booking-mode="enquiry-link"]')
-    .forEach((form) => setupEnquiryLinkForm(form));
+    .forEach((form) => setupLinkForm(form, 'enquiries/'));
+  document
+    .querySelectorAll('form[data-booking-mode="availability-link"]')
+    .forEach((form) => setupLinkForm(form, 'stay/'));
 
   const liveForms = document.querySelectorAll('form[data-bungalow-key]');
   if (!liveForms.length) return;
@@ -73,12 +80,13 @@ export function initBooking() {
   liveForms.forEach((form) => setupBookingForm(form, modal));
 }
 
-// Wire the /stay/ top booking bar: plain season-aware date pickers (no
-// bookings.json blocking), and on submit navigate to /enquiries/ carrying
-// the chosen check-in/check-out so enquiry.js can pre-fill its own pickers.
-// The Rooms/Guests selects are decorative here (the enquiry form collects
-// party size separately) — only the dates are forwarded.
-function setupEnquiryLinkForm(form) {
+// Wire a link-mode booking bar: plain season-aware date pickers (no
+// bookings.json blocking), and on submit navigate to `targetPath` (relative to
+// the Vite base) carrying the chosen check-in/check-out as ?checkin=&checkout=.
+// Used by the /enquiries/ bar (legacy detail pages) and the home floating dock
+// (→ /stay/). The Rooms/Guests selects are decorative here — only the dates
+// are forwarded.
+function setupLinkForm(form, targetPath) {
   const checkin = form.querySelector('[name="checkin"]');
   const checkout = form.querySelector('[name="checkout"]');
   if (!checkin || !checkout) return;
@@ -119,12 +127,12 @@ function setupEnquiryLinkForm(form) {
     disableMobile: true,
   });
 
-  // Resolve /enquiries/ relative to this page so it works under the GitHub
-  // Pages base path (/vayana-bungalows/) and in dev (/) alike. From /stay/
-  // the sibling is ../enquiries/.
+  // Resolve the target (enquiries/ or stay/) via the Vite base path so it
+  // works from ANY page depth — the home page and /stay/ alike — under the
+  // GitHub Pages base (/vayana-bungalows/) and in dev (/).
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const url = new URL('../enquiries/', window.location.href);
+    const url = new URL(`${import.meta.env.BASE_URL}${targetPath}`, window.location.origin);
     // Pass dates as unambiguous ISO (YYYY-MM-DD) regardless of the picker's
     // locale display format; enquiry.js parses them back with parseIso.
     if (fpIn.selectedDates[0]) url.searchParams.set('checkin', toIso(fpIn.selectedDates[0]));
