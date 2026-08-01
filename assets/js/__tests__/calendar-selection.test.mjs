@@ -44,6 +44,7 @@ function loadLogic() {
     const PRICE_PER_NIGHT = 100;
     const MIN_NIGHTS = 5;
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const KEY_ORDER = ['B1', 'B2', 'B3'];
     const parseIso = (iso) => { const [y,m,d] = iso.split('-').map(Number); return new Date(y, m-1, d); };
     const toIso = (d) => {
       const y = d.getFullYear();
@@ -58,9 +59,10 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'priceForNights'),
     sliceFn(SEL_SRC, 'isRangeContiguous'),
     sliceFn(SEL_SRC, 'evaluateSelection'),
+    sliceFn(SEL_SRC, 'firstAvailableBungalow'),
     sliceFn(SEL_SRC, 'dayState'),
     sliceFn(SEL_SRC, 'reduceClick'),
-    'return { nightsBetween, priceForNights, isRangeContiguous, evaluateSelection, dayState, reduceClick, MIN_NIGHTS, PRICE_PER_NIGHT };',
+    'return { nightsBetween, priceForNights, isRangeContiguous, evaluateSelection, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, PRICE_PER_NIGHT, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -145,6 +147,64 @@ test('evaluateSelection: gap-crossing range → invalid', () => {
   const unavailable = new Set(['2026-06-04', '2026-06-05', '2026-06-06', '2026-06-07', '2026-06-08', '2026-06-09']);
   const v = L.evaluateSelection({ key: 'B1', checkIn: '2026-06-01', checkOut: '2026-06-11' }, unavailable, TODAY);
   assert.equal(v.kind, 'invalid');
+});
+
+// ── firstAvailableBungalow (home-dock deep-link resolver) ────────────────────
+// Given the three bungalows' booked-night sets + a candidate range, return the
+// first hosting bungalow (B1→B2→B3) or null. Folds in the 5-night minimum that
+// the /stay/ calendars enforce but the home dock does not.
+
+const KO = ['B1', 'B2', 'B3'];
+const boarded = (b1 = [], b2 = [], b3 = []) =>
+  new Map([['B1', new Set(b1)], ['B2', new Set(b2)], ['B3', new Set(b3)]]);
+
+test('firstAvailableBungalow: all three free → B1 (numeric order)', () => {
+  const key = L.firstAvailableBungalow(boarded(), '2026-08-10', '2026-08-15', TODAY, KO);
+  assert.equal(key, 'B1');
+});
+
+test('firstAvailableBungalow: B1+B3 free, B2 booked mid-range → B1 (order)', () => {
+  const b2 = ['2026-08-12']; // a night inside the range
+  const key = L.firstAvailableBungalow(boarded([], b2, []), '2026-08-10', '2026-08-15', TODAY, KO);
+  assert.equal(key, 'B1');
+});
+
+test('firstAvailableBungalow: only B2 free (B1+B3 booked mid-range) → B2', () => {
+  const booked = ['2026-08-12'];
+  const key = L.firstAvailableBungalow(boarded(booked, [], booked), '2026-08-10', '2026-08-15', TODAY, KO);
+  assert.equal(key, 'B2');
+});
+
+test('firstAvailableBungalow: none free (all booked mid-range) → null', () => {
+  const booked = ['2026-08-12'];
+  const key = L.firstAvailableBungalow(boarded(booked, booked, booked), '2026-08-10', '2026-08-15', TODAY, KO);
+  assert.equal(key, null);
+});
+
+test('firstAvailableBungalow: contiguous but <5 nights → null even when all free', () => {
+  // Aug 10 → Aug 13 = 3 nights; every bungalow free, but under the minimum.
+  const key = L.firstAvailableBungalow(boarded(), '2026-08-10', '2026-08-13', TODAY, KO);
+  assert.equal(key, null);
+});
+
+test('firstAvailableBungalow: gap-crossing for B1, clean for B2 → B2', () => {
+  // B1 has Aug 4–9 booked; range Aug 1 → Aug 11 spans the gap (invalid for B1),
+  // B2 is free → B2.
+  const b1 = ['2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09'];
+  const key = L.firstAvailableBungalow(boarded(b1, [], []), '2026-08-01', '2026-08-11', TODAY, KO);
+  assert.equal(key, 'B2');
+});
+
+test('firstAvailableBungalow: checkout day booked is fine (departure, not a night)', () => {
+  // Aug 15 (the checkout) booked for B1, nights Aug 10..14 free → still B1.
+  const key = L.firstAvailableBungalow(boarded(['2026-08-15'], [], []), '2026-08-10', '2026-08-15', TODAY, KO);
+  assert.equal(key, 'B1');
+});
+
+test('firstAvailableBungalow: default keyOrder resolves B1→B2→B3', () => {
+  // Omit the explicit keyOrder → uses the exported KEY_ORDER default.
+  const key = L.firstAvailableBungalow(boarded(['2026-08-12'], [], []), '2026-08-10', '2026-08-15', TODAY);
+  assert.equal(key, 'B2');
 });
 
 // ── per-day paint state ───────────────────────────────────────────────────────
