@@ -200,7 +200,7 @@ function renderInstance(inst) {
       <span class="avail-cal__eyebrow">Availability</span>
       <span class="avail-cal__nav-group">
         <button class="avail-cal__today" type="button"
-                aria-label="Jump to the current month"${atFloor ? ' disabled' : ''}>Today</button>
+                title="Jump to the current month"${atFloor ? ' disabled' : ''}>Today</button>
         <button class="avail-cal__nav avail-cal__nav--prev" type="button"
                 aria-label="Previous month"${atFloor ? ' disabled' : ''}>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
@@ -225,11 +225,11 @@ function renderInstance(inst) {
     </div>
   `;
 
-  // Wire this instance's arrows. Every control moves ALL calendars together.
-  const today_ = root.querySelector('.avail-cal__today');
+  // Wire this instance's controls. Every control moves ALL calendars together.
+  const todayBtn = root.querySelector('.avail-cal__today');
   const prev = root.querySelector('.avail-cal__nav--prev');
   const next = root.querySelector('.avail-cal__nav--next');
-  today_?.addEventListener('click', () => {
+  todayBtn?.addEventListener('click', () => {
     // Jump back to the current month (+ next), i.e. the navigation floor.
     const { floor } = navBounds();
     if (monthCmp(currentMonth, floor) !== 0) {
