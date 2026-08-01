@@ -49,6 +49,28 @@ export function initLightbox() {
     render();
   };
 
+  // Touch-swipe navigation on the overlay: a horizontal drag flips photos the
+  // same way the arrows do (swipe left → next, swipe right → prev), wrapping at
+  // the ends. Only a clearly-horizontal gesture counts, so a vertical drag
+  // (e.g. flicking to dismiss / scroll) is ignored. Passive listeners — we
+  // never preventDefault, so the browser keeps normal gesture handling.
+  const SWIPE_MIN = 45;   // px of horizontal travel to count as a swipe
+  let touchX = 0;
+  let touchY = 0;
+  const onTouchStart = (e) => {
+    const t = e.changedTouches[0];
+    touchX = t.clientX;
+    touchY = t.clientY;
+  };
+  const onTouchEnd = (e) => {
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchX;
+    const dy = t.clientY - touchY;
+    // Horizontal intent: enough X travel AND more horizontal than vertical.
+    if (Math.abs(dx) < SWIPE_MIN || Math.abs(dx) <= Math.abs(dy)) return;
+    go(dx < 0 ? 1 : -1);
+  };
+
   const onKeyDown = (e) => {
     if (e.key === 'Escape') { e.preventDefault(); close(); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
@@ -87,6 +109,8 @@ export function initLightbox() {
 
     box.hidden = false;
     document.addEventListener('keydown', onKeyDown);
+    box.addEventListener('touchstart', onTouchStart, { passive: true });
+    box.addEventListener('touchend', onTouchEnd, { passive: true });
     // Focus the close button so keyboard users land inside the dialog.
     if (closeBtn) closeBtn.focus({ preventScroll: true });
   };
@@ -95,6 +119,8 @@ export function initLightbox() {
     if (box.hidden) return;
     box.hidden = true;
     document.removeEventListener('keydown', onKeyDown);
+    box.removeEventListener('touchstart', onTouchStart);
+    box.removeEventListener('touchend', onTouchEnd);
 
     document.body.classList.remove('body--scroll-locked');
     document.body.style.top = '';
