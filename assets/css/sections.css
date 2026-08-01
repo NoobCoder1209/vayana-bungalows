@@ -387,6 +387,12 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
+  /* iOS: declare that this element owns the horizontal pan gesture, and turn on
+     momentum scrolling. Without pan-x, Safari can hand the touch to an ancestor
+     (e.g. the bungalow carousel's overflow:hidden + -webkit-mask wrapper) and
+     the swipe never scrolls the track. Harmless on other engines. */
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Pure-mouse devices (bucket A: hover + fine primary pointer AND no touch
@@ -409,6 +415,10 @@
     /* transition is applied/removed inline by slider.js per step so the
        DOM-rotation reset can happen instantly. */
     will-change: transform;
+    /* Not a scroll container in stepper mode — restore the default so a
+       vertical drag over the gallery still scrolls the page. pan-x only
+       matters for the touch/native-scroll buckets. */
+    touch-action: auto;
   }
 }
 
