@@ -37,7 +37,10 @@ export function initSliders() {
     const items = () => Array.from(track.children);
     if (items().length < 2) return;
 
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Read prefers-reduced-motion LIVE on each use (not cached at init) so a
+    // mid-session OS toggle is honoured — the module has no separate listener
+    // for the reduced-motion query.
+    const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let animating = false;
 
     // One card's advance distance: item width + the flex gap.
@@ -61,7 +64,7 @@ export function initSliders() {
     const goNext = () => {
       if (animating) return;
       const d = stepDistance();
-      if (reduced) {
+      if (reduced()) {
         track.appendChild(track.children[0]);
         return;
       }
@@ -84,7 +87,7 @@ export function initSliders() {
     const goPrev = () => {
       if (animating) return;
       const d = stepDistance();
-      if (reduced) {
+      if (reduced()) {
         track.insertBefore(track.children[track.children.length - 1], track.children[0]);
         return;
       }
@@ -106,19 +109,36 @@ export function initSliders() {
 
     // Native-scroll arrow handlers (buckets B & C). The track is a real
     // scroll-snap container here, so scrollBy by one card lands on a snapped
-    // slide automatically; at the ends we WRAP by jumping scrollLeft to the
-    // other extreme (no seamless DOM rotation — that fights the native scroll).
-    // -1/+1 px tolerances absorb sub-pixel scrollWidth rounding.
-    const scrollBehavior = () => (reduced ? 'auto' : 'smooth');
+    // slide automatically. We only WRAP (jump to the other extreme) once the
+    // track is ALREADY pinned at an edge and a further step would reveal
+    // nothing new — never mid-strip.
+    //
+    // Padding matters: the home gallery track has side padding
+    // (`padding: 0 var(--container-pad)`), so the resting scrollLeft at the
+    // FIRST card is the first child's offsetLeft (~32px), NOT 0 — and the
+    // bungalow tracks (padding:0) rest at 0. So the start edge is
+    // `firstChild.offsetLeft`, not a hardcoded 0, and the wrap-to-start target
+    // is that same value. maxScroll (scrollWidth - clientWidth) is the true
+    // right-most position and already accounts for how many cards are visible,
+    // so multi-card galleries don't wrap early. Tolerance is half a card so
+    // snap-settling near an edge is still detected.
+    const minScroll = () => track.children[0]?.offsetLeft || 0;
+    const maxScroll = () => track.scrollWidth - track.clientWidth;
+    const edgeTol = () => Math.max(2, stepDistance() / 2);
+    const scrollBehavior = () => (reduced() ? 'auto' : 'smooth');
     const scrollNext = () => {
-      const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 1;
-      if (atEnd) track.scrollTo({ left: 0, behavior: scrollBehavior() });
-      else track.scrollBy({ left: stepDistance(), behavior: scrollBehavior() });
+      if (track.scrollLeft >= maxScroll() - edgeTol()) {
+        track.scrollTo({ left: minScroll(), behavior: scrollBehavior() }); // wrap to start
+      } else {
+        track.scrollBy({ left: stepDistance(), behavior: scrollBehavior() });
+      }
     };
     const scrollPrev = () => {
-      const atStart = track.scrollLeft <= 1;
-      if (atStart) track.scrollTo({ left: track.scrollWidth, behavior: scrollBehavior() });
-      else track.scrollBy({ left: -stepDistance(), behavior: scrollBehavior() });
+      if (track.scrollLeft <= minScroll() + edgeTol()) {
+        track.scrollTo({ left: maxScroll(), behavior: scrollBehavior() }); // wrap to end
+      } else {
+        track.scrollBy({ left: -stepDistance(), behavior: scrollBehavior() });
+      }
     };
 
     // The arrow handlers are wired ONCE and self-branch on the live mode: in
@@ -139,11 +159,17 @@ export function initSliders() {
       wired = true;
     };
 
-    // On leaving stepper mode, strip the inline transform/transition the stepper
-    // left behind so the native scroll container is pristine. Nothing to do
-    // entering stepper mode (goNext/goPrev set their own inline styles).
+    // Keep the two modes' residue from bleeding into each other on a live mode
+    // flip (DevTools emulation, plugging/unplugging a mouse):
+    //   - Leaving stepper → native: strip the inline transform/transition the
+    //     stepper left so the native scroll container starts pristine.
+    //   - Entering stepper ← native: the stepper assumes the track sits at
+    //     scrollLeft 0 / translateX(0). A leftover native scroll offset would
+    //     shift every stepper frame, so reset scrollLeft.
     const sync = () => {
-      if (!mq.matches) {
+      if (mq.matches) {
+        track.scrollLeft = 0;
+      } else {
         track.style.transition = '';
         track.style.transform = '';
         animating = false;
