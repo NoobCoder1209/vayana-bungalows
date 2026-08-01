@@ -150,6 +150,7 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungal
     const iso = toIso(date);
     const classes = ['avail-cal__day'];
     let stateLabel = 'available';
+    let selState = ''; // '' | 'start' | 'end' | 'mid' — only set for available
 
     // Precedence: past → off-season → booked → available. Off-season is a
     // greyed, non-bookable state now that navigation spans all 12 months
@@ -170,17 +171,25 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungal
       // maps (bungalowKey, iso) → '' | 'start' | 'end' | 'mid'; anything else
       // stays plainly available. Endpoints/middle get their own classes so CSS
       // can paint gold circles without the selection layer touching the DOM.
-      const sel = selectionLookup(bungalowKey, iso);
-      if (sel === 'start') classes.push('is-sel-start');
-      else if (sel === 'end') classes.push('is-sel-end');
-      else if (sel === 'mid') classes.push('is-sel-mid');
+      selState = selectionLookup(bungalowKey, iso);
+      if (selState === 'start') classes.push('is-sel-start');
+      else if (selState === 'end') classes.push('is-sel-end');
+      else if (selState === 'mid') classes.push('is-sel-mid');
     }
 
+    const isAvailable = stateLabel === 'available';
+    // Available cells are the page's interactive booking control: make them
+    // focusable (tabindex=0) with button semantics + aria-selected so keyboard
+    // and screen-reader users can select a range, not just mouse users. Blocked
+    // days stay plain gridcells with aria-disabled (not focusable).
     const label = `${dayFormatter.format(date)} — ${stateLabel}`;
+    const attrs = isAvailable
+      ? ` role="gridcell" aria-label="${label}" data-iso="${iso}"`
+        + ' tabindex="0"'
+        + ` aria-selected="${selState ? 'true' : 'false'}"`
+      : ` role="gridcell" aria-label="${label}" data-iso="${iso}" aria-disabled="true"`;
     cellHtml.push(
-      `<div class="${classes.join(' ')}" role="gridcell" aria-label="${label}"`
-        + ` data-iso="${iso}"`
-        + `${stateLabel === 'available' ? '' : ' aria-disabled="true"'}>`
+      `<div class="${classes.join(' ')}"${attrs}>`
         + `<span aria-hidden="true">${day}</span></div>`,
     );
   }

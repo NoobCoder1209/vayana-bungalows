@@ -115,6 +115,43 @@ export function dayState(sel, iso) {
   return '';
 }
 
+/**
+ * Pure click reducer: given the current selection and a click (bungalow key +
+ * available-day ISO + that bungalow's unavailable set + today), return the NEXT
+ * selection. Extracted so the click state machine is testable without a DOM and
+ * the transitions live in one place.
+ *
+ * Invariant: a selection ALWAYS has a non-null `checkIn` (every branch that
+ * creates one sets it). So there is no "selection with no check-in" state — the
+ * only question on a same-bungalow second click is whether it completes,
+ * re-seeds, or is void.
+ *
+ * Transitions:
+ *   - no selection / different bungalow / both endpoints already set (3rd click)
+ *       → fresh check-in on this bungalow
+ *   - same day re-clicked, or clicked earlier than check-in
+ *       → re-seed check-in (clears check-out)
+ *   - clicked later but the range crosses a booked/blocked gap
+ *       → re-seed check-in to the clicked date (owner rule; not a rejection)
+ *   - clicked later and contiguous
+ *       → record check-out (completes the range)
+ */
+export function reduceClick(selection, { key, iso, unavailable, today }) {
+  const fresh = { key, checkIn: iso, checkOut: null };
+
+  // First click, switching bungalows, or a 3rd click (both endpoints set).
+  if (!selection || selection.key !== key || (selection.checkIn && selection.checkOut)) {
+    return fresh;
+  }
+  // Same-bungalow second click. (checkIn is always set — see invariant.)
+  if (iso === selection.checkIn) return fresh; // re-pick the same start
+  if (parseIso(iso) < parseIso(selection.checkIn)) return fresh; // earlier → new start
+  if (!isRangeContiguous(selection.checkIn, iso, unavailable, today)) {
+    return fresh; // crosses a gap → clicked date becomes the new check-in
+  }
+  return { key, checkIn: selection.checkIn, checkOut: iso }; // contiguous → complete
+}
+
 // ── DOM wiring ────────────────────────────────────────────────────────────────
 
 // Local-midnight today, for the past-night guard.
@@ -131,6 +168,14 @@ function todayMidnight() {
 export function initCalendarSelection() {
   const roots = Array.from(document.querySelectorAll('[data-avail-cal][data-bungalow-key]'));
   if (!roots.length) return;
+
+  // Idempotency guard, mirroring initAvailabilityCalendars' own re-init reset.
+  // A second call (SPA soft-nav, Vite HMR, future re-init) would otherwise
+  // stack a second click/keydown listener per root, register a duplicate
+  // selection lookup, and append another dock to <main>. Mark the roots on
+  // first run and bail on any subsequent call.
+  if (roots.some((r) => r.dataset.selectionWired === '1')) return;
+  roots.forEach((r) => { r.dataset.selectionWired = '1'; });
 
   // Active selection: which bungalow, and its chosen check-in/out ISO days.
   // Only ever one at a time (owner request).
@@ -149,13 +194,26 @@ export function initCalendarSelection() {
   });
 
   // ── Shared bottom error dock (created once, appended to <main>) ────────────
+  // Visual only (aria-hidden): announcements go through the dedicated polite
+  // live region below, so we never toggle `hidden` on a live region (which can
+  // double-announce or announce on hide across browsers — review M5).
   const host = document.querySelector('main') || document.body;
   const dock = document.createElement('div');
   dock.className = 'stay-select__dock';
-  dock.setAttribute('role', 'status');
+  dock.setAttribute('aria-hidden', 'true');
   dock.hidden = true;
   dock.textContent = 'At least 5 nights required for a reservation';
   host.appendChild(dock);
+
+  // One polite live region announces BOTH outcomes — the too-short error and
+  // the valid-range success (price) — so screen-reader users hear either, not
+  // just the failure. Visually hidden; updated by refreshUI.
+  const announcer = document.createElement('div');
+  announcer.className = 'stay-select__sr';
+  announcer.setAttribute('role', 'status');
+  announcer.setAttribute('aria-live', 'polite');
+  host.appendChild(announcer);
+  const announce = (msg) => { announcer.textContent = msg; };
 
   const showDock = () => { dock.hidden = false; };
   const hideDock = () => { dock.hidden = true; };
@@ -219,23 +277,31 @@ export function initCalendarSelection() {
     hideAllCounts();
     rerenderCalendars();
 
-    if (!selection) return;
+    if (!selection) { announce(''); return; }
     const unavailable = unavailableByKey.get(selection.key) || new Set();
     let verdict = evaluateSelection(selection, unavailable, today);
 
     if (verdict.kind === 'invalid') {
-      // Defensive: a range that was valid at click time can become
-      // gap-crossing once real bookings load (selection made pre-fetch).
-      // Promote the check-out to a fresh check-in — same rule as the click
-      // path — so we never leave a stale invalid range lit, then re-evaluate
-      // (a lone check-in is 'incomplete': no pill, no dock).
+      // A range that was contiguous when clicked can become gap-crossing once
+      // real bookings load (selection made before the fetch resolved — the
+      // reducer never produces an invalid range at click time, it re-seeds).
+      // Promote the check-out to a fresh check-in, tell the guest why (so the
+      // selection doesn't just silently vanish — review H2), then re-evaluate.
       selection = { key: selection.key, checkIn: selection.checkOut, checkOut: null };
       rerenderCalendars();
-      verdict = evaluateSelection(selection, unavailable, today);
+      showDock();
+      dock.textContent = 'Those dates just became unavailable — please pick again';
+      announce('Those dates are no longer available. Please choose your dates again.');
+      return;
     }
+
+    // Reset the dock text to the default min-nights message (it may have been
+    // overwritten by the invalidation branch on a previous refresh).
+    dock.textContent = 'At least 5 nights required for a reservation';
 
     if (verdict.kind === 'tooShort') {
       showDock();
+      announce('At least 5 nights required for a reservation.');
     } else if (verdict.kind === 'valid') {
       const root = roots.find((r) => r.dataset.bungalowKey === selection.key);
       const pill = pillFor(root, selection.key);
@@ -246,55 +312,61 @@ export function initCalendarSelection() {
       const count = countFor(root, selection.key, pill);
       count.textContent = `Selected ${verdict.nights} ${verdict.nights === 1 ? 'night' : 'nights'}`;
       count.hidden = false;
+      // Announce the success outcome too (not just failures — review M5).
+      announce(`Selected ${verdict.nights} nights. Stay with us for ${verdict.price} euros.`);
+    } else {
+      // incomplete (only a check-in) — no dock, no pill, clear any prior status.
+      announce('');
     }
+  };
+
+  // Core: apply a day selection for (root, iso) and refresh. `refocusIso`, when
+  // set, moves keyboard focus back to that day cell after refreshUI's re-render
+  // wipes the old node (keyboard users would otherwise lose their place).
+  const selectDay = (root, iso, refocusIso) => {
+    const key = root.dataset.bungalowKey;
+    selection = reduceClick(selection, {
+      key,
+      iso,
+      unavailable: unavailableByKey.get(key) || new Set(),
+      today: todayMidnight(),
+    });
+    refreshUI();
+    if (refocusIso) {
+      const next = root.querySelector(`.avail-cal__day[data-iso="${refocusIso}"]`);
+      if (next && next.classList.contains('is-available')) next.focus();
+    }
+  };
+
+  // Resolve an event target to a selectable available-day cell in this root.
+  const availableCell = (root, target) => {
+    const cell = target.closest && target.closest('.avail-cal__day');
+    if (!cell || !root.contains(cell)) return null;
+    if (!cell.classList.contains('is-available')) return null; // blocked days
+    return cell.dataset.iso ? cell : null;
   };
 
   // One click handler per calendar (delegation). Ignores non-available cells.
   const onCalendarClick = (root, ev) => {
-    const cell = ev.target.closest('.avail-cal__day');
-    if (!cell || !root.contains(cell)) return;
-    // Only available days are selectable — blocked days carry aria-disabled.
-    if (!cell.classList.contains('is-available')) return;
-    const iso = cell.dataset.iso;
-    if (!iso) return;
+    const cell = availableCell(root, ev.target);
+    if (!cell) return;
+    selectDay(root, cell.dataset.iso);
+  };
 
-    const key = root.dataset.bungalowKey;
-
-    // Switching bungalows (or first ever click) clears any other selection and
-    // starts a fresh check-in here.
-    if (!selection || selection.key !== key || (selection.checkIn && selection.checkOut)) {
-      // 3rd click (both set) → reset to a new check-in; also covers switching.
-      selection = { key, checkIn: iso, checkOut: null };
-      refreshUI();
-      return;
-    }
-
-    // Second click on the same bungalow.
-    if (!selection.checkIn) {
-      selection.checkIn = iso;
-    } else if (iso === selection.checkIn) {
-      // Clicking the same day again — treat as a re-pick of check-in (no-op
-      // range), keep it as the start.
-      selection = { key, checkIn: iso, checkOut: null };
-    } else if (parseIso(iso) < parseIso(selection.checkIn)) {
-      // Clicked earlier than the current check-in → make THAT the new check-in.
-      selection = { key, checkIn: iso, checkOut: null };
-    } else if (!isRangeContiguous(
-      selection.checkIn, iso, unavailableByKey.get(key) || new Set(), todayMidnight(),
-    )) {
-      // The range check-in → this click crosses a booked/blocked gap. Rather
-      // than reject and leave the old check-in lit, treat the clicked date as
-      // a fresh check-in (owner request): the guest restarts the range from
-      // the day they just clicked.
-      selection = { key, checkIn: iso, checkOut: null };
-    } else {
-      selection.checkOut = iso;
-    }
-    refreshUI();
+  // Keyboard: Enter/Space on a focused available cell selects it, mirroring a
+  // click. Re-focus the same day after the grid repaints so keyboard nav keeps
+  // its place (review M4).
+  const onCalendarKeydown = (root, ev) => {
+    if (ev.key !== 'Enter' && ev.key !== ' ' && ev.key !== 'Spacebar') return;
+    const cell = availableCell(root, ev.target);
+    if (!cell) return;
+    ev.preventDefault(); // stop Space from scrolling the page
+    selectDay(root, cell.dataset.iso, cell.dataset.iso);
   };
 
   roots.forEach((root) => {
     root.addEventListener('click', (ev) => onCalendarClick(root, ev));
+    root.addEventListener('keydown', (ev) => onCalendarKeydown(root, ev));
   });
 
   // Populate the real unavailable sets from the shared (cached) fetch, then

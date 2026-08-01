@@ -59,7 +59,8 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'isRangeContiguous'),
     sliceFn(SEL_SRC, 'evaluateSelection'),
     sliceFn(SEL_SRC, 'dayState'),
-    'return { nightsBetween, priceForNights, isRangeContiguous, evaluateSelection, dayState, MIN_NIGHTS, PRICE_PER_NIGHT };',
+    sliceFn(SEL_SRC, 'reduceClick'),
+    'return { nightsBetween, priceForNights, isRangeContiguous, evaluateSelection, dayState, reduceClick, MIN_NIGHTS, PRICE_PER_NIGHT };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -164,24 +165,65 @@ test('dayState: no middle highlight before check-out is chosen', () => {
 });
 
 // ── gap-crossing 2nd click promotes to a new check-in ────────────────────────
-// The click reducer lives inside initCalendarSelection's closure, but its rule
-// is: if isRangeContiguous(checkIn → clicked) is false, the clicked date
-// becomes the new check-in. We assert that guard directly (the reducer's exact
-// branch condition) so the behaviour is locked without a DOM.
+// The click reducer is now an exported pure function — test its transitions
+// directly (the previous version could only assert the guard in isolation).
 
-test('gap-crossing 2nd click: contiguity guard is false → caller re-seeds check-in', () => {
-  // B1 has Aug 4–9 booked. Check-in Aug 1, 2nd click Aug 11 spans the gap.
-  const unavailable = new Set(['2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09']);
-  const crosses = !L.isRangeContiguous('2026-08-01', '2026-08-11', unavailable, TODAY);
-  assert.equal(crosses, true, 'range crosses the booked gap');
-  // Reducer’s resulting selection when the guard trips: clicked date is the
-  // fresh check-in, check-out cleared.
-  const next = crosses ? { key: 'B1', checkIn: '2026-08-11', checkOut: null } : null;
-  assert.deepEqual(next, { key: 'B1', checkIn: '2026-08-11', checkOut: null });
+const click = (key, iso, unavailable = new Set(), today = TODAY) => ({ key, iso, unavailable, today });
+
+test('reduceClick: first click → fresh check-in', () => {
+  const next = L.reduceClick(null, click('B1', '2026-08-10'));
+  assert.deepEqual(next, { key: 'B1', checkIn: '2026-08-10', checkOut: null });
 });
 
-test('non-crossing 2nd click: guard passes → range forms (no re-seed)', () => {
-  const unavailable = new Set(['2026-08-04', '2026-08-05']);
-  // Aug 10 → Aug 16 is clear of the booked days → contiguous → real range.
-  assert.equal(L.isRangeContiguous('2026-08-10', '2026-08-16', unavailable, TODAY), true);
+test('reduceClick: second later contiguous click → completes range', () => {
+  const s1 = L.reduceClick(null, click('B1', '2026-08-10'));
+  const s2 = L.reduceClick(s1, click('B1', '2026-08-16'));
+  assert.deepEqual(s2, { key: 'B1', checkIn: '2026-08-10', checkOut: '2026-08-16' });
+});
+
+test('reduceClick: third click (both set) → resets to a fresh check-in', () => {
+  const s2 = { key: 'B1', checkIn: '2026-08-10', checkOut: '2026-08-16' };
+  const s3 = L.reduceClick(s2, click('B1', '2026-08-20'));
+  assert.deepEqual(s3, { key: 'B1', checkIn: '2026-08-20', checkOut: null });
+});
+
+test('reduceClick: clicking a different bungalow clears and re-seeds there', () => {
+  const s1 = { key: 'B1', checkIn: '2026-08-10', checkOut: null };
+  const s2 = L.reduceClick(s1, click('B2', '2026-08-06'));
+  assert.deepEqual(s2, { key: 'B2', checkIn: '2026-08-06', checkOut: null });
+});
+
+test('reduceClick: same day re-clicked → re-seed (no zero-night range)', () => {
+  const s1 = { key: 'B1', checkIn: '2026-08-10', checkOut: null };
+  const s2 = L.reduceClick(s1, click('B1', '2026-08-10'));
+  assert.deepEqual(s2, { key: 'B1', checkIn: '2026-08-10', checkOut: null });
+});
+
+test('reduceClick: clicking earlier than check-in → that becomes the new check-in', () => {
+  const s1 = { key: 'B1', checkIn: '2026-08-10', checkOut: null };
+  const s2 = L.reduceClick(s1, click('B1', '2026-08-07'));
+  assert.deepEqual(s2, { key: 'B1', checkIn: '2026-08-07', checkOut: null });
+});
+
+test('reduceClick: gap-crossing 2nd click → clicked date becomes new check-in', () => {
+  // Aug 4–9 booked. Check-in Aug 1, then click Aug 11 → spans the gap → re-seed.
+  const unavailable = new Set(['2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09']);
+  const s1 = { key: 'B1', checkIn: '2026-08-01', checkOut: null };
+  const s2 = L.reduceClick(s1, click('B1', '2026-08-11', unavailable));
+  assert.deepEqual(s2, { key: 'B1', checkIn: '2026-08-11', checkOut: null });
+});
+
+// ── G2: a range valid at click time, invalidated once real bookings load ─────
+// Guests can select before bookings.json resolves (empty unavailable = all
+// contiguous). Once data lands, evaluateSelection must report 'invalid' so the
+// UI layer promotes check-out → new check-in and warns (rather than silently
+// keeping a now-illegal range).
+
+test('post-load invalidation: contiguous-at-click range → invalid once bookings arrive', () => {
+  // At click time the set was empty → range formed.
+  const sel = { key: 'B1', checkIn: '2026-08-01', checkOut: '2026-08-11' };
+  assert.equal(L.evaluateSelection(sel, new Set(), TODAY).kind, 'valid');
+  // Bookings arrive: Aug 4–9 now booked → same range is invalid.
+  const loaded = new Set(['2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09']);
+  assert.equal(L.evaluateSelection(sel, loaded, TODAY).kind, 'invalid');
 });
