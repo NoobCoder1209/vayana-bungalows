@@ -81,3 +81,104 @@ test('jsonCacheableResponse sets public max-age and echoes allowed origin', asyn
   assert.equal(res.headers.get('content-type'), 'application/json; charset=utf-8');
   assert.deepEqual(await res.json(), { ok: true, offers: [] });
 });
+
+import { generateKeyPairSync } from 'node:crypto';
+import worker from '../src/index.js';
+import { _resetForTests } from '../src/sheets.js';
+
+// Minimal env for the /offers path. No Turnstile/IP salt needed — /offers
+// never reaches those gates. GSHEETS_SA_JSON carries a throwaway RSA key
+// generated fresh per test run: it must be a *real* PKCS8 key because
+// getAccessToken() imports it via jose.importPKCS8 and RS256-signs a JWT
+// BEFORE the (mocked) OAuth fetch — a placeholder key would fail import
+// and the success paths could never reach the mocked network. The key
+// never leaves the test process; we mock global fetch so no token is used.
+const FAKE_SA_KEY = generateKeyPairSync('rsa', { modulusLength: 2048 })
+  .privateKey.export({ type: 'pkcs8', format: 'pem' });
+const FAKE_SA = JSON.stringify({
+  client_email: 'x@y.iam.gserviceaccount.com',
+  private_key: FAKE_SA_KEY,
+});
+const offersEnv = {
+  ALLOWED_ORIGINS: 'http://localhost:5173',
+  GSHEETS_SHEET_ID: 'SHEET',
+  GSHEETS_OFFERS_TAB: 'Offers',
+  GSHEETS_SA_JSON: FAKE_SA,
+};
+const getReq = (path = '/offers') =>
+  new Request(`https://w.example${path}`, {
+    method: 'GET',
+    headers: { origin: 'http://localhost:5173' },
+  });
+
+// Swap global fetch for a scripted stub over the two upstream calls the
+// offers path makes: (1) the OAuth token exchange, (2) the Sheets values.get.
+function withMockedSheets(valuesOrThrow, run) {
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('oauth2.googleapis.com/token')) {
+      return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
+    }
+    if (u.includes('sheets.googleapis.com')) {
+      if (valuesOrThrow === 'ERR') return new Response('nope', { status: 500 });
+      return new Response(JSON.stringify({ values: valuesOrThrow }), { status: 200 });
+    }
+    return new Response('unexpected', { status: 418 });
+  };
+  return Promise.resolve()
+    .then(run)
+    .finally(() => { globalThis.fetch = real; _resetForTests(); });
+}
+
+test('GET /offers returns enabled offers as JSON with cache header', async () => {
+  await withMockedSheets(
+    [['12 Jun', '20', '400', '320', '4', 'Breakfast', 'True']],
+    async () => {
+      const res = await worker.fetch(getReq(), offersEnv, {});
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get('cache-control'), 'public, max-age=60');
+      const body = await res.json();
+      assert.equal(body.ok, true);
+      assert.equal(body.offers.length, 1);
+      assert.equal(body.offers[0].message, 'Breakfast');
+    },
+  );
+});
+
+test('GET /offers returns [] when the sheet has no enabled rows', async () => {
+  await withMockedSheets(
+    [['', '', '', '', '', '', 'False']],
+    async () => {
+      const res = await worker.fetch(getReq(), offersEnv, {});
+      assert.equal(res.status, 200);
+      assert.deepEqual((await res.json()).offers, []);
+    },
+  );
+});
+
+test('GET /offers returns 502 when the sheet read fails', async () => {
+  await withMockedSheets('ERR', async () => {
+    const res = await worker.fetch(getReq(), offersEnv, {});
+    assert.equal(res.status, 502);
+    assert.equal((await res.json()).error, 'offers-unavailable');
+  });
+});
+
+test('POST /offers is rejected (405) — offers is GET-only', async () => {
+  const res = await worker.fetch(
+    new Request('https://w.example/offers', { method: 'POST', headers: { origin: 'http://localhost:5173', 'content-type': 'application/json' }, body: '{}' }),
+    offersEnv, {},
+  );
+  assert.equal(res.status, 405);
+});
+
+test('GET /submit is rejected (405) — submit stays POST-only', async () => {
+  const res = await worker.fetch(getReq('/submit'), offersEnv, {});
+  assert.equal(res.status, 405);
+});
+
+test('GET on an unknown path is 404', async () => {
+  const res = await worker.fetch(getReq('/nope'), offersEnv, {});
+  assert.equal(res.status, 404);
+});
