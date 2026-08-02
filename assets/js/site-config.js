@@ -64,6 +64,10 @@ export const SITE_CONFIG = {
   // resolve simply produces a TypeError caught by enquiry.js).
   endpoints: {
     enquiry: 'https://vayana-enquiries.vayana.workers.dev/submit',
+    // Read-only GET endpoint for the home-page offers section. Same Worker
+    // origin as `enquiry`, different route. Public. Swap the origin here
+    // (only) when a custom domain ships.
+    offers: 'https://vayana-enquiries.vayana.workers.dev/offers',
     turnstileSiteKey: '0x4AAAAAADpxs0HIUft5BY7_',
   },
   // The heart glyph is U+2764 followed by the U+FE0F emoji variation
