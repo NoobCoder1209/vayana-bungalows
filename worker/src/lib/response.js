@@ -32,7 +32,7 @@ function pickOrigin(request, env) {
 export function corsHeaders(request, env) {
   const origin = pickOrigin(request, env);
   const headers = {
-    'access-control-allow-methods': 'POST, OPTIONS',
+    'access-control-allow-methods': 'GET, POST, OPTIONS',
     'access-control-allow-headers': 'content-type',
     'access-control-max-age': '600',
     vary: 'origin',
@@ -54,6 +54,22 @@ export function jsonResponse(body, status, request, env) {
       // any modern context, setting `default-src 'none'` is free
       // defence-in-depth against a future code path that accidentally
       // returns text/html.
+      'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+      'x-content-type-options': 'nosniff',
+      ...corsHeaders(request, env),
+    },
+  });
+}
+
+// Like jsonResponse but cacheable — used by the read-only GET /offers
+// route so the edge (Worker Cache API + browser) can serve repeat hits
+// without re-reading the sheet. maxAge is in seconds.
+export function jsonCacheableResponse(body, status, request, env, maxAge) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': `public, max-age=${maxAge}`,
       'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
       'x-content-type-options': 'nosniff',
       ...corsHeaders(request, env),

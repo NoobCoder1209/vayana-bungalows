@@ -311,20 +311,26 @@
         </div>
       </section>
 
-      <!-- 11. Image CTA -->
-      <section class="cta-block section" aria-labelledby="cta-title">
-        <div class="container cta-block__inner reveal">
-          <div class="cta-block__frame">
-            <img src="/assets/img/cta-pool.jpg"
-                 data-i18n-attr="alt:home.cta_block.img_alt"
-                 alt="Infinity pool overlooking the ocean" loading="lazy" />
-          </div>
-          <div class="cta-block__copy">
-            <span class="eyebrow" data-i18n="home.cta_block.eyebrow">A retreat for two</span>
-            <h3 id="cta-title" data-i18n="home.cta_block.title">Stay four nights, the fifth is on us.</h3>
-            <p data-i18n="home.cta_block.body">An invitation to slow down, between June and September, in any of our bungalows.</p>
-            <a href="#" class="btn btn-primary" data-i18n="home.cta_block.cta">View the offer</a>
-          </div>
+      <!-- 11. Offers (dynamic — populated by offers.js from GET /offers) -->
+      <section class="offers section" aria-labelledby="offers-title">
+        <div class="container offers__head reveal">
+          <span class="eyebrow" data-i18n="home.offers.eyebrow">Special offers</span>
+          <h3 id="offers-title" data-i18n="home.offers.title">Current offers</h3>
+        </div>
+        <div class="container">
+          <!-- Localized card labels + state messages are baked here as
+               data-* attributes (no runtime i18n dict exists); offers.js
+               reads them from dataset. -->
+          <div class="offers__grid"
+               data-offers
+               data-i18n-attr="data-label-dates:home.offers.label_dates;
+                               data-label-discount:home.offers.label_discount;
+                               data-label-price-before:home.offers.label_price_before;
+                               data-label-price-after:home.offers.label_price_after;
+                               data-label-nights:home.offers.label_nights;
+                               data-label-message:home.offers.label_message;
+                               data-empty-msg:home.offers.empty;
+                               data-error-msg:home.offers.error"></div>
         </div>
       </section>
 

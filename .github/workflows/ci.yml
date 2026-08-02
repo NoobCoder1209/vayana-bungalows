@@ -63,6 +63,14 @@ jobs:
 
       - run: npm ci
 
+      # Install the Worker's own deps too: the root `npm test` list includes
+      # worker/__tests__/*.test.mjs, and worker/src/sheets.js imports `jose`
+      # from worker/node_modules — which the root `npm ci` does not install.
+      # Without this the worker offers test fails with ERR_MODULE_NOT_FOUND.
+      - name: Install Worker dependencies
+        run: npm ci
+        working-directory: worker
+
       # Lint FIRST — dict/marker issues are the cheapest to reproduce
       # locally and give the clearest error message, so surfacing them
       # before test/build failures makes the PR feedback loop cleaner.

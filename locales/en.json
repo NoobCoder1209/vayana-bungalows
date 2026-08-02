@@ -83,12 +83,17 @@
       "card2_img_alt": "Bungalow 2",
       "card3_img_alt": "Bungalow 3"
     },
-    "cta_block": {
-      "eyebrow": "A retreat for two",
-      "title": "Stay four nights, the fifth is on us.",
-      "body": "An invitation to slow down, between June and September, in any of our bungalows.",
-      "cta": "View the offer",
-      "img_alt": "Infinity pool overlooking the ocean"
+    "offers": {
+      "eyebrow": "Special offers",
+      "title": "Current offers",
+      "label_dates": "Dates",
+      "label_discount": "Discount",
+      "label_price_before": "Price before",
+      "label_price_after": "Price after",
+      "label_nights": "Nights",
+      "label_message": "Message",
+      "empty": "No current offers at the moment.",
+      "error": "Offers are temporarily unavailable. Please try again later."
     },
     "services": {
       "eyebrow": "Discover the services we offer",

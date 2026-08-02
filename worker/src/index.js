@@ -22,9 +22,11 @@
 import { verifyTurnstile } from './turnstile.js';
 import { validateBody } from './validation.js';
 import { appendEnquiry } from './sheets.js';
+import { fetchOffers } from './offers.js';
 import { checkRateLimit } from './rate-limit.js';
 import {
   jsonResponse,
+  jsonCacheableResponse,
   redirectResponse,
   corsHeaders,
 } from './lib/response.js';
@@ -63,10 +65,27 @@ export default {
       });
     }
 
+    // Offers route — GET /offers only. Read-only, cacheable, no captcha /
+    // rate-limit / IP gates (those are enquiry-submit concerns). Placed
+    // before the /submit path gate so /offers isn't swallowed by the 404.
+    const { pathname } = new URL(request.url);
+    if (pathname === '/offers') {
+      if (request.method !== 'GET') {
+        return jsonResponse({ ok: false, error: 'method' }, 405, request, env);
+      }
+      try {
+        const offers = await fetchOffers(env);
+        return jsonCacheableResponse({ ok: true, offers }, 200, request, env, 60);
+      } catch {
+        // Generic log only — never echo err.message (could leak SA key fragments).
+        console.error('offers.fetch failed');
+        return jsonResponse({ ok: false, error: 'offers-unavailable' }, 502, request, env);
+      }
+    }
+
     // 2. Path gate — Worker has exactly one route. Refuse everything else
     //    with 404 so future additional routes can't be accidentally
     //    exposed by a path-traversal-style POST.
-    const { pathname } = new URL(request.url);
     if (pathname !== '/submit') {
       return jsonResponse(
         { ok: false, error: 'not-found' },
