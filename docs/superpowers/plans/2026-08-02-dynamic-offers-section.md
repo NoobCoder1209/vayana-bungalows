@@ -822,7 +822,7 @@ Run: `npm run build`
 Expected: build succeeds. Then confirm no marker leaked and the container is present:
 
 ```bash
-grep -c "data-i18n-attr" dist/index.html; echo "--- should be 0 ---"
+grep -c 'data-i18n-attr=' dist/index.html; echo "--- LIVE attributes, should be 0 (a prose mention in the header KEEP-IN-SYNC comment is NOT a marker; match the '=' to exclude it) ---"
 grep -c "data-offers" dist/index.html dist/bg/index.html
 grep -o 'data-label-dates="[^"]*"' dist/index.html dist/bg/index.html
 ```
