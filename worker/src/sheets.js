@@ -51,7 +51,7 @@ async function loadServiceAccount(env) {
   return { privateKey, clientEmail: sa.client_email };
 }
 
-async function getAccessToken(env) {
+export async function getAccessToken(env) {
   const nowSec = Math.floor(Date.now() / 1000);
   if (cachedToken && nowSec < cachedTokenExpiry - 30) {
     return cachedToken;
