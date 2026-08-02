@@ -27,13 +27,18 @@
 
 import { loadBookings, toIso, parseIso, availabilityFor } from './bookings-data.js';
 import { isOffSeason } from './season.js';
-import { setSelectionLookup, rerenderCalendars } from './availability-calendar.js';
+import { setSelectionLookup, rerenderCalendars, goToMonth } from './availability-calendar.js';
 
 // ── Constants (net-new to this feature) ──────────────────────────────────────
 export const PRICE_PER_NIGHT = 100; // euros
 export const MIN_NIGHTS = 5;
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+// Bungalow preference order for the home-dock deep link: when the picked range
+// is free for more than one bungalow, land on the lowest-numbered one (owner
+// request). This is also the on-page (DOM) order of the three sections.
+export const KEY_ORDER = ['B1', 'B2', 'B3'];
 
 // ── Pure logic (DOM-free, exported for unit tests) ───────────────────────────
 
@@ -97,6 +102,82 @@ export function evaluateSelection(sel, unavailable, today) {
   const nights = nightsBetween(sel.checkIn, sel.checkOut);
   if (nights < MIN_NIGHTS) return { kind: 'tooShort', nights };
   return { kind: 'valid', nights, price: priceForNights(nights) };
+}
+
+// Shape-only ISO gate (YYYY-MM-DD). Shape does NOT imply validity — see
+// isBookableDockDate for why a round-trip check is still needed.
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Is `iso` a date the home dock may deep-link into a stay? Pure (DOM-free) so
+ * the acceptance rule is unit-testable and lives in ONE place rather than a
+ * hand-rolled copy inside the DOM handler.
+ *
+ * Accepts only a REAL calendar date that is today-or-later AND in the open
+ * season. Rejections (→ caller lands the guest at the top of /stay/):
+ *   - wrong shape (regex)
+ *   - a rolled-over / non-existent date: parseIso('2026-08-32') does NOT throw
+ *     or return NaN — JS Date rolls it to 2026-09-01. So a NaN check never
+ *     fires; instead we require toIso(parseIso(iso)) === iso, which fails for
+ *     any out-of-range day/month (the rolled date serialises to a different
+ *     string) — junk is rejected, not silently turned into a wrong real date.
+ *   - a past date
+ *   - an off-season date. Applied to BOTH endpoints, incl. the checkout: the
+ *     checkout is the departure day, and the latest legal departure is Sep 30
+ *     because Oct is off-season — a guest cannot leave on Oct 1.
+ *
+ * @param {string} iso    candidate YYYY-MM-DD
+ * @param {Date}   today  local-midnight "today" for the past guard
+ * @returns {Date|null}   the parsed local-midnight Date, or null if unusable
+ */
+export function isBookableDockDate(iso, today) {
+  if (!ISO_RE.test(iso || '')) return null;
+  const d = parseIso(iso);
+  if (Number.isNaN(d.getTime())) return null; // belt-and-braces
+  if (toIso(d) !== iso) return null; // rolled-over / non-existent calendar date
+  if (d < today) return null;
+  if (isOffSeason(d)) return null;
+  return d;
+}
+
+/**
+ * Home-dock deep link resolver: given every bungalow's unavailable-night set,
+ * a candidate [checkInIso, checkOutIso) range, and today, return the FIRST
+ * bungalow key (in `keyOrder`) that could actually host this stay, or null.
+ *
+ * "Could host" = the range is contiguous for that bungalow (no booked / past /
+ * off-season night inside it) AND is at least MIN_NIGHTS long. The night-count
+ * gate is what makes a sub-5-night dock selection resolve to null → the caller
+ * lands the guest at the top of /stay/ rather than auto-selecting an
+ * un-bookable range (the /stay/ calendars enforce the 5-night minimum; the home
+ * dock does not, so we fold the same rule in here).
+ *
+ * Pure (no DOM) so the decision table is unit-testable. Reuses the same
+ * isRangeContiguous walk a manual selection uses, so a hit is guaranteed to
+ * produce the same 'valid' verdict evaluateSelection would.
+ *
+ * @param {Map<string, Set<string>>} unavailableByKey  key → booked-night ISO set
+ * @param {string} checkInIso   YYYY-MM-DD
+ * @param {string} checkOutIso  YYYY-MM-DD (must be after check-in)
+ * @param {Date}   today        local-midnight "today" for the past-night guard
+ * @param {string[]} keyOrder   preference order (default KEY_ORDER: B1→B2→B3)
+ * @returns {string|null} the first hosting bungalow key, or null if none
+ */
+export function firstAvailableBungalow(
+  unavailableByKey,
+  checkInIso,
+  checkOutIso,
+  today,
+  keyOrder = KEY_ORDER,
+) {
+  if (nightsBetween(checkInIso, checkOutIso) < MIN_NIGHTS) return null;
+  for (const key of keyOrder) {
+    const unavailable = unavailableByKey.get(key) || new Set();
+    if (isRangeContiguous(checkInIso, checkOutIso, unavailable, today)) {
+      return key;
+    }
+  }
+  return null;
 }
 
 /**
@@ -369,13 +450,87 @@ export function initCalendarSelection() {
     root.addEventListener('keydown', (ev) => onCalendarKeydown(root, ev));
   });
 
+  // ── Home-dock deep link (?checkin=&checkout=) ──────────────────────────────
+  // The home floating dock (booking.js) navigates here as stay/?checkin=&
+  // checkout= with the ISO dates the visitor picked. Unlike the /stay/
+  // calendars, the dock does NOT enforce the 5-night minimum. On arrival we:
+  //   - find the FIRST bungalow (B1→B2→B3) that is free for the whole range AND
+  //     the range is >=5 nights → auto-select it (same visuals as a manual
+  //     pick: gold circles, "Selected N nights", price pill), scroll to that
+  //     bungalow, and focus its check-in cell; then strip the params.
+  //   - otherwise (no bungalow free, range <5 nights, or junk params) → leave
+  //     the page at the top so the guest can scroll and browse.
+  // Runs ONCE, inside the loadBookings().then below, so availability is judged
+  // against real data — never the empty fail-safe sets. Only fires when no
+  // manual selection has been made yet (an early click before data loaded wins).
+  const applyDeepLink = () => {
+    if (selection) return; // a manual pick before data loaded wins
+    const params = new URLSearchParams(window.location.search);
+    const ciRaw = params.get('checkin');
+    const coRaw = params.get('checkout');
+    if (!ciRaw && !coRaw) return; // no deep link present
+
+    const today = todayMidnight();
+    const ci = isBookableDockDate(ciRaw, today);
+    const co = isBookableDockDate(coRaw, today);
+
+    // Strip the params regardless of outcome so a refresh / shared link doesn't
+    // re-scroll or re-select on every load. Replace (not push) — no history
+    // entry, no reload; keeps the address bar clean.
+    const cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState(null, '', cleanUrl);
+
+    // Both endpoints must be valid and ordered; else land at the top.
+    if (!ci || !co || co <= ci) return;
+    const checkInIso = toIso(ci);
+    const checkOutIso = toIso(co);
+
+    const key = firstAvailableBungalow(
+      unavailableByKey, checkInIso, checkOutIso, today, KEY_ORDER,
+    );
+    if (!key) return; // none free, or <5 nights → top of page
+
+    // Resolve the target calendar's root BEFORE committing any state. firstAvailable
+    // Bungalow works off KEY_ORDER + the unavailable map, which could in principle
+    // name a key that has no rendered calendar (e.g. a future refactor hides a
+    // bungalow while bookings.json still lists it). Guard first so we never leave a
+    // committed-but-invisible selection painted with no calendar to scroll to.
+    const root = roots.find((r) => r.dataset.bungalowKey === key);
+    if (!root) return;
+
+    // Drive the exact same path a completing manual click produces.
+    selection = { key, checkIn: checkInIso, checkOut: checkOutIso };
+    // The calendars only render two months at a time; page the check-in's month
+    // into view FIRST, or the selection highlight would paint into an off-screen
+    // month and the check-in cell wouldn't exist to focus. goToMonth clamps to
+    // the same nav bounds the arrows use and re-renders if the month moved;
+    // refreshUI's own rerenderCalendars() then repaints the selection on top.
+    goToMonth(parseIso(checkInIso));
+    refreshUI();
+
+    // Scroll to the bungalow section (the calendar's nearest .bungalow-split,
+    // whose heading is the stable anchor). Respect reduced-motion.
+    const section = root.closest('.bungalow-split') || root;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    section.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+    // Land keyboard focus inside the selection (the check-in cell), after the
+    // repaint replaced the old cell. preventScroll so it doesn't fight the
+    // smooth scroll above. Mirrors selectDay's refocus pattern.
+    const cell = root.querySelector(`.avail-cal__day[data-iso="${checkInIso}"]`);
+    if (cell && cell.classList.contains('is-available')) {
+      cell.focus({ preventScroll: true });
+    }
+  };
+
   // Populate the real unavailable sets from the shared (cached) fetch, then
-  // re-evaluate any selection made before data arrived.
+  // re-evaluate any selection made before data arrived, and finally apply any
+  // home-dock deep link against the now-real availability.
   loadBookings().then((bookings) => {
     roots.forEach((root) => {
       const key = root.dataset.bungalowKey;
       unavailableByKey.set(key, availabilityFor(bookings, key).unavailable);
     });
     if (selection) refreshUI();
+    applyDeepLink();
   });
 }
