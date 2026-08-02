@@ -773,60 +773,106 @@
   }
 }
 
-/* ========== Image CTA block ========== */
-.cta-block {
+/* ========== Offers (dynamic — offers.js) ========== */
+.offers {
   background: var(--bg-cream);
 }
 
-.cta-block__inner {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: clamp(2rem, 6vw, 5rem);
-  align-items: center;
+.offers__head {
+  text-align: center;
+  margin-bottom: var(--space-6);
 }
 
-.cta-block__frame {
-  position: relative;
-  padding: 1.25rem;
+/* Base = touch/native-scroll carousel (buckets B & C: phones, tablets,
+   touch-laptops). One card snaps into view at a time; swipe scrolls. This
+   is the SAME model as the photo galleries (see .gallery__track above). */
+.offers__grid {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0 var(--container-pad);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  justify-content: flex-start;
 }
 
-.cta-block__frame::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 1px solid var(--primary);
+.offers__grid::-webkit-scrollbar { display: none; }
+
+.offer-card {
+  flex: 0 0 auto;
+  width: clamp(240px, 78vw, 320px); /* portrait card, one-per-view on phones */
+  aspect-ratio: 3 / 4;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--bg-light);
+  border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  transform: translate(18px, 18px);
-  z-index: 0;
-  transition: transform var(--t-base);
+  box-sizing: border-box;
 }
 
-.cta-block__frame:hover::before {
-  transform: translate(10px, 10px);
+.offer-card__row {
+  margin: 0;
+  line-height: 1.4;
 }
 
-.cta-block__frame img {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-radius: var(--radius-card);
-  transition: transform var(--t-base);
+.offer-card__label {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
 }
 
-.cta-block__frame:hover img {
-  transform: scale(1.02);
+/* Empty / error state — a single centered message card. */
+.offers__grid[data-count="0"] {
+  justify-content: center;
+}
+.offers__msg {
+  flex: 0 0 auto;
+  max-width: 32rem;
+  text-align: center;
+  color: var(--text-muted, currentColor);
+  padding: var(--space-5);
 }
 
-.cta-block__copy h3 {
-  margin-bottom: var(--space-2);
-}
-
-@media (max-width: 768px) {
-  .cta-block__inner {
-    grid-template-columns: 1fr;
+/* Pure-mouse desktop (bucket A): static centered grid, NO scroll/snap,
+   NO carousel. Row rules keyed off data-count. Copied verbatim from the
+   gallery stepper media condition so the two never desync. */
+@media (hover: hover) and (pointer: fine) and (not (any-pointer: coarse)) {
+  .offers__grid {
+    display: grid;
+    overflow-x: visible;
+    scroll-snap-type: none;
+    touch-action: auto;
+    justify-content: center;
+    max-width: 1100px;
+    margin-inline: auto;
+    grid-template-columns: repeat(3, minmax(0, 280px));
   }
+  .offers__grid .offer-card { width: auto; }
+
+  /* 1 / 2 / 3 → single centered row of exactly N columns. */
+  .offers__grid[data-count="1"] { grid-template-columns: minmax(0, 280px); }
+  .offers__grid[data-count="2"] { grid-template-columns: repeat(2, minmax(0, 280px)); }
+  .offers__grid[data-count="3"] { grid-template-columns: repeat(3, minmax(0, 280px)); }
+  /* 4 → 2 + 2 (force a 2-column grid; rows wrap naturally). */
+  .offers__grid[data-count="4"] { grid-template-columns: repeat(2, minmax(0, 280px)); }
+  /* 5 → 3 + 2, 6 → 3 + 3 (3-column grid; last row centers via auto margins
+     on the trailing item is unnecessary — grid centering handles it). */
+  .offers__grid[data-count="5"],
+  .offers__grid[data-count="6"] { grid-template-columns: repeat(3, minmax(0, 280px)); }
+
+  /* 5 cards in a 3-col grid leaves the 4th/5th on row 2; center that row by
+     spanning the trailing two across the track with justified centering. The
+     grid is already justify-content:center so the short last row is centered
+     as a group. No extra rule needed. */
+
+  .offers__msg { grid-column: 1 / -1; }
 }
 
 /* ========== Testimonial ========== */
