@@ -128,6 +128,33 @@ function stepMonth(delta) {
   return true;
 }
 
+/**
+ * Jump the two-month view so that `date`'s month is VISIBLE (it becomes the
+ * left month, or the right month when that would otherwise push the left past
+ * the ceiling). Clamped into the same [floor, ceil] bounds the arrows honour,
+ * then re-renders every calendar if the month actually moved.
+ *
+ * Used by the home-dock deep link (calendar-selection.js): a link can carry any
+ * in-season date up to seasonMaxDate, but the calendars only render two months
+ * at a time, so the deep-link's check-in month must be paged into view before
+ * its selection highlight can appear (and before its day cell exists to focus).
+ * Returns true if the visible month changed.
+ */
+export function goToMonth(date) {
+  if (!currentMonth) return false; // calendars not initialised (non-/stay/ page)
+  const { floor, ceil } = navBounds();
+  // Target the date's month as the LEFT month, but never past the last position
+  // where the RIGHT month still fits under the ceiling — i.e. left <= ceil - 1.
+  const ceilLeft = new Date(ceil.getFullYear(), ceil.getMonth() - 1, 1);
+  let target = firstOfMonth(date);
+  if (monthCmp(target, floor) < 0) target = floor;
+  if (monthCmp(target, ceilLeft) > 0) target = ceilLeft;
+  if (monthCmp(target, currentMonth) === 0) return false; // already showing it
+  currentMonth = target;
+  renderAll();
+  return true;
+}
+
 // Build ONE month's grid markup (weekday header row + day cells in week rows)
 // for the given month + availability. Returns { label, gridHtml }. Off-season
 // days (outside the open May–Sep season) render greyed/non-selectable; past

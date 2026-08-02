@@ -45,6 +45,7 @@ function loadLogic() {
     const MIN_NIGHTS = 5;
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
     const KEY_ORDER = ['B1', 'B2', 'B3'];
+    const ISO_RE = /^\\d{4}-\\d{2}-\\d{2}$/;
     const parseIso = (iso) => { const [y,m,d] = iso.split('-').map(Number); return new Date(y, m-1, d); };
     const toIso = (d) => {
       const y = d.getFullYear();
@@ -59,10 +60,11 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'priceForNights'),
     sliceFn(SEL_SRC, 'isRangeContiguous'),
     sliceFn(SEL_SRC, 'evaluateSelection'),
+    sliceFn(SEL_SRC, 'isBookableDockDate'),
     sliceFn(SEL_SRC, 'firstAvailableBungalow'),
     sliceFn(SEL_SRC, 'dayState'),
     sliceFn(SEL_SRC, 'reduceClick'),
-    'return { nightsBetween, priceForNights, isRangeContiguous, evaluateSelection, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, PRICE_PER_NIGHT, KEY_ORDER };',
+    'return { nightsBetween, priceForNights, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, PRICE_PER_NIGHT, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -205,6 +207,50 @@ test('firstAvailableBungalow: default keyOrder resolves B1→B2→B3', () => {
   // Omit the explicit keyOrder → uses the exported KEY_ORDER default.
   const key = L.firstAvailableBungalow(boarded(['2026-08-12'], [], []), '2026-08-10', '2026-08-15', TODAY);
   assert.equal(key, 'B2');
+});
+
+// ── isBookableDockDate (home-dock ?checkin/?checkout gate) ───────────────────
+// Pure date-acceptance rule extracted from the DOM handler. TODAY here is Jan 1
+// 2026, so the August/September dates below are all comfortably in the future.
+
+test('isBookableDockDate: a real, future, in-season date is accepted', () => {
+  const d = L.isBookableDockDate('2026-08-10', TODAY);
+  assert.ok(d instanceof Date);
+  assert.equal(d.getMonth(), 7); // August (0-indexed)
+  assert.equal(d.getDate(), 10);
+});
+
+test('isBookableDockDate: wrong shape → null', () => {
+  assert.equal(L.isBookableDockDate('nope', TODAY), null);
+  assert.equal(L.isBookableDockDate('2026-8-10', TODAY), null); // not zero-padded
+  assert.equal(L.isBookableDockDate('', TODAY), null);
+  assert.equal(L.isBookableDockDate(null, TODAY), null);
+});
+
+test('isBookableDockDate: rolled-over calendar date → null (the 2026-08-32 bug)', () => {
+  // parseIso('2026-08-32') rolls to Sep 1 (not NaN). The toIso round-trip must
+  // reject it so we never auto-select a date the guest never picked.
+  assert.equal(L.isBookableDockDate('2026-08-32', TODAY), null);
+  assert.equal(L.isBookableDockDate('2026-13-01', TODAY), null); // month 13 → next year
+  assert.equal(L.isBookableDockDate('2026-02-30', TODAY), null); // Feb 30 → March
+});
+
+test('isBookableDockDate: past date → null', () => {
+  const today = new Date(2026, 7, 15); // Aug 15 2026
+  assert.equal(L.isBookableDockDate('2026-08-10', today), null); // before today
+  assert.ok(L.isBookableDockDate('2026-08-20', today)); // after today is fine
+});
+
+test('isBookableDockDate: off-season date → null', () => {
+  assert.equal(L.isBookableDockDate('2026-10-15', TODAY), null); // October = off-season
+  assert.equal(L.isBookableDockDate('2026-01-15', TODAY), null); // January = off-season
+});
+
+test('isBookableDockDate: checkout on Sep 30 accepted, Oct 1 rejected (season departure rule)', () => {
+  // The latest legal departure is Sep 30 — a guest cannot leave on Oct 1 (Oct is
+  // off-season). Applied to the checkout endpoint too, by design.
+  assert.ok(L.isBookableDockDate('2026-09-30', TODAY)); // last in-season day
+  assert.equal(L.isBookableDockDate('2026-10-01', TODAY), null); // first off-season day
 });
 
 // ── per-day paint state ───────────────────────────────────────────────────────

@@ -27,7 +27,7 @@
 
 import { loadBookings, toIso, parseIso, availabilityFor } from './bookings-data.js';
 import { isOffSeason } from './season.js';
-import { setSelectionLookup, rerenderCalendars } from './availability-calendar.js';
+import { setSelectionLookup, rerenderCalendars, goToMonth } from './availability-calendar.js';
 
 // ── Constants (net-new to this feature) ──────────────────────────────────────
 export const PRICE_PER_NIGHT = 100; // euros
@@ -102,6 +102,42 @@ export function evaluateSelection(sel, unavailable, today) {
   const nights = nightsBetween(sel.checkIn, sel.checkOut);
   if (nights < MIN_NIGHTS) return { kind: 'tooShort', nights };
   return { kind: 'valid', nights, price: priceForNights(nights) };
+}
+
+// Shape-only ISO gate (YYYY-MM-DD). Shape does NOT imply validity — see
+// isBookableDockDate for why a round-trip check is still needed.
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Is `iso` a date the home dock may deep-link into a stay? Pure (DOM-free) so
+ * the acceptance rule is unit-testable and lives in ONE place rather than a
+ * hand-rolled copy inside the DOM handler.
+ *
+ * Accepts only a REAL calendar date that is today-or-later AND in the open
+ * season. Rejections (→ caller lands the guest at the top of /stay/):
+ *   - wrong shape (regex)
+ *   - a rolled-over / non-existent date: parseIso('2026-08-32') does NOT throw
+ *     or return NaN — JS Date rolls it to 2026-09-01. So a NaN check never
+ *     fires; instead we require toIso(parseIso(iso)) === iso, which fails for
+ *     any out-of-range day/month (the rolled date serialises to a different
+ *     string) — junk is rejected, not silently turned into a wrong real date.
+ *   - a past date
+ *   - an off-season date. Applied to BOTH endpoints, incl. the checkout: the
+ *     checkout is the departure day, and the latest legal departure is Sep 30
+ *     because Oct is off-season — a guest cannot leave on Oct 1.
+ *
+ * @param {string} iso    candidate YYYY-MM-DD
+ * @param {Date}   today  local-midnight "today" for the past guard
+ * @returns {Date|null}   the parsed local-midnight Date, or null if unusable
+ */
+export function isBookableDockDate(iso, today) {
+  if (!ISO_RE.test(iso || '')) return null;
+  const d = parseIso(iso);
+  if (Number.isNaN(d.getTime())) return null; // belt-and-braces
+  if (toIso(d) !== iso) return null; // rolled-over / non-existent calendar date
+  if (d < today) return null;
+  if (isOffSeason(d)) return null;
+  return d;
 }
 
 /**
@@ -427,19 +463,6 @@ export function initCalendarSelection() {
   // Runs ONCE, inside the loadBookings().then below, so availability is judged
   // against real data — never the empty fail-safe sets. Only fires when no
   // manual selection has been made yet (an early click before data loaded wins).
-  const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
-  // A dock date is usable only if it is a real ISO date, today-or-later, and in
-  // the open season — the same guards enquiry.js applies to its ?checkin/out
-  // pre-fill. Junk / past / off-season silently fail (→ top of page).
-  const validDockDate = (iso, today) => {
-    if (!ISO_RE.test(iso || '')) return null;
-    const d = parseIso(iso);
-    if (Number.isNaN(d.getTime())) return null;
-    if (d < today) return null;
-    if (isOffSeason(d)) return null;
-    return d;
-  };
-
   const applyDeepLink = () => {
     if (selection) return; // a manual pick before data loaded wins
     const params = new URLSearchParams(window.location.search);
@@ -448,8 +471,8 @@ export function initCalendarSelection() {
     if (!ciRaw && !coRaw) return; // no deep link present
 
     const today = todayMidnight();
-    const ci = validDockDate(ciRaw, today);
-    const co = validDockDate(coRaw, today);
+    const ci = isBookableDockDate(ciRaw, today);
+    const co = isBookableDockDate(coRaw, today);
 
     // Strip the params regardless of outcome so a refresh / shared link doesn't
     // re-scroll or re-select on every load. Replace (not push) — no history
@@ -467,12 +490,24 @@ export function initCalendarSelection() {
     );
     if (!key) return; // none free, or <5 nights → top of page
 
-    // Drive the exact same path a completing manual click produces.
-    selection = { key, checkIn: checkInIso, checkOut: checkOutIso };
-    refreshUI();
-
+    // Resolve the target calendar's root BEFORE committing any state. firstAvailable
+    // Bungalow works off KEY_ORDER + the unavailable map, which could in principle
+    // name a key that has no rendered calendar (e.g. a future refactor hides a
+    // bungalow while bookings.json still lists it). Guard first so we never leave a
+    // committed-but-invisible selection painted with no calendar to scroll to.
     const root = roots.find((r) => r.dataset.bungalowKey === key);
     if (!root) return;
+
+    // Drive the exact same path a completing manual click produces.
+    selection = { key, checkIn: checkInIso, checkOut: checkOutIso };
+    // The calendars only render two months at a time; page the check-in's month
+    // into view FIRST, or the selection highlight would paint into an off-screen
+    // month and the check-in cell wouldn't exist to focus. goToMonth clamps to
+    // the same nav bounds the arrows use and re-renders if the month moved;
+    // refreshUI's own rerenderCalendars() then repaints the selection on top.
+    goToMonth(parseIso(checkInIso));
+    refreshUI();
+
     // Scroll to the bungalow section (the calendar's nearest .bungalow-split,
     // whose heading is the stable anchor). Respect reduced-motion.
     const section = root.closest('.bungalow-split') || root;
