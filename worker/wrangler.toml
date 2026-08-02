@@ -29,4 +29,6 @@ SITE_BASE = "/vayana-bungalows"
 # Tab name within GSHEETS_SHEET_ID holding the offers table (range B3:H8).
 # Same spreadsheet file as the Enquires tab — the service account already
 # has read access, so no new secret/permission is needed.
+# A plain [vars] value (not a secret): a tab name is not sensitive. The
+# GSHEETS_ENQUIRES_TAB above stays a secret only for historical consistency.
 GSHEETS_OFFERS_TAB = "Offers"

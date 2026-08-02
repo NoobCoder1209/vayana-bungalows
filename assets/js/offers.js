@@ -61,9 +61,10 @@ function buildMessage(text) {
  * testable. Sets dataset.count = number of offers (0 for the empty state).
  */
 export function renderOffers(container, offers) {
-  // Clear any prior render (loading state / re-init).
-  while (container.children && container.children.length) container.children.pop?.();
+  // Clear any prior render (re-init). replaceChildren in the browser;
+  // the array-based test fake has no replaceChildren, so reset its children.
   if (typeof container.replaceChildren === 'function') container.replaceChildren();
+  else if (Array.isArray(container.children)) container.children.length = 0;
 
   if (!offers || offers.length === 0) {
     container.dataset.count = '0';
@@ -77,6 +78,7 @@ export function renderOffers(container, offers) {
 function renderError(container) {
   container.dataset.count = '0';
   if (typeof container.replaceChildren === 'function') container.replaceChildren();
+  else if (Array.isArray(container.children)) container.children.length = 0;
   container.append(buildMessage(container.dataset.errorMsg || 'Offers are temporarily unavailable.'));
 }
 
@@ -86,6 +88,9 @@ function renderError(container) {
 export function initOffers() {
   const container = document.querySelector('[data-offers]');
   if (!container) return;
+
+  // Deterministic layout while the fetch is in flight (avoids a header-over-blank-gap flash); overwritten on render.
+  container.dataset.count = '0';
 
   // No cache override: rely on the Worker's Cache-Control max-age=60 for ~1-min freshness.
   fetch(SITE_CONFIG.endpoints.offers)

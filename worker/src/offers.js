@@ -16,7 +16,7 @@ const COL = { dates: 0, discountPct: 1, priceBefore: 2, priceAfter: 3, nights: 4
 // A cell → trimmed string, or null when blank/whitespace-only.
 function cell(row, idx) {
   const raw = row[idx];
-  if (typeof raw !== 'string') return raw == null ? null : String(raw).trim() || null;
+  if (typeof raw !== 'string') return null; // Sheets values.get returns strings; anything else (missing/short row) → blank
   const t = raw.trim();
   return t === '' ? null : t;
 }
@@ -82,5 +82,11 @@ export async function fetchOffers(env) {
   } catch {
     throw new Error('offers-parse-failed');
   }
-  return parseOffers(payload.values || []);
+  if (!payload || !Array.isArray(payload.values)) {
+    // A 200 with no values[] is either a legitimately empty range OR a
+    // shaped-differently response. The Sheets API omits `values` entirely
+    // for a fully-empty range, so treat missing values as empty (not error).
+    return parseOffers([]);
+  }
+  return parseOffers(payload.values);
 }

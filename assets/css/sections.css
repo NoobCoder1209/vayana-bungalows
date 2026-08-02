@@ -867,10 +867,7 @@
   .offers__grid[data-count="5"],
   .offers__grid[data-count="6"] { grid-template-columns: repeat(3, minmax(0, 280px)); }
 
-  /* 5 cards in a 3-col grid leaves the 4th/5th on row 2; center that row by
-     spanning the trailing two across the track with justified centering. The
-     grid is already justify-content:center so the short last row is centered
-     as a group. No extra rule needed. */
+  /* Short last row (5→3+2, 6→3+3) centers as a group via justify-content:center. */
 
   .offers__msg { grid-column: 1 / -1; }
 }

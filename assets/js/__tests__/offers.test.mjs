@@ -73,3 +73,12 @@ test('zero offers → single message card, data-count=0, uses emptyMsg', () => {
   assert.equal(msgs.length, 1);
   assert.equal(msgs[0].textContent, 'No current offers.');
 });
+
+test('each field row carries a .offer-card__label with the dataset label text', () => {
+  const c = container();
+  renderOffers(c, [{ dates: '12 Jun', discountPct: null, priceBefore: null, priceAfter: null, nights: null, message: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  const labels = card.querySelectorAll('.offer-card__label');
+  assert.equal(labels.length, 1);
+  assert.equal(labels[0].textContent, 'Dates'); // from dataset.labelDates, NOT the 'dates' field-key fallback
+});

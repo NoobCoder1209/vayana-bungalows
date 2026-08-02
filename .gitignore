@@ -19,3 +19,6 @@ worker/node_modules/
 .env
 .env.*
 !.env.example
+
+# Superpowers SDD/brainstorm scratch — never committed.
+.superpowers/
