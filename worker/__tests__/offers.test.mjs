@@ -1,6 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseOffers } from '../src/offers.js';
+import { jsonCacheableResponse, corsHeaders } from '../src/lib/response.js';
+
+const req = (origin = 'http://localhost:5173') =>
+  new Request('https://w.example/offers', { headers: origin ? { origin } : {} });
+const env = { ALLOWED_ORIGINS: 'http://localhost:5173,https://noobcoder1209.github.io' };
 
 // Column order in B3:H8 → row array indices:
 //   [0]=B Dates, [1]=C Discount%, [2]=D PriceBefore, [3]=E PriceAfter,
@@ -60,4 +65,19 @@ test('preserves sheet order and treats every surviving row uniformly', () => {
 test('trims whitespace-only cells to null', () => {
   const out = parseOffers([enabled({ 0: '   ' })]);
   assert.equal(out[0].dates, null);
+});
+
+test('corsHeaders advertises GET alongside POST and OPTIONS', () => {
+  const h = corsHeaders(req(), env);
+  assert.match(h['access-control-allow-methods'], /GET/);
+  assert.match(h['access-control-allow-methods'], /POST/);
+});
+
+test('jsonCacheableResponse sets public max-age and echoes allowed origin', async () => {
+  const res = jsonCacheableResponse({ ok: true, offers: [] }, 200, req(), env, 60);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('cache-control'), 'public, max-age=60');
+  assert.equal(res.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+  assert.equal(res.headers.get('content-type'), 'application/json; charset=utf-8');
+  assert.deepEqual(await res.json(), { ok: true, offers: [] });
 });
