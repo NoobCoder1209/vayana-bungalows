@@ -16,6 +16,7 @@
 - **Worker error logging:** every `catch` logs a generic string only — NEVER `err.message` (avoids leaking service-account private-key fragments). Mirror `worker/src/sheets.js`.
 - **i18n key parity:** `locales/en.json` and `locales/bg.json` MUST have the identical key set — the i18n plugin throws at build time otherwise. Every added/removed key must be mirrored in both.
 - **i18n lint:** `npm run i18n:lint` must stay green — every `data-i18n*` marker needs a key in every dict, and every non-`_note` key must be referenced by ≥1 marker (no orphans).
+- **Test invocation (CORRECTION — verified against the repo):** `worker/package.json` has a `test` script (added in Task 2.5) → run Worker tests with `cd worker && npm test` OR directly `cd worker && node --test __tests__/offers.test.mjs`. The ROOT `npm test` uses an **explicit hardcoded file list** (no auto-discovery), so any NEW test file MUST be registered in the root `package.json` `test` script or it will silently not run. Task 2.5 registers `worker/__tests__/offers.test.mjs` and `assets/js/__tests__/offers.test.mjs`.
 - **No runtime i18n dictionary exists.** Localized strings reach JS only by (a) build-time `data-i18n`/`data-i18n-attr` markers baking text into the DOM, then reading `textContent`/`dataset`, or (b) hardcoded English fallback literals. Follow pattern (a) for all offers copy.
 - **Enquiries route is `/submit`** (not `/enquiries`) — do NOT rename or weaken it.
 - **CSS media-query buckets (copy verbatim from `assets/css/sections.css`):**
@@ -123,6 +124,49 @@ Expected: PASS (this is a non-behavioral change — adding `export` to an alread
 ```bash
 git add worker/src/sheets.js
 git commit -m "refactor(worker): export getAccessToken for reuse by offers reader"
+```
+
+---
+
+## Task 2.5: Test infrastructure — worker test script + register new test files
+
+**Files:**
+- Modify: `worker/package.json` (add a `test` script)
+- Modify: `package.json` (append the two new offers test files to the root `test` script)
+
+**Interfaces:**
+- Produces: `cd worker && npm test` runs the Worker's `node --test` suite; root `npm test` includes `worker/__tests__/offers.test.mjs` and `assets/js/__tests__/offers.test.mjs`.
+
+Rationale: discovered during Task 2 — `worker/package.json` had no `test` script (so `cd worker && npm test` failed) and the root `test` script is an explicit file list with no auto-discovery (so new test files would silently not run). This task fixes both BEFORE the tasks that add those test files. The two offers test files do not exist yet, so registering them makes root `npm test` fail until Tasks 3/10 create them — that is expected; only run root `npm test` as a gate at Task 12.
+
+- [ ] **Step 1: Add a test script to worker/package.json**
+
+In `worker/package.json`, add to the `scripts` object (after `"tail": "wrangler tail"`):
+
+```json
+    "test": "node --test"
+```
+
+(Add a comma after the `tail` line.) `node --test` with no args auto-discovers `__tests__/*.test.mjs` under the worker dir.
+
+- [ ] **Step 2: Register the new offers test files in the root test script**
+
+In the root `package.json`, append these two paths to the END of the existing `test` script's `node --test ...` file list (space-separated, before the closing quote):
+
+```
+worker/__tests__/offers.test.mjs assets/js/__tests__/offers.test.mjs
+```
+
+- [ ] **Step 3: Verify the worker script works on the existing suite**
+
+Run: `cd worker && npm test`
+Expected: PASS — the existing `locale.test.mjs` runs (offers.test.mjs doesn't exist yet, so it's simply not present; `node --test` only runs what exists).
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add worker/package.json package.json
+git commit -m "test(worker): add worker test script + register offers test files"
 ```
 
 ---
