@@ -87,7 +87,8 @@ export function initOffers() {
   const container = document.querySelector('[data-offers]');
   if (!container) return;
 
-  fetch(SITE_CONFIG.endpoints.offers, { cache: 'no-cache' })
+  // No cache override: rely on the Worker's Cache-Control max-age=60 for ~1-min freshness.
+  fetch(SITE_CONFIG.endpoints.offers)
     .then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
