@@ -86,12 +86,9 @@
     "offers": {
       "eyebrow": "Special offers",
       "title": "Current offers",
-      "label_dates": "Dates",
-      "label_discount": "Discount",
-      "label_price_before": "Price before",
-      "label_price_after": "Price after",
-      "label_nights": "Nights",
-      "label_message": "Message",
+      "save": "Save",
+      "off": "off",
+      "nights": "nights",
       "empty": "No current offers at the moment.",
       "error": "Offers are temporarily unavailable. Please try again later."
     },
