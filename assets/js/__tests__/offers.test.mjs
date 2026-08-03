@@ -2,83 +2,157 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderOffers } from '../offers.js';
 
-// Minimal DOM stand-in: this module only uses createElement, append,
-// textContent, dataset, and className. We use a tiny fake so the test
-// runs under plain node:test with no jsdom dependency (matches the repo's
-// existing dependency-free test style).
+// Dependency-free DOM fake. offers.js uses only createElement, append,
+// textContent, className, dataset, and (guarded) prepend/replaceChildren.
+// The fake deliberately omits prepend/replaceChildren/createTextNode to lock
+// the module to that minimal surface.
 function makeEl() {
   return {
     children: [], dataset: {}, className: '', textContent: '',
-    _attrs: {},
-    setAttribute(k, v) { this._attrs[k] = v; },
-    getAttribute(k) { return this._attrs[k]; },
     append(...kids) { this.children.push(...kids); },
     querySelectorAll(sel) {
-      // only '.offer-card' and '.offers__msg' are queried in tests
       const cls = sel.replace('.', '');
       const out = [];
-      const walk = (n) => { if (n.className && n.className.split(' ').includes(cls)) out.push(n); (n.children||[]).forEach(walk); };
+      const walk = (n) => {
+        if (n.className && n.className.split(' ').includes(cls)) out.push(n);
+        (n.children || []).forEach(walk);
+      };
       this.children.forEach(walk);
       return out;
     },
   };
 }
-// Patch a global document factory the module uses via a small shim.
 globalThis.document = { createElement: () => makeEl() };
 
 const container = () => {
   const c = makeEl();
   c.dataset = {
-    labelDates: 'Dates', labelDiscount: 'Discount',
-    labelPriceBefore: 'Price before', labelPriceAfter: 'Price after',
-    labelNights: 'Nights', labelMessage: 'Message',
+    saveLabel: 'Save', offLabel: 'off', nightsLabel: 'nights',
     emptyMsg: 'No current offers.', errorMsg: 'Unavailable.',
   };
   return c;
 };
 
-test('renders one card per offer and sets data-count', () => {
-  const c = container();
-  renderOffers(c, [
-    { dates: '12 Jun', discountPct: '20', priceBefore: '400', priceAfter: '320', nights: '4', message: 'Hi' },
-    { dates: '1 Jul', discountPct: null, priceBefore: null, priceAfter: null, nights: null, message: 'Yo' },
-  ]);
-  assert.equal(c.dataset.count, '2');
-  assert.equal(c.querySelectorAll('.offer-card').length, 2);
+const full = () => ({
+  dates: '12–18 Jun 2026', discountPct: '20',
+  priceBefore: '400', priceAfter: '320', nights: '4',
+  message: 'Free breakfast included',
 });
+const txt = (card, cls) => {
+  const n = card.querySelectorAll(cls);
+  return n.length ? n[0].textContent : null;
+};
 
-test('omits blank fields (null → no row)', () => {
+test('full offer → all Price Hero rows present with correct text', () => {
   const c = container();
-  renderOffers(c, [{ dates: null, discountPct: null, priceBefore: null, priceAfter: null, nights: null, message: 'Only me' }]);
+  renderOffers(c, [full()]);
   const card = c.querySelectorAll('.offer-card')[0];
-  const rows = card.querySelectorAll('.offer-card__row');
-  assert.equal(rows.length, 1);
+  assert.equal(txt(card, '.offer-card__eyebrow'), '12–18 Jun 2026');
+  assert.equal(txt(card, '.offer-card__struck'), '€400');
+  assert.equal(txt(card, '.offer-card__hero'), '€320');
+  assert.equal(txt(card, '.offer-card__save'), 'Save €80');
+  assert.equal(txt(card, '.offer-card__pct'), '20% off');
+  assert.equal(txt(card, '.offer-card__nights'), '4 nights');
+  assert.equal(txt(card, '.offer-card__msg'), 'Free breakfast included');
 });
 
-test('formats discount with % and prices with €', () => {
+test('save pill = derived euro when both prices present and before > after', () => {
   const c = container();
-  renderOffers(c, [{ dates: null, discountPct: '20', priceBefore: '400', priceAfter: '320', nights: null, message: null }]);
-  const rows = c.querySelectorAll('.offer-card')[0].querySelectorAll('.offer-card__row');
-  const text = rows.map(r => r.textContent).join('|');
-  assert.match(text, /20%/);
-  assert.match(text, /€400/);
-  assert.match(text, /€320/);
+  renderOffers(c, [{ ...full(), discountPct: null, message: null, dates: null, nights: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__save'), 'Save €80');
 });
 
-test('zero offers → single message card, data-count=0, uses emptyMsg', () => {
+test('pill falls back to "% off" when no before-price but discountPct present', () => {
   const c = container();
-  renderOffers(c, []);
+  renderOffers(c, [{ dates: null, discountPct: '20', priceBefore: null, priceAfter: '320', nights: null, message: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__save'), '20% off');
+});
+
+test('pill AND pct line co-occur when both prices and discountPct present', () => {
+  const c = container();
+  renderOffers(c, [full()]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__save'), 'Save €80'); // euro pill
+  assert.equal(txt(card, '.offer-card__pct'), '20% off');   // separate line
+});
+
+test('no pill when neither euro saving nor discountPct available', () => {
+  const c = container();
+  renderOffers(c, [{ dates: null, discountPct: null, priceBefore: null, priceAfter: '320', nights: null, message: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(card.querySelectorAll('.offer-card__save').length, 0);
+});
+
+test('only priceAfter present → hero only, no other rows, no divider', () => {
+  const c = container();
+  renderOffers(c, [{ dates: null, discountPct: null, priceBefore: null, priceAfter: '320', nights: null, message: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__hero'), '€320');
+  assert.equal(card.querySelectorAll('.offer-card__struck').length, 0);
+  assert.equal(card.querySelectorAll('.offer-card__save').length, 0);
+  assert.equal(card.querySelectorAll('.offer-card__pct').length, 0);
+  assert.equal(card.querySelectorAll('.offer-card__nights').length, 0);
+  assert.equal(card.querySelectorAll('.offer-card__msg').length, 0);
+  assert.equal(card.querySelectorAll('.offer-card__divider').length, 0);
+});
+
+test('offer without priceAfter is dropped; count matches rendered cards', () => {
+  const c = container();
+  renderOffers(c, [full(), { ...full(), priceAfter: null }]);
+  assert.equal(c.querySelectorAll('.offer-card').length, 1);
+  assert.equal(c.dataset.count, '1');
+});
+
+test('all offers lack priceAfter → empty message, count 0', () => {
+  const c = container();
+  renderOffers(c, [{ ...full(), priceAfter: null }, { ...full(), priceAfter: '' }]);
+  assert.equal(c.querySelectorAll('.offer-card').length, 0);
   assert.equal(c.dataset.count, '0');
   const msgs = c.querySelectorAll('.offers__msg');
   assert.equal(msgs.length, 1);
   assert.equal(msgs[0].textContent, 'No current offers.');
 });
 
-test('each field row carries a .offer-card__label with the dataset label text', () => {
+test('zero offers → single message card, count 0', () => {
   const c = container();
-  renderOffers(c, [{ dates: '12 Jun', discountPct: null, priceBefore: null, priceAfter: null, nights: null, message: null }]);
+  renderOffers(c, []);
+  assert.equal(c.dataset.count, '0');
+  assert.equal(c.querySelectorAll('.offers__msg').length, 1);
+});
+
+test('compose labels come from dataset', () => {
+  const c = container();
+  c.dataset.saveLabel = 'Спестявате';
+  c.dataset.offLabel = 'отстъпка';
+  c.dataset.nightsLabel = 'нощувки';
+  renderOffers(c, [full()]);
   const card = c.querySelectorAll('.offer-card')[0];
-  const labels = card.querySelectorAll('.offer-card__label');
-  assert.equal(labels.length, 1);
-  assert.equal(labels[0].textContent, 'Dates'); // from dataset.labelDates, NOT the 'dates' field-key fallback
+  assert.equal(txt(card, '.offer-card__save'), 'Спестявате €80');
+  assert.equal(txt(card, '.offer-card__pct'), '20% отстъпка');
+  assert.equal(txt(card, '.offer-card__nights'), '4 нощувки');
+});
+
+test('€ guard: priceAfter already prefixed does not double the symbol', () => {
+  const c = container();
+  renderOffers(c, [{ dates: null, discountPct: null, priceBefore: null, priceAfter: '€320', nights: null, message: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__hero'), '€320');
+});
+
+test('discountPct of 0 → no pct line and no pct pill fallback', () => {
+  const c = container();
+  renderOffers(c, [{ dates: null, discountPct: '0', priceBefore: null, priceAfter: '320', nights: null, message: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(card.querySelectorAll('.offer-card__pct').length, 0);
+  assert.equal(card.querySelectorAll('.offer-card__save').length, 0);
+});
+
+test('bad data: before < after → no euro saving; pct pill fallback if present', () => {
+  const c = container();
+  renderOffers(c, [{ dates: null, discountPct: '20', priceBefore: '300', priceAfter: '320', nights: null, message: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__struck'), '€300'); // present field still shown
+  assert.equal(txt(card, '.offer-card__save'), '20% off'); // euro not derivable → pct fallback
 });
