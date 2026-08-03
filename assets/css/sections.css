@@ -835,7 +835,10 @@
   right: 0;
   padding: 0.47rem 0.7rem;
   background: var(--avail-booked-bg);
-  color: var(--avail-booked);
+  /* Deeper rose than the calendar's --avail-booked (#a86a63, only 3.72:1 on
+     this tint) so the small uppercase banner text clears WCAG AA (5.54:1).
+     Scoped to the banner — the availability calendar keeps its own token. */
+  color: #8a4f48;
   border-bottom: 1px solid var(--avail-booked-border);
   font-size: 0.63rem;
   letter-spacing: 1.5px;
