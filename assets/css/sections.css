@@ -802,12 +802,15 @@
 
 .offer-card {
   flex: 0 0 auto;
-  width: clamp(240px, 78vw, 320px); /* portrait card, one-per-view on phones */
+  width: clamp(240px, 78vw, 320px);
   aspect-ratio: 3 / 4;
   scroll-snap-align: center;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  justify-content: center;   /* Price Hero is vertically centered */
+  align-items: center;       /* center the pill and rows */
+  text-align: center;
+  gap: 0;                     /* spacing is margin-driven per element */
   padding: var(--space-5);
   background: var(--bg-light);
   border: 1px solid var(--border);
@@ -815,17 +818,59 @@
   box-sizing: border-box;
 }
 
-.offer-card__row {
-  margin: 0;
-  line-height: 1.4;
-}
+.offer-card p { margin: 0; }
 
-.offer-card__label {
-  display: block;
+.offer-card__eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.offer-card__struck {
+  font-size: 1rem;
+  margin: 0.75rem 0 0.15rem;
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.offer-card__hero {
+  font-family: var(--font-heading);
+  font-size: clamp(2.6rem, 12vw, 3.6rem); /* fits the 240px narrow card */
+  line-height: 1;
+  color: var(--primary-deep);
+}
+.offer-card__save {
+  align-self: center;
+  margin-top: 0.75rem;
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--secondary);
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+}
+.offer-card__pct {
+  margin-top: 0.5rem;
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--text-muted);
+}
+.offer-card__divider {
+  width: 40px;
+  height: 1px;
+  background: var(--border);
+  margin: 1.5rem auto;
+}
+.offer-card__nights {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+.offer-card__msg {
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--secondary);
 }
 
 /* Empty / error state — a single centered message card. */
