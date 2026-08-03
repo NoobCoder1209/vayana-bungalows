@@ -12,40 +12,99 @@
 
 import { SITE_CONFIG } from './site-config.js';
 
-// Field render order + how each value is decorated. label is the dataset key
-// holding the localized label; format wraps the raw sheet value.
-const FIELDS = [
-  { key: 'dates', label: 'labelDates', format: v => v },
-  { key: 'discountPct', label: 'labelDiscount', format: v => `${v}%` },
-  { key: 'priceBefore', label: 'labelPriceBefore', format: v => `€${v}` },
-  { key: 'priceAfter', label: 'labelPriceAfter', format: v => `€${v}` },
-  { key: 'nights', label: 'labelNights', format: v => v },
-  { key: 'message', label: 'labelMessage', format: v => v },
-];
+// Parse a raw sheet price string (bare number, maybe with € or spaces) to a
+// finite number, or NaN. Tolerates "€400", "400", " 400 ".
+function parsePrice(v) {
+  if (v == null || v === '') return NaN;
+  return Number(String(v).replace(/[^0-9.]/g, ''));
+}
 
+// Prepend € unless the raw value already carries it (avoid €€).
+function euro(raw) {
+  const s = String(raw);
+  return s.startsWith('€') ? s : `€${s}`;
+}
+
+// A positive integer-ish discount, or null.
+function pctValue(v) {
+  if (v == null || v === '') return null;
+  const n = Number(String(v).replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+// Decide the save pill: euro saving preferred, pct fallback, else null.
+// Returns the ready-to-render text or null.
+function deriveSave(offer, dataset) {
+  const before = parsePrice(offer.priceBefore);
+  const after = parsePrice(offer.priceAfter);
+  const saveLabel = dataset.saveLabel || 'Save';
+  const offLabel = dataset.offLabel || 'off';
+  if (Number.isFinite(before) && Number.isFinite(after) && before > after) {
+    return `${saveLabel} €${before - after}`;
+  }
+  const pct = pctValue(offer.discountPct);
+  if (pct != null) return `${pct}% ${offLabel}`;
+  return null;
+}
+
+// Banner discount %: prefer the sheet's Discount % (col C); if blank, derive
+// from prices (round(before−after)/before). Returns a positive integer % or null.
+function bannerPct(offer) {
+  const c = pctValue(offer.discountPct);
+  if (c != null) return c;
+  const before = parsePrice(offer.priceBefore);
+  const after = parsePrice(offer.priceAfter);
+  if (Number.isFinite(before) && Number.isFinite(after) && before > after) {
+    return Math.round(((before - after) / before) * 100);
+  }
+  return null;
+}
+
+// Build one Price Hero card. priceAfter is guaranteed non-blank by the caller.
 function buildCard(container, offer) {
+  const ds = container.dataset;
   const card = document.createElement('article');
   card.className = 'offer-card';
-  for (const field of FIELDS) {
-    const raw = offer[field.key];
-    if (raw == null || raw === '') continue; // omit blank fields
-    const row = document.createElement('p');
-    row.className = 'offer-card__row';
-    // Label goes in a leading block span (CSS puts it on its own uppercase
-    // line); the formatted value is the row's own text. Assigning textContent
-    // for the value keeps us inside createElement/append/textContent — the
-    // tiny DOM surface the unit test's fake element provides (no createTextNode).
-    row.textContent = field.format(raw);
-    const label = document.createElement('span');
-    label.className = 'offer-card__label';
-    label.textContent = container.dataset[field.label] || field.key;
-    // prepend in the real browser so the label renders above the value;
-    // the array-based test fake has no prepend, so fall back to append
-    // (child order is irrelevant there — the test reads row.textContent).
-    if (typeof row.prepend === 'function') row.prepend(label);
-    else row.append(label);
-    card.append(row);
+
+  const add = (cls, text) => {
+    const el = document.createElement('p');
+    el.className = cls;
+    el.textContent = text;
+    card.append(el);
+    return el;
+  };
+
+  // Full-width top banner: "Discount 20%" (calendar booked-cell styling). Sheet
+  // Discount % preferred, derived-% fallback. Always shown when a % is available.
+  const bpct = bannerPct(offer);
+  if (bpct != null) add('offer-card__banner', `${ds.discountLabel || 'Discount'} ${bpct}%`);
+
+  if (offer.dates) add('offer-card__eyebrow', offer.dates);
+  if (offer.priceBefore) add('offer-card__struck', euro(offer.priceBefore));
+  add('offer-card__hero', euro(offer.priceAfter)); // required
+
+  const save = deriveSave(offer, ds);
+  if (save) add('offer-card__save', save);
+
+  // Divider only when something follows it (nights or message present).
+  const hasFooter = !!offer.nights || !!offer.message;
+  if (hasFooter) {
+    const d = document.createElement('span');
+    d.className = 'offer-card__divider';
+    card.append(d);
   }
+
+  if (offer.nights) add('offer-card__nights', `${offer.nights} ${ds.nightsLabel || 'nights'}`);
+  if (offer.message) add('offer-card__msg', offer.message);
+
+  // Gold pill CTA → Bungalow 1 on the stay page. Relative href keeps the
+  // GitHub Pages base (/vayana-bungalows/) intact, same as the header links.
+  const cta = document.createElement('a');
+  cta.className = 'offer-card__cta btn btn-primary';
+  cta.setAttribute('href', 'stay/#bungalow-1-title');
+  cta.textContent = ds.ctaLabel || 'Take the offer';
+  card.append(cta);
+
   return card;
 }
 
@@ -66,13 +125,17 @@ export function renderOffers(container, offers) {
   if (typeof container.replaceChildren === 'function') container.replaceChildren();
   else if (Array.isArray(container.children)) container.children.length = 0;
 
-  if (!offers || offers.length === 0) {
+  // Price Hero requires a hero (price-after). Drop offers without one so the
+  // count matches rendered cards and the empty state triggers if all drop.
+  const shown = (offers || []).filter((o) => o.priceAfter != null && o.priceAfter !== '');
+
+  if (shown.length === 0) {
     container.dataset.count = '0';
     container.append(buildMessage(container.dataset.emptyMsg || 'No current offers.'));
     return;
   }
-  container.dataset.count = String(offers.length);
-  for (const offer of offers) container.append(buildCard(container, offer));
+  container.dataset.count = String(shown.length);
+  for (const offer of shown) container.append(buildCard(container, offer));
 }
 
 function renderError(container) {

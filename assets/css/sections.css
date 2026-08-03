@@ -802,30 +802,101 @@
 
 .offer-card {
   flex: 0 0 auto;
-  width: clamp(240px, 78vw, 320px); /* portrait card, one-per-view on phones */
+  width: clamp(240px, 78vw, 320px);
   aspect-ratio: 3 / 4;
   scroll-snap-align: center;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-5);
+  justify-content: center;   /* Price Hero is vertically centered */
+  align-items: center;       /* center the pill and rows */
+  text-align: center;
+  gap: 0;                     /* spacing is margin-driven per element */
+  /* Banner is absolute/out-of-flow (~2.07rem tall). To make the gap under the
+     banner equal the gap above the bottom edge, reserve top padding = banner
+     height + bottom padding, so the centred content sits symmetrically between
+     the banner bottom and the card bottom. */
+  padding: calc(var(--space-4) + 2.07rem) var(--space-4) var(--space-4);
   background: var(--bg-light);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   box-sizing: border-box;
+  position: relative;         /* anchor the full-bleed top banner */
+  overflow: hidden;           /* clip the banner to the rounded corners */
 }
 
-.offer-card__row {
-  margin: 0;
-  line-height: 1.4;
-}
+.offer-card p { margin: 0; }
 
-.offer-card__label {
-  display: block;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+/* Full-width top banner ("Discount 20%") in the availability calendar's
+   "booked" cell palette: pale rose tint, dusty-rose text, soft rose underline. */
+.offer-card__banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.47rem 0.7rem;
+  background: var(--avail-booked-bg);
+  /* Deeper rose than the calendar's --avail-booked (#a86a63, only 3.72:1 on
+     this tint) so the small uppercase banner text clears WCAG AA (5.54:1).
+     Scoped to the banner — the availability calendar keeps its own token. */
+  color: #8a4f48;
+  border-bottom: 1px solid var(--avail-booked-border);
+  font-size: 0.63rem;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--primary);
+}
+
+.offer-card__eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.offer-card__struck {
+  font-size: 1rem;
+  margin: 0.75rem 0 0.15rem;
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.offer-card__hero {
+  font-family: var(--font-heading);
+  font-size: clamp(2.35rem, 9vw, 2.9rem); /* smaller + capped so it stops growing on wide cards */
+  line-height: 1.2; /* room below the box so the serif descender clears the pill */
+  color: var(--primary-deep);
+}
+.offer-card__save {
+  align-self: center;
+  margin-top: 0.9rem;
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--secondary);
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+}
+.offer-card__divider {
+  width: 40px;
+  height: 1px;
+  background: var(--border);
+  margin: 1.1rem auto;
+}
+.offer-card__nights {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+.offer-card__msg {
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--secondary);
+}
+/* Gold pill CTA at the bottom. Inherits .btn.btn-primary colours; overrides
+   the header button's chunky sizing to fit the card. */
+.offer-card__cta {
+  margin-top: 1.25rem;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.85rem;
+  min-height: 0;
 }
 
 /* Empty / error state — a single centered message card. */
