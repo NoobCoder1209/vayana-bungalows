@@ -47,6 +47,19 @@ function deriveSave(offer, dataset) {
   return null;
 }
 
+// Banner discount %: prefer the sheet's Discount % (col C); if blank, derive
+// from prices (round(before−after)/before). Returns a positive integer % or null.
+function bannerPct(offer) {
+  const c = pctValue(offer.discountPct);
+  if (c != null) return c;
+  const before = parsePrice(offer.priceBefore);
+  const after = parsePrice(offer.priceAfter);
+  if (Number.isFinite(before) && Number.isFinite(after) && before > after) {
+    return Math.round(((before - after) / before) * 100);
+  }
+  return null;
+}
+
 // Build one Price Hero card. priceAfter is guaranteed non-blank by the caller.
 function buildCard(container, offer) {
   const ds = container.dataset;
@@ -61,15 +74,17 @@ function buildCard(container, offer) {
     return el;
   };
 
+  // Full-width top banner: "Discount 20%" (calendar booked-cell styling). Sheet
+  // Discount % preferred, derived-% fallback. Always shown when a % is available.
+  const bpct = bannerPct(offer);
+  if (bpct != null) add('offer-card__banner', `${ds.discountLabel || 'Discount'} ${bpct}%`);
+
   if (offer.dates) add('offer-card__eyebrow', offer.dates);
   if (offer.priceBefore) add('offer-card__struck', euro(offer.priceBefore));
   add('offer-card__hero', euro(offer.priceAfter)); // required
 
   const save = deriveSave(offer, ds);
   if (save) add('offer-card__save', save);
-
-  const pct = pctValue(offer.discountPct);
-  if (pct != null) add('offer-card__pct', `${pct}% ${ds.offLabel || 'off'}`);
 
   // Divider only when something follows it (nights or message present).
   const hasFooter = !!offer.nights || !!offer.message;
@@ -81,6 +96,14 @@ function buildCard(container, offer) {
 
   if (offer.nights) add('offer-card__nights', `${offer.nights} ${ds.nightsLabel || 'nights'}`);
   if (offer.message) add('offer-card__msg', offer.message);
+
+  // Gold pill CTA → Bungalow 1 on the stay page. Relative href keeps the
+  // GitHub Pages base (/vayana-bungalows/) intact, same as the header links.
+  const cta = document.createElement('a');
+  cta.className = 'offer-card__cta btn btn-primary';
+  cta.setAttribute('href', 'stay/#bungalow-1-title');
+  cta.textContent = ds.ctaLabel || 'Take the offer';
+  card.append(cta);
 
   return card;
 }

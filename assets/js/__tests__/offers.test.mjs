@@ -8,8 +8,10 @@ import { renderOffers } from '../offers.js';
 // the module to that minimal surface.
 function makeEl() {
   return {
-    children: [], dataset: {}, className: '', textContent: '',
+    children: [], dataset: {}, className: '', textContent: '', _attrs: {},
     append(...kids) { this.children.push(...kids); },
+    setAttribute(k, v) { this._attrs[k] = v; },
+    getAttribute(k) { return this._attrs[k]; },
     querySelectorAll(sel) {
       const cls = sel.replace('.', '');
       const out = [];
@@ -28,6 +30,7 @@ const container = () => {
   const c = makeEl();
   c.dataset = {
     saveLabel: 'Save', offLabel: 'off', nightsLabel: 'nights',
+    discountLabel: 'Discount', ctaLabel: 'Take the offer',
     emptyMsg: 'No current offers.', errorMsg: 'Unavailable.',
   };
   return c;
@@ -47,13 +50,59 @@ test('full offer → all Price Hero rows present with correct text', () => {
   const c = container();
   renderOffers(c, [full()]);
   const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__banner'), 'Discount 20%');
   assert.equal(txt(card, '.offer-card__eyebrow'), '12–18 Jun 2026');
   assert.equal(txt(card, '.offer-card__struck'), '€400');
   assert.equal(txt(card, '.offer-card__hero'), '€320');
   assert.equal(txt(card, '.offer-card__save'), 'Save €80');
-  assert.equal(txt(card, '.offer-card__pct'), '20% off');
   assert.equal(txt(card, '.offer-card__nights'), '4 nights');
   assert.equal(txt(card, '.offer-card__msg'), 'Free breakfast included');
+  // The redundant "20% off" line was removed once the banner carried the %.
+  assert.equal(card.querySelectorAll('.offer-card__pct').length, 0);
+  // Gold CTA present, correct label + Bungalow-1 target.
+  const cta = card.querySelectorAll('.offer-card__cta')[0];
+  assert.equal(cta.textContent, 'Take the offer');
+  assert.equal(cta.getAttribute('href'), 'stay/#bungalow-1-title');
+});
+
+test('CTA is present on every rendered card (even hero-only) with localized label', () => {
+  const c = container();
+  c.dataset.ctaLabel = 'Вземете офертата';
+  renderOffers(c, [{ dates: null, discountPct: null, priceBefore: null, priceAfter: '320', nights: null, message: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  const cta = card.querySelectorAll('.offer-card__cta')[0];
+  assert.equal(cta.textContent, 'Вземете офертата');
+  assert.equal(cta.getAttribute('href'), 'stay/#bungalow-1-title');
+});
+
+test('banner uses the sheet Discount % (col C) when present', () => {
+  const c = container();
+  renderOffers(c, [{ ...full(), priceBefore: null }]); // col C present, no before-price
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__banner'), 'Discount 20%');
+});
+
+test('banner falls back to derived % from prices when Discount % is blank', () => {
+  const c = container();
+  // before 400 / after 320 → round((400-320)/400*100) = 20
+  renderOffers(c, [{ ...full(), discountPct: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__banner'), 'Discount 20%');
+});
+
+test('no banner when neither Discount % nor a derivable % is available', () => {
+  const c = container();
+  renderOffers(c, [{ dates: null, discountPct: null, priceBefore: null, priceAfter: '320', nights: null, message: null }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(card.querySelectorAll('.offer-card__banner').length, 0);
+});
+
+test('banner label comes from dataset (localized)', () => {
+  const c = container();
+  c.dataset.discountLabel = 'Отстъпка';
+  renderOffers(c, [full()]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__banner'), 'Отстъпка 20%');
 });
 
 test('save pill = derived euro when both prices present and before > after', () => {
@@ -70,14 +119,6 @@ test('pill falls back to "% off" when no before-price but discountPct present', 
   assert.equal(txt(card, '.offer-card__save'), '20% off');
 });
 
-test('pill AND pct line co-occur when both prices and discountPct present', () => {
-  const c = container();
-  renderOffers(c, [full()]);
-  const card = c.querySelectorAll('.offer-card')[0];
-  assert.equal(txt(card, '.offer-card__save'), 'Save €80'); // euro pill
-  assert.equal(txt(card, '.offer-card__pct'), '20% off');   // separate line
-});
-
 test('no pill when neither euro saving nor discountPct available', () => {
   const c = container();
   renderOffers(c, [{ dates: null, discountPct: null, priceBefore: null, priceAfter: '320', nights: null, message: null }]);
@@ -85,14 +126,14 @@ test('no pill when neither euro saving nor discountPct available', () => {
   assert.equal(card.querySelectorAll('.offer-card__save').length, 0);
 });
 
-test('only priceAfter present → hero only, no other rows, no divider', () => {
+test('only priceAfter present → hero only, no other rows, no divider, no banner', () => {
   const c = container();
   renderOffers(c, [{ dates: null, discountPct: null, priceBefore: null, priceAfter: '320', nights: null, message: null }]);
   const card = c.querySelectorAll('.offer-card')[0];
   assert.equal(txt(card, '.offer-card__hero'), '€320');
+  assert.equal(card.querySelectorAll('.offer-card__banner').length, 0);
   assert.equal(card.querySelectorAll('.offer-card__struck').length, 0);
   assert.equal(card.querySelectorAll('.offer-card__save').length, 0);
-  assert.equal(card.querySelectorAll('.offer-card__pct').length, 0);
   assert.equal(card.querySelectorAll('.offer-card__nights').length, 0);
   assert.equal(card.querySelectorAll('.offer-card__msg').length, 0);
   assert.equal(card.querySelectorAll('.offer-card__divider').length, 0);
@@ -125,12 +166,10 @@ test('zero offers → single message card, count 0', () => {
 test('compose labels come from dataset', () => {
   const c = container();
   c.dataset.saveLabel = 'Спестявате';
-  c.dataset.offLabel = 'отстъпка';
   c.dataset.nightsLabel = 'нощувки';
   renderOffers(c, [full()]);
   const card = c.querySelectorAll('.offer-card')[0];
   assert.equal(txt(card, '.offer-card__save'), 'Спестявате €80');
-  assert.equal(txt(card, '.offer-card__pct'), '20% отстъпка');
   assert.equal(txt(card, '.offer-card__nights'), '4 нощувки');
 });
 
@@ -141,11 +180,11 @@ test('€ guard: priceAfter already prefixed does not double the symbol', () => 
   assert.equal(txt(card, '.offer-card__hero'), '€320');
 });
 
-test('discountPct of 0 → no pct line and no pct pill fallback', () => {
+test('discountPct of 0 → no banner and no pct pill fallback', () => {
   const c = container();
   renderOffers(c, [{ dates: null, discountPct: '0', priceBefore: null, priceAfter: '320', nights: null, message: null }]);
   const card = c.querySelectorAll('.offer-card')[0];
-  assert.equal(card.querySelectorAll('.offer-card__pct').length, 0);
+  assert.equal(card.querySelectorAll('.offer-card__banner').length, 0);
   assert.equal(card.querySelectorAll('.offer-card__save').length, 0);
 });
 
@@ -155,4 +194,6 @@ test('bad data: before < after → no euro saving; pct pill fallback if present'
   const card = c.querySelectorAll('.offer-card')[0];
   assert.equal(txt(card, '.offer-card__struck'), '€300'); // present field still shown
   assert.equal(txt(card, '.offer-card__save'), '20% off'); // euro not derivable → pct fallback
+  // banner still shows col-C % (derived would be negative, so col C is used)
+  assert.equal(txt(card, '.offer-card__banner'), 'Discount 20%');
 });
