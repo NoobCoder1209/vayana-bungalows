@@ -862,12 +862,25 @@
   .offers__grid[data-count="3"] { grid-template-columns: repeat(3, minmax(0, 280px)); }
   /* 4 → 2 + 2 (force a 2-column grid; rows wrap naturally). */
   .offers__grid[data-count="4"] { grid-template-columns: repeat(2, minmax(0, 280px)); }
-  /* 5 → 3 + 2, 6 → 3 + 3 (3-column grid; last row centers via auto margins
-     on the trailing item is unnecessary — grid centering handles it). */
-  .offers__grid[data-count="5"],
+  /* 6 → 3 + 3 (3-column grid; both rows full, no centering needed). */
   .offers__grid[data-count="6"] { grid-template-columns: repeat(3, minmax(0, 280px)); }
 
-  /* Short last row (5→3+2, 6→3+3) centers as a group via justify-content:center. */
+  /* 5 → 3 + 2 with the SECOND row centered under the first. A plain
+     3-column grid would leave cards 4 & 5 left-aligned under columns 1-2.
+     Trick: use 6 columns so each card spans 2, letting card 4 start at
+     col 2 and card 5 at col 4 — centering the pair under the trio. Each
+     half-column is (280px − gap)/2 so a 2-column span + the injected inner
+     gap sums back to exactly 280px: the 5-card row then matches the card
+     size and total width of every other count (no wider/larger cards). */
+  .offers__grid[data-count="5"] {
+    grid-template-columns: repeat(6, minmax(0, calc((280px - 1.5rem) / 2)));
+  }
+  .offers__grid[data-count="5"] .offer-card { grid-column: span 2; }
+  .offers__grid[data-count="5"] .offer-card:nth-child(4) { grid-column: 2 / span 2; }
+  .offers__grid[data-count="5"] .offer-card:nth-child(5) { grid-column: 4 / span 2; }
+
+  /* Short last row for 6 (3+3) is full, and for 5 is explicitly centered
+     via the nth-child spans above. */
 
   .offers__msg { grid-column: 1 / -1; }
 }
