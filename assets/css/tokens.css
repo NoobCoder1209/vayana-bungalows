@@ -85,6 +85,12 @@
   /* Z-index scale */
   --z-base: 1;
   --z-sticky: 50;
+  /* One rung above --z-sticky: the footer sits above the fixed booking dock
+     (which is --z-sticky) so the dock slides behind the opaque footer at the
+     bottom of the page, while staying well below modals/toasts. If you ever
+     raise --z-sticky toward --z-modal, revisit this so the footer can't start
+     occluding modal-layer UI. */
+  --z-footer: 51;
   --z-modal: 100;
   --z-toast: 200;
 }
