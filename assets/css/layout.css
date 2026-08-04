@@ -794,6 +794,11 @@ html.no-js .site-header__menu {
   background: var(--bg-dark);
   color: var(--text-light);
   padding-top: var(--space-12);
+  /* Own stacking context above the fixed booking dock (--z-sticky: 50) so the
+     dock slides BEHIND the opaque footer at the bottom of the home page,
+     instead of floating on top of it. */
+  position: relative;
+  z-index: calc(var(--z-sticky) + 1);
 }
 
 .site-footer__inner {
