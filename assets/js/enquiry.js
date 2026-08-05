@@ -323,6 +323,22 @@ export function initEnquiry() {
     }
   }
 
+  // URL-param pre-fill: `?offer=<text>` populates the message textarea when a
+  // visitor clicks "Take the offer" in the home-page offer modal. Unlike
+  // `?villa` (allowlist → fixed sentence), this IS free text composed from OUR
+  // OWN offers sheet, so we accept the value — but defensively: assigning to
+  // textarea.value is XSS-safe (it becomes a text node, never parsed as HTML),
+  // and we still (a) strip control chars, (b) cap length at MAX_MESSAGE_LEN so
+  // a tampered/overlong URL can't blow past the server guard, and (c)
+  // empty-only-fill (never clobber text the guest already typed), mirroring the
+  // villa block's fail-safe posture. URLSearchParams.get already percent-decodes.
+  const offerParam = params.get('offer');
+  if (offerParam && !message.value.trim()) {
+    message.value = offerParam
+      .replace(/[\x00-\x1f\x7f]/g, " ")
+      .slice(0, MAX_MESSAGE_LEN);
+  }
+
   // URL-param pre-fill: `?checkin=&checkout=` (ISO YYYY-MM-DD) pre-populate
   // the date pickers. The /stay/ top booking bar links here carrying the
   // dates the visitor chose there. We validate defensively — a value only

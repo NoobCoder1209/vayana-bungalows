@@ -11,6 +11,7 @@
 // stylesheet can pick the right grid (desktop) / carousel (touch) rule.
 
 import { SITE_CONFIG } from './site-config.js';
+import { openOfferModal } from './offer-modal.js';
 
 // Parse a raw sheet price string (bare number, maybe with € or spaces) to a
 // finite number, or NaN. Tolerates "€400", "400", " 400 ".
@@ -20,7 +21,8 @@ function parsePrice(v) {
 }
 
 // Prepend € unless the raw value already carries it (avoid €€).
-function euro(raw) {
+// Exported so offer-modal.js formats prices identically to the card.
+export function euro(raw) {
   const s = String(raw);
   return s.startsWith('€') ? s : `€${s}`;
 }
@@ -34,7 +36,8 @@ function pctValue(v) {
 
 // Decide the save pill: euro saving preferred, pct fallback, else null.
 // Returns the ready-to-render text or null.
-function deriveSave(offer, dataset) {
+// Exported so offer-modal.js derives the same savings text as the card.
+export function deriveSave(offer, dataset) {
   const before = parsePrice(offer.priceBefore);
   const after = parsePrice(offer.priceAfter);
   const saveLabel = dataset.saveLabel || 'Save';
@@ -61,7 +64,9 @@ function bannerPct(offer) {
 }
 
 // Build one Price Hero card. priceAfter is guaranteed non-blank by the caller.
-function buildCard(container, offer) {
+// `index` is the card's position among the rendered offers (for the CTA's
+// data-offer-index, useful for tests/debugging).
+function buildCard(container, offer, index) {
   const ds = container.dataset;
   const card = document.createElement('article');
   card.className = 'offer-card';
@@ -97,12 +102,16 @@ function buildCard(container, offer) {
   if (offer.nights) add('offer-card__nights', `${offer.nights} ${ds.nightsLabel || 'nights'}`);
   if (offer.message) add('offer-card__msg', offer.message);
 
-  // Gold pill CTA → Bungalow 1 on the stay page. Relative href keeps the
-  // GitHub Pages base (/vayana-bungalows/) intact, same as the header links.
-  const cta = document.createElement('a');
+  // Gold pill CTA → opens the offer detail modal (offer-modal.js) with the
+  // full offer + templated rules. A <button> (not <a>) because it triggers
+  // in-page UI, not navigation. The offer object is captured in the click
+  // closure; data-offer-index is kept for tests/debugging.
+  const cta = document.createElement('button');
+  cta.type = 'button';
   cta.className = 'offer-card__cta btn btn-primary';
-  cta.setAttribute('href', 'stay/#bungalow-1-title');
+  cta.setAttribute('data-offer-index', String(index));
   cta.textContent = ds.ctaLabel || 'Check the offer';
+  cta.addEventListener('click', () => openOfferModal(offer, cta));
   card.append(cta);
 
   return card;
@@ -135,7 +144,7 @@ export function renderOffers(container, offers) {
     return;
   }
   container.dataset.count = String(shown.length);
-  for (const offer of shown) container.append(buildCard(container, offer));
+  shown.forEach((offer, i) => container.append(buildCard(container, offer, i)));
 }
 
 function renderError(container) {

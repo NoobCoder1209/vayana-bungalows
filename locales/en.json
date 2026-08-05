@@ -92,7 +92,17 @@
       "discount": "Discount",
       "cta": "Check the offer",
       "empty": "No current offers at the moment.",
-      "error": "Offers are temporarily unavailable. Please try again later."
+      "error": "Offers are temporarily unavailable. Please try again later.",
+      "modal_eyebrow": "Special offer",
+      "modal_title": "Offer details",
+      "modal_fixed_dates": "These dates are fixed and cannot be changed or extended:",
+      "modal_rules_title": "Offer terms",
+      "modal_rule_1": "The offer is valid only for the dates shown above and cannot be moved, split, or extended.",
+      "modal_rule_2": "The price covers the full stay for the stated number of nights; it is not a per-night rate.",
+      "modal_rule_3": "The offer is subject to availability and confirmation, and may be withdrawn at any time before you enquire.",
+      "modal_rule_4": "This offer cannot be combined with any other promotion or discount.",
+      "modal_take": "Take the offer",
+      "take_message": "I'm taking the offer"
     },
     "services": {
       "eyebrow": "Discover the services we offer",
