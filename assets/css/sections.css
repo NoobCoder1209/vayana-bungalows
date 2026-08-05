@@ -387,11 +387,15 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  /* iOS: declare that this element owns the horizontal pan gesture, and turn on
-     momentum scrolling. Without pan-x, Safari can hand the touch to an ancestor
-     (e.g. the bungalow carousel's overflow:hidden + -webkit-mask wrapper) and
-     the swipe never scrolls the track. Harmless on other engines. */
-  touch-action: pan-x;
+  /* iOS: declare the pan gestures this element handles, and turn on momentum
+     scrolling. pan-x keeps the horizontal swipe from being handed to an
+     ancestor (e.g. the bungalow carousel's overflow:hidden + -webkit-mask
+     wrapper) so the track always scrolls sideways; pan-y lets a vertical drag
+     that starts on a photo escape to the page so the page still scrolls. The
+     browser picks the axis from the initial drag angle. scroll-snap-type stays
+     x-only, so the carousel's own scroll is unaffected. Harmless on other
+     engines. */
+  touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -793,7 +797,9 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  touch-action: pan-x;
+  /* pan-x owns the horizontal swipe; pan-y lets a vertical drag starting on a
+     card escape to the page so the page still scrolls. See .gallery__track. */
+  touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: touch;
   justify-content: flex-start;
 }
