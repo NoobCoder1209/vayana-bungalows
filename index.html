@@ -445,6 +445,60 @@
         </div>
       </div>
 
+      <!-- Offer detail modal (#offer-modal). Reuses the .modal pattern
+           (sections.css). All FIXED copy is localized here via data-i18n /
+           data-i18n-attr (build-time i18n; no runtime dict). offer-modal.js
+           fills the [data-offer-slot] placeholders with the clicked offer's
+           dynamic values and toggles the optional rows. Info-only: the bottom
+           button deep-links to /enquiries/ with ?offer=<prefilled message>
+           (href overwritten by JS at open time to stay locale-aware). -->
+      <div class="modal" id="offer-modal" hidden role="dialog" aria-modal="true" aria-labelledby="offer-modal-title">
+        <div class="modal__backdrop" data-modal-close></div>
+        <div class="modal__panel modal__panel--offer" tabindex="-1">
+          <button class="modal__close" type="button"
+                  data-i18n-attr="aria-label:common.close_aria"
+                  aria-label="Close" data-modal-close>&times;</button>
+
+          <span class="eyebrow" data-i18n="home.offers.modal_eyebrow">Special offer</span>
+          <h3 id="offer-modal-title" data-i18n="home.offers.modal_title">Offer details</h3>
+
+          <!-- Dynamic offer summary — offer-modal.js fills each [data-offer-slot]
+               and removes [hidden] from the optional rows when the field exists. -->
+          <div class="offer-modal__summary">
+            <p class="offer-modal__dates" data-offer-slot="dates" hidden></p>
+            <p class="offer-modal__prices">
+              <span class="offer-modal__struck" data-offer-slot="struck" hidden></span>
+              <span class="offer-modal__hero" data-offer-slot="hero"></span>
+            </p>
+            <p class="offer-modal__save" data-offer-slot="save" hidden></p>
+            <p class="offer-modal__nights" data-offer-slot="nights" hidden></p>
+            <p class="offer-modal__msg" data-offer-slot="message" hidden></p>
+          </div>
+
+          <!-- Emphasized fixed-dates callout: boilerplate prefix + this offer's
+               date range (offer-modal.js fills the <strong>; hides the whole
+               callout if the offer has no dates). -->
+          <p class="offer-modal__fixed-dates" data-offer-slot="callout" hidden>
+            <span data-i18n="home.offers.modal_fixed_dates">These dates are fixed and cannot be changed or extended:</span>
+            <strong data-offer-slot="callout-dates"></strong>
+          </p>
+
+          <!-- Templated rules / terms — identical for every offer. -->
+          <h4 class="offer-modal__rules-title" data-i18n="home.offers.modal_rules_title">Offer terms</h4>
+          <ul class="offer-modal__rules">
+            <li data-i18n="home.offers.modal_rule_1">The offer is valid only for the dates shown above and cannot be moved, split, or extended.</li>
+            <li data-i18n="home.offers.modal_rule_2">The price covers the full stay for the stated number of nights; it is not a per-night rate.</li>
+            <li data-i18n="home.offers.modal_rule_3">The offer is subject to availability and confirmation, and may be withdrawn at any time before you enquire.</li>
+            <li data-i18n="home.offers.modal_rule_4">This offer cannot be combined with any other promotion or discount.</li>
+          </ul>
+
+          <a class="btn btn-primary offer-modal__take" data-offer-take
+             href="enquiries/"
+             data-i18n="home.offers.modal_take"
+             data-i18n-attr="data-take-message:home.offers.take_message">Take the offer</a>
+        </div>
+      </div>
+
       <!-- Gallery lightbox (#gallery-lightbox). One shared overlay for every
            .gallery__item across the page; lightbox.js fills it from whichever
            gallery was clicked and cycles that gallery's photos. No share /
