@@ -824,6 +824,35 @@
   overflow: hidden;           /* clip the banner to the rounded corners */
 }
 
+/* Faded photo background for every offer card. A ::before layer holds the
+   image (no markup change — cards are built in JS) at 50% opacity over the
+   white card base, so the photo reads as a soft wash rather than a full
+   image and the dark text/pills stay legible on top. Adjust the opacity to
+   taste. The card's own content is lifted above this layer below. */
+.offer-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('../img/gallery-2.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* Lift the card's real content above the ::before photo. The banner is
+   already position:absolute; give it a higher z-index so it stays on top of
+   the photo too. */
+.offer-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.offer-card__banner {
+  z-index: 2;
+}
+
 .offer-card p { margin: 0; }
 
 /* Full-width top banner ("Discount 20%") in the availability calendar's
