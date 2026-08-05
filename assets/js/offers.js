@@ -102,7 +102,7 @@ function buildCard(container, offer) {
   const cta = document.createElement('a');
   cta.className = 'offer-card__cta btn btn-primary';
   cta.setAttribute('href', 'stay/#bungalow-1-title');
-  cta.textContent = ds.ctaLabel || 'Take the offer';
+  cta.textContent = ds.ctaLabel || 'Check the offer';
   card.append(cta);
 
   return card;
