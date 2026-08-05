@@ -87,13 +87,16 @@ export function openOfferModal(offer, triggerEl) {
   lastFocusBeforeModal = triggerEl || document.activeElement;
 
   // Dynamic summary — mirror buildCard's field gating (offers.js:82-98).
+  // The localized labels (save/off/nights) live on the [data-offers] grid
+  // container (the i18n plugin bakes them there), NOT on #offer-modal — so
+  // resolve them from that container and hand it to deriveSave, exactly as the
+  // card does. Falls back to {} → deriveSave's English defaults if absent.
+  const offersDs = document.querySelector('[data-offers]')?.dataset || {};
   setSlot(modal, 'dates', offer.dates);
   setSlot(modal, 'struck', offer.priceBefore ? euro(offer.priceBefore) : '');
   setSlot(modal, 'hero', offer.priceAfter ? euro(offer.priceAfter) : '');
-  setSlot(modal, 'save', deriveSave(offer, modal.dataset));
-  const nightsLabel = modal.dataset.nightsLabel
-    || document.querySelector('[data-offers]')?.dataset.nightsLabel
-    || 'nights';
+  setSlot(modal, 'save', deriveSave(offer, offersDs));
+  const nightsLabel = offersDs.nightsLabel || 'nights';
   setSlot(modal, 'nights', offer.nights ? `${offer.nights} ${nightsLabel}` : '');
   setSlot(modal, 'message', offer.message);
 

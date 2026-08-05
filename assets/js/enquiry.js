@@ -335,7 +335,7 @@ export function initEnquiry() {
   const offerParam = params.get('offer');
   if (offerParam && !message.value.trim()) {
     message.value = offerParam
-      .replace(/[ -]/g, ' ')
+      .replace(/[\x00-\x1f\x7f]/g, " ")
       .slice(0, MAX_MESSAGE_LEN);
   }
 

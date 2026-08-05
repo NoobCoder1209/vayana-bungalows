@@ -1433,8 +1433,11 @@
   overflow-y: auto;
 }
 
-/* Shared paragraph spacing (base .modal__panel p is centered/muted; slots
-   below set their own color). */
+/* Shared paragraph spacing. NOTE: the base `.modal__panel p { color:
+   var(--text-muted) }` rule (0,1,1) outweighs a bare slot class (0,1,0), so
+   every color-bearing slot below is scoped under `.modal__panel--offer`
+   (0,2,0) to win the cascade — otherwise the save pill, callout, dates, and
+   message would all render muted grey (the save pill fails AA on green). */
 .modal__panel--offer p {
   margin-bottom: var(--space-2);
 }
@@ -1443,7 +1446,7 @@
   margin: var(--space-3) 0;
 }
 
-.offer-modal__dates {
+.modal__panel--offer .offer-modal__dates {
   font-family: var(--font-heading);
   color: var(--primary-deep);
   font-size: var(--fs-lg);
@@ -1466,7 +1469,7 @@
   color: var(--primary-deep);
 }
 
-.offer-modal__save {
+.modal__panel--offer .offer-modal__save {
   display: inline-block;
   width: fit-content;
   align-self: start;
@@ -1479,7 +1482,7 @@
   border-radius: 20px;
 }
 
-.offer-modal__msg {
+.modal__panel--offer .offer-modal__msg {
   font-style: italic;
   color: var(--secondary);
 }
@@ -1487,7 +1490,7 @@
 /* Emphasized fixed-dates callout — reuses the offer-card banner's booked-cell
    palette (rose tint + deepened rose text, AA-safe) so it reads as a firm,
    non-negotiable constraint. */
-.offer-modal__fixed-dates {
+.modal__panel--offer .offer-modal__fixed-dates {
   background: var(--avail-booked-bg);
   color: #8a4f48;
   border: 1px solid var(--avail-booked-border);
