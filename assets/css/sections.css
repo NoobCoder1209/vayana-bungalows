@@ -619,6 +619,10 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
+  /* pan-x owns the horizontal swipe; pan-y lets a vertical drag starting on a
+     card escape to the page so the page still scrolls. See .gallery__track. */
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
   /* Centre the cards when they fit the row (desktop, 3 cards); `safe`
      falls back to flex-start when they overflow (mobile) so the first
      card isn't clipped in the horizontal scroll. */
