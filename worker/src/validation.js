@@ -232,6 +232,21 @@ export function validateBody(body) {
   const bungalowRaw = String(body.bungalow ?? '').trim();
   cleaned.bungalow = BUNGALOW_LABELS[bungalowRaw] || '';
 
+  // Price — optional metadata: the end price the guest is enquiring about, sent
+  // as a bare number by the /stay/ pill (computed stay price) or the Offers
+  // modal (offer after-price). Absent on a direct /enquiries/ visit. It is
+  // CLIENT-ORIGINATED, so unlike the bungalow label (from our own map) we do not
+  // trust it. We strip ONLY currency symbols and whitespace, then require pure
+  // digits: a decimal point or thousands separator means we can't trust the
+  // magnitude (e.g. "400.50" would otherwise strip to "40050", a 100× lie), so
+  // such inputs — and any letters/junk/missing — degrade to '' (blank Column L),
+  // an honest blank rather than a wrong number. Never invalidates the submission
+  // and never a formula, so no neutraliseFormula needed. Same never-fatal
+  // contract as locale/bungalow. Frontend only ever sends bare integers; this
+  // guard is defence-in-depth against a tampered/hand-crafted body.
+  const priceStripped = String(body.price ?? '').replace(/[\s€$£]/g, '');
+  cleaned.price = /^\d{1,7}$/.test(priceStripped) ? priceStripped : '';
+
   return invalid.length === 0
     ? { ok: true, cleaned }
     : { ok: false, invalidFields: invalid };

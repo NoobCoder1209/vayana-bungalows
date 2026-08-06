@@ -15,7 +15,9 @@ import { openOfferModal } from './offer-modal.js';
 
 // Parse a raw sheet price string (bare number, maybe with € or spaces) to a
 // finite number, or NaN. Tolerates "€400", "400", " 400 ".
-function parsePrice(v) {
+// Exported so offer-modal.js can derive the same bare number for the ?price=
+// enquiry param (single source of truth with the card/modal formatting).
+export function parsePrice(v) {
   if (v == null || v === '') return NaN;
   return Number(String(v).replace(/[^0-9.]/g, ''));
 }

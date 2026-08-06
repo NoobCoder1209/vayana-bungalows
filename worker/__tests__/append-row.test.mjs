@@ -18,6 +18,7 @@ import assert from 'node:assert/strict';
 import { generateKeyPairSync } from 'node:crypto';
 import worker from '../src/index.js';
 import { _resetForTests } from '../src/sheets.js';
+import { _resetForTests as resetRateLimit } from '../src/rate-limit.js';
 
 // Real throwaway RSA key: getAccessToken() imports it via jose.importPKCS8 and
 // RS256-signs a JWT before the (mocked) OAuth fetch, so a placeholder would fail
@@ -59,6 +60,9 @@ function submitBody(overrides = {}) {
   });
 }
 
+// Fixed client IP is fine: each test resets the in-memory rate limiter (and the
+// token cache) in withCapturedAppend's finally, so buckets never accumulate
+// across tests regardless of run order or how many requests fire.
 const submitReq = (body) =>
   new Request('https://w.example/submit', {
     method: 'POST',
@@ -93,7 +97,7 @@ function withCapturedAppend(run) {
   };
   return Promise.resolve()
     .then(() => run(captured))
-    .finally(() => { globalThis.fetch = real; _resetForTests(); });
+    .finally(() => { globalThis.fetch = real; _resetForTests(); resetRateLimit(); });
 }
 
 test('POST /submit writes the bungalow label into Column B (row index 1)', async () => {
@@ -103,11 +107,11 @@ test('POST /submit writes the bungalow label into Column B (row index 1)', async
     assert.ok(captured.appendBody, 'the Sheets append must have been called');
     const row = captured.appendBody.values[0];
     assert.equal(row[1], 'Bungalow 2', 'Column B (index 1) must carry the bungalow label');
-    assert.equal(row.length, 14, 'row must stay 14 columns wide (range A:N)');
+    assert.equal(row.length, 15, 'row must be 15 columns wide (range A:O)');
   });
 });
 
-test('POST /submit with no bungalow leaves Column B blank (still 14 columns)', async () => {
+test('POST /submit with no bungalow leaves Column B blank (still 15 columns)', async () => {
   await withCapturedAppend(async (captured) => {
     // Omit the bungalow key entirely — the direct-/enquiries/ visit case.
     const body = submitBody();
@@ -117,7 +121,7 @@ test('POST /submit with no bungalow leaves Column B blank (still 14 columns)', a
     assert.equal(res.status, 200);
     const row = captured.appendBody.values[0];
     assert.equal(row[1], '', 'Column B must be blank when no bungalow was sent');
-    assert.equal(row.length, 14);
+    assert.equal(row.length, 15);
   });
 });
 
@@ -130,5 +134,53 @@ test('POST /submit does not put the bungalow anywhere else in the row', async ()
     const hits = row.filter((c) => c === 'Bungalow 3');
     assert.equal(hits.length, 1, 'the bungalow label must occupy exactly one cell');
     assert.equal(row[1], 'Bungalow 3');
+  });
+});
+
+// ── Price → Column L (index 11), with the trailing columns shifted right ──────
+
+test('POST /submit writes the price into Column L (row index 11), consent shifts to M', async () => {
+  await withCapturedAppend(async (captured) => {
+    const res = await worker.fetch(submitReq(submitBody({ price: '500' })), submitEnv, {});
+    assert.equal(res.status, 200, 'a valid submit must succeed');
+    const row = captured.appendBody.values[0];
+    assert.equal(row[11], '500', 'Column L (index 11) must carry the price');
+    assert.equal(row[12], 'true', 'consent must have shifted to Column M (index 12)');
+    assert.ok(typeof row[13] === 'string' && row[13].length > 0, 'source_ip_hash present at Column N (index 13)');
+    assert.equal(row[14], 'en', 'locale must have shifted to Column O (index 14)');
+    assert.equal(row.length, 15, 'row must be 15 columns wide (range A:O)');
+    const hits = row.filter((c) => c === '500');
+    assert.equal(hits.length, 1, 'the price must occupy exactly one cell');
+  });
+});
+
+test('POST /submit with no price leaves Column L blank (still 15 columns)', async () => {
+  await withCapturedAppend(async (captured) => {
+    // Omit price entirely — the direct-/enquiries/ visit case.
+    const parsed = JSON.parse(submitBody());
+    delete parsed.price;
+    const res = await worker.fetch(submitReq(JSON.stringify(parsed)), submitEnv, {});
+    assert.equal(res.status, 200);
+    const row = captured.appendBody.values[0];
+    assert.equal(row[11], '', 'Column L must be blank when no price was sent');
+    assert.equal(row.length, 15);
+  });
+});
+
+test('POST /submit with junk price records blank Column L (never 400, never junk in the sheet)', async () => {
+  await withCapturedAppend(async (captured) => {
+    const res = await worker.fetch(submitReq(submitBody({ price: 'abc' })), submitEnv, {});
+    assert.equal(res.status, 200, 'a junk price must not fail the submission');
+    assert.equal(captured.appendBody.values[0][11], '', 'junk price → blank Column L');
+  });
+});
+
+test('POST /submit with price and bungalow together lands both in their own cells', async () => {
+  await withCapturedAppend(async (captured) => {
+    await worker.fetch(submitReq(submitBody({ bungalow: '1', price: '600' })), submitEnv, {});
+    const row = captured.appendBody.values[0];
+    assert.equal(row[1], 'Bungalow 1', 'bungalow stays at Column B (index 1)');
+    assert.equal(row[11], '600', 'price at Column L (index 11)');
+    assert.equal(row.length, 15);
   });
 });

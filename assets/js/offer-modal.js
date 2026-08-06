@@ -14,7 +14,7 @@
 // Reuses the .modal pattern (sections.css) and the focus-trap / Escape /
 // focus-restore conventions from enquiry.js.
 
-import { euro, deriveSave } from './offers.js';
+import { euro, deriveSave, parsePrice } from './offers.js';
 import { currentLocale, isDefaultLocale } from './util/current-locale.js';
 
 // Remember what was focused before opening so we can restore it on close.
@@ -40,6 +40,18 @@ export function buildEnquiryUrl(offer, takeMsg) {
   if (offer.nights) parts.push(`Nights: ${offer.nights}`);
   if (offer.message) parts.push(offer.message);
   url.searchParams.set('offer', parts.join('. '));
+
+  // Structured copy of the offer's end price for the sheet's Price column
+  // (Column L). The price already appears inside the ?offer= prose above; this
+  // is the discrete, sheet-friendly bare number. parsePrice tolerates "€400" /
+  // "400" / " 400 "; note it maps junk like "€"/"free" to 0 (not NaN), so we
+  // require a POSITIVE amount before emitting — this both drops priceless/junk
+  // offers to a blank Price cell AND matches the /stay/ pill's `price > 0` rule
+  // (calendar-selection.js), so the two producers never disagree on the zero
+  // case. Math.round pins whole euros (offers are whole-euro; round-half-up).
+  const p = parsePrice(offer.priceAfter);
+  if (Number.isFinite(p) && p > 0) url.searchParams.set('price', String(Math.round(p)));
+
   return url.toString();
 }
 
