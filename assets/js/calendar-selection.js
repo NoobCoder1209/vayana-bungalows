@@ -40,6 +40,12 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 // request). This is also the on-page (DOM) order of the three sections.
 export const KEY_ORDER = ['B1', 'B2', 'B3'];
 
+// Bungalow key → the compact number the /stay/ pill passes to /enquiries/ as
+// ?bungalow=. enquiry.js validates it (/^[123]$/) into a hidden field and the
+// Worker maps it to a human label ("Bungalow 1") for the sheet. Kept as a small
+// allowlist so an unknown key just yields no param (blank Column B), never junk.
+export const KEY_TO_NUM = { B1: '1', B2: '2', B3: '3' };
+
 // ── Pure logic (DOM-free, exported for unit tests) ───────────────────────────
 
 /**
@@ -343,9 +349,18 @@ export function initCalendarSelection() {
   };
   const hideAllCounts = () => countByKey.forEach((el) => { el.hidden = true; });
 
-  // Build the enquiry link the pill points at. Dates only, no villa param
-  // (owner's choice); enquiry.js already reads & validates ?checkin/?checkout.
-  const enquiryHref = (sel) => `../enquiries/?checkin=${sel.checkIn}&checkout=${sel.checkOut}`;
+  // Build the enquiry link the pill points at. Dates plus the bungalow the pill
+  // belongs to (?bungalow=1|2|3) — each pill's href is set for its OWN bungalow,
+  // so the clicked pill inherently carries the right one. enquiry.js reads &
+  // validates ?checkin/?checkout and the hidden bungalow field; the Worker maps
+  // the number to a "Bungalow N" label for the sheet. No villa param (owner's
+  // choice for the free-text message; the bungalow travels structured instead).
+  const enquiryHref = (sel) => {
+    const num = KEY_TO_NUM[sel.key] || '';
+    const q = `checkin=${sel.checkIn}&checkout=${sel.checkOut}`
+      + (num ? `&bungalow=${num}` : '');
+    return `../enquiries/?${q}`;
+  };
 
   // Repaint the pill/dock for the current selection + repaint calendars so the
   // day circles reflect the range. One place → the two never drift. Calendars

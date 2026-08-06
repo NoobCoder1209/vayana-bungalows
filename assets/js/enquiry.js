@@ -162,6 +162,10 @@ export function initEnquiry() {
   const consentInput = form.querySelector('[data-enquiry-consent]');
   const consentLabel = consentInput?.closest('.enquiry-form__consent');
   const turnstileContainer = form.querySelector('[data-enquiry-turnstile]');
+  // Optional hidden field — the /stay/ pill's ?bungalow=1|2|3 lands here so the
+  // enquiry records which bungalow it came from. Absent on direct visits; not a
+  // hard requirement, so it's excluded from the missing-element bail below.
+  const bungalowInput = form.querySelector('[data-enquiry-bungalow]');
   const modal = document.getElementById('enquiry-modal');
 
   // Hard requirements: bail and warn on any missing element so future
@@ -337,6 +341,18 @@ export function initEnquiry() {
     message.value = offerParam
       .replace(/[\x00-\x1f\x7f]/g, " ")
       .slice(0, MAX_MESSAGE_LEN);
+  }
+
+  // URL-param pre-fill: `?bungalow=1|2|3` populates the invisible hidden field
+  // when the visitor arrives from a specific bungalow's /stay/ pill. We accept
+  // only the compact keys 1/2/3 (client-side hygiene; the Worker re-validates
+  // and maps to a "Bungalow N" label). Anything else — junk, missing, or the
+  // field itself absent — leaves the value blank, so a non-bungalow enquiry
+  // records no bungalow (blank Column B). This value is structured, NOT prose:
+  // it never touches the message textarea.
+  const bungalowParam = params.get('bungalow');
+  if (bungalowInput && /^[123]$/.test(bungalowParam || '')) {
+    bungalowInput.value = bungalowParam;
   }
 
   // URL-param pre-fill: `?checkin=&checkout=` (ISO YYYY-MM-DD) pre-populate
@@ -682,6 +698,10 @@ export function initEnquiry() {
       infants: infants.value,
       message: messageVal,
       consent: consentInput.checked ? 'true' : 'false',
+      // Which bungalow this enquiry came from, as a compact key ('1'|'2'|'3'),
+      // or '' when it didn't originate from a /stay/ bungalow pill. The Worker
+      // maps it to a "Bungalow N" label for Column B; a blank value is fine.
+      bungalow: bungalowInput ? bungalowInput.value : '',
       // Emit-locale of the page the user submitted from. The Worker uses
       // this to build a locale-aware redirect back (no-JS form path) AND
       // to write a locale column on the Sheet so the reply-back operator

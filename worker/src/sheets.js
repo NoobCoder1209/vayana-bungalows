@@ -125,15 +125,21 @@ export async function appendEnquiry(env, row) {
   // success/fail with no numeric score. A placeholder column N existed
   // briefly during planning and has been removed from the sheet header.)
   //
-  // Task #167: added column N = Locale (row.locale, 'en' | 'bg'). The
-  // reply-back operator uses this to know which language to answer in.
-  // BEFORE DEPLOYING: extend the sheet's header row from column M to
-  // column N and add "Locale" as the N1 cell value — otherwise the
-  // first BG submit lands in a header-less column and the schema drifts
-  // silently.
+  // Task #167 added column N = Locale (row.locale, 'en' | 'bg'), and the
+  // sheet's header row was already extended to N ("Locale" in N1) when that
+  // shipped — so there is NO outstanding header action for the locale column.
+  // (Kept as history so the A:N range and column count stay self-documenting.)
+  //
+  // ⚠️ PRE-DEPLOY ACTION FOR THIS CHANGE — Column B: now carries the bungalow
+  // label ("Bungalow 1|2|3") the guest implicitly picked via a /stay/ pill —
+  // blank when the enquiry didn't come from a bungalow selection. This REPLACES
+  // the old opaque `ref` correlation id in the sheet column; `ref` is still
+  // generated and returned in the success response (index.js), it just no
+  // longer occupies a cell. BEFORE DEPLOYING: rename the sheet's B1 header cell
+  // from the ref label to "Bungalow" so the column header matches its contents.
   const values = [[
     row.timestamp,
-    row.ref,
+    row.bungalow,
     row.name,
     row.email,
     row.phone,
