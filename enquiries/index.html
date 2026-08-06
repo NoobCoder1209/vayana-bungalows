@@ -179,6 +179,14 @@
                  selection). Carried to the Worker, which maps it to a
                  "Bungalow N" label written to Column B of the Enquires sheet. -->
             <input type="hidden" name="bungalow" value="" data-enquiry-bungalow>
+            <!-- Hidden price field — same invisible-by-design pattern as
+                 bungalow above. Populated by initEnquiry() from the ?price=
+                 param appended by the /stay/ pill (computed stay price) or the
+                 home Offers modal's "Take the offer" link (offer after-price).
+                 Blank when the enquiry didn't come from either. Carried to the
+                 Worker, which sanitises it to a bare number written to Column L
+                 of the Enquires sheet. -->
+            <input type="hidden" name="price" value="" data-enquiry-price>
             <!-- 1. Full name — full-row width (extended per spec).
                  Visible <label> hidden via .sr-only so screen readers
                  still announce the field; sighted users see the

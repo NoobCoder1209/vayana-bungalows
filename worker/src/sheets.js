@@ -112,7 +112,7 @@ export async function appendEnquiry(env, row) {
 
   const token = await getAccessToken(env);
   const range = encodeURIComponent(
-    `'${env.GSHEETS_ENQUIRES_TAB.replace(/'/g, "''")}'!A:N`,
+    `'${env.GSHEETS_ENQUIRES_TAB.replace(/'/g, "''")}'!A:O`,
   );
   const url =
     `${SHEETS_BASE}/${encodeURIComponent(env.GSHEETS_SHEET_ID)}` +
@@ -120,23 +120,28 @@ export async function appendEnquiry(env, row) {
     `?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
 
   // Column order — keep in lockstep with the header row in the sheet.
-  // Adding a column? Update both the sheet and this array.
-  // (Note: no captcha_score column — Turnstile managed mode is binary
-  // success/fail with no numeric score. A placeholder column N existed
-  // briefly during planning and has been removed from the sheet header.)
+  // Adding/moving a column? Update BOTH the sheet and this array.
   //
-  // Task #167 added column N = Locale (row.locale, 'en' | 'bg'), and the
-  // sheet's header row was already extended to N ("Locale" in N1) when that
-  // shipped — so there is NO outstanding header action for the locale column.
-  // (Kept as history so the A:N range and column count stay self-documenting.)
+  // Current layout (A:O, 15 columns):
+  //   A timestamp | B bungalow | C name | D email | E phone | F checkin |
+  //   G checkout | H adults | I children | J infants | K message | L price |
+  //   M consent | N source_ip_hash | O locale
   //
-  // ⚠️ PRE-DEPLOY ACTION FOR THIS CHANGE — Column B: now carries the bungalow
-  // label ("Bungalow 1|2|3") the guest implicitly picked via a /stay/ pill —
-  // blank when the enquiry didn't come from a bungalow selection. This REPLACES
-  // the old opaque `ref` correlation id in the sheet column; `ref` is still
-  // generated and returned in the success response (index.js), it just no
-  // longer occupies a cell. BEFORE DEPLOYING: rename the sheet's B1 header cell
-  // from the ref label to "Bungalow" so the column header matches its contents.
+  // History (already shipped; no outstanding header action):
+  //   - Turnstile managed mode is binary (no numeric score), so there is no
+  //     captcha_score column — a placeholder briefly existed during planning
+  //     and was removed.
+  //   - Task #167 added Locale; Task (bungalow) put the bungalow label in B,
+  //     replacing the opaque `ref` (which is still generated and returned in the
+  //     success response, index.js — it just no longer occupies a cell).
+  //
+  // ⚠️ PRE-DEPLOY ACTION FOR THIS CHANGE — Column L now carries the end PRICE of
+  // the enquiry (a bare number) from the /stay/ pill or the Offers modal; blank
+  // when the enquiry came from neither. Inserting price at L shifts the three
+  // trailing columns one right: consent → M, source_ip_hash → N, locale → O, and
+  // the range widened A:N → A:O. BEFORE DEPLOYING: insert a new column L in the
+  // sheet with header "Price" so consent / source_ip_hash / locale move to
+  // M / N / O and stay aligned with their data — otherwise the schema drifts.
   const values = [[
     row.timestamp,
     row.bungalow,
@@ -149,6 +154,7 @@ export async function appendEnquiry(env, row) {
     row.children,
     row.infants,
     row.message,
+    row.price,
     row.consent,
     row.source_ip_hash,
     row.locale,

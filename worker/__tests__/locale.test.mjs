@@ -128,6 +128,85 @@ test('validateBody: a client-supplied label (not a key) does NOT leak into the s
   assert.equal(r.cleaned.bungalow, '');
 });
 
+// ── validation.js: price field ───────────────────────────────────────────
+// Optional client-originated metadata (the end price), sanitised to a bare
+// digit string for Column L. Currency symbols/whitespace are stripped, but a
+// separator (decimal/thousands) makes the magnitude untrustworthy → blank, not
+// a mangled integer. Unknown/missing → '' and NEVER invalidates the submission.
+
+test('validateBody: price="500" → cleaned.price="500"', () => {
+  const r = validateBody(baseBody({ price: '500' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.price, '500');
+});
+
+test('validateBody: price="€400" strips the currency symbol → "400"', () => {
+  const r = validateBody(baseBody({ price: '€400' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.price, '400');
+});
+
+test('validateBody: price with surrounding whitespace is trimmed → digits', () => {
+  const r = validateBody(baseBody({ price: '  600 ' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.price, '600');
+});
+
+test('validateBody: decimal price degrades to "" (honest blank, not an inflated integer)', () => {
+  // "400.50" must NOT become "40050" — a separator means we can't trust the
+  // magnitude, so we record blank rather than a 100× wrong number.
+  const r = validateBody(baseBody({ price: '400.50' }));
+  assert.equal(r.ok, true, 'a bad price must not fail the submission');
+  assert.equal(r.cleaned.price, '');
+});
+
+test('validateBody: thousands-separated price degrades to ""', () => {
+  const r = validateBody(baseBody({ price: '1,250' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.price, '');
+});
+
+test('validateBody: non-numeric price degrades to ""', () => {
+  const r = validateBody(baseBody({ price: 'free' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.price, '');
+});
+
+test('validateBody: missing price key → cleaned.price="" (blank, still ok)', () => {
+  const r = validateBody(baseBody());
+  assert.equal(r.ok, true, 'a priceless enquiry must still validate');
+  assert.equal(r.cleaned.price, '');
+});
+
+test('validateBody: over-long (8+ digit) price degrades to ""', () => {
+  const r = validateBody(baseBody({ price: '12345678' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.price, '');
+});
+
+test('validateBody: non-string/junk price degrades to "" without throwing', () => {
+  const r = validateBody(baseBody({ price: { evil: true } }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.price, '');
+});
+
+test('validateBody: a formula-shaped price cannot reach the sheet', () => {
+  const r = validateBody(baseBody({ price: '=1+1' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.price, '');
+});
+
+test('validateBody: price="0" is kept as "0" (documents server behavior)', () => {
+  // The frontend only ever emits price>0 (the pill guards `price > 0`; the
+  // offer modal guards `p > 0`), so '0' is out-of-contract from real callers.
+  // The Worker does not special-case it — a literal '0' passes /^\d{1,7}$/ and
+  // is recorded as-is. Pinned so a future change to blank-out zero is a
+  // deliberate, test-visible decision rather than an accident.
+  const r = validateBody(baseBody({ price: '0' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.price, '0');
+});
+
 // ── lib/response.js: redirectResponse locale prefix ──────────────────────
 
 // Minimal Request-shaped object — redirectResponse reads .headers.get()

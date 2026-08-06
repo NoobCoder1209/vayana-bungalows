@@ -351,14 +351,21 @@ export function initCalendarSelection() {
 
   // Build the enquiry link the pill points at. Dates plus the bungalow the pill
   // belongs to (?bungalow=1|2|3) — each pill's href is set for its OWN bungalow,
-  // so the clicked pill inherently carries the right one. enquiry.js reads &
-  // validates ?checkin/?checkout and the hidden bungalow field; the Worker maps
-  // the number to a "Bungalow N" label for the sheet. No villa param (owner's
-  // choice for the free-text message; the bungalow travels structured instead).
+  // so the clicked pill inherently carries the right one. Also the stay's end
+  // price (?price=<euros>) so the enquiry records what the guest is agreeing to
+  // (lands in the sheet's Price column). enquiry.js reads & validates
+  // ?checkin/?checkout and the hidden bungalow/price fields; the Worker maps the
+  // bungalow number to a "Bungalow N" label. No villa param (owner's choice for
+  // the free-text message; bungalow + price travel structured instead).
   const enquiryHref = (sel) => {
     const num = KEY_TO_NUM[sel.key] || '';
+    // Recompute the price from the same pure helpers the pill text uses, so the
+    // link and the visible "…for X€" pill can never drift. Only append when it's
+    // a real positive amount (a complete, valid >=5-night range).
+    const price = priceForNights(nightsBetween(sel.checkIn, sel.checkOut));
     const q = `checkin=${sel.checkIn}&checkout=${sel.checkOut}`
-      + (num ? `&bungalow=${num}` : '');
+      + (num ? `&bungalow=${num}` : '')
+      + (price > 0 ? `&price=${price}` : '');
     return `../enquiries/?${q}`;
   };
 

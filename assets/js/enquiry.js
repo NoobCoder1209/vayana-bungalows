@@ -166,6 +166,10 @@ export function initEnquiry() {
   // enquiry records which bungalow it came from. Absent on direct visits; not a
   // hard requirement, so it's excluded from the missing-element bail below.
   const bungalowInput = form.querySelector('[data-enquiry-bungalow]');
+  // Optional hidden field — the /stay/ pill and the Offers modal append a
+  // ?price= that lands here so the enquiry records the end price. Absent on
+  // direct visits; like bungalow, excluded from the missing-element bail below.
+  const priceInput = form.querySelector('[data-enquiry-price]');
   const modal = document.getElementById('enquiry-modal');
 
   // Hard requirements: bail and warn on any missing element so future
@@ -353,6 +357,17 @@ export function initEnquiry() {
   const bungalowParam = params.get('bungalow');
   if (bungalowInput && /^[123]$/.test(bungalowParam || '')) {
     bungalowInput.value = bungalowParam;
+  }
+
+  // URL-param pre-fill: `?price=<bare number>` populates the invisible price
+  // field from the /stay/ pill (computed stay price) or the Offers modal (offer
+  // after-price). Accept a plain integer only (client-side hygiene; the Worker
+  // re-sanitises to digits). Junk, missing, or the field itself absent leaves it
+  // blank, so a non-priced enquiry records no price (blank Column L). Structured,
+  // NOT prose — never touches the message textarea.
+  const priceParam = params.get('price');
+  if (priceInput && /^\d{1,7}$/.test(priceParam || '')) {
+    priceInput.value = priceParam;
   }
 
   // URL-param pre-fill: `?checkin=&checkout=` (ISO YYYY-MM-DD) pre-populate
@@ -702,6 +717,10 @@ export function initEnquiry() {
       // or '' when it didn't originate from a /stay/ bungalow pill. The Worker
       // maps it to a "Bungalow N" label for Column B; a blank value is fine.
       bungalow: bungalowInput ? bungalowInput.value : '',
+      // The end price the guest is enquiring about (bare number as a string),
+      // or '' when the enquiry didn't come from a /stay/ pill or Offers modal.
+      // The Worker sanitises it to digits for Column L; a blank value is fine.
+      price: priceInput ? priceInput.value : '',
       // Emit-locale of the page the user submitted from. The Worker uses
       // this to build a locale-aware redirect back (no-JS form path) AND
       // to write a locale column on the Sheet so the reply-back operator
