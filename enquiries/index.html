@@ -172,6 +172,13 @@
                  initEnquiry() populates the value at init time from
                  <html lang>. -->
             <input type="hidden" name="locale" value="" data-enquiry-locale>
+            <!-- Hidden bungalow field — never rendered, never focusable, no
+                 label: invisible to the guest by design. Populated by
+                 initEnquiry() from the ?bungalow=1|2|3 param the /stay/ pill
+                 appends (blank when the enquiry didn't come from a bungalow
+                 selection). Carried to the Worker, which maps it to a
+                 "Bungalow N" label written to Column B of the Enquires sheet. -->
+            <input type="hidden" name="bungalow" value="" data-enquiry-bungalow>
             <!-- 1. Full name — full-row width (extended per spec).
                  Visible <label> hidden via .sr-only so screen readers
                  still announce the field; sighted users see the

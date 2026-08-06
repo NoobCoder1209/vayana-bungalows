@@ -30,6 +30,12 @@ const ALLOWED_ADULTS = new Set(['1', '2', '3', '4']);
 // to the default rather than routing to /xx/ (which would 404).
 const ALLOWED_LOCALES = new Set(['en', 'bg']);
 const DEFAULT_LOCALE = 'en';
+
+// Bungalow — optional metadata. The /stay/ pill sends a compact key ('1'|'2'|
+// '3'); we map it to a human-readable label written to Column B of the Enquires
+// sheet. The label is authored HERE (never taken from the client), so a spoofed
+// value can only ever select a known label or fall through to '' (blank).
+const BUNGALOW_LABELS = { '1': 'Bungalow 1', '2': 'Bungalow 2', '3': 'Bungalow 3' };
 // Children and Infants are OPTIONAL. The form's default state shows a
 // label-style placeholder ("CHILDREN" / "INFANTS") whose <option> has
 // an empty value, and includes "-" as a real selectable option meaning
@@ -213,6 +219,18 @@ export function validateBody(body) {
   // some future middleware rewrote the locale key would be user-hostile.
   const localeRaw = typeof body.locale === 'string' ? body.locale.trim() : '';
   cleaned.locale = ALLOWED_LOCALES.has(localeRaw) ? localeRaw : DEFAULT_LOCALE;
+
+  // Bungalow — optional. The /stay/ pill sends a compact key ('1'|'2'|'3');
+  // it's absent on direct /enquiries/ visits or the generic "Send an enquiry"
+  // CTA. We map the key to a human-readable label for the sheet and NEVER
+  // trust a client-supplied label — an unknown or missing value degrades to
+  // '' (blank Column B), never a 400. Same rationale as the locale field: this
+  // is UX metadata (which bungalow to reply about), not typed enquiry content,
+  // so a tampered value must not fail an otherwise-valid submission. Because
+  // the label comes from our own map (not the client), no formula-neutralising
+  // is needed.
+  const bungalowRaw = String(body.bungalow ?? '').trim();
+  cleaned.bungalow = BUNGALOW_LABELS[bungalowRaw] || '';
 
   return invalid.length === 0
     ? { ok: true, cleaned }

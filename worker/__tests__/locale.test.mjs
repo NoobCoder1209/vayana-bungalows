@@ -73,6 +73,61 @@ test('validateBody: padded but valid locale is trimmed and accepted', () => {
   assert.equal(r.cleaned.locale, 'bg');
 });
 
+// ── validation.js: bungalow field ────────────────────────────────────────
+// Optional metadata sent by the /stay/ pill as a compact key ('1'|'2'|'3');
+// mapped to a human label for Column B. Unknown/missing degrades to '' (blank
+// column) and must NEVER invalidate the submission — same contract as locale.
+
+test('validateBody: bungalow="1" maps to cleaned.bungalow="Bungalow 1"', () => {
+  const r = validateBody(baseBody({ bungalow: '1' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.bungalow, 'Bungalow 1');
+});
+
+test('validateBody: bungalow="2" maps to "Bungalow 2"', () => {
+  const r = validateBody(baseBody({ bungalow: '2' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.bungalow, 'Bungalow 2');
+});
+
+test('validateBody: bungalow="3" maps to "Bungalow 3"', () => {
+  const r = validateBody(baseBody({ bungalow: '3' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.bungalow, 'Bungalow 3');
+});
+
+test('validateBody: missing bungalow key → cleaned.bungalow="" (blank, still ok)', () => {
+  const r = validateBody(baseBody());
+  assert.equal(r.ok, true, 'a non-bungalow enquiry must still validate');
+  assert.equal(r.cleaned.bungalow, '');
+});
+
+test('validateBody: unknown bungalow value silently degrades to "" (does NOT invalidate)', () => {
+  const r = validateBody(baseBody({ bungalow: '9' }));
+  assert.equal(r.ok, true, 'a bad bungalow value must not fail the whole submission');
+  assert.equal(r.cleaned.bungalow, '');
+});
+
+test('validateBody: junk/non-string bungalow degrades to ""', () => {
+  const r = validateBody(baseBody({ bungalow: { evil: true } }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.bungalow, '');
+});
+
+test('validateBody: padded bungalow key is trimmed and mapped', () => {
+  const r = validateBody(baseBody({ bungalow: '  2  ' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.bungalow, 'Bungalow 2');
+});
+
+test('validateBody: a client-supplied label (not a key) does NOT leak into the sheet', () => {
+  // Defence: only our own keys map to labels; a spoofed "Bungalow 9000" or a
+  // formula string can never reach Column B — it falls through to ''.
+  const r = validateBody(baseBody({ bungalow: '=cmd|/c calc' }));
+  assert.equal(r.ok, true);
+  assert.equal(r.cleaned.bungalow, '');
+});
+
 // ── lib/response.js: redirectResponse locale prefix ──────────────────────
 
 // Minimal Request-shaped object — redirectResponse reads .headers.get()

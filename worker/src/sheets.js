@@ -131,9 +131,17 @@ export async function appendEnquiry(env, row) {
   // column N and add "Locale" as the N1 cell value — otherwise the
   // first BG submit lands in a header-less column and the schema drifts
   // silently.
+  //
+  // Column B: now carries the bungalow label ("Bungalow 1|2|3") the guest
+  // implicitly picked via a /stay/ pill — blank when the enquiry didn't come
+  // from a bungalow selection. This REPLACES the old opaque `ref` correlation
+  // id in the sheet column; `ref` is still generated and returned in the
+  // success response (index.js), it just no longer occupies a cell. BEFORE
+  // DEPLOYING: rename the sheet's B1 header cell from the ref label to
+  // "Bungalow" so the column header matches its new contents.
   const values = [[
     row.timestamp,
-    row.ref,
+    row.bungalow,
     row.name,
     row.email,
     row.phone,
