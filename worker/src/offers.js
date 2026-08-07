@@ -11,6 +11,10 @@ import { getAccessToken } from './sheets.js';
 const SHEETS_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
 // Column layout of the B3:H8 range, as row-array indices (B is index 0).
+// dates (Column B, index 0): expected to be a machine-readable ISO range
+// `YYYY-MM-DD/YYYY-MM-DD`, parsed client-side (assets/js/util/offer-dates.js)
+// for enquiry date prefill. Freehand/legacy cells still render verbatim and
+// simply don't prefill — the Worker returns the raw string either way.
 const COL = { dates: 0, discountPct: 1, priceBefore: 2, priceAfter: 3, nights: 4, message: 5, enable: 6 };
 
 // A cell → trimmed string, or null when blank/whitespace-only.

@@ -64,3 +64,31 @@ test('missing take message falls back to a default opener', () => {
   assert.ok(msg.length > 0);
   assert.ok(msg.includes('taking the offer'));
 });
+
+test('ISO-range offer: buildEnquiryUrl emits checkin/checkout + pretty prose (EN)', () => {
+  htmlLang = 'en';
+  const href = buildEnquiryUrl(
+    { dates: '2027-06-15/2027-06-20', priceBefore: null, priceAfter: '320', nights: null, message: null },
+    "I'm taking the offer",
+  );
+  const url = new URL(href);
+  assert.equal(url.searchParams.get('checkin'), '2027-06-15');
+  assert.equal(url.searchParams.get('checkout'), '2027-06-20');
+  // Prose carries the FORMATTED range, not the raw ISO.
+  const msg = url.searchParams.get('offer');
+  assert.ok(msg.includes('15 Jun 2027 – 20 Jun 2027'), 'prose shows pretty dates');
+  assert.ok(!msg.includes('2027-06-15/2027-06-20'), 'prose does not leak raw ISO');
+});
+
+test('freehand-dates offer: buildEnquiryUrl emits NO checkin/checkout, prose keeps raw text', () => {
+  htmlLang = 'en';
+  const href = buildEnquiryUrl(
+    { dates: '12–18 June 2026', priceBefore: null, priceAfter: '320', nights: null, message: null },
+    "I'm taking the offer",
+  );
+  const url = new URL(href);
+  assert.equal(url.searchParams.get('checkin'), null);
+  assert.equal(url.searchParams.get('checkout'), null);
+  // Freehand passes through unchanged (formatOfferDates returns raw).
+  assert.ok(url.searchParams.get('offer').includes('12–18 June 2026'));
+});

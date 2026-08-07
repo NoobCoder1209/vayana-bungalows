@@ -26,7 +26,12 @@ function makeEl() {
     },
   };
 }
-globalThis.document = { createElement: () => makeEl() };
+globalThis.document = {
+  createElement: () => makeEl(),
+  // offers.js reads currentLocale() → documentElement.getAttribute('lang')
+  // when formatting the dates eyebrow. Default to EN for these render tests.
+  documentElement: { getAttribute: (k) => (k === 'lang' ? 'en' : null) },
+};
 
 const container = () => {
   const c = makeEl();
@@ -203,4 +208,18 @@ test('bad data: before < after → no euro saving; pct pill fallback if present'
   assert.equal(txt(card, '.offer-card__save'), '20% off'); // euro not derivable → pct fallback
   // banner still shows col-C % (derived would be negative, so col C is used)
   assert.equal(txt(card, '.offer-card__banner'), 'Discount 20%');
+});
+
+test('ISO-range dates render as a pretty EN eyebrow', () => {
+  const c = container();
+  renderOffers(c, [{ ...full(), dates: '2027-06-15/2027-06-20' }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__eyebrow'), '15 Jun 2027 – 20 Jun 2027');
+});
+
+test('freehand dates render verbatim on the eyebrow (fail-safe)', () => {
+  const c = container();
+  renderOffers(c, [{ ...full(), dates: '12–18 Jun' }]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__eyebrow'), '12–18 Jun');
 });

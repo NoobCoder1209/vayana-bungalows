@@ -15,6 +15,7 @@
 // focus-restore conventions from enquiry.js.
 
 import { euro, deriveSave, parsePrice } from './offers.js';
+import { parseOfferDates, formatOfferDates } from './util/offer-dates.js';
 import { currentLocale, isDefaultLocale } from './util/current-locale.js';
 
 // Remember what was focused before opening so we can restore it on close.
@@ -35,7 +36,7 @@ export function buildEnquiryUrl(offer, takeMsg) {
   // The structural glue words stay English — the guest can edit the free-text
   // message anyway, and this avoids a fan-out of extra locale keys.
   const parts = [takeMsg || 'I’m taking the offer'];
-  if (offer.dates) parts.push(`Dates: ${offer.dates}`);
+  if (offer.dates) parts.push(`Dates: ${formatOfferDates(offer.dates, currentLocale())}`);
   if (offer.priceAfter) parts.push(`Price: ${euro(offer.priceAfter)}`);
   if (offer.nights) parts.push(`Nights: ${offer.nights}`);
   if (offer.message) parts.push(offer.message);
@@ -51,6 +52,17 @@ export function buildEnquiryUrl(offer, takeMsg) {
   // case. Math.round pins whole euros (offers are whole-euro; round-half-up).
   const p = parsePrice(offer.priceAfter);
   if (Number.isFinite(p) && p > 0) url.searchParams.set('price', String(Math.round(p)));
+
+  // Structured check-in/check-out for the enquiry date pickers. Only when the
+  // Dates cell is a valid ISO range (parseOfferDates returns null for freehand/
+  // blank/malformed cells, so those simply don't prefill — same fail-safe as a
+  // priceless offer). enquiry.js re-validates these (not past, in-season,
+  // checkout > checkin), so it stays the authority on bookable dates.
+  const range = parseOfferDates(offer.dates);
+  if (range) {
+    url.searchParams.set('checkin', range.checkin);
+    url.searchParams.set('checkout', range.checkout);
+  }
 
   return url.toString();
 }
@@ -104,7 +116,8 @@ export function openOfferModal(offer, triggerEl) {
   // resolve them from that container and hand it to deriveSave, exactly as the
   // card does. Falls back to {} → deriveSave's English defaults if absent.
   const offersDs = document.querySelector('[data-offers]')?.dataset || {};
-  setSlot(modal, 'dates', offer.dates);
+  const formattedDates = formatOfferDates(offer.dates, currentLocale());
+  setSlot(modal, 'dates', formattedDates);
   setSlot(modal, 'struck', offer.priceBefore ? euro(offer.priceBefore) : '');
   setSlot(modal, 'hero', offer.priceAfter ? euro(offer.priceAfter) : '');
   setSlot(modal, 'save', deriveSave(offer, offersDs));
@@ -118,7 +131,7 @@ export function openOfferModal(offer, triggerEl) {
   if (callout) {
     if (offer.dates) {
       const strong = modal.querySelector('[data-offer-slot="callout-dates"]');
-      if (strong) strong.textContent = offer.dates;
+      if (strong) strong.textContent = formattedDates;
       callout.removeAttribute('hidden');
     } else {
       callout.hidden = true;
