@@ -12,6 +12,8 @@
 
 import { SITE_CONFIG } from './site-config.js';
 import { openOfferModal } from './offer-modal.js';
+import { currentLocale } from './util/current-locale.js';
+import { formatOfferDates } from './util/offer-dates.js';
 
 // Parse a raw sheet price string (bare number, maybe with € or spaces) to a
 // finite number, or NaN. Tolerates "€400", "400", " 400 ".
@@ -86,7 +88,7 @@ function buildCard(container, offer, index) {
   const bpct = bannerPct(offer);
   if (bpct != null) add('offer-card__banner', `${ds.discountLabel || 'Discount'} ${bpct}%`);
 
-  if (offer.dates) add('offer-card__eyebrow', offer.dates);
+  if (offer.dates) add('offer-card__eyebrow', formatOfferDates(offer.dates, currentLocale()));
   if (offer.priceBefore) add('offer-card__struck', euro(offer.priceBefore));
   add('offer-card__hero', euro(offer.priceAfter)); // required
 
