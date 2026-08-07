@@ -64,8 +64,9 @@ formatter into the card/modal display and the `?offer=` prose; wire the splitter
 Two exported pure functions, no DOM, unit-testable in isolation:
 
 - **`parseOfferDates(raw)` → `{ checkin, checkout }` | `null`**
-  - Coerce `raw` to string; split on the FIRST `/`.
-  - Require exactly two parts, each matching `^\d{4}-\d{2}-\d{2}$`.
+  - Coerce `raw` to string; split on `/`.
+  - Require exactly two parts, each matching `^\d{4}-\d{2}-\d{2}$` (so a
+    date written with slashes, e.g. `2027/6/15/...`, yields >2 parts → null).
   - Validate each half is a REAL calendar date via a UTC round-trip
     (`new Date(Date.UTC(y, m-1, d))` and assert the components come back
     unchanged) so `2027-02-30` is rejected rather than silently rolling to
