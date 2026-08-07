@@ -10,6 +10,21 @@ test('environment: ICU has Bulgarian month names (full-icu)', () => {
   assert.equal(bgProbe, 'юни', `runner ICU lacks BG month names (got "${bgProbe}"); Node needs full ICU`);
 });
 
+// EN September ICU guard: 'en-GB' short month for September can render 'Sep'
+// (most ICU builds) or 'Sept' (Node v22+ / ICU 73+). Probe the actual value
+// so the September format tests below are pinned to what this runner produces,
+// rather than a hardcoded assumption that breaks on ICU upgrades.
+// This runner (Node v26 / ICU 76+) produces 'Sept'.
+const enSepProbe = new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(2027, 8, 15)));
+test('environment: EN ICU September short-month probe (Sep vs Sept detection)', () => {
+  const known = ['Sep', 'Sept'];
+  assert.ok(
+    known.includes(enSepProbe),
+    `unexpected EN short month for September: "${enSepProbe}"; expected "Sep" or "Sept". ` +
+    `ICU version mismatch — update the September format tests to match.`,
+  );
+});
+
 // ── parseOfferDates ───────────────────────────────────────────────────────
 
 test('parseOfferDates: valid ISO range → {checkin, checkout}', () => {
@@ -90,4 +105,29 @@ test('formatOfferDates: null input → "" (string type contract)', () => {
 
 test('formatOfferDates: undefined input → "" (string type contract)', () => {
   assert.equal(formatOfferDates(undefined, 'en'), '');
+});
+
+// ── September coverage (Sep vs Sept ICU risk) ─────────────────────────────
+// The EN short month name for September varies by ICU version ('Sep' on older
+// builds, 'Sept' on ICU 73+/Node 22+). These tests are pinned to what this
+// runner actually produces (observed: 'Sept' on Node v26/ICU 76+) so that a
+// future ICU upgrade causes a deliberate compile-time failure here rather than
+// a silent wrong value reaching production.
+
+test('formatOfferDates: EN September range → exact string this runner produces', () => {
+  // enSepProbe was computed above at module load time; pin to it.
+  const expected = `15 ${enSepProbe} 2027 – 20 ${enSepProbe} 2027`;
+  assert.equal(
+    formatOfferDates('2027-09-15/2027-09-20', 'en'),
+    expected,
+    `Expected "${expected}" — update pin if ICU changed (probe="${enSepProbe}")`,
+  );
+});
+
+test('formatOfferDates: BG September range → localized name, hyphen, no г.', () => {
+  const out = formatOfferDates('2027-09-15/2027-09-20', 'bg');
+  // Observed: "15 септември 2027 - 20 септември 2027"
+  assert.equal(out, '15 септември 2027 - 20 септември 2027');
+  assert.ok(!out.includes('г.'), 'BG September must not carry the "г." era suffix');
+  assert.ok(!out.includes('–'), 'BG September format uses a plain hyphen, not an en-dash');
 });

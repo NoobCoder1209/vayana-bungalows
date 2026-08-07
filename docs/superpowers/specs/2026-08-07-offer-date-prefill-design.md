@@ -86,9 +86,6 @@ Two exported pure functions, no DOM, unit-testable in isolation:
     - `en` → `15 Jun 2027`, joined with ` – ` (en-dash) → `15 Jun 2027 – 20 Jun 2027`.
     - `bg` → build from BG month names, strip a trailing ` г.`/`г.` and any era
       artifacts, join with ` - ` (plain hyphen) → `15 юни 2027 - 20 юни 2027`.
-  - If start and end are the same calendar day, render a single formatted date (no
-    range separator). (Out-of-contract for a real range — `checkout > checkin` is
-    required — so this only matters defensively.)
   - Locale resolution: caller passes `currentLocale()`; an unknown locale falls back
     to `en` formatting.
 

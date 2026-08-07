@@ -116,7 +116,8 @@ export function openOfferModal(offer, triggerEl) {
   // resolve them from that container and hand it to deriveSave, exactly as the
   // card does. Falls back to {} → deriveSave's English defaults if absent.
   const offersDs = document.querySelector('[data-offers]')?.dataset || {};
-  setSlot(modal, 'dates', formatOfferDates(offer.dates, currentLocale()));
+  const formattedDates = formatOfferDates(offer.dates, currentLocale());
+  setSlot(modal, 'dates', formattedDates);
   setSlot(modal, 'struck', offer.priceBefore ? euro(offer.priceBefore) : '');
   setSlot(modal, 'hero', offer.priceAfter ? euro(offer.priceAfter) : '');
   setSlot(modal, 'save', deriveSave(offer, offersDs));
@@ -130,7 +131,7 @@ export function openOfferModal(offer, triggerEl) {
   if (callout) {
     if (offer.dates) {
       const strong = modal.querySelector('[data-offer-slot="callout-dates"]');
-      if (strong) strong.textContent = formatOfferDates(offer.dates, currentLocale());
+      if (strong) strong.textContent = formattedDates;
       callout.removeAttribute('hidden');
     } else {
       callout.hidden = true;
