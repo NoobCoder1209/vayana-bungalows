@@ -2,6 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseOfferDates, formatOfferDates } from '../offer-dates.js';
 
+// ── Environment guard ─────────────────────────────────────────────────────
+// If the runner's ICU build lacks Bulgarian month names, the BG format tests
+// will silently produce wrong output. Fail fast with a clear diagnosis instead.
+const bgProbe = new Intl.DateTimeFormat('bg-BG', { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2027, 5, 15)));
+test('environment: ICU has Bulgarian month names (full-icu)', () => {
+  assert.equal(bgProbe, 'юни', `runner ICU lacks BG month names (got "${bgProbe}"); Node needs full ICU`);
+});
+
 // ── parseOfferDates ───────────────────────────────────────────────────────
 
 test('parseOfferDates: valid ISO range → {checkin, checkout}', () => {
@@ -74,4 +82,12 @@ test('formatOfferDates: freehand / blank / malformed → raw input returned unch
   assert.equal(formatOfferDates('12–18 Jun', 'en'), '12–18 Jun');
   assert.equal(formatOfferDates('', 'en'), '');
   assert.equal(formatOfferDates('2027-02-30/2027-03-05', 'en'), '2027-02-30/2027-03-05');
+});
+
+test('formatOfferDates: null input → "" (string type contract)', () => {
+  assert.equal(formatOfferDates(null, 'en'), '');
+});
+
+test('formatOfferDates: undefined input → "" (string type contract)', () => {
+  assert.equal(formatOfferDates(undefined, 'en'), '');
 });

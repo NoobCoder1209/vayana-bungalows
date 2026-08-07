@@ -53,6 +53,8 @@ export function parseOfferDates(raw) {
 }
 
 // Locale → Intl locale tag. Unknown locales fall back to English.
+// en-GB is used (not en-US) because en-US renders "Jun 15, 2027" — the
+// desired format is day-first: "15 Jun 2027".
 const INTL_LOCALE = { en: 'en-GB', bg: 'bg-BG' };
 
 // bg-BG `month: 'short'` returns a numeric value ("06") on some ICU builds;
@@ -62,6 +64,7 @@ const MONTH_WIDTH = { bg: 'long' };
 // Format one UTC ISO date as "15 Jun 2027" (EN) / "15 юни 2027" (BG, no era).
 function formatOne(iso, locale) {
   const dt = toRealDate(iso);
+  if (!dt) return '';
   const tag = INTL_LOCALE[locale] || INTL_LOCALE.en;
   const monthWidth = MONTH_WIDTH[locale] || 'short';
   const parts = new Intl.DateTimeFormat(tag, {
@@ -81,10 +84,12 @@ function formatOne(iso, locale) {
 /**
  * Localized display string for a valid range, else the raw input unchanged.
  * EN joins with an en-dash " – "; BG joins with a plain hyphen " - ".
+ * Non-string inputs (null/undefined/number) return '' rather than the raw
+ * value, preserving the string return-type contract.
  */
 export function formatOfferDates(raw, locale) {
   const range = parseOfferDates(raw);
-  if (!range) return raw;
+  if (!range) return typeof raw === 'string' ? raw : '';
   const sep = locale === 'bg' ? ' - ' : ' – ';
   return `${formatOne(range.checkin, locale)}${sep}${formatOne(range.checkout, locale)}`;
 }
