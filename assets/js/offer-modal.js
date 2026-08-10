@@ -14,8 +14,8 @@
 // Reuses the .modal pattern (sections.css) and the focus-trap / Escape /
 // focus-restore conventions from enquiry.js.
 
-import { euro, deriveSave, parsePrice } from './offers.js';
-import { parseOfferDates, formatOfferDates } from './util/offer-dates.js';
+import { euro } from './offers.js';
+import { formatOfferDates, offerPrefillDates } from './util/offer-dates.js';
 import { currentLocale, isDefaultLocale } from './util/current-locale.js';
 
 // Remember what was focused before opening so we can restore it on close.
@@ -34,35 +34,23 @@ export function buildEnquiryUrl(offer, takeMsg) {
 
   // Compose the prefilled message: localized opener + the offer's own details.
   // The structural glue words stay English — the guest can edit the free-text
-  // message anyway, and this avoids a fan-out of extra locale keys.
+  // message anyway, and this avoids a fan-out of extra locale keys. Prose is
+  // kept minimal in the new schema: opener + a single Dates line (price prose
+  // is omitted this phase; there is no single "nights" value).
   const parts = [takeMsg || 'I’m taking the offer'];
-  if (offer.dates) parts.push(`Dates: ${formatOfferDates(offer.dates, currentLocale())}`);
-  if (offer.priceAfter) parts.push(`Price: ${euro(offer.priceAfter)}`);
-  if (offer.nights) parts.push(`Nights: ${offer.nights}`);
-  if (offer.message) parts.push(offer.message);
+  const formatted = formatOfferDates(offer, currentLocale());
+  if (formatted) parts.push(`Dates: ${formatted}`);
   url.searchParams.set('offer', parts.join('. '));
 
-  // Structured copy of the offer's end price for the sheet's Price column
-  // (Column L). The price already appears inside the ?offer= prose above; this
-  // is the discrete, sheet-friendly bare number. parsePrice tolerates "€400" /
-  // "400" / " 400 "; note it maps junk like "€"/"free" to 0 (not NaN), so we
-  // require a POSITIVE amount before emitting — this both drops priceless/junk
-  // offers to a blank Price cell AND matches the /stay/ pill's `price > 0` rule
-  // (calendar-selection.js), so the two producers never disagree on the zero
-  // case. Math.round pins whole euros (offers are whole-euro; round-half-up).
-  const p = parsePrice(offer.priceAfter);
-  if (Number.isFinite(p) && p > 0) url.searchParams.set('price', String(Math.round(p)));
+  // ?price is OMITTED this phase (no priceAfter in the new shape).
 
-  // Structured check-in/check-out for the enquiry date pickers. Only when the
-  // Dates cell is a valid ISO range (parseOfferDates returns null for freehand/
-  // blank/malformed cells, so those simply don't prefill — same fail-safe as a
-  // priceless offer). enquiry.js re-validates these (not past, in-season,
-  // checkout > checkin), so it stays the authority on bookable dates.
-  const range = parseOfferDates(offer.dates);
-  if (range) {
-    url.searchParams.set('checkin', range.checkin);
-    url.searchParams.set('checkout', range.checkout);
-  }
+  // Structured check-in/check-out for the enquiry date pickers, from the
+  // offer's real ISO sides only (offerPrefillDates omits freehand/blank sides,
+  // so those simply don't prefill). enquiry.js re-validates these (not past,
+  // in-season, checkout > checkin), so it stays the authority on bookable dates.
+  const pf = offerPrefillDates(offer);
+  if (pf.checkin) url.searchParams.set('checkin', pf.checkin);
+  if (pf.checkout) url.searchParams.set('checkout', pf.checkout);
 
   return url.toString();
 }
@@ -102,7 +90,8 @@ function closeModal(modal) {
 
 /**
  * Populate and open the offer detail modal for one offer object.
- * offer: { dates, discountPct, priceBefore, priceAfter, nights, message }.
+ * offer: { label, startDate, endDate, startRaw, endRaw, rate, tier,
+ *          minimumToBook, paidNights, freeNights, method }.
  * triggerEl: the card CTA button that opened it (for focus restore).
  */
 export function openOfferModal(offer, triggerEl) {
@@ -110,26 +99,29 @@ export function openOfferModal(offer, triggerEl) {
   if (!modal || !offer) return;
   lastFocusBeforeModal = triggerEl || document.activeElement;
 
-  // Dynamic summary — mirror buildCard's field gating (offers.js:82-98).
-  // The localized labels (save/off/nights) live on the [data-offers] grid
-  // container (the i18n plugin bakes them there), NOT on #offer-modal — so
-  // resolve them from that container and hand it to deriveSave, exactly as the
-  // card does. Falls back to {} → deriveSave's English defaults if absent.
+  // Dynamic summary — mirror buildCard's field usage (offers.js). The localized
+  // nights-deal template lives on the [data-offers] grid container (the i18n
+  // plugin bakes it there under `nightsDealLabel`), NOT on #offer-modal — so
+  // resolve it from that container, exactly as the card does. Falls back to the
+  // English template when absent.
   const offersDs = document.querySelector('[data-offers]')?.dataset || {};
-  const formattedDates = formatOfferDates(offer.dates, currentLocale());
+  const formattedDates = formatOfferDates(offer, currentLocale());
   setSlot(modal, 'dates', formattedDates);
-  setSlot(modal, 'struck', offer.priceBefore ? euro(offer.priceBefore) : '');
-  setSlot(modal, 'hero', offer.priceAfter ? euro(offer.priceAfter) : '');
-  setSlot(modal, 'save', deriveSave(offer, offersDs));
-  const nightsLabel = offersDs.nightsLabel || 'nights';
-  setSlot(modal, 'nights', offer.nights ? `${offer.nights} ${nightsLabel}` : '');
-  setSlot(modal, 'message', offer.message);
+  setSlot(modal, 'struck', ''); // DORMANT: always hidden (no priceBefore)
+  setSlot(modal, 'hero', euro(offer.rate));
+  setSlot(modal, 'save', ''); // DORMANT: always hidden (no savings data)
+  const nightsText = (offer.minimumToBook >= 1 && offer.freeNights >= 1)
+    ? (offersDs.nightsDealLabel || 'stay minimum {min} nights get {free} free')
+        .replace('{min}', offer.minimumToBook).replace('{free}', offer.freeNights)
+    : '';
+  setSlot(modal, 'nights', nightsText);
+  setSlot(modal, 'message', ''); // DORMANT: no message field in the new shape
 
-  // Fixed-dates callout: show only when the offer has a date range. The
+  // Fixed-dates callout: show only when the offer has displayable dates. The
   // boilerplate prefix (<span>) is already localized; we set the <strong>.
   const callout = modal.querySelector('[data-offer-slot="callout"]');
   if (callout) {
-    if (offer.dates) {
+    if (formattedDates) {
       const strong = modal.querySelector('[data-offer-slot="callout-dates"]');
       if (strong) strong.textContent = formattedDates;
       callout.removeAttribute('hidden');
