@@ -24,25 +24,13 @@ export function parsePrice(v) {
   return Number(String(v).replace(/[^0-9.]/g, ''));
 }
 
-// Prepend € unless the raw value already carries it (avoid €€). Returns '' for
-// a value that isn't a usable price (null/undefined/NaN/blank) so a malformed or
-// stale-shape offer can never render "€undefined"/"€NaN" — callers treat '' as
-// "no price to show". A numeric rate (the current schema) or a legacy string are
-// both accepted.
+// Prepend € unless the raw value already carries it (avoid €€).
+// Exported so offer-modal.js formats prices identically to the card.
 export function euro(raw) {
-  if (raw == null || raw === '') return '';
-  const s = String(raw).trim();
-  if (s === '' || /^€?(NaN|undefined|null)$/i.test(s)) return '';
-  // Reject values with no digit at all (e.g. pure junk); a leading € is fine.
-  if (!/\d/.test(s)) return '';
+  const s = String(raw);
   return s.startsWith('€') ? s : `€${s}`;
 }
 
-// DORMANT (kept for a future discount phase): pctValue / deriveSave / bannerPct
-// are defined-but-unused by the card in the current schema (discountPct and the
-// before/after prices are gone). deriveSave/parsePrice/euro stay EXPORTED
-// because offer-modal.js imports euro; deriveSave/parsePrice are retained for
-// the planned discount phase. Do not delete.
 // A positive integer-ish discount, or null.
 function pctValue(v) {
   if (v == null || v === '') return null;
@@ -79,10 +67,7 @@ function bannerPct(offer) {
   return null;
 }
 
-// Build one Price Hero card from the new offer shape (Task 1):
-// { label, startDate, endDate, startRaw, endRaw, rate, tier, minimumToBook,
-//   paidNights, freeNights, method }. `rate` (per-night, a Number) drives the
-// hero and is always rendered.
+// Build one Price Hero card. priceAfter is guaranteed non-blank by the caller.
 // `index` is the card's position among the rendered offers (for the CTA's
 // data-offer-index, useful for tests/debugging).
 function buildCard(container, offer, index) {
@@ -98,39 +83,28 @@ function buildCard(container, offer, index) {
     return el;
   };
 
-  // Banner (DORMANT): the old discount-% banner has no data source in the new
-  // shape (discountPct/prices are gone), so it is not rendered. bannerPct /
-  // deriveSave / pctValue remain defined-but-unused (see dormant note above),
-  // kept for a future discount phase.
+  // Full-width top banner: "Discount 20%" (calendar booked-cell styling). Sheet
+  // Discount % preferred, derived-% fallback. Always shown when a % is available.
+  const bpct = bannerPct(offer);
+  if (bpct != null) add('offer-card__banner', `${ds.discountLabel || 'Discount'} ${bpct}%`);
 
-  // Eyebrow: localized dates from the offer object (formatOfferDates now takes
-  // the offer, resolving ISO range → pretty, or falling back to raw verbatim).
-  const eyebrow = formatOfferDates(offer, currentLocale());
-  if (eyebrow) add('offer-card__eyebrow', eyebrow);
+  if (offer.dates) add('offer-card__eyebrow', formatOfferDates(offer.dates, currentLocale()));
+  if (offer.priceBefore) add('offer-card__struck', euro(offer.priceBefore));
+  add('offer-card__hero', euro(offer.priceAfter)); // required
 
-  // Struck price (DORMANT): no priceBefore in the new shape → not rendered.
+  const save = deriveSave(offer, ds);
+  if (save) add('offer-card__save', save);
 
-  // Hero: per-night rate, e.g. "€100". Guard against a malformed/stale offer
-  // whose rate isn't a usable number — euro() returns '' for those, and we skip
-  // the element entirely rather than render an empty/"€NaN" hero.
-  const heroText = euro(offer.rate);
-  if (heroText) add('offer-card__hero', heroText);
-
-  // Save pill (DORMANT): no savings data in the new shape → not rendered.
-
-  // Nights-deal line: "stay minimum {min} nights get {free} free" when both
-  // numbers are present & >= 1. Template comes from the [data-offers] dataset
-  // key `nightsDealLabel` (Task 4 supplies the real localized value); English
-  // fallback until then. Divider precedes it, mirroring the old hasFooter gate
-  // (footer is now the nights line only — message is gone).
-  const hasNights = offer.minimumToBook >= 1 && offer.freeNights >= 1;
-  if (hasNights) {
+  // Divider only when something follows it (nights or message present).
+  const hasFooter = !!offer.nights || !!offer.message;
+  if (hasFooter) {
     const d = document.createElement('span');
     d.className = 'offer-card__divider';
     card.append(d);
-    const tmpl = ds.nightsDealLabel || 'stay minimum {min} nights get {free} free';
-    add('offer-card__nights', tmpl.replace(/\{min\}/g, String(offer.minimumToBook)).replace(/\{free\}/g, String(offer.freeNights)));
   }
+
+  if (offer.nights) add('offer-card__nights', `${offer.nights} ${ds.nightsLabel || 'nights'}`);
+  if (offer.message) add('offer-card__msg', offer.message);
 
   // Gold pill CTA → opens the offer detail modal (offer-modal.js) with the
   // full offer + templated rules. A <button> (not <a>) because it triggers
@@ -164,9 +138,9 @@ export function renderOffers(container, offers) {
   if (typeof container.replaceChildren === 'function') container.replaceChildren();
   else if (Array.isArray(container.children)) container.children.length = 0;
 
-  // The Worker (Task 1) already returns only eligible offers, so render them
-  // all — no client-side re-filter on any (now-dead) field.
-  const shown = offers || [];
+  // Price Hero requires a hero (price-after). Drop offers without one so the
+  // count matches rendered cards and the empty state triggers if all drop.
+  const shown = (offers || []).filter((o) => o.priceAfter != null && o.priceAfter !== '');
 
   if (shown.length === 0) {
     container.dataset.count = '0';
