@@ -36,7 +36,7 @@ const enabled = (over = {}) => {
     1,              // 9  J Free Nights
     true,           // 10 K V1
     false,          // 11 L V2
-    'TRUE',         // 12 M Enabled
+    true,           // 12 M Enabled — real boolean (matches the live sheet's checkbox under UNFORMATTED_VALUE)
   ];
   const r = [...base];
   for (const [i, v] of Object.entries(over)) r[i] = v;
@@ -99,6 +99,14 @@ test("DROP: Enabled (M) not 'true' (case/space insensitive)", () => {
   assert.equal(parseOffers([enabled({ 12: 'yes' })]).length, 0);
   assert.equal(parseOffers([enabled({ 12: false })]).length, 0);
   assert.equal(parseOffers([enabled({ 12: '  true  ' })]).length, 1); // trims+lowercases
+});
+
+test('KEEP: Enabled (M) accepts a real boolean TRUE and the string "TRUE"', () => {
+  // The live sheet returns column M as a JS boolean under UNFORMATTED_VALUE;
+  // a checkbox-typed Enabled cell must NOT be dropped (regression: the gate
+  // once required a string and silently hid every boolean-enabled offer).
+  assert.equal(parseOffers([enabled({ 12: true })]).length, 1);
+  assert.equal(parseOffers([enabled({ 12: 'TRUE' })]).length, 1);
 });
 
 test('DROP: Start (B) is free text', () => {

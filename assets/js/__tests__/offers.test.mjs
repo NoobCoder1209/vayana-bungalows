@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { renderOffers } from '../offers.js';
+import { renderOffers, euro } from '../offers.js';
 
 // Dependency-free DOM fake. offers.js uses only createElement, append,
 // textContent, className, dataset, and (guarded) prepend/replaceChildren.
@@ -179,6 +179,27 @@ test('€ guard: numeric rate renders as €<n> with no double symbol', () => {
   renderOffers(c, [{ ...full(), rate: 100 }]);
   const card = c.querySelectorAll('.offer-card')[0];
   assert.equal(txt(card, '.offer-card__hero'), '€100');
+});
+
+test('euro() returns "" for a non-price value (no €undefined / €NaN)', () => {
+  assert.equal(euro(100), '€100');
+  assert.equal(euro('€100'), '€100');
+  assert.equal(euro(undefined), '');
+  assert.equal(euro(null), '');
+  assert.equal(euro(''), '');
+  assert.equal(euro(NaN), '');
+  assert.equal(euro('NaN'), '');
+  assert.equal(euro('abc'), ''); // no digit → not a price
+});
+
+test('€ guard: a malformed offer (missing rate) renders NO hero, not "€NaN"', () => {
+  htmlLang = 'en';
+  const c = container();
+  // Stale/old-shape offer that slipped through with no numeric rate.
+  const { rate, ...noRate } = full();
+  renderOffers(c, [noRate]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__hero'), null); // hero element absent
 });
 
 test('ISO-range dates render as a pretty EN eyebrow', () => {

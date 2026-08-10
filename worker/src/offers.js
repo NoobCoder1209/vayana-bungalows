@@ -101,9 +101,11 @@ export function parseOffers(rows) {
   for (const row of rows) {
     if (!Array.isArray(row)) continue;
 
-    // 1. Enabled
-    const enableRaw = row[COL.enabled];
-    if (!(typeof enableRaw === 'string' && enableRaw.trim().toLowerCase() === 'true')) {
+    // 1. Enabled — accept a real boolean TRUE (checkbox / UNFORMATTED_VALUE)
+    //    OR the string 'true'. Uses the same toBool() as the V1/V2 flags so a
+    //    checkbox-typed Enabled cell isn't silently rejected (it arrives as a
+    //    JS boolean under valueRenderOption=UNFORMATTED_VALUE, not "TRUE").
+    if (!toBool(row[COL.enabled])) {
       continue;
     }
 

@@ -24,10 +24,17 @@ export function parsePrice(v) {
   return Number(String(v).replace(/[^0-9.]/g, ''));
 }
 
-// Prepend € unless the raw value already carries it (avoid €€).
-// Exported so offer-modal.js formats prices identically to the card.
+// Prepend € unless the raw value already carries it (avoid €€). Returns '' for
+// a value that isn't a usable price (null/undefined/NaN/blank) so a malformed or
+// stale-shape offer can never render "€undefined"/"€NaN" — callers treat '' as
+// "no price to show". A numeric rate (the current schema) or a legacy string are
+// both accepted.
 export function euro(raw) {
-  const s = String(raw);
+  if (raw == null || raw === '') return '';
+  const s = String(raw).trim();
+  if (s === '' || /^€?(NaN|undefined|null)$/i.test(s)) return '';
+  // Reject values with no digit at all (e.g. pure junk); a leading € is fine.
+  if (!/\d/.test(s)) return '';
   return s.startsWith('€') ? s : `€${s}`;
 }
 
@@ -103,8 +110,11 @@ function buildCard(container, offer, index) {
 
   // Struck price (DORMANT): no priceBefore in the new shape → not rendered.
 
-  // Hero (required): per-night rate, e.g. "€100".
-  add('offer-card__hero', euro(offer.rate));
+  // Hero: per-night rate, e.g. "€100". Guard against a malformed/stale offer
+  // whose rate isn't a usable number — euro() returns '' for those, and we skip
+  // the element entirely rather than render an empty/"€NaN" hero.
+  const heroText = euro(offer.rate);
+  if (heroText) add('offer-card__hero', heroText);
 
   // Save pill (DORMANT): no savings data in the new shape → not rendered.
 
