@@ -53,6 +53,16 @@ const i18nContext = {
     privacy_url: `${BASE}privacy/`,
     email_href: 'mailto:contact@vayanabungalows.com',
     email_display: 'contact@vayanabungalows.com',
+    // Runtime-interpolated tokens: the offers nights-deal template
+    // (home.offers.nights_deal) carries {min}/{free}, which offers.js /
+    // offer-modal.js fill from offer.minimumToBook / offer.freeNights at
+    // runtime. The i18n plugin interpolates EVERY {token} at build time and
+    // hard-fails on an unknown one, so we resolve these to the literal token
+    // string — the plugin substitutes `{min}` → `{min}` (global replace does
+    // not re-scan inserted text), leaving the runtime token intact in the
+    // baked data-nights-deal-label attribute. Keep in both locales.
+    min: '{min}',
+    free: '{free}',
   },
   bg: {
     phone: '+359 88 888 8888',
@@ -64,6 +74,11 @@ const i18nContext = {
     privacy_url: `${BASE}bg/privacy/`,
     email_href: 'mailto:contact@vayanabungalows.com',
     email_display: 'contact@vayanabungalows.com',
+    // See EN note above — {min}/{free} in home.offers.nights_deal are
+    // runtime tokens; resolve them to the literal token so the plugin
+    // leaves them intact for the client-side interpolation.
+    min: '{min}',
+    free: '{free}',
   },
 };
 

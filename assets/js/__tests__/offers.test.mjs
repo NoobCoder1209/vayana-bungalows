@@ -93,6 +93,17 @@ test('nights line falls back to the English template when the attr is absent', (
   assert.equal(txt(card, '.offer-card__nights'), 'stay minimum 7 nights get 2 free');
 });
 
+test('nights line interpolates ALL occurrences of a repeated token (global replace)', () => {
+  htmlLang = 'en';
+  const c = container();
+  // A template that repeats {min}/{free} must have every occurrence replaced —
+  // no literal {min}/{free} may leak through.
+  c.dataset.nightsDealLabel = '{min} {min} / {free} {free}';
+  renderOffers(c, [full()]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__nights'), '7 7 / 2 2');
+});
+
 test('CTA is present on every rendered card with localized label', () => {
   htmlLang = 'en';
   const c = container();

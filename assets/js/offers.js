@@ -119,7 +119,7 @@ function buildCard(container, offer, index) {
     d.className = 'offer-card__divider';
     card.append(d);
     const tmpl = ds.nightsDealLabel || 'stay minimum {min} nights get {free} free';
-    add('offer-card__nights', tmpl.replace('{min}', offer.minimumToBook).replace('{free}', offer.freeNights));
+    add('offer-card__nights', tmpl.replace(/\{min\}/g, String(offer.minimumToBook)).replace(/\{free\}/g, String(offer.freeNights)));
   }
 
   // Gold pill CTA → opens the offer detail modal (offer-modal.js) with the

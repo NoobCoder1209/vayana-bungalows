@@ -112,7 +112,7 @@ export function openOfferModal(offer, triggerEl) {
   setSlot(modal, 'save', ''); // DORMANT: always hidden (no savings data)
   const nightsText = (offer.minimumToBook >= 1 && offer.freeNights >= 1)
     ? (offersDs.nightsDealLabel || 'stay minimum {min} nights get {free} free')
-        .replace('{min}', offer.minimumToBook).replace('{free}', offer.freeNights)
+        .replace(/\{min\}/g, String(offer.minimumToBook)).replace(/\{free\}/g, String(offer.freeNights))
     : '';
   setSlot(modal, 'nights', nightsText);
   setSlot(modal, 'message', ''); // DORMANT: no message field in the new shape
