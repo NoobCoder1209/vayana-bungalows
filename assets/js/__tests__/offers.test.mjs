@@ -115,6 +115,9 @@ test('CTA is present on every rendered card with localized label', () => {
   assert.equal(cta.type, 'button');
   assert.equal(cta.getAttribute('href'), null);
   assert.equal(cta.getAttribute('data-offer-index'), '0');
+  // The zeroed deal fields (minimumToBook:0, freeNights:0) must suppress the
+  // nights line — assert it so this override is load-bearing, not decorative.
+  assert.equal(txt(card, '.offer-card__nights'), null);
 });
 
 test('hero-only offer (no nights deal) → hero present, no nights line, no divider', () => {
