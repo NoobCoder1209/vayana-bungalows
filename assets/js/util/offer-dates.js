@@ -1,15 +1,23 @@
-// Parse + format the Offers-sheet `Dates` cell (Column B).
+// Format + prefill helpers for the two-column Offers `Dates` schema.
 //
-// The cell is a strict single-cell ISO range: `YYYY-MM-DD/YYYY-MM-DD`
-// (e.g. "2027-06-15/2027-06-20"). This is the machine-readable contract that
-// lets "Take the offer" prefill the enquiry date pickers. Two consumers:
-//   - parseOfferDates → the ?checkin/?checkout link params (offer-modal.js)
-//   - formatOfferDates → the pretty display on the card / modal / ?offer= prose
+// Task 1 split the single `Dates` cell into two machine + two raw fields on the
+// offer object:
+//   - offer.startDate / offer.endDate : ISO "YYYY-MM-DD" when the sheet cell is
+//     a real calendar date, else null (the machine-readable contract that lets
+//     "Take the offer" prefill the enquiry date pickers).
+//   - offer.startRaw / offer.endRaw   : the raw cell string, kept for verbatim
+//     display of free text ("The whole July"), else null.
 //
-// SOFT contract: anything that is not a valid strictly-increasing range of two
-// real calendar dates fails safe — parseOfferDates returns null (no prefill)
-// and formatOfferDates returns the raw input unchanged (old freehand cells
-// keep rendering verbatim). Never throws. Dependency-free (Intl is built-in).
+// Two consumers (Task 3):
+//   - offerPrefillDates → the ?checkin/?checkout link params (offer-modal.js)
+//   - formatOfferDates  → the pretty display on the card / modal / ?offer= prose
+//
+// SOFT contract: only real calendar ISO dates are formatted/prefilled. When
+// neither side is a real ISO date, formatOfferDates falls back to the first
+// non-empty raw string (verbatim) so freehand cells keep rendering as-is;
+// offerPrefillDates simply omits any side that is not a real ISO date. A
+// missing/null/non-object offer fails safe ("" and {}). Never throws.
+// Dependency-free (Intl is built-in).
 
 const ISO_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -17,6 +25,7 @@ const ISO_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 // naive `new Date(2027, 1, 30)` would silently roll to Mar 2). Returns a UTC
 // Date on success, or null.
 function toRealDate(iso) {
+  if (typeof iso !== 'string') return null;
   const m = ISO_RE.exec(iso);
   if (!m) return null;
   const [, y, mo, d] = m;
@@ -32,24 +41,6 @@ function toRealDate(iso) {
     return null;
   }
   return dt;
-}
-
-/**
- * Split a raw `Dates` cell into { checkin, checkout } ISO strings, or null.
- * Requires exactly two `/`-separated ISO halves, both real dates, checkout
- * strictly after checkin.
- */
-export function parseOfferDates(raw) {
-  if (typeof raw !== 'string') return null;
-  const parts = raw.split('/');
-  if (parts.length !== 2) return null;
-  const a = parts[0].trim();
-  const b = parts[1].trim();
-  const da = toRealDate(a);
-  const db = toRealDate(b);
-  if (!da || !db) return null;
-  if (db.getTime() <= da.getTime()) return null;
-  return { checkin: a, checkout: b };
 }
 
 // Locale → Intl locale tag. Unknown locales fall back to English.
@@ -81,15 +72,51 @@ function formatOne(iso, locale) {
   return `${day} ${month} ${year}`;
 }
 
+// First non-empty trimmed string among the candidates, else ''.
+function firstNonEmptyRaw(...candidates) {
+  for (const c of candidates) {
+    if (typeof c === 'string') {
+      const t = c.trim();
+      if (t) return t;
+    }
+  }
+  return '';
+}
+
 /**
- * Localized display string for a valid range, else the raw input unchanged.
- * EN joins with an en-dash " – "; BG joins with a plain hyphen " - ".
- * Non-string inputs (null/undefined/number) return '' rather than the raw
- * value, preserving the string return-type contract.
+ * Localized display string for an offer's dates.
+ *   both ISO valid  → "1 Jul 2026 – 15 Jul 2026" (EN en-dash) /
+ *                      "1 юли 2026 - 15 юли 2026" (BG plain hyphen, no "г.")
+ *   one ISO valid   → that single date bare (no separator, no "from"/"until")
+ *   neither ISO     → the first non-empty of startRaw/endRaw (trimmed) verbatim
+ *   nothing usable  → "" (empty string)
+ * A missing/null/non-object offer returns "". Never throws.
  */
-export function formatOfferDates(raw, locale) {
-  const range = parseOfferDates(raw);
-  if (!range) return typeof raw === 'string' ? raw : '';
-  const sep = locale === 'bg' ? ' - ' : ' – ';
-  return `${formatOne(range.checkin, locale)}${sep}${formatOne(range.checkout, locale)}`;
+export function formatOfferDates(offer, locale) {
+  if (!offer || typeof offer !== 'object') return '';
+  const start = toRealDate(offer.startDate);
+  const end = toRealDate(offer.endDate);
+  if (start && end) {
+    const sep = locale === 'bg' ? ' - ' : ' – ';
+    return `${formatOne(offer.startDate, locale)}${sep}${formatOne(offer.endDate, locale)}`;
+  }
+  if (start) return formatOne(offer.startDate, locale);
+  if (end) return formatOne(offer.endDate, locale);
+  return firstNonEmptyRaw(offer.startRaw, offer.endRaw);
+}
+
+/**
+ * Enquiry-prefill params for "Take the offer". Emits only sides that are real
+ * ISO dates: `checkin` from startDate, `checkout` from endDate. Free text or a
+ * missing side is omitted; may return an empty {}. Order (checkout>checkin),
+ * not-past and in-season checks are left to the downstream enquiry.js reader —
+ * this util just forwards the valid ISO sides. A missing/null/non-object offer
+ * returns {}. Never throws.
+ */
+export function offerPrefillDates(offer) {
+  const out = {};
+  if (!offer || typeof offer !== 'object') return out;
+  if (toRealDate(offer.startDate)) out.checkin = offer.startDate;
+  if (toRealDate(offer.endDate)) out.checkout = offer.endDate;
+  return out;
 }
