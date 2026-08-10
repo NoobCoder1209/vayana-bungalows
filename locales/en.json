@@ -89,6 +89,7 @@
       "save": "Save",
       "off": "off",
       "nights": "nights",
+      "nights_deal": "stay minimum {min} nights get {free} free",
       "discount": "Discount",
       "cta": "Check the offer",
       "empty": "No current offers at the moment.",
