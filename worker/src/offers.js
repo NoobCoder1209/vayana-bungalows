@@ -9,9 +9,10 @@
 // service-account private-key fragments.
 //
 // The offer objects returned here are the INTERNAL shape (they carry the raw
-// tier rate + discount parameters + type, which the /price engine needs). The
-// public /offers response projects these to a generic shape that hides the
-// tier rates and discount params (see toPublicOffer / the route handler).
+// tier rate + discount parameters + type, which the /price engine needs). A
+// later task (Task 3) will add a public projection that hides the tier rates
+// and discount params before they reach the browser via /offers; until that
+// lands, the /offers route returns this internal shape unchanged.
 
 import { getAccessToken } from './sheets.js';
 

@@ -119,10 +119,26 @@ test('Type 1 per-day and total variants carry the right single param', () => {
   assert.equal(perDay.length, 1);
   assert.equal(perDay[0].discountPerDay, 15);
   assert.equal(perDay[0].discountPct, undefined);
+  assert.equal(perDay[0].discountTotal, undefined);
 
   const total = parseOffers([type1({ 7: '', 9: 50 })]);
   assert.equal(total.length, 1);
   assert.equal(total[0].discountTotal, 50);
+  assert.equal(total[0].discountPct, undefined);
+  assert.equal(total[0].discountPerDay, undefined);
+});
+
+test('Type 2 ignores any populated discount columns (uses paid/free only)', () => {
+  // A Type-2 row that also has discount cells filled must still map as Type 2
+  // with paid/free and NO discount params leaking onto the object.
+  const out = parseOffers([type2({ 7: 20, 8: 10, 9: 50 })]);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].type, 'Type 2');
+  assert.equal(out[0].paidNights, 3);
+  assert.equal(out[0].freeNights, 1);
+  assert.equal(out[0].discountPct, undefined);
+  assert.equal(out[0].discountPerDay, undefined);
+  assert.equal(out[0].discountTotal, undefined);
 });
 
 test('tier selects the matching price cell (Mid → E, Low → F), case-insensitive', () => {
@@ -192,7 +208,10 @@ test('DROP: Type 1 with zero discount mechanisms', () => {
 });
 
 test('DROP: Type 1 with two discount mechanisms', () => {
-  assert.equal(parseOffers([type1({ 7: 20, 8: 10 })]).length, 0);
+  assert.equal(parseOffers([type1({ 7: 20, 8: 10 })]).length, 0); // pct + perDay
+  assert.equal(parseOffers([type1({ 7: 20, 9: 50 })]).length, 0); // pct + total
+  assert.equal(parseOffers([type1({ 7: '', 8: 10, 9: 50 })]).length, 0); // perDay + total
+  assert.equal(parseOffers([type1({ 7: 20, 8: 10, 9: 50 })]).length, 0); // all three
 });
 
 test('DROP: Type 1 % not a whole number 1..99', () => {
