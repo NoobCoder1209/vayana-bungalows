@@ -278,11 +278,24 @@ export async function fetchSheetData(env) {
   } catch {
     throw new Error('sheet-parse-failed');
   }
-  // batchGet → { valueRanges: [ { values }, { values } ] } in request order.
-  // A fully-empty range omits `values`; treat missing as [] (not an error).
+  // batchGet → { valueRanges: [ { values }, { values } ] } in REQUEST order:
+  // valueRanges[0] = offers (A3:N8), valueRanges[1] = rate bands (A16:C25).
+  //
+  // We requested TWO ranges, so a well-formed response MUST carry two
+  // valueRanges entries. Fewer than two is a malformed/partial read — treat
+  // it as a hard failure (throw → route 502s, nothing is cached) rather than
+  // defaulting the missing range to []. That default was a cache-poisoning
+  // trap: an anomalous response that omitted the band range would silently
+  // cache `bands: []` for 60s, and every no-offer /price in that window would
+  // 400 (`bad-dates`) — dropping the enquiry price. An entry that is PRESENT
+  // but has no `values` is a legitimately empty range (Sheets omits `values`
+  // for an empty block) and stays a benign [].
   const vr = (payload && Array.isArray(payload.valueRanges)) ? payload.valueRanges : [];
-  const offerRows = vr[0] && Array.isArray(vr[0].values) ? vr[0].values : [];
-  const bandRows = vr[1] && Array.isArray(vr[1].values) ? vr[1].values : [];
+  if (vr.length < 2) {
+    throw new Error('sheet-read-incomplete');
+  }
+  const offerRows = Array.isArray(vr[0].values) ? vr[0].values : [];
+  const bandRows = Array.isArray(vr[1].values) ? vr[1].values : [];
   return { offers: parseOffers(offerRows), bands: parseRateBands(bandRows) };
 }
 

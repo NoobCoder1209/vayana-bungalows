@@ -259,3 +259,31 @@ test('POST /price: 502 when the sheet read fails', async () => {
     assert.equal((await res.json()).error, 'price-unavailable');
   });
 });
+
+test('POST /price: a batchGet missing the band range → 502, NOT a silent 400', async () => {
+  // Regression guard for the Column-L blanking bug: an anomalous batchGet that
+  // returns only the offers range (no band range) must surface as a retryable
+  // 502 price-unavailable — never a 400 bad-dates that silently drops the
+  // price and never a cached empty-bands state. A no-offer stay is used so the
+  // path goes through standardPrice(bands).
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('oauth2.googleapis.com/token')) {
+      return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
+    }
+    if (u.includes('sheets.googleapis.com')) {
+      // Only the offers valueRange present — the band range is absent.
+      return new Response(JSON.stringify({ valueRanges: [{ values: [OFFER_T2] }] }), { status: 200 });
+    }
+    return new Response('unexpected', { status: 418 });
+  };
+  try {
+    // Dates outside every offer window → no-offer branch → needs bands.
+    const res = await worker.fetch(priceReq({ checkin: '2026-08-01', checkout: '2026-08-05' }), env, {});
+    assert.equal(res.status, 502);
+    assert.equal((await res.json()).error, 'price-unavailable');
+  } finally {
+    globalThis.fetch = real; _resetForTests(); _resetOffersCacheForTests();
+  }
+});

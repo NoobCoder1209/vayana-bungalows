@@ -355,7 +355,7 @@ test('jsonCacheableResponse sets public max-age and echoes allowed origin', asyn
 import { generateKeyPairSync } from 'node:crypto';
 import worker from '../src/index.js';
 import { _resetForTests } from '../src/sheets.js';
-import { _resetOffersCacheForTests } from '../src/offers.js';
+import { _resetOffersCacheForTests, fetchSheetData } from '../src/offers.js';
 
 // Minimal env for the /offers path. GSHEETS_SA_JSON carries a throwaway RSA key
 // generated fresh per test run (must be a real PKCS8 key — getAccessToken()
@@ -449,8 +449,65 @@ test('sheet read: batchGet requests BOTH ranges (A3:N8 offers + A16:C25 bands) w
   );
 });
 
-test('GET /offers returns [] when the sheet has no eligible rows', async () => {
-  await withMockedSheets(
+// A batchGet stub whose response body we fully control, so we can simulate a
+// malformed/partial upstream (fewer valueRanges than ranges requested) — the
+// shape that previously cache-poisoned `bands: []`.
+function withBatchGetPayload(payloadOrStatus, run) {
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('oauth2.googleapis.com/token')) {
+      return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
+    }
+    if (u.includes('sheets.googleapis.com')) {
+      if (typeof payloadOrStatus === 'number') return new Response('nope', { status: payloadOrStatus });
+      return new Response(JSON.stringify(payloadOrStatus), { status: 200 });
+    }
+    return new Response('unexpected', { status: 418 });
+  };
+  return Promise.resolve()
+    .then(run)
+    .finally(() => { globalThis.fetch = real; _resetForTests(); _resetOffersCacheForTests(); });
+}
+
+test('fetchSheetData: a batchGet missing the band range THROWS (never caches empty bands)', async () => {
+  // We requested two ranges; a response carrying only the offers range is a
+  // partial read. Must throw (→ route 502, retryable) instead of silently
+  // returning bands:[] — the regression that blanked Column L.
+  await withBatchGetPayload({ valueRanges: [{ values: [validRow] }] }, async () => {
+    await assert.rejects(fetchSheetData(offersEnv), /sheet-read-incomplete/);
+  });
+});
+
+test('fetchSheetData: an entirely empty valueRanges THROWS', async () => {
+  await withBatchGetPayload({ valueRanges: [] }, async () => {
+    await assert.rejects(fetchSheetData(offersEnv), /sheet-read-incomplete/);
+  });
+});
+
+test('fetchSheetData: a PRESENT-but-empty band range is a benign [] (not an error)', async () => {
+  // Sheets omits `values` for a genuinely empty block. Two entries present →
+  // valid response; bands parse to [] without throwing.
+  await withBatchGetPayload({ valueRanges: [{ values: [validRow] }, {}] }, async () => {
+    const { offers, bands } = await fetchSheetData(offersEnv);
+    assert.equal(offers.length, 1);
+    assert.deepEqual(bands, []);
+  });
+});
+
+test('fetchSheetData: both ranges populated → offers + bands parsed', async () => {
+  // Serials 46113=2026-04-01, 46142=2026-04-30. One April band @ €75.
+  await withBatchGetPayload(
+    { valueRanges: [{ values: [validRow] }, { values: [[46113, 46142, 75]] }] },
+    async () => {
+      const { offers, bands } = await fetchSheetData(offersEnv);
+      assert.equal(offers.length, 1);
+      assert.deepEqual(bands, [{ startISO: '2026-04-01', endISO: '2026-04-30', rate: 75 }]);
+    },
+  );
+});
+
+test('GET /offers returns [] when the sheet has no eligible rows', async () => {  await withMockedSheets(
     [['Offer 1', '', '', '', '', '', '', '', '', '', '', '', '', '']],
     async () => {
       const res = await worker.fetch(getReq(), offersEnv, {});
