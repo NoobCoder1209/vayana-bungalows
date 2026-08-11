@@ -1,7 +1,9 @@
 // Unit tests for the /stay/ calendar-selection PURE logic: night counting,
-// pricing, the MIN_NIGHTS gate, the contiguity walk, and the completed-range
-// verdict table. The DOM wiring (click delegation, pill/dock) is not exercised
-// here — these lock the decision logic that would silently regress.
+// the MIN_NIGHTS gate, the contiguity walk, and the completed-range verdict
+// table. The DOM wiring (click delegation, pill/dock, the async POST /price
+// fetch) is not exercised here — these lock the decision logic that would
+// silently regress. The price is now sourced from the Worker's /price endpoint,
+// so there is no client-side price function to slice.
 //
 // calendar-selection.js can't be plain-imported in Node: it pulls in
 // availability-calendar.js (DOM/flatpickr chain) and bookings-data.js (reads
@@ -41,7 +43,6 @@ function sliceFn(src, name) {
 // free references resolve without importing that env-coupled module.
 function loadLogic() {
   const deps = `
-    const PRICE_PER_NIGHT = 100;
     const MIN_NIGHTS = 5;
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
     const KEY_ORDER = ['B1', 'B2', 'B3'];
@@ -57,14 +58,15 @@ function loadLogic() {
   const body = [
     deps,
     sliceFn(SEL_SRC, 'nightsBetween'),
-    sliceFn(SEL_SRC, 'priceForNights'),
+    sliceFn(SEL_SRC, 'sameSelection'),
+    sliceFn(SEL_SRC, 'priceResponseIsStale'),
     sliceFn(SEL_SRC, 'isRangeContiguous'),
     sliceFn(SEL_SRC, 'evaluateSelection'),
     sliceFn(SEL_SRC, 'isBookableDockDate'),
     sliceFn(SEL_SRC, 'firstAvailableBungalow'),
     sliceFn(SEL_SRC, 'dayState'),
     sliceFn(SEL_SRC, 'reduceClick'),
-    'return { nightsBetween, priceForNights, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, PRICE_PER_NIGHT, KEY_ORDER };',
+    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -74,7 +76,7 @@ const L = loadLogic();
 // in-season August dates used below.
 const TODAY = new Date(2026, 0, 1); // Jan 1 2026
 
-// ── nights + price ────────────────────────────────────────────────────────
+// ── nights ──────────────────────────────────────────────────────────────────
 
 test('nightsBetween: hotel convention (Aug 10 → Aug 15 = 5 nights)', () => {
   assert.equal(L.nightsBetween('2026-08-10', '2026-08-15'), 5);
@@ -89,10 +91,36 @@ test('nightsBetween: reversed order is non-positive', () => {
   assert.ok(L.nightsBetween('2026-08-15', '2026-08-10') <= 0);
 });
 
-test('priceForNights: €100/night', () => {
-  assert.equal(L.priceForNights(5), 500);
-  assert.equal(L.priceForNights(6), 600);
-  assert.equal(L.priceForNights(10), 1000);
+// ── async /price race guard (pure decision) ──────────────────────────────────
+
+const SNAP = { key: 'B1', checkIn: '2026-08-10', checkOut: '2026-08-15' };
+
+test('sameSelection: matches on key + both endpoints; null-safe', () => {
+  assert.equal(L.sameSelection(SNAP, { ...SNAP }), true);
+  assert.equal(L.sameSelection(SNAP, { ...SNAP, checkOut: '2026-08-16' }), false);
+  assert.equal(L.sameSelection(SNAP, { ...SNAP, key: 'B2' }), false);
+  assert.equal(L.sameSelection(null, SNAP), false);
+  assert.equal(L.sameSelection(SNAP, null), false);
+});
+
+test('priceResponseIsStale: fresh response for the current selection is NOT stale', () => {
+  // reqId matches current, live selection === snapshot → paint it.
+  assert.equal(L.priceResponseIsStale(SNAP, { ...SNAP }, 3, 3), false);
+});
+
+test('priceResponseIsStale: a newer request having fired makes an older one stale', () => {
+  // Response captured reqId 2, but priceReqId has advanced to 3 → discard.
+  assert.equal(L.priceResponseIsStale(SNAP, { ...SNAP }, 2, 3), true);
+});
+
+test('priceResponseIsStale: selection changed since the request → stale (cross-bungalow)', () => {
+  // Same reqId, but the guest moved to B2 / a different range before it resolved.
+  const live = { key: 'B2', checkIn: '2026-09-01', checkOut: '2026-09-06' };
+  assert.equal(L.priceResponseIsStale(live, SNAP, 5, 5), true);
+});
+
+test('priceResponseIsStale: selection cleared (deselect) → stale', () => {
+  assert.equal(L.priceResponseIsStale(null, SNAP, 4, 4), true);
 });
 
 // ── contiguity walk ─────────────────────────────────────────────────────────
@@ -132,11 +160,13 @@ test('evaluateSelection: incomplete when no check-out', () => {
   assert.equal(v.kind, 'incomplete');
 });
 
-test('evaluateSelection: valid ≥5-night contiguous range → price', () => {
+test('evaluateSelection: valid ≥5-night contiguous range → nights, NO price', () => {
   const v = L.evaluateSelection({ key: 'B1', checkIn: '2026-08-10', checkOut: '2026-08-15' }, new Set(), TODAY);
   assert.equal(v.kind, 'valid');
   assert.equal(v.nights, 5);
-  assert.equal(v.price, 500);
+  // The price is now fetched from the Worker's /price endpoint; the pure
+  // verdict must NOT carry a client-computed price.
+  assert.equal('price' in v, false);
 });
 
 test('evaluateSelection: 4-night range → tooShort (no price)', () => {

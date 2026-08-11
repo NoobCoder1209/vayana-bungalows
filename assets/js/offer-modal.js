@@ -14,7 +14,7 @@
 // Reuses the .modal pattern (sections.css) and the focus-trap / Escape /
 // focus-restore conventions from enquiry.js.
 
-import { euro } from './offers.js';
+import { euro, offerDealLine } from './offers.js';
 import { formatOfferDates, offerPrefillDates } from './util/offer-dates.js';
 import { currentLocale, isDefaultLocale } from './util/current-locale.js';
 
@@ -90,8 +90,9 @@ function closeModal(modal) {
 
 /**
  * Populate and open the offer detail modal for one offer object.
- * offer: { label, startDate, endDate, startRaw, endRaw, rate, tier,
- *          minimumToBook, paidNights, freeNights, method }.
+ * offer: the PUBLIC shape — { label, startDate, endDate, startRaw, endRaw,
+ *          price, minimumToBook, type, (Type 2: paidNights, freeNights |
+ *          Type 1: one of discountPct/discountPerDay/discountTotal) }.
  * triggerEl: the card CTA button that opened it (for focus restore).
  */
 export function openOfferModal(offer, triggerEl) {
@@ -108,13 +109,11 @@ export function openOfferModal(offer, triggerEl) {
   const formattedDates = formatOfferDates(offer, currentLocale());
   setSlot(modal, 'dates', formattedDates);
   setSlot(modal, 'struck', ''); // DORMANT: always hidden (no priceBefore)
-  setSlot(modal, 'hero', euro(offer.rate));
+  setSlot(modal, 'hero', euro(offer.price));
   setSlot(modal, 'save', ''); // DORMANT: always hidden (no savings data)
-  const nightsText = (offer.minimumToBook >= 1 && offer.freeNights >= 1)
-    ? (offersDs.nightsDealLabel || 'stay minimum {min} nights get {free} free')
-        .replace(/\{min\}/g, String(offer.minimumToBook)).replace(/\{free\}/g, String(offer.freeNights))
-    : '';
-  setSlot(modal, 'nights', nightsText);
+  // Deal line — Type 2 nights-free or Type 1 discount framing. Shared helper
+  // with the card (offers.js offerDealLine) so the two never drift.
+  setSlot(modal, 'nights', offerDealLine(offer, offersDs));
   setSlot(modal, 'message', ''); // DORMANT: no message field in the new shape
 
   // Fixed-dates callout: show only when the offer has displayable dates. The

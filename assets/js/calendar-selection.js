@@ -16,7 +16,12 @@
 //   - Minimum 5 nights. Nights use the hotel convention:
 //     nights = (checkOut - checkIn) / 1 day. A valid <5-night range shows a red
 //     dock ("At least 5 nights required for a reservation"); a valid >=5-night
-//     range shows the gold "Stay with us only for X€" pill (X = nights * 100).
+//     range shows the gold "Stay with us only for X€" pill, where X is the total
+//     returned by the Worker's POST /price (the SINGLE price source — there is
+//     no client-side per-night fallback). The pill appears immediately on a
+//     valid selection so the guest can always enquire; the price is filled in
+//     asynchronously once /price resolves, and the pill stays priceless if it
+//     fails.
 //   - ONE selection at a time across all three bungalows: starting/among one
 //     clears any selection on the others, so only one pill is ever visible.
 //
@@ -28,10 +33,15 @@
 import { loadBookings, toIso, parseIso, availabilityFor } from './bookings-data.js';
 import { isOffSeason } from './season.js';
 import { setSelectionLookup, rerenderCalendars, goToMonth } from './availability-calendar.js';
+import { SITE_CONFIG } from './site-config.js';
 
 // ── Constants (net-new to this feature) ──────────────────────────────────────
-export const PRICE_PER_NIGHT = 100; // euros
 export const MIN_NIGHTS = 5;
+
+// Debounce window before firing POST /price on a fresh valid selection. Rapid
+// re-selections coalesce; the race guard (request id) is the correctness
+// backstop that discards any stale response.
+const PRICE_DEBOUNCE_MS = 250;
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -60,9 +70,27 @@ export function nightsBetween(checkInIso, checkOutIso) {
   return Math.round((b - a) / ONE_DAY_MS);
 }
 
-/** Price for a stay of `nights` nights, in whole euros. */
-export function priceForNights(nights) {
-  return nights * PRICE_PER_NIGHT;
+/**
+ * Two selections are the "same" when key + both ISO endpoints match. Used by
+ * the async /price flow to tell whether a response still belongs to the live
+ * selection. Null-safe.
+ */
+export function sameSelection(a, b) {
+  return !!a && !!b && a.key === b.key
+    && a.checkIn === b.checkIn && a.checkOut === b.checkOut;
+}
+
+/**
+ * The staleness gate for an async /price response: discard it when a newer
+ * request has since fired (reqId !== currentReqId) OR the live selection no
+ * longer matches the one this request was fired for. Pure so the race guard is
+ * unit-testable without the DOM/flatpickr wiring.
+ * @returns {boolean} true → the response is stale and must NOT paint the pill.
+ */
+export function priceResponseIsStale(currentSelection, snapshot, reqId, currentReqId) {
+  if (reqId !== currentReqId) return true;
+  if (!sameSelection(currentSelection, snapshot)) return true;
+  return false;
 }
 
 /**
@@ -98,7 +126,11 @@ export function isRangeContiguous(checkInIso, checkOutIso, unavailable, today) {
  *   - no check-out yet            → { kind: 'incomplete' }
  *   - range crosses a gap         → { kind: 'invalid' }  (2nd click is void)
  *   - contiguous but < MIN_NIGHTS → { kind: 'tooShort', nights }
- *   - contiguous and >= MIN_NIGHTS→ { kind: 'valid', nights, price }
+ *   - contiguous and >= MIN_NIGHTS→ { kind: 'valid', nights }
+ *
+ * The valid verdict carries NO price: the total now comes from the Worker's
+ * POST /price (fetched asynchronously by the UI layer), never from a client
+ * computation.
  */
 export function evaluateSelection(sel, unavailable, today) {
   if (!sel || !sel.checkIn || !sel.checkOut) return { kind: 'incomplete' };
@@ -107,7 +139,7 @@ export function evaluateSelection(sel, unavailable, today) {
   }
   const nights = nightsBetween(sel.checkIn, sel.checkOut);
   if (nights < MIN_NIGHTS) return { kind: 'tooShort', nights };
-  return { kind: 'valid', nights, price: priceForNights(nights) };
+  return { kind: 'valid', nights };
 }
 
 // Shape-only ISO gate (YYYY-MM-DD). Shape does NOT imply validity — see
@@ -351,22 +383,96 @@ export function initCalendarSelection() {
 
   // Build the enquiry link the pill points at. Dates plus the bungalow the pill
   // belongs to (?bungalow=1|2|3) — each pill's href is set for its OWN bungalow,
-  // so the clicked pill inherently carries the right one. Also the stay's end
-  // price (?price=<euros>) so the enquiry records what the guest is agreeing to
-  // (lands in the sheet's Price column). enquiry.js reads & validates
-  // ?checkin/?checkout and the hidden bungalow/price fields; the Worker maps the
-  // bungalow number to a "Bungalow N" label. No villa param (owner's choice for
-  // the free-text message; bungalow + price travel structured instead).
-  const enquiryHref = (sel) => {
+  // so the clicked pill inherently carries the right one. The stay's total price
+  // (?price=<euros>) is OPTIONAL and appended only once the Worker's POST /price
+  // resolves for the current selection: the price is no longer computed on the
+  // client, so the pre-/price href carries no price and the post-/price href
+  // carries the Worker's total. enquiry.js reads & validates ?checkin/?checkout
+  // and the hidden bungalow/price fields; the Worker maps the bungalow number to
+  // a "Bungalow N" label and records the price in the sheet's Price column. No
+  // villa param (owner's choice for the free-text message; bungalow + price
+  // travel structured instead).
+  const enquiryHref = (sel, price) => {
     const num = KEY_TO_NUM[sel.key] || '';
-    // Recompute the price from the same pure helpers the pill text uses, so the
-    // link and the visible "…for X€" pill can never drift. Only append when it's
-    // a real positive amount (a complete, valid >=5-night range).
-    const price = priceForNights(nightsBetween(sel.checkIn, sel.checkOut));
+    const hasPrice = typeof price === 'number' && Number.isFinite(price) && price > 0;
     const q = `checkin=${sel.checkIn}&checkout=${sel.checkOut}`
       + (num ? `&bungalow=${num}` : '')
-      + (price > 0 ? `&price=${price}` : '');
+      + (hasPrice ? `&price=${price}` : '');
     return `../enquiries/?${q}`;
+  };
+
+  // ── Async price fetch (POST /price), race-guarded + debounced ──────────────
+  // The pill's number now comes from the Worker, not the client. Two safety
+  // rails per the brief:
+  //   - Race guard: every fetch is stamped with a monotonically increasing
+  //     request id (and the selection's checkIn/checkOut/key it was fired for).
+  //     When a response resolves we only touch the pill if BOTH the id is still
+  //     the latest AND the live selection still matches — a slow earlier
+  //     response can never overwrite a newer selection's price.
+  //   - Debounce: rapid re-selections coalesce into one fetch after
+  //     PRICE_DEBOUNCE_MS; the race guard remains the correctness backstop.
+  // On ANY failure (network error, non-2xx, bad shape) we leave the pill in its
+  // no-price state — neutral label + href without ?price — and never invent a
+  // number, never throw (log a console.warn like offers.js).
+  // priceReqId is a monotonic staleness token, NOT a request count — it is
+  // bumped both when a fetch is scheduled and when it fires (so it can advance
+  // by more than one per selection). Only its monotonicity matters: any
+  // response whose captured reqId !== the current priceReqId is stale → discarded.
+  let priceReqId = 0;
+  let priceTimer = null;
+
+  const fetchPrice = (sel) => {
+    const reqId = ++priceReqId;
+    const snapshot = { key: sel.key, checkIn: sel.checkIn, checkOut: sel.checkOut };
+    const num = KEY_TO_NUM[sel.key] || '';
+    const body = { checkin: sel.checkIn, checkout: sel.checkOut };
+    if (num) body.bungalow = num;
+
+    fetch(SITE_CONFIG.endpoints.price, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        if (!data || data.ok !== true || typeof data.total !== 'number'
+          || !Number.isFinite(data.total)) {
+          throw new Error('bad-shape');
+        }
+        // Race guard (pure, unit-tested): discard if a newer fetch has since
+        // fired OR the live selection no longer matches this fetch's snapshot.
+        if (priceResponseIsStale(selection, snapshot, reqId, priceReqId)) return;
+        const pill = pillByKey.get(snapshot.key);
+        if (!pill || pill.hidden) return; // pill was hidden (selection cleared)
+        const total = data.total;
+        pill.textContent = `Stay with us only for ${total}€`;
+        pill.href = enquiryHref(snapshot, total);
+        // Reset the live region before re-announcing so screen readers still
+        // read an identical euro total when the guest re-selects the same range.
+        announce('');
+        announce(`Stay with us for ${total} euros.`);
+      })
+      .catch((err) => {
+        // No fallback number: leave the pill priceless. Never throw.
+        console.warn('[stay] could not price selection:', err.message);
+      });
+  };
+
+  // Debounced entry point: schedule a priced fetch for the current selection.
+  const schedulePrice = (sel) => {
+    if (priceTimer) clearTimeout(priceTimer);
+    // Bump the id NOW so any in-flight response fired before this reschedule is
+    // discarded even if it resolves during the debounce window.
+    priceReqId++;
+    const snapshot = { key: sel.key, checkIn: sel.checkIn, checkOut: sel.checkOut };
+    priceTimer = setTimeout(() => {
+      priceTimer = null;
+      // Only fire if the selection is still the one we scheduled for.
+      if (sameSelection(selection, snapshot)) fetchPrice(snapshot);
+    }, PRICE_DEBOUNCE_MS);
   };
 
   // Repaint the pill/dock for the current selection + repaint calendars so the
@@ -408,15 +514,23 @@ export function initCalendarSelection() {
     } else if (verdict.kind === 'valid') {
       const root = roots.find((r) => r.dataset.bungalowKey === selection.key);
       const pill = pillFor(root, selection.key);
-      pill.textContent = `Stay with us only for ${verdict.price}€`;
+      // Show the pill IMMEDIATELY without a price — the guest can always proceed
+      // to enquire even if /price is slow or fails. The neutral label is
+      // replaced with the "…for X€" total once POST /price resolves for this
+      // still-current selection (see fetchPrice). The initial href carries NO
+      // ?price; the priced href is set on resolve.
+      pill.textContent = 'Continue to enquire';
       pill.href = enquiryHref(selection);
       pill.hidden = false;
       // Italic "Selected X nights" caption, to the left of the pill.
       const count = countFor(root, selection.key, pill);
       count.textContent = `Selected ${verdict.nights} ${verdict.nights === 1 ? 'night' : 'nights'}`;
       count.hidden = false;
-      // Announce the success outcome too (not just failures — review M5).
-      announce(`Selected ${verdict.nights} nights. Stay with us for ${verdict.price} euros.`);
+      // Announce the (priceless) success outcome now; the price announcement
+      // follows when /price resolves.
+      announce(`Selected ${verdict.nights} nights.`);
+      // Fetch the real total (async, debounced, race-guarded).
+      schedulePrice(selection);
     } else {
       // incomplete (only a check-in) — no dock, no pill, clear any prior status.
       announce('');

@@ -68,6 +68,13 @@ export const SITE_CONFIG = {
     // origin as `enquiry`, different route. Public. Swap the origin here
     // (only) when a custom domain ships.
     offers: 'https://vayana-enquiries.vayana.workers.dev/offers',
+    // POST endpoint the /stay/ page calls to price a selected date range.
+    // Body { checkin, checkout, bungalow? } → { ok, total, applied }. The client
+    // reads `ok` + `total` only (`applied` is informational, currently unused).
+    // Same Worker origin as `enquiry`/`offers`; swap the origin here (only) when
+    // a custom domain ships. This is the SINGLE source of the pill price — the
+    // frontend has no hardcoded per-night fallback.
+    price: 'https://vayana-enquiries.vayana.workers.dev/price',
     turnstileSiteKey: '0x4AAAAAADpxs0HIUft5BY7_',
   },
   // The heart glyph is U+2764 followed by the U+FE0F emoji variation

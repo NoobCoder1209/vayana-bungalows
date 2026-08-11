@@ -1,0 +1,153 @@
+// Pure offer-pricing engine — no I/O, no DOM, no network. Unit-tested in
+// isolation (worker/__tests__/pricing.test.mjs). All money math lives here so
+// the Worker route (index.js /price) stays thin and the formulas never ship to
+// the browser.
+//
+// Night convention: a "night" is a date slept. A stay checkin..checkout covers
+// the nights checkin, checkin+1, …, checkout-1 (checkout day is not a night).
+// An offer window winStart..winEnd is the same: nights winStart..winEnd-1.
+//
+// The four discount mechanisms (all gated identically on "≥ minimumToBook nights
+// fall inside the window"; when eligible, ALL in-window nights are discounted and
+// nights outside the window are always charged at the plain rate):
+//   Type 2  (pay X get Y free): (W − free)·rate            + X·rate
+//   Type 1 %  (Discount%):      W·rate·(1 − pct/100)       + X·rate
+//   Type 1 /day (Discount/Day): W·(rate − perDay)          + X·rate
+//   Type 1 total (DiscountTotal): (W·rate − total)         + X·rate   (no clamp)
+// where W = in-window nights booked, X = outside nights booked.
+
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Parse an ISO 'YYYY-MM-DD' to a UTC day-count (ms/day since epoch), or null.
+// UTC-based so night counting is DST-immune. Round-trip validated so an
+// impossible date like 2026-02-30 (which Date would roll over) is rejected.
+function isoToDayNumber(iso) {
+  if (typeof iso !== 'string' || !ISO_RE.test(iso)) return null;
+  const ms = Date.parse(`${iso}T00:00:00Z`);
+  if (Number.isNaN(ms)) return null;
+  const d = new Date(ms);
+  if (d.toISOString().slice(0, 10) !== iso) return null; // reject rolled-over dates
+  return Math.round(ms / 86400000);
+}
+
+// Round a money amount to whole cents, killing binary-float dust like
+// 669.9999999999999 → 670. Applied to every mechanism's final total so the
+// value that reaches display/compare/enquiry is clean. (Orthogonal to the
+// DiscountTotal "no clamp" rule — this only fixes float hygiene, not sign.)
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
+
+/**
+ * Whole nights between two ISO dates (checkout − checkin), or null on bad
+ * input / non-positive span. Used by the /price no-offer (standard-rate) path.
+ * @param {string} checkin  ISO 'YYYY-MM-DD'
+ * @param {string} checkout ISO 'YYYY-MM-DD'
+ * @returns {number|null}
+ */
+export function nightsBetween(checkin, checkout) {
+  const ci = isoToDayNumber(checkin);
+  const co = isoToDayNumber(checkout);
+  if (ci === null || co === null) return null;
+  const n = co - ci;
+  return n > 0 ? n : null;
+}
+
+/**
+ * Split a booking (checkin..checkout) into nights inside vs outside an offer
+ * window (winStart..winEnd). All args are ISO 'YYYY-MM-DD'. End dates are the
+ * checkout day (exclusive), so a night N counts as in-window when
+ * winStartDay <= N < winEndDay.
+ * @returns {{inWindow:number, outside:number} | null} null on any bad/unparseable input.
+ */
+export function nightsInWindow(checkin, checkout, winStart, winEnd) {
+  const ci = isoToDayNumber(checkin);
+  const co = isoToDayNumber(checkout);
+  const ws = isoToDayNumber(winStart);
+  const we = isoToDayNumber(winEnd);
+  if (ci === null || co === null || ws === null || we === null) return null;
+  const booked = co - ci;          // total nights booked
+  if (booked <= 0) return null;    // non-positive stay is not a valid booking
+  // Overlap of [ci, co) with [ws, we) in whole nights.
+  const overlapStart = Math.max(ci, ws);
+  const overlapEnd = Math.min(co, we);
+  const inWindow = Math.max(0, overlapEnd - overlapStart);
+  return { inWindow, outside: booked - inWindow };
+}
+
+/**
+ * Compute the total price for a stay under an offer.
+ * @param {object} offer - { type:'Type 1'|'Type 2', rate:number, minimumToBook:number,
+ *   freeNights?, paidNights?, discountPct?, discountPerDay?, discountTotal?,
+ *   startDate, endDate } (ISO window dates).
+ * @param {string} checkin  ISO 'YYYY-MM-DD'
+ * @param {string} checkout ISO 'YYYY-MM-DD'
+ * @returns {{ total: number|null, applied: boolean }}
+ *   total=null when it can't be priced at all (bad dates / missing rate); never throws.
+ *   applied=false with a plain (rate·nights) total when the offer's eligibility fails.
+ */
+export function computeOfferPrice(offer, checkin, checkout) {
+  const fail = { total: null, applied: false };
+  if (!offer || typeof offer !== 'object') return fail;
+
+  const rate = offer.rate;
+  if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) return fail;
+
+  const split = nightsInWindow(checkin, checkout, offer.startDate, offer.endDate);
+  if (!split) return fail;
+  const { inWindow: W, outside: X } = split;
+  const bookedNights = W + X;
+  const plainTotal = round2(bookedNights * rate);
+
+  const minToBook = offer.minimumToBook;
+  const eligible =
+    typeof minToBook === 'number' && minToBook >= 1 && W >= minToBook;
+
+  if (!eligible) {
+    // Offer doesn't apply — the whole stay is plain rate.
+    return { total: plainTotal, applied: false };
+  }
+
+  const extras = X * rate;
+
+  if (offer.type === 'Type 2') {
+    const free = offer.freeNights;
+    const paid = offer.paidNights;
+    if (!Number.isFinite(free) || !Number.isFinite(paid)
+        || paid < 1 || paid + free !== minToBook) {
+      return { total: plainTotal, applied: false }; // misconfigured → plain
+    }
+    return { total: round2((W - free) * rate + extras), applied: true };
+  }
+
+  if (offer.type === 'Type 1') {
+    // Exactly one discount mechanism should be present; pick the one that is.
+    const hasPct = typeof offer.discountPct === 'number';
+    const hasPerDay = typeof offer.discountPerDay === 'number';
+    const hasTotal = typeof offer.discountTotal === 'number';
+    const count = [hasPct, hasPerDay, hasTotal].filter(Boolean).length;
+    if (count !== 1) return { total: plainTotal, applied: false };
+
+    if (hasPct) {
+      const p = offer.discountPct;
+      // Whole number 1..99 (e.g. 20 = 20% off). A fraction (0.2) or out-of-range
+      // value is a misconfigured cell → fall back to plain rate.
+      if (!(Number.isInteger(p) && p >= 1 && p <= 99)) {
+        return { total: plainTotal, applied: false };
+      }
+      return { total: round2(W * rate * (1 - p / 100) + extras), applied: true };
+    }
+    if (hasPerDay) {
+      const d = offer.discountPerDay;
+      if (!(Number.isFinite(d) && d > 0)) return { total: plainTotal, applied: false };
+      return { total: round2(W * (rate - d) + extras), applied: true };
+    }
+    // hasTotal — flat sum off the in-window portion (no clamp on sign, per spec).
+    const t = offer.discountTotal;
+    if (!(Number.isFinite(t) && t > 0)) return { total: plainTotal, applied: false };
+    return { total: round2((W * rate - t) + extras), applied: true };
+  }
+
+  // Unknown type → not an offer.
+  return { total: plainTotal, applied: false };
+}

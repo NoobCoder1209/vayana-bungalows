@@ -61,8 +61,12 @@ const i18nContext = {
     // string — the plugin substitutes `{min}` → `{min}` (global replace does
     // not re-scan inserted text), leaving the runtime token intact in the
     // baked data-nights-deal-label attribute. Keep in both locales.
+    // pct/amount are the same for the Type-1 discount templates
+    // (discount_pct/{pct}, discount_per_day/{amount}, discount_total/{amount}).
     min: '{min}',
     free: '{free}',
+    pct: '{pct}',
+    amount: '{amount}',
   },
   bg: {
     phone: '+359 88 888 8888',
@@ -79,6 +83,8 @@ const i18nContext = {
     // leaves them intact for the client-side interpolation.
     min: '{min}',
     free: '{free}',
+    pct: '{pct}',
+    amount: '{amount}',
   },
 };
 

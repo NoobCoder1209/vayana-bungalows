@@ -39,18 +39,28 @@ const container = () => {
   c.dataset = {
     ctaLabel: 'Take the offer',
     emptyMsg: 'No current offers.', errorMsg: 'Unavailable.',
-    // EN nights-deal template (Task 4 supplies the real localized value; the
-    // dataset key must stay `nightsDealLabel` so Task 4's build matches).
+    // EN deal templates (build bakes the localized values; keys must match
+    // what offerDealLine reads).
     nightsDealLabel: 'stay minimum {min} nights get {free} free',
+    discountPctLabel: '{pct}% off',
+    discountPerDayLabel: '€{amount}/night off',
+    discountTotalLabel: '€{amount} off',
   };
   return c;
 };
 
-// New offer shape (Task 1 Worker output). rate is a Number (per-night price).
+// Public offer shape (Task 3 /offers projection): generic `price`, `type`, no
+// rate/tier. Default fixture is a Type-2 pay-X-get-Y-free offer.
 const full = () => ({
   label: 'Offer 1', startDate: '2026-07-01', endDate: '2026-07-15',
-  startRaw: '2026-07-01', endRaw: '2026-07-15', rate: 100, tier: 'Mid',
-  minimumToBook: 7, paidNights: 5, freeNights: 2, method: 'V1',
+  startRaw: '2026-07-01', endRaw: '2026-07-15', price: 100,
+  minimumToBook: 7, paidNights: 5, freeNights: 2, type: 'Type 2',
+});
+// A Type-1 percentage-discount offer.
+const type1Pct = () => ({
+  label: 'Offer T1', startDate: '2026-07-01', endDate: '2026-07-31',
+  startRaw: '2026-07-01', endRaw: '2026-07-31', price: 100,
+  minimumToBook: 5, type: 'Type 1', discountPct: 20,
 });
 const txt = (card, cls) => {
   const n = card.querySelectorAll(cls);
@@ -125,7 +135,7 @@ test('hero-only offer (no nights deal) → hero present, no nights line, no divi
   const c = container();
   renderOffers(c, [{
     label: 'Bare', startDate: null, endDate: null, startRaw: null, endRaw: null,
-    rate: 120, tier: 'Low', minimumToBook: 0, paidNights: 0, freeNights: 0, method: 'V1',
+    price: 120, minimumToBook: 0, paidNights: 0, freeNights: 0, type: 'Type 2',
   }]);
   const card = c.querySelectorAll('.offer-card')[0];
   assert.equal(txt(card, '.offer-card__hero'), '€120');
@@ -151,10 +161,46 @@ test('nights line only when both minimumToBook >= 1 and freeNights >= 1', () => 
   assert.equal(card.querySelectorAll('.offer-card__nights').length, 0);
 });
 
+test('Type 1 % offer → discount framing line, no nights line', () => {
+  htmlLang = 'en';
+  const c = container();
+  renderOffers(c, [type1Pct()]);
+  const card = c.querySelectorAll('.offer-card')[0];
+  assert.equal(txt(card, '.offer-card__hero'), '€100');
+  assert.equal(txt(card, '.offer-card__nights'), '20% off');
+});
+
+test('Type 1 per-day and total offers → their discount framing', () => {
+  htmlLang = 'en';
+  const c = container();
+  renderOffers(c, [{ ...type1Pct(), discountPct: undefined, discountPerDay: 10 }]);
+  assert.equal(txt(c.querySelectorAll('.offer-card')[0], '.offer-card__nights'), '€10/night off');
+  const c2 = container();
+  renderOffers(c2, [{ ...type1Pct(), discountPct: undefined, discountTotal: 50 }]);
+  assert.equal(txt(c2.querySelectorAll('.offer-card')[0], '.offer-card__nights'), '€50 off');
+});
+
+test('Type 1 discount framing: precedence pct > perDay > total when multiple present', () => {
+  htmlLang = 'en';
+  const c = container();
+  renderOffers(c, [{ ...type1Pct(), discountPct: 20, discountPerDay: 10, discountTotal: 50 }]);
+  assert.equal(txt(c.querySelectorAll('.offer-card')[0], '.offer-card__nights'), '20% off');
+});
+
+test('Type 1 discount framing: 0 / negative / NaN discount → no line (guarded)', () => {
+  htmlLang = 'en';
+  for (const bad of [0, -5, NaN]) {
+    const c = container();
+    renderOffers(c, [{ ...type1Pct(), discountPct: bad }]);
+    assert.equal(txt(c.querySelectorAll('.offer-card')[0], '.offer-card__nights'), null,
+      `discountPct ${bad} must not render a deal line`);
+  }
+});
+
 test('all Worker-returned offers are rendered (no dead-field drop-filter)', () => {
   htmlLang = 'en';
   const c = container();
-  renderOffers(c, [full(), { ...full(), label: 'Offer 2', rate: 90 }]);
+  renderOffers(c, [full(), { ...full(), label: 'Offer 2', price: 90 }]);
   assert.equal(c.querySelectorAll('.offer-card').length, 2);
   assert.equal(c.dataset.count, '2');
 });
@@ -179,7 +225,7 @@ test('null offers → empty state, count 0', () => {
 test('€ guard: numeric rate renders as €<n> with no double symbol', () => {
   htmlLang = 'en';
   const c = container();
-  renderOffers(c, [{ ...full(), rate: 100 }]);
+  renderOffers(c, [{ ...full(), price: 100 }]);
   const card = c.querySelectorAll('.offer-card')[0];
   assert.equal(txt(card, '.offer-card__hero'), '€100');
 });
@@ -199,7 +245,7 @@ test('€ guard: a malformed offer (missing rate) renders NO hero, not "€NaN"'
   htmlLang = 'en';
   const c = container();
   // Stale/old-shape offer that slipped through with no numeric rate.
-  const { rate, ...noRate } = full();
+  const { price, ...noRate } = full();
   renderOffers(c, [noRate]);
   const card = c.querySelectorAll('.offer-card')[0];
   assert.equal(txt(card, '.offer-card__hero'), null); // hero element absent
