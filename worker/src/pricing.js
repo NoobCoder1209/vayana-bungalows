@@ -30,6 +30,14 @@ function isoToDayNumber(iso) {
   return Math.round(ms / 86400000);
 }
 
+// Round a money amount to whole cents, killing binary-float dust like
+// 669.9999999999999 → 670. Applied to every mechanism's final total so the
+// value that reaches display/compare/enquiry is clean. (Orthogonal to the
+// DiscountTotal "no clamp" rule — this only fixes float hygiene, not sign.)
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
+
 /**
  * Split a booking (checkin..checkout) into nights inside vs outside an offer
  * window (winStart..winEnd). All args are ISO 'YYYY-MM-DD'. End dates are the
@@ -51,11 +59,6 @@ export function nightsInWindow(checkin, checkout, winStart, winEnd) {
   const inWindow = Math.max(0, overlapEnd - overlapStart);
   return { inWindow, outside: booked - inWindow };
 }
-
-// Resolve the per-window-night discounted rate for a Type-1 offer from whichever
-// single discount field is present. Returns a per-night price, or the special
-// value {flat} for the DiscountTotal mechanism (a lump sum off the whole window).
-// Returns null when the offer isn't a priceable Type-1 config.
 
 /**
  * Compute the total price for a stay under an offer.
@@ -79,7 +82,7 @@ export function computeOfferPrice(offer, checkin, checkout) {
   if (!split) return fail;
   const { inWindow: W, outside: X } = split;
   const bookedNights = W + X;
-  const plainTotal = bookedNights * rate;
+  const plainTotal = round2(bookedNights * rate);
 
   const minToBook = offer.minimumToBook;
   const eligible =
@@ -95,11 +98,11 @@ export function computeOfferPrice(offer, checkin, checkout) {
   if (offer.type === 'Type 2') {
     const free = offer.freeNights;
     const paid = offer.paidNights;
-    if (typeof free !== 'number' || typeof paid !== 'number'
+    if (!Number.isFinite(free) || !Number.isFinite(paid)
         || paid < 1 || paid + free !== minToBook) {
       return { total: plainTotal, applied: false }; // misconfigured → plain
     }
-    return { total: (W - free) * rate + extras, applied: true };
+    return { total: round2((W - free) * rate + extras), applied: true };
   }
 
   if (offer.type === 'Type 1') {
@@ -112,18 +115,22 @@ export function computeOfferPrice(offer, checkin, checkout) {
 
     if (hasPct) {
       const p = offer.discountPct;
-      if (!(p > 0 && p < 100)) return { total: plainTotal, applied: false };
-      return { total: W * rate * (1 - p / 100) + extras, applied: true };
+      // Whole number 1..99 (e.g. 20 = 20% off). A fraction (0.2) or out-of-range
+      // value is a misconfigured cell → fall back to plain rate.
+      if (!(Number.isInteger(p) && p >= 1 && p <= 99)) {
+        return { total: plainTotal, applied: false };
+      }
+      return { total: round2(W * rate * (1 - p / 100) + extras), applied: true };
     }
     if (hasPerDay) {
       const d = offer.discountPerDay;
-      if (!(d > 0)) return { total: plainTotal, applied: false };
-      return { total: W * (rate - d) + extras, applied: true };
+      if (!(Number.isFinite(d) && d > 0)) return { total: plainTotal, applied: false };
+      return { total: round2(W * (rate - d) + extras), applied: true };
     }
-    // hasTotal — flat sum off the in-window portion (no clamp, per spec).
+    // hasTotal — flat sum off the in-window portion (no clamp on sign, per spec).
     const t = offer.discountTotal;
-    if (!(t > 0)) return { total: plainTotal, applied: false };
-    return { total: (W * rate - t) + extras, applied: true };
+    if (!(Number.isFinite(t) && t > 0)) return { total: plainTotal, applied: false };
+    return { total: round2((W * rate - t) + extras), applied: true };
   }
 
   // Unknown type → not an offer.

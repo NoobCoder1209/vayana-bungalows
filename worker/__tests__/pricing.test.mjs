@@ -167,3 +167,81 @@ test('non-ISO booking dates → null total, no throw', () => {
   assert.equal(r.total, null);
   assert.equal(r.applied, false);
 });
+
+// ── Type 1 % — whole-number guard + float hygiene (review findings I1/I2) ──
+
+test('Type 1 %: non-integer discountPct is misconfigured → plain price', () => {
+  // 20.5 is not a whole 1..99 → fall back to plain, not a 20.5% discount.
+  const r = computeOfferPrice(t1pct({ discountPct: 20.5 }), '2026-09-01', '2026-09-11');
+  assert.equal(r.applied, false);
+  assert.equal(r.total, 1000); // 10 nights * 100 plain
+});
+
+test('Type 1 %: a fraction like 0.2 is rejected (not treated as 0.2%)', () => {
+  const r = computeOfferPrice(t1pct({ discountPct: 0.2 }), '2026-09-01', '2026-09-11');
+  assert.equal(r.applied, false);
+  assert.equal(r.total, 1000);
+});
+
+test('Type 1 %: pct boundaries — 0 and 100 rejected, 1 and 99 accepted', () => {
+  assert.equal(computeOfferPrice(t1pct({ discountPct: 0 }), '2026-09-01', '2026-09-11').applied, false);
+  assert.equal(computeOfferPrice(t1pct({ discountPct: 100 }), '2026-09-01', '2026-09-11').applied, false);
+  assert.equal(computeOfferPrice(t1pct({ discountPct: 1 }), '2026-09-01', '2026-09-11').applied, true);
+  assert.equal(computeOfferPrice(t1pct({ discountPct: 99 }), '2026-09-01', '2026-09-11').applied, true);
+});
+
+test('Type 1 %: 33% off yields a clean cents value, not 669.9999…', () => {
+  // 10 in-window nights, rate 100, 33% off → 10*100*0.67 = 670 exactly (rounded).
+  const r = computeOfferPrice(t1pct({ discountPct: 33 }), '2026-09-01', '2026-09-11');
+  assert.equal(r.applied, true);
+  assert.equal(r.total, 670);
+});
+
+// ── Type 1 — exactly one mechanism ─────────────────────────────────────────
+
+test('Type 1: zero discount mechanisms → plain price', () => {
+  const r = computeOfferPrice(
+    { type: 'Type 1', rate: 100, minimumToBook: 5, startDate: '2026-09-01', endDate: '2026-09-30' },
+    '2026-09-01', '2026-09-11',
+  );
+  assert.equal(r.applied, false);
+  assert.equal(r.total, 1000);
+});
+
+test('Type 1: two discount mechanisms → plain price (ambiguous config)', () => {
+  const r = computeOfferPrice(
+    { type: 'Type 1', rate: 100, minimumToBook: 5, discountPct: 20, discountPerDay: 10,
+      startDate: '2026-09-01', endDate: '2026-09-30' },
+    '2026-09-01', '2026-09-11',
+  );
+  assert.equal(r.applied, false);
+  assert.equal(r.total, 1000);
+});
+
+// ── Type 1 per-day — negative per-night is not clamped (trust the sheet) ───
+
+test('Type 1 per-day: perDay > rate produces a negative per-night (no clamp)', () => {
+  // rate 100, perDay 150 → each in-window night = -50. 5 in-window → -250.
+  const r = computeOfferPrice(
+    { type: 'Type 1', rate: 100, minimumToBook: 5, discountPerDay: 150,
+      startDate: '2026-09-01', endDate: '2026-09-30' },
+    '2026-09-01', '2026-09-06',
+  );
+  assert.equal(r.applied, true);
+  assert.equal(r.total, -250);
+});
+
+// ── Type 2 — misconfiguration falls back to plain ─────────────────────────
+
+test('Type 2: paid + free !== minToBook is misconfigured → plain price', () => {
+  // minToBook 9 but paid 5 + free 3 = 8 → mismatch. Book the 9-night window.
+  const r = computeOfferPrice(t2({ paidNights: 5, freeNights: 3 }), '2026-09-01', '2026-09-10');
+  assert.equal(r.applied, false);
+  assert.equal(r.total, 900); // 9 nights * 100 plain
+});
+
+test('Type 2: paid < 1 is misconfigured → plain price', () => {
+  const r = computeOfferPrice(t2({ paidNights: 0, freeNights: 9 }), '2026-09-01', '2026-09-10');
+  assert.equal(r.applied, false);
+  assert.equal(r.total, 900);
+});
