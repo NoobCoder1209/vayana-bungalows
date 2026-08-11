@@ -43,6 +43,31 @@ export const MIN_NIGHTS = 5;
 // backstop that discards any stale response.
 const PRICE_DEBOUNCE_MS = 250;
 
+// Safety cap on the loading state: if POST /price neither resolves nor rejects
+// within this window (network stall, hung request), fall the pill back to the
+// clickable no-price state so the guest is never trapped behind a spinner that
+// never stops. On a healthy request the fetch resolves well under this.
+const PRICE_TIMEOUT_MS = 12000;
+
+// Pure presentation resolver for the /stay/ pill: given a state and (for the
+// priced state) a total, return the visible label and whether the pill is
+// disabled (non-clickable while pricing). Split out so the copy + disabled
+// logic is unit-testable without the DOM. The DOM writer in fetchPrice/
+// refreshUI applies this plus the spinner element and aria attributes.
+//   'loading'  → spinner + "Pricing your stay…", disabled (guest waits)
+//   'priced'   → "Stay with us for only X€",     enabled
+//   'fallback' → "Continue to enquire",          enabled (price unavailable)
+export function pillPresentation(state, total) {
+  if (state === 'priced' && typeof total === 'number' && Number.isFinite(total)) {
+    return { label: `Stay with us for only ${total}€`, disabled: false };
+  }
+  if (state === 'loading') {
+    return { label: 'Pricing your stay…', disabled: true };
+  }
+  // 'fallback' (and any unexpected state) → the neutral, always-clickable copy.
+  return { label: 'Continue to enquire', disabled: false };
+}
+
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 // Bungalow preference order for the home-dock deep link: when the picked range
@@ -350,11 +375,49 @@ export function initCalendarSelection() {
     pill = document.createElement('a');
     pill.className = 'stay-select__pill';
     pill.hidden = true;
+    // Belt-and-suspenders click guard: while the pill is in the disabled
+    // (loading) state we clear its href AND set aria-disabled, and CSS sets
+    // pointer-events:none — but a stray click (stale href, focus+Enter before
+    // the style applies) must still not navigate. Registered once per pill.
+    pill.addEventListener('click', (ev) => {
+      if (pill.getAttribute('aria-disabled') === 'true') ev.preventDefault();
+    });
     root.insertAdjacentElement('afterend', pill);
     pillByKey.set(key, pill);
     return pill;
   };
   const hideAllPills = () => pillByKey.forEach((p) => { p.hidden = true; });
+
+  // Apply a pill state (see pillPresentation) to the DOM: label, the spinner
+  // element (loading only), the href (priced carries ?price; loading has none),
+  // and the aria/class flags that make it non-clickable while pricing.
+  //   loading  → spinner + "Pricing your stay…", NO href, aria-disabled/busy
+  //   priced   → "Stay with us for only X€", href with ?price, enabled
+  //   fallback → "Continue to enquire", href without price, enabled
+  const applyPillState = (pill, state, snapshot, total) => {
+    const { label, disabled } = pillPresentation(state, total);
+    if (state === 'loading') {
+      pill.classList.add('stay-select__pill--loading');
+      pill.setAttribute('aria-disabled', 'true');
+      pill.setAttribute('aria-busy', 'true');
+      pill.removeAttribute('href'); // a hrefless <a> is not an activatable link
+      // Spinner span (aria-hidden — the live region announces the wait) + label.
+      pill.innerHTML = '';
+      const spinner = document.createElement('span');
+      spinner.className = 'stay-select__spinner';
+      spinner.setAttribute('aria-hidden', 'true');
+      pill.appendChild(spinner);
+      pill.appendChild(document.createTextNode(label));
+    } else {
+      pill.classList.remove('stay-select__pill--loading');
+      pill.removeAttribute('aria-disabled');
+      pill.removeAttribute('aria-busy');
+      pill.textContent = label;
+      pill.href = state === 'priced'
+        ? enquiryHref(snapshot, total)
+        : enquiryHref(snapshot);
+    }
+  };
 
   // ── Per-bungalow "Selected X nights" caption ───────────────────────────────
   // A plain italic text line (no pill/button styling), shown to the LEFT,
@@ -428,6 +491,33 @@ export function initCalendarSelection() {
     const body = { checkin: sel.checkIn, checkout: sel.checkOut };
     if (num) body.bungalow = num;
 
+    // Settle-once guard shared by resolve / reject / timeout: only the FIRST
+    // outcome for this fetch touches the pill, and only if this fetch is still
+    // the current one and its pill is still shown for the same selection.
+    let settled = false;
+    const settle = (apply) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      if (priceResponseIsStale(selection, snapshot, reqId, priceReqId)) return;
+      const pill = pillByKey.get(snapshot.key);
+      if (!pill || pill.hidden) return; // pill was hidden (selection cleared)
+      apply(pill);
+    };
+
+    // Fallback used by BOTH a failed fetch and the safety timeout: leave the
+    // pill clickable with the neutral no-price label so a slow/failed /price
+    // never traps the guest behind a permanent spinner.
+    const toFallback = () => settle((pill) => {
+      applyPillState(pill, 'fallback', snapshot);
+      announce('');
+      announce('Continue to enquire.');
+    });
+
+    // Safety timeout: a request that never resolves or rejects still clears the
+    // spinner. The fetch's own outcome (settle) will no-op afterwards.
+    const timeoutId = setTimeout(toFallback, PRICE_TIMEOUT_MS);
+
     fetch(SITE_CONFIG.endpoints.price, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -442,22 +532,19 @@ export function initCalendarSelection() {
           || !Number.isFinite(data.total)) {
           throw new Error('bad-shape');
         }
-        // Race guard (pure, unit-tested): discard if a newer fetch has since
-        // fired OR the live selection no longer matches this fetch's snapshot.
-        if (priceResponseIsStale(selection, snapshot, reqId, priceReqId)) return;
-        const pill = pillByKey.get(snapshot.key);
-        if (!pill || pill.hidden) return; // pill was hidden (selection cleared)
         const total = data.total;
-        pill.textContent = `Stay with us only for ${total}€`;
-        pill.href = enquiryHref(snapshot, total);
-        // Reset the live region before re-announcing so screen readers still
-        // read an identical euro total when the guest re-selects the same range.
-        announce('');
-        announce(`Stay with us for ${total} euros.`);
+        settle((pill) => {
+          applyPillState(pill, 'priced', snapshot, total);
+          // Reset the live region before re-announcing so screen readers still
+          // read an identical euro total when the guest re-selects the same range.
+          announce('');
+          announce(`Stay with us for ${total} euros.`);
+        });
       })
       .catch((err) => {
-        // No fallback number: leave the pill priceless. Never throw.
+        // No fallback number: neutral clickable pill. Never throw.
         console.warn('[stay] could not price selection:', err.message);
+        toFallback();
       });
   };
 
@@ -514,21 +601,21 @@ export function initCalendarSelection() {
     } else if (verdict.kind === 'valid') {
       const root = roots.find((r) => r.dataset.bungalowKey === selection.key);
       const pill = pillFor(root, selection.key);
-      // Show the pill IMMEDIATELY without a price — the guest can always proceed
-      // to enquire even if /price is slow or fails. The neutral label is
-      // replaced with the "…for X€" total once POST /price resolves for this
-      // still-current selection (see fetchPrice). The initial href carries NO
-      // ?price; the priced href is set on resolve.
-      pill.textContent = 'Continue to enquire';
-      pill.href = enquiryHref(selection);
+      // Show the pill IMMEDIATELY in the LOADING state — spinner + "Pricing
+      // your stay…", non-clickable — so the guest sees that a price is being
+      // fetched and waits for it. POST /price then resolves this to the priced
+      // state ("…for X€", clickable) or, on failure/timeout, to the neutral
+      // clickable "Continue to enquire" fallback (see fetchPrice). The loading
+      // pill carries NO href.
+      applyPillState(pill, 'loading', selection);
       pill.hidden = false;
       // Italic "Selected X nights" caption, to the left of the pill.
       const count = countFor(root, selection.key, pill);
       count.textContent = `Selected ${verdict.nights} ${verdict.nights === 1 ? 'night' : 'nights'}`;
       count.hidden = false;
-      // Announce the (priceless) success outcome now; the price announcement
-      // follows when /price resolves.
-      announce(`Selected ${verdict.nights} nights.`);
+      // Announce the selection + that pricing is underway; the price (or the
+      // fallback) announcement follows when /price settles.
+      announce(`Selected ${verdict.nights} nights. Pricing your stay…`);
       // Fetch the real total (async, debounced, race-guarded).
       schedulePrice(selection);
     } else {

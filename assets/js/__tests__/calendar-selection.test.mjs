@@ -66,7 +66,8 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'firstAvailableBungalow'),
     sliceFn(SEL_SRC, 'dayState'),
     sliceFn(SEL_SRC, 'reduceClick'),
-    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, KEY_ORDER };',
+    sliceFn(SEL_SRC, 'pillPresentation'),
+    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, pillPresentation, MIN_NIGHTS, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -362,4 +363,42 @@ test('post-load invalidation: contiguous-at-click range → invalid once booking
   // Bookings arrive: Aug 4–9 now booked → same range is invalid.
   const loaded = new Set(['2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09']);
   assert.equal(L.evaluateSelection(sel, loaded, TODAY).kind, 'invalid');
+});
+
+// ── pillPresentation: the pill's copy + disabled flag per state ──────────────
+// Pure resolver used by the DOM writer (applyPillState) to decide the /stay/
+// pill's label and whether it's clickable while POST /price is in flight.
+
+test('pillPresentation: loading → spinner label, disabled (guest waits)', () => {
+  assert.deepEqual(L.pillPresentation('loading'), {
+    label: 'Pricing your stay…', disabled: true,
+  });
+});
+
+test('pillPresentation: priced → "…for X€", enabled', () => {
+  assert.deepEqual(L.pillPresentation('priced', 375), {
+    label: 'Stay with us for only 375€', disabled: false,
+  });
+});
+
+test('pillPresentation: fallback → neutral clickable label', () => {
+  assert.deepEqual(L.pillPresentation('fallback'), {
+    label: 'Continue to enquire', disabled: false,
+  });
+});
+
+test('pillPresentation: priced with a non-finite/absent total degrades to fallback copy', () => {
+  // A "priced" state that somehow lacks a real number must NOT render "…for X€"
+  // with a blank/NaN — it falls through to the neutral clickable label.
+  for (const bad of [undefined, NaN, Infinity, '375', null]) {
+    assert.deepEqual(L.pillPresentation('priced', bad), {
+      label: 'Continue to enquire', disabled: false,
+    });
+  }
+});
+
+test('pillPresentation: unknown state → safe clickable fallback', () => {
+  assert.deepEqual(L.pillPresentation('bogus'), {
+    label: 'Continue to enquire', disabled: false,
+  });
 });
