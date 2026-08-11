@@ -1,7 +1,69 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { nightsInWindow, computeOfferPrice } from '../src/pricing.js';
+import { nightsInWindow, computeOfferPrice, standardPrice } from '../src/pricing.js';
+
+// ── standardPrice: seasonal per-night band pricing ─────────────────────────
+// Bands use month/day (year-agnostic); End is INCLUSIVE (the last night charged).
+// Real sheet bands (subset): Apr 1–30 = 75, May 1–31 = 75, Jun 1–14 = 90,
+// Jun 15–30 = 110.
+const BANDS = [
+  { startISO: '2026-04-01', endISO: '2026-04-30', rate: 75 },
+  { startISO: '2026-05-01', endISO: '2026-05-31', rate: 75 },
+  { startISO: '2026-06-01', endISO: '2026-06-14', rate: 90 },
+  { startISO: '2026-06-15', endISO: '2026-06-30', rate: 110 },
+];
+
+test('standardPrice: 28 Apr → 3 May (owner example) = 5 nights × €75 = €375', () => {
+  // nights 28,29,30 Apr + 1,2 May (checkout 3 May not a night).
+  assert.deepEqual(standardPrice('2026-04-28', '2026-05-03', BANDS), { total: 375 });
+});
+
+test('standardPrice: band-spanning stay 13 → 17 Jun = €400 (90+90+110+110)', () => {
+  // nights 13,14 Jun @ €90 + 15,16 Jun @ €110.
+  assert.deepEqual(standardPrice('2026-06-13', '2026-06-17', BANDS), { total: 400 });
+});
+
+test('standardPrice: single night', () => {
+  assert.deepEqual(standardPrice('2026-06-15', '2026-06-16', BANDS), { total: 110 });
+});
+
+test('standardPrice: year-agnostic — a 2027 April night prices same as 2026', () => {
+  assert.deepEqual(standardPrice('2027-04-10', '2027-04-13', BANDS), { total: 225 }); // 3 × 75
+});
+
+test('standardPrice: a night outside every band → null (uncovered)', () => {
+  // Oct is in no band (table is Apr–Sep). One out-of-band night poisons the whole total.
+  assert.equal(standardPrice('2026-10-01', '2026-10-03', BANDS), null);
+  // A stay that starts in-band but crosses into an uncovered night is also null.
+  assert.equal(standardPrice('2026-09-29', '2026-10-02', BANDS), null);
+});
+
+test('standardPrice: bad / non-positive date range → null, never throws', () => {
+  assert.equal(standardPrice('garbage', '2026-06-17', BANDS), null);
+  assert.equal(standardPrice('2026-06-17', '2026-06-13', BANDS), null); // reversed
+  assert.equal(standardPrice('2026-06-15', '2026-06-15', BANDS), null); // zero nights
+  assert.equal(standardPrice('2026-06-13', '2026-06-17', []), null);    // no bands
+});
+
+test('standardPrice: null / non-array bands → null (no throw)', () => {
+  assert.equal(standardPrice('2026-06-13', '2026-06-17', null), null);
+  assert.equal(standardPrice('2026-06-13', '2026-06-17', undefined), null);
+  assert.equal(standardPrice('2026-06-13', '2026-06-17', 'nope'), null);
+});
+
+test('standardPrice: overlapping bands → first match wins (deterministic)', () => {
+  const overlap = [
+    { startISO: '2026-06-01', endISO: '2026-06-30', rate: 50 },
+    { startISO: '2026-06-10', endISO: '2026-06-20', rate: 999 },
+  ];
+  // Jun 15 & 16 both fall in both bands → first (50) wins → 2 × 50 = 100.
+  assert.deepEqual(standardPrice('2026-06-15', '2026-06-17', overlap), { total: 100 });
+});
+
+test('standardPrice: impossible date (Feb 30) is rejected → null', () => {
+  assert.equal(standardPrice('2026-02-30', '2026-03-02', BANDS), null);
+});
 
 // ── nightsInWindow ────────────────────────────────────────────────────────
 // Nights are the dates slept: checkin..checkout-1. A booked night N is

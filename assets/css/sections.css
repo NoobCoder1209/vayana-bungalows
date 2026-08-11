@@ -1975,7 +1975,7 @@
   opacity: 0.45;
 }
 
-/* Off-season day (outside the May–Sep open window) — greyed + muted, no
+/* Off-season day (outside the Apr–Sep open window) — greyed + muted, no
    circle fill, non-bookable. Distinct from past: these are future dates the
    resort simply isn't open for. */
 .avail-cal__day.is-offseason {

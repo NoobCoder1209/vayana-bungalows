@@ -22,8 +22,8 @@
 import { verifyTurnstile } from './turnstile.js';
 import { validateBody } from './validation.js';
 import { appendEnquiry } from './sheets.js';
-import { toPublicOffer, getCachedOffers } from './offers.js';
-import { computeOfferPrice, nightsBetween } from './pricing.js';
+import { toPublicOffer, getCachedOffers, getCachedRateBands } from './offers.js';
+import { computeOfferPrice, standardPrice } from './pricing.js';
 import { checkRateLimit } from './rate-limit.js';
 import {
   jsonResponse,
@@ -44,11 +44,6 @@ import { hashIp } from './lib/ip-hash.js';
 const KNOWN_LOCALES = new Set(['en', 'bg']);
 const DEFAULT_LOCALE = 'en';
 
-// Standard per-night rate used by /price when NO offer applies. This is the
-// single source of the off-offer price (the frontend keeps no hardcoded
-// fallback). A future task will source this from the sheet instead of a
-// constant here.
-const STANDARD_RATE = 100;
 function sniffLocale(body) {
   if (!body || typeof body !== 'object') return DEFAULT_LOCALE;
   const raw = typeof body.locale === 'string' ? body.locale.trim() : '';
@@ -124,10 +119,13 @@ export default {
         return jsonResponse({ ok: false, error: 'bad-dates' }, 400, request, env);
       }
       let offers;
+      let bands;
       try {
+        // Both come from the same 60s cache entry (one Sheets batchGet).
         offers = await getCachedOffers(env);
+        bands = await getCachedRateBands(env);
       } catch {
-        console.error('price.offers-fetch failed');
+        console.error('price.sheet-fetch failed');
         return jsonResponse({ ok: false, error: 'price-unavailable' }, 502, request, env);
       }
       // Find the first offer that APPLIES to this selection (order = sheet order).
@@ -144,16 +142,18 @@ export default {
         }
       }
       if (!applied) {
-        // No offer applies → standard rate. Single source of the standard
-        // per-night price lives here (no hardcoded fallback on the frontend);
-        // a future task will source it from the sheet.
-        const nights = nightsBetween(checkin, checkout);
-        total = nights === null ? null : nights * STANDARD_RATE;
+        // No offer applies → standard rate: standardPrice() charges each night
+        // at its seasonal band rate (bands read from the sheet via
+        // getCachedRateBands). A night outside every band → null → the
+        // total===null 400 below (we never guess a price).
+        const std = standardPrice(checkin, checkout, bands);
+        total = std === null ? null : std.total;
       }
       if (total === null) {
-        // Reachable only for a syntactically-valid-but-impossible date (e.g.
-        // 2026-02-30): it passes the ISO regex above but nightsBetween's
-        // round-trip guard rejects it, and no offer applied. Treat as bad input.
+        // null when no offer applied AND standardPrice couldn't price the stay:
+        // either an impossible date (e.g. 2026-02-30, rejected by the round-trip
+        // guard) or a night that falls outside every seasonal rate band. Either
+        // way we refuse to guess a price → treat as bad input.
         return jsonResponse({ ok: false, error: 'bad-dates' }, 400, request, env);
       }
       // Round the total to a WHOLE euro before returning. A per-day / total

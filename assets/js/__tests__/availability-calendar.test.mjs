@@ -84,13 +84,13 @@ test('navBounds: ceil is the month of seasonMaxDate (Dec of currentYear+5)', () 
   assert.equal(ceil.getFullYear(), max.getFullYear());
 });
 
-test('isOffSeason: May–Sep are open; Oct–Apr are off-season (greyed in the grid)', () => {
-  // Open season (returns false = in season)
-  for (const m of [4, 5, 6, 7, 8]) { // May..Sep
+test('isOffSeason: Apr–Sep are open; Oct–Mar are off-season (greyed in the grid)', () => {
+  // Open season (returns false = in season) — April..September, months 3..8.
+  for (const m of [3, 4, 5, 6, 7, 8]) { // Apr..Sep
     assert.equal(isOffSeason(new Date(2026, m, 15)), false, `month ${m} should be open`);
   }
-  // Off season (returns true = greyed)
-  for (const m of [0, 1, 2, 3, 9, 10, 11]) { // Jan..Apr, Oct..Dec
+  // Off season (returns true = greyed) — Jan..Mar, Oct..Dec.
+  for (const m of [0, 1, 2, 9, 10, 11]) {
     assert.equal(isOffSeason(new Date(2026, m, 15)), true, `month ${m} should be off-season`);
   }
 });

@@ -7,7 +7,7 @@
 //   - .is-booked     — an occupied night (in `unavailable`), red circle
 //   - .is-available  — a free, future, in-season night, green circle
 //   - .is-past       — before today (muted, no circle)
-//   - .is-offseason  — a future date outside the open May–Sep season
+//   - .is-offseason  — a future date outside the open Apr–Sep season
 //                      (greyed, non-bookable)
 //
 // All calendars on the page share ONE visible (left) month. Paging any
@@ -157,7 +157,7 @@ export function goToMonth(date) {
 
 // Build ONE month's grid markup (weekday header row + day cells in week rows)
 // for the given month + availability. Returns { label, gridHtml }. Off-season
-// days (outside the open May–Sep season) render greyed/non-selectable; past
+// days (outside the open Apr–Sep season) render greyed/non-selectable; past
 // days muted; booked red; available green.
 function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungalowKey) {
   const daysInMonth = new Date(
@@ -181,7 +181,7 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungal
 
     // Precedence: past → off-season → booked → available. Off-season is a
     // greyed, non-bookable state now that navigation spans all 12 months
-    // (the open season is May–Sep; isOffSeason() covers Oct–Apr).
+    // (the open season is Apr–Sep; isOffSeason() covers Oct–Mar).
     if (date < today) {
       classes.push('is-past');
       stateLabel = 'past';
