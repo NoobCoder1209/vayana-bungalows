@@ -284,6 +284,20 @@ test('toPublicOffer never exposes High/Mid/Low or the tier name', () => {
   assert.equal(pub.price, 60); // Low tier value, but that it's "Low" is hidden
 });
 
+test('toPublicOffer carries the per-day and total Type-1 framing params', () => {
+  const perDay = toPublicOffer(parseOffers([type1({ 7: '', 8: 15 })])[0]);
+  assert.equal(perDay.discountPerDay, 15);
+  assert.equal(perDay.discountPct, undefined);
+  assert.equal(perDay.discountTotal, undefined);
+  assert.equal('rate' in perDay, false);
+
+  const total = toPublicOffer(parseOffers([type1({ 7: '', 9: 50 })])[0]);
+  assert.equal(total.discountTotal, 50);
+  assert.equal(total.discountPct, undefined);
+  assert.equal(total.discountPerDay, undefined);
+  assert.equal('rate' in total, false);
+});
+
 test('corsHeaders advertises GET alongside POST and OPTIONS', () => {
   const h = corsHeaders(req(), env);
   assert.match(h['access-control-allow-methods'], /GET/);

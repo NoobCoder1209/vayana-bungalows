@@ -8,11 +8,12 @@
 // string — never err.message — because a stack trace could carry
 // service-account private-key fragments.
 //
-// The offer objects returned here are the INTERNAL shape (they carry the raw
-// tier rate + discount parameters + type, which the /price engine needs). A
-// later task (Task 3) will add a public projection that hides the tier rates
-// and discount params before they reach the browser via /offers; until that
-// lands, the /offers route returns this internal shape unchanged.
+// The offer objects parseOffers returns are the INTERNAL shape (they carry the
+// raw tier rate + discount parameters + type, which the /price engine needs).
+// The /offers route projects each via toPublicOffer before sending to the
+// browser, exposing only a generic per-night `price` and hiding the tier NAME
+// and the High/Mid/Low structure. fetchOffers returns the internal shape;
+// the route (index.js) does the projection.
 
 import { getAccessToken } from './sheets.js';
 
@@ -206,8 +207,8 @@ export function toPublicOffer(offer) {
   if (offer.type === 'Type 2') {
     pub.paidNights = offer.paidNights;
     pub.freeNights = offer.freeNights;
-  } else {
-    // Type 1 — carry whichever single discount param is present, for framing.
+  } else if (offer.type === 'Type 1') {
+    // Carry whichever single discount param is present, for card framing.
     if (offer.discountPct !== undefined) pub.discountPct = offer.discountPct;
     if (offer.discountPerDay !== undefined) pub.discountPerDay = offer.discountPerDay;
     if (offer.discountTotal !== undefined) pub.discountTotal = offer.discountTotal;
