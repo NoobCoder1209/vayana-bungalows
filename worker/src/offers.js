@@ -1,9 +1,11 @@
-// Google Sheets read — offers table on the 'Offers' tab.
+// Google Sheets read — the 'Offers' tab.
 //
-// Reads A3:N8 (up to 6 offers) under valueRenderOption=UNFORMATTED_VALUE so
-// real dates come back as numeric serials and prices/nights as numbers, then
-// returns only the ELIGIBLE offers (see parseOffers eligibility gate below).
-// Reuses getAccessToken() from sheets.js (same JWT service-account flow, same
+// A single values.batchGet reads BOTH the offers block (A3:N8) and the seasonal
+// rate-band table (A16:C25) under valueRenderOption=UNFORMATTED_VALUE, so real
+// dates come back as numeric serials and prices/nights as numbers. parseOffers
+// returns only the ELIGIBLE offers (see its gate); parseRateBands returns the
+// seasonal per-night bands (see standardPrice in pricing.js). Reuses
+// getAccessToken() from sheets.js (same JWT service-account flow, same
 // module-scoped token cache). Like sheets.js, every catch logs ONLY a generic
 // string — never err.message — because a stack trace could carry
 // service-account private-key fragments.
@@ -12,8 +14,7 @@
 // raw tier rate + discount parameters + type, which the /price engine needs).
 // The /offers route projects each via toPublicOffer before sending to the
 // browser, exposing only a generic per-night `price` and hiding the tier NAME
-// and the High/Mid/Low structure. fetchOffers returns the internal shape;
-// the route (index.js) does the projection.
+// and the High/Mid/Low structure.
 
 import { getAccessToken } from './sheets.js';
 
@@ -266,7 +267,7 @@ export async function fetchOffers(env) {
  */
 export async function fetchSheetData(env) {
   if (!env.GSHEETS_SHEET_ID || !env.GSHEETS_OFFERS_TAB) {
-    throw new Error('offers-config-missing');
+    throw new Error('sheet-config-missing');
   }
   const token = await getAccessToken(env);
   const tab = env.GSHEETS_OFFERS_TAB.replace(/'/g, "''");
@@ -280,16 +281,16 @@ export async function fetchSheetData(env) {
   try {
     res = await fetch(url, { headers: { authorization: `Bearer ${token}` } });
   } catch {
-    throw new Error('offers-fetch-failed');
+    throw new Error('sheet-fetch-failed');
   }
   if (!res.ok) {
-    throw new Error(`offers-read-failed:${res.status}`);
+    throw new Error(`sheet-read-failed:${res.status}`);
   }
   let payload;
   try {
     payload = await res.json();
   } catch {
-    throw new Error('offers-parse-failed');
+    throw new Error('sheet-parse-failed');
   }
   // batchGet → { valueRanges: [ { values }, { values } ] } in request order.
   // A fully-empty range omits `values`; treat missing as [] (not an error).
