@@ -391,6 +391,10 @@ export function initCalendarSelection() {
   // On ANY failure (network error, non-2xx, bad shape) we leave the pill in its
   // no-price state — neutral label + href without ?price — and never invent a
   // number, never throw (log a console.warn like offers.js).
+  // priceReqId is a monotonic staleness token, NOT a request count — it is
+  // bumped both when a fetch is scheduled and when it fires (so it can advance
+  // by more than one per selection). Only its monotonicity matters: any
+  // response whose captured reqId !== the current priceReqId is stale → discarded.
   let priceReqId = 0;
   let priceTimer = null;
 
@@ -427,6 +431,9 @@ export function initCalendarSelection() {
         const total = data.total;
         pill.textContent = `Stay with us only for ${total}€`;
         pill.href = enquiryHref(snapshot, total);
+        // Reset the live region before re-announcing so screen readers still
+        // read an identical euro total when the guest re-selects the same range.
+        announce('');
         announce(`Stay with us for ${total} euros.`);
       })
       .catch((err) => {

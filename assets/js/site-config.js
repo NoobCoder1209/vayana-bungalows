@@ -69,9 +69,10 @@ export const SITE_CONFIG = {
     // (only) when a custom domain ships.
     offers: 'https://vayana-enquiries.vayana.workers.dev/offers',
     // POST endpoint the /stay/ page calls to price a selected date range.
-    // Body { checkin, checkout, bungalow? } → { ok, total, applied }. Same
-    // Worker origin as `enquiry`/`offers`; swap the origin here (only) when a
-    // custom domain ships. This is the SINGLE source of the pill price — the
+    // Body { checkin, checkout, bungalow? } → { ok, total, applied }. The client
+    // reads `ok` + `total` only (`applied` is informational, currently unused).
+    // Same Worker origin as `enquiry`/`offers`; swap the origin here (only) when
+    // a custom domain ships. This is the SINGLE source of the pill price — the
     // frontend has no hardcoded per-night fallback.
     price: 'https://vayana-enquiries.vayana.workers.dev/price',
     turnstileSiteKey: '0x4AAAAAADpxs0HIUft5BY7_',
