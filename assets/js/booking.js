@@ -92,7 +92,7 @@ function setupLinkForm(form, targetPath) {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  // Season-only pickers (shared factory) — isOffSeason greys Oct..Apr, minDate
+  // Season-only pickers (shared factory) — isOffSeason greys Oct..Mar, minDate
   // blocks the past, maxDate caps the year, disableMobile forces the grid. NO
   // per-bungalow booked-day disabling: this bar is an enquiry entry point, not
   // an availability check.
@@ -209,7 +209,7 @@ function setupBookingForm(form, modal) {
     minDate: 'today',
     dateFormat: fpDateFormat(),
     locale: fpLocale(),
-    // isOffSeason (added by the factory) greys out Oct..Apr; per-bungalow
+    // isOffSeason (added by the factory) greys out Oct..Mar; per-bungalow
     // booked dates get pushed in later via .set('disable', ...) once
     // bookings.json resolves (see loadBookings().then below). First paint is
     // already season-aware — booked-day decoration comes second.

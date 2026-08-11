@@ -3,7 +3,7 @@
 // The booking widget (both the live per-bungalow path and the /stay/ top
 // enquiry-link bar) and the enquiry form all build essentially the same
 // flatpickr instance: past dates blocked (`minDate`), the year capped
-// (`maxDate: seasonMaxDate()`), Oct–Apr greyed out (`disable: [isOffSeason]`),
+// (`maxDate: seasonMaxDate()`), Oct–Mar greyed out (`disable: [isOffSeason]`),
 // the year <input> swapped for a <select> (`onReady: attachYearDropdown`), and
 // the calendar grid forced on mobile. This factory centralises that config so
 // a change to the season contract happens in ONE place instead of three.
