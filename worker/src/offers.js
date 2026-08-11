@@ -181,11 +181,48 @@ export function parseOffers(rows) {
 }
 
 /**
- * Read the offers range from the sheet and return parsed offers.
- * Requests valueRenderOption=UNFORMATTED_VALUE so dates arrive as numeric
- * serials and prices/nights as numbers. Throws a generic Error on any
- * failure (config missing, token, fetch, parse) — the route handler turns
- * that into a 502 without leaking detail.
+ * Project an INTERNAL offer object to the PUBLIC shape sent to the browser via
+ * /offers. Hides the tier STRUCTURE — the tier name ('Mid') and the fact that
+ * three tiers (High/Mid/Low) exist and how they're derived. The resolved
+ * per-night value is exposed as a generic `price` (owner wants the selected
+ * price shown, just not which tier it is or the alternatives).
+ *
+ * Kept: label, dates, generic `price`, type, minimumToBook, and the deal
+ * framing — Type 2 → paid/free night COUNTS ('stay N get M free'); Type 1 →
+ * the single discount param for '20% off' / '€10/night' / '€50 off' framing.
+ * Dropped: `rate` (renamed to `price`), `tier`.
+ */
+export function toPublicOffer(offer) {
+  const pub = {
+    label: offer.label,
+    startDate: offer.startDate,
+    endDate: offer.endDate,
+    startRaw: offer.startRaw,
+    endRaw: offer.endRaw,
+    price: offer.rate,           // generic per-night price (tier value; tier NAME hidden)
+    minimumToBook: offer.minimumToBook,
+    type: offer.type,
+  };
+  if (offer.type === 'Type 2') {
+    pub.paidNights = offer.paidNights;
+    pub.freeNights = offer.freeNights;
+  } else {
+    // Type 1 — carry whichever single discount param is present, for framing.
+    if (offer.discountPct !== undefined) pub.discountPct = offer.discountPct;
+    if (offer.discountPerDay !== undefined) pub.discountPerDay = offer.discountPerDay;
+    if (offer.discountTotal !== undefined) pub.discountTotal = offer.discountTotal;
+  }
+  return pub;
+}
+
+/**
+ * Read the offers range from the sheet and return INTERNAL offer objects
+ * (they carry rate + discount params, which the /price engine needs). The
+ * /offers route projects each via toPublicOffer before sending to the browser;
+ * /price consumes them directly. Requests valueRenderOption=UNFORMATTED_VALUE
+ * so dates arrive as numeric serials and prices/nights as numbers. Throws a
+ * generic Error on any failure (config missing, token, fetch, parse) — the
+ * route handler turns that into a 502 without leaking detail.
  */
 export async function fetchOffers(env) {
   if (!env.GSHEETS_SHEET_ID || !env.GSHEETS_OFFERS_TAB) {

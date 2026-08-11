@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseOffers, serialToISO } from '../src/offers.js';
+import { parseOffers, serialToISO, toPublicOffer } from '../src/offers.js';
 import { jsonCacheableResponse, corsHeaders } from '../src/lib/response.js';
 
 const req = (origin = 'http://localhost:5173') =>
@@ -247,6 +247,43 @@ test('defensive: price as formatted string "100.00€" still parses positive', (
   assert.equal(out[0].rate, 100);
 });
 
+// --- toPublicOffer: hides tier structure, exposes generic price ---------
+
+test('toPublicOffer (Type 2): generic price, NO rate/tier, keeps night counts', () => {
+  const internal = parseOffers([type2()])[0];
+  const pub = toPublicOffer(internal);
+  assert.equal(pub.price, 100);       // resolved tier value as generic `price`
+  assert.equal(pub.type, 'Type 2');
+  assert.equal(pub.minimumToBook, 4);
+  assert.equal(pub.paidNights, 3);
+  assert.equal(pub.freeNights, 1);
+  assert.equal(pub.startDate, '2026-07-01');
+  assert.equal('rate' in pub, false);
+  assert.equal('tier' in pub, false);
+});
+
+test('toPublicOffer (Type 1): carries the discount framing param, no rate/tier', () => {
+  const pub = toPublicOffer(parseOffers([type1()])[0]); // 20% off
+  assert.equal(pub.price, 100);
+  assert.equal(pub.type, 'Type 1');
+  assert.equal(pub.discountPct, 20);
+  assert.equal(pub.discountPerDay, undefined);
+  assert.equal(pub.discountTotal, undefined);
+  assert.equal('rate' in pub, false);
+  assert.equal('tier' in pub, false);
+  assert.equal('paidNights' in pub, false);
+  assert.equal('freeNights' in pub, false);
+});
+
+test('toPublicOffer never exposes High/Mid/Low or the tier name', () => {
+  const pub = toPublicOffer(parseOffers([type2({ 6: 'Low' })])[0]);
+  const keys = Object.keys(pub);
+  for (const forbidden of ['rate', 'tier', 'highPrice', 'midPrice', 'lowPrice', 'high', 'mid', 'low']) {
+    assert.equal(keys.includes(forbidden), false, `must not expose ${forbidden}`);
+  }
+  assert.equal(pub.price, 60); // Low tier value, but that it's "Low" is hidden
+});
+
 test('corsHeaders advertises GET alongside POST and OPTIONS', () => {
   const h = corsHeaders(req(), env);
   assert.match(h['access-control-allow-methods'], /GET/);
@@ -330,6 +367,10 @@ test('GET /offers returns eligible offers as JSON with cache header', async () =
       assert.equal(body.offers[0].startDate, '2026-07-01');
       assert.equal(body.offers[0].endDate, '2026-07-07');
       assert.equal(body.offers[0].minimumToBook, 4);
+      // Generic price exposed; tier structure hidden — no rate/tier leak.
+      assert.equal(body.offers[0].price, 100);
+      assert.equal('rate' in body.offers[0], false);
+      assert.equal('tier' in body.offers[0], false);
     },
   );
 });

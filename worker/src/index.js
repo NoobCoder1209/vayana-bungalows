@@ -22,7 +22,7 @@
 import { verifyTurnstile } from './turnstile.js';
 import { validateBody } from './validation.js';
 import { appendEnquiry } from './sheets.js';
-import { fetchOffers } from './offers.js';
+import { fetchOffers, toPublicOffer } from './offers.js';
 import { checkRateLimit } from './rate-limit.js';
 import {
   jsonResponse,
@@ -75,7 +75,10 @@ export default {
       }
       try {
         const offers = await fetchOffers(env);
-        return jsonCacheableResponse({ ok: true, offers }, 200, request, env, 60);
+        // Project to the PUBLIC shape before sending — hides the tier name and
+        // the High/Mid/Low structure; exposes only a generic per-night `price`.
+        const publicOffers = offers.map(toPublicOffer);
+        return jsonCacheableResponse({ ok: true, offers: publicOffers }, 200, request, env, 60);
       } catch {
         // Generic log only — never echo err.message (could leak SA key fragments).
         console.error('offers.fetch failed');
