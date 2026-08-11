@@ -28,6 +28,14 @@ const OFFER_T1 = [
   'Offer T1', 46204, 46234, '', 100, '', 'Mid', 20, '', '', 5, '', '', 'Type 1',
 ];
 
+// Seasonal rate-band rows [startSerial, endSerial, price] for the no-offer path.
+// Serials: 46204=2026-07-01, 46234=2026-07-31, 46235=2026-08-01, 46265=2026-08-31.
+// July = €130/night, August = €110/night.
+const BAND_ROWS = [
+  [46204, 46234, 130], // 1–31 Jul @ 130
+  [46235, 46265, 110], // 1–31 Aug @ 110
+];
+
 function priceReq(bodyObj) {
   return new Request('https://w.example/price', {
     method: 'POST',
@@ -45,7 +53,7 @@ function withMockedSheets(valuesOrThrow, run) {
     }
     if (u.includes('sheets.googleapis.com')) {
       if (valuesOrThrow === 'ERR') return new Response('nope', { status: 500 });
-      return new Response(JSON.stringify({ valueRanges: [{ values: valuesOrThrow }, { values: [] }] }), { status: 200 });
+      return new Response(JSON.stringify({ valueRanges: [{ values: valuesOrThrow }, { values: BAND_ROWS }] }), { status: 200 });
     }
     return new Response('unexpected', { status: 418 });
   };
@@ -97,24 +105,34 @@ test('POST /price: fractional offer total is rounded to a whole euro', async () 
   });
 });
 
-test('POST /price: no offer applies → standard rate (nights * 100)', async () => {
+test('POST /price: no offer applies → standard rate from the seasonal bands', async () => {
   await withMockedSheets([OFFER_T2], async () => {
-    // Dates entirely outside the offer window → no offer; 4 nights * 100 = 400.
+    // Dates entirely outside the offer window → no offer. Book 1–5 Aug =
+    // 4 nights (1,2,3,4 Aug), August band €110 → 4 × 110 = 440.
     const res = await worker.fetch(priceReq({ checkin: '2026-08-01', checkout: '2026-08-05' }), env, {});
     const body = await res.json();
     assert.equal(body.ok, true);
     assert.equal(body.applied, false);
-    assert.equal(body.total, 400);
+    assert.equal(body.total, 440);
   });
 });
 
-test('POST /price: below-minimum in-window → offer not applied, standard rate', async () => {
+test('POST /price: below-minimum in-window → offer not applied, standard band rate', async () => {
   await withMockedSheets([OFFER_T2], async () => {
-    // Book only 2 in-window nights (< min 9) → no discount; 2 nights * 100 = 200.
+    // 2 in-window nights (< min 9) → no discount. Book 1–3 Jul = 2 nights
+    // (1,2 Jul), July band €130 → 2 × 130 = 260.
     const res = await worker.fetch(priceReq({ checkin: '2026-07-01', checkout: '2026-07-03' }), env, {});
     const body = await res.json();
     assert.equal(body.applied, false);
-    assert.equal(body.total, 200);
+    assert.equal(body.total, 260);
+  });
+});
+
+test('POST /price: no offer + a night outside all bands → 400', async () => {
+  await withMockedSheets([OFFER_T2], async () => {
+    // Sep is in no band (bands only cover Jul/Aug here) → standardPrice null → 400.
+    const res = await worker.fetch(priceReq({ checkin: '2026-09-10', checkout: '2026-09-13' }), env, {});
+    assert.equal(res.status, 400);
   });
 });
 
