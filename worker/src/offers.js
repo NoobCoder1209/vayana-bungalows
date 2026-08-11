@@ -313,8 +313,18 @@ async function getCachedData(env) {
     return cachedData;
   }
   const data = await fetchSheetData(env);
-  cachedData = data;
-  cachedExpiry = now + OFFERS_CACHE_TTL_MS;
+  // Don't cache a result with ZERO rate bands. The seasonal rate table is a
+  // permanent fixture (it always has rows), so an empty `bands` here is never
+  // the real state — it's a transient bad read (a structurally-valid batchGet
+  // whose band range came back empty). Caching it would serve empty bands for
+  // the full TTL, and every no-offer /price in that window would fail to price
+  // (→ 502) — the intermittent blank-price bug. Returning WITHOUT caching lets
+  // the very next request re-read and self-heal. Offers CAN legitimately be
+  // empty (all promotions expired), so only `bands` gates caching.
+  if (Array.isArray(data.bands) && data.bands.length > 0) {
+    cachedData = data;
+    cachedExpiry = now + OFFERS_CACHE_TTL_MS;
+  }
   return data;
 }
 
@@ -327,11 +337,16 @@ export async function getCachedOffers(env) {
 }
 
 /**
- * Return the parsed seasonal rate bands, from the same 60s cache as the offers
- * (shares the single batchGet). Used by /price's no-offer standard-rate path.
+ * Return BOTH parsed offers and rate bands from the single 60s cache entry in
+ * ONE call. This is the accessor /price uses: reading offers and bands through
+ * two separate getCachedData calls would trigger a redundant second Sheets
+ * read within the same request on any not-cached state (cold cache, or the
+ * empty-bands case that deliberately isn't cached). This reads once. Throws on
+ * a read failure (route → 502), same as getCachedOffers.
  */
-export async function getCachedRateBands(env) {
-  return (await getCachedData(env)).bands;
+export async function getCachedSheetData(env) {
+  const { offers, bands } = await getCachedData(env);
+  return { offers, bands };
 }
 
 // For tests only — wipe the cache so a fresh isolate is simulated.

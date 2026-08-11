@@ -199,7 +199,10 @@ function withCountingSheets(values, run) {
     }
     if (u.includes('sheets.googleapis.com')) {
       sheetsHits += 1;
-      return new Response(JSON.stringify({ valueRanges: [{ values }, { values: [] }] }), { status: 200 });
+      // Non-empty bands so the cache actually warms — getCachedData refuses to
+      // cache a zero-band read (see the self-heal test below), which would
+      // otherwise make every call re-read and defeat these cache assertions.
+      return new Response(JSON.stringify({ valueRanges: [{ values }, { values: BAND_ROWS }] }), { status: 200 });
     }
     return new Response('unexpected', { status: 418 });
   };
@@ -218,8 +221,49 @@ test('POST /price: second call within 60s serves offers from cache (no extra she
   });
 });
 
-test('POST /price: warm cache is still served even if the sheet later errors', async () => {
+test('POST /price: a zero-band read is NOT cached — the next call re-reads and self-heals', async () => {
+  // Regression guard for the intermittent blank-price bug. A transient bad
+  // read returns empty bands; it must not stick for the 60s TTL. While the
+  // transient lasts, no-offer stays 502 (and nothing caches); once the sheet
+  // returns real bands, the very next request prices correctly instead of
+  // 502-ing for a full minute.
   const real = globalThis.fetch;
+  let phase = 'bad';   // flip to 'good' to simulate the transient clearing
+  let reads = 0;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('oauth2.googleapis.com/token')) {
+      return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
+    }
+    if (u.includes('sheets.googleapis.com')) {
+      reads += 1;
+      const bandRange = phase === 'bad' ? { values: [] } : { values: BAND_ROWS };
+      return new Response(JSON.stringify({ valueRanges: [{ values: [OFFER_T2] }, bandRange] }), { status: 200 });
+    }
+    return new Response('unexpected', { status: 418 });
+  };
+  try {
+    // Transient bad read → no-offer Aug stay 502s, and the empty result is not
+    // cached (so it can't stick). Independent of how many reads happened.
+    const r1 = await worker.fetch(priceReq({ checkin: '2026-08-01', checkout: '2026-08-05' }), env, {});
+    assert.equal(r1.status, 502);
+    // Transient clears. Because the empty read was never cached, the next call
+    // re-reads and now sees real bands → prices (4 nights × €110 = 440).
+    phase = 'good';
+    const r2 = await worker.fetch(priceReq({ checkin: '2026-08-01', checkout: '2026-08-05' }), env, {});
+    assert.equal(r2.status, 200);
+    assert.equal((await r2.json()).total, 440);
+    // That good read WAS cached (non-empty) → a third call does not re-read.
+    const readsAfterHeal = reads;
+    const r3 = await worker.fetch(priceReq({ checkin: '2026-08-01', checkout: '2026-08-05' }), env, {});
+    assert.equal(r3.status, 200);
+    assert.equal(reads, readsAfterHeal, 'third call served from warm cache (no extra read)');
+  } finally {
+    globalThis.fetch = real; _resetForTests(); _resetOffersCacheForTests();
+  }
+});
+
+test('POST /price: warm cache is still served even if the sheet later errors', async () => {  const real = globalThis.fetch;
   let mode = 'ok';
   globalThis.fetch = async (url) => {
     const u = String(url);
@@ -228,7 +272,7 @@ test('POST /price: warm cache is still served even if the sheet later errors', a
     }
     if (u.includes('sheets.googleapis.com')) {
       return mode === 'ok'
-        ? new Response(JSON.stringify({ valueRanges: [{ values: [OFFER_T2] }, { values: [] }] }), { status: 200 })
+        ? new Response(JSON.stringify({ valueRanges: [{ values: [OFFER_T2] }, { values: BAND_ROWS }] }), { status: 200 })
         : new Response('nope', { status: 500 });
     }
     return new Response('unexpected', { status: 418 });

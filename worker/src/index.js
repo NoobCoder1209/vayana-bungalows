@@ -22,7 +22,7 @@
 import { verifyTurnstile } from './turnstile.js';
 import { validateBody } from './validation.js';
 import { appendEnquiry } from './sheets.js';
-import { toPublicOffer, getCachedOffers, getCachedRateBands } from './offers.js';
+import { toPublicOffer, getCachedOffers, getCachedSheetData } from './offers.js';
 import { computeOfferPrice, standardPrice } from './pricing.js';
 import { checkRateLimit } from './rate-limit.js';
 import {
@@ -121,9 +121,10 @@ export default {
       let offers;
       let bands;
       try {
-        // Both come from the same 60s cache entry (one Sheets batchGet).
-        offers = await getCachedOffers(env);
-        bands = await getCachedRateBands(env);
+        // Both come from the same 60s cache entry via ONE getCachedData call
+        // (one Sheets batchGet) — reading them separately would double-read on
+        // a cold/not-cached state.
+        ({ offers, bands } = await getCachedSheetData(env));
       } catch {
         console.error('price.sheet-fetch failed');
         return jsonResponse({ ok: false, error: 'price-unavailable' }, 502, request, env);
