@@ -371,34 +371,35 @@ test('post-load invalidation: contiguous-at-click range → invalid once booking
 
 test('pillPresentation: loading → spinner label, disabled (guest waits)', () => {
   assert.deepEqual(L.pillPresentation('loading'), {
-    label: 'Pricing your stay…', disabled: true,
+    label: 'Pricing your stay…', disabled: true, priced: false,
   });
 });
 
-test('pillPresentation: priced → "…for X€", enabled', () => {
+test('pillPresentation: priced → "…for X€", enabled, priced', () => {
   assert.deepEqual(L.pillPresentation('priced', 375), {
-    label: 'Stay with us for only 375€', disabled: false,
+    label: 'Stay with us for only 375€', disabled: false, priced: true,
   });
 });
 
-test('pillPresentation: fallback → neutral clickable label', () => {
+test('pillPresentation: fallback → neutral clickable label, not priced', () => {
   assert.deepEqual(L.pillPresentation('fallback'), {
-    label: 'Continue to enquire', disabled: false,
+    label: 'Continue to enquire', disabled: false, priced: false,
   });
 });
 
 test('pillPresentation: priced with a non-finite/absent total degrades to fallback copy', () => {
   // A "priced" state that somehow lacks a real number must NOT render "…for X€"
-  // with a blank/NaN — it falls through to the neutral clickable label.
+  // with a blank/NaN — it falls through to the neutral clickable label, and is
+  // NOT marked priced (so the href won't append ?price).
   for (const bad of [undefined, NaN, Infinity, '375', null]) {
     assert.deepEqual(L.pillPresentation('priced', bad), {
-      label: 'Continue to enquire', disabled: false,
+      label: 'Continue to enquire', disabled: false, priced: false,
     });
   }
 });
 
 test('pillPresentation: unknown state → safe clickable fallback', () => {
   assert.deepEqual(L.pillPresentation('bogus'), {
-    label: 'Continue to enquire', disabled: false,
+    label: 'Continue to enquire', disabled: false, priced: false,
   });
 });

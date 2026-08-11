@@ -16,12 +16,14 @@
 //   - Minimum 5 nights. Nights use the hotel convention:
 //     nights = (checkOut - checkIn) / 1 day. A valid <5-night range shows a red
 //     dock ("At least 5 nights required for a reservation"); a valid >=5-night
-//     range shows the gold "Stay with us only for X€" pill, where X is the total
-//     returned by the Worker's POST /price (the SINGLE price source — there is
-//     no client-side per-night fallback). The pill appears immediately on a
-//     valid selection so the guest can always enquire; the price is filled in
-//     asynchronously once /price resolves, and the pill stays priceless if it
-//     fails.
+//     range shows the gold pill. On selection the pill appears in a LOADING
+//     state — a spinner + "Pricing your stay…", non-clickable — while the
+//     Worker's POST /price (the SINGLE price source; no client-side per-night
+//     fallback) computes the total. It then resolves to "Stay with us for only
+//     X€" (clickable, href carries ?price), or, if /price fails or a safety
+//     timeout elapses, falls back to a clickable "Continue to enquire" with no
+//     price (so a slow/failed lookup never traps the guest). See
+//     pillPresentation / applyPillState / fetchPrice.
 //   - ONE selection at a time across all three bungalows: starting/among one
 //     clears any selection on the others, so only one pill is ever visible.
 //
@@ -50,22 +52,26 @@ const PRICE_DEBOUNCE_MS = 250;
 const PRICE_TIMEOUT_MS = 12000;
 
 // Pure presentation resolver for the /stay/ pill: given a state and (for the
-// priced state) a total, return the visible label and whether the pill is
-// disabled (non-clickable while pricing). Split out so the copy + disabled
-// logic is unit-testable without the DOM. The DOM writer in fetchPrice/
-// refreshUI applies this plus the spinner element and aria attributes.
-//   'loading'  → spinner + "Pricing your stay…", disabled (guest waits)
-//   'priced'   → "Stay with us for only X€",     enabled
-//   'fallback' → "Continue to enquire",          enabled (price unavailable)
+// priced state) a total, return the label, whether the pill is `disabled`
+// (non-clickable while pricing), and whether it's `priced` (carries a real
+// total → the href should append ?price). Split out so ALL of the copy /
+// clickability / price-ness logic lives in one testable place; applyPillState
+// (the DOM writer) drives its branches purely off these fields — it does not
+// re-derive the state itself.
+//   'loading'  → spinner + "Pricing your stay…", disabled, not priced
+//   'priced'   → "Stay with us for only X€",     enabled,  priced
+//   'fallback' → "Continue to enquire",          enabled,  not priced
+// A 'priced' state whose total isn't a finite number degrades to the neutral
+// fallback (enabled, not priced) — never renders "…for €NaN".
 export function pillPresentation(state, total) {
   if (state === 'priced' && typeof total === 'number' && Number.isFinite(total)) {
-    return { label: `Stay with us for only ${total}€`, disabled: false };
+    return { label: `Stay with us for only ${total}€`, disabled: false, priced: true };
   }
   if (state === 'loading') {
-    return { label: 'Pricing your stay…', disabled: true };
+    return { label: 'Pricing your stay…', disabled: true, priced: false };
   }
   // 'fallback' (and any unexpected state) → the neutral, always-clickable copy.
-  return { label: 'Continue to enquire', disabled: false };
+  return { label: 'Continue to enquire', disabled: false, priced: false };
 }
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -395,8 +401,10 @@ export function initCalendarSelection() {
   //   priced   → "Stay with us for only X€", href with ?price, enabled
   //   fallback → "Continue to enquire", href without price, enabled
   const applyPillState = (pill, state, snapshot, total) => {
-    const { label, disabled } = pillPresentation(state, total);
-    if (state === 'loading') {
+    const { label, disabled, priced } = pillPresentation(state, total);
+    if (disabled) {
+      // Loading: spinner + label, non-clickable (no href, aria-disabled/busy;
+      // CSS adds pointer-events:none via --loading).
       pill.classList.add('stay-select__pill--loading');
       pill.setAttribute('aria-disabled', 'true');
       pill.setAttribute('aria-busy', 'true');
@@ -409,13 +417,13 @@ export function initCalendarSelection() {
       pill.appendChild(spinner);
       pill.appendChild(document.createTextNode(label));
     } else {
+      // Enabled (priced or fallback): plain label + href. Only a priced result
+      // appends ?price (enquiryHref re-guards the number regardless).
       pill.classList.remove('stay-select__pill--loading');
       pill.removeAttribute('aria-disabled');
       pill.removeAttribute('aria-busy');
       pill.textContent = label;
-      pill.href = state === 'priced'
-        ? enquiryHref(snapshot, total)
-        : enquiryHref(snapshot);
+      pill.href = priced ? enquiryHref(snapshot, total) : enquiryHref(snapshot);
     }
   };
 
