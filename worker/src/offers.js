@@ -1,18 +1,23 @@
 // Google Sheets read — offers table on the 'Offers' tab.
 //
-// Reads A3:M8 (up to 6 offers) under valueRenderOption=UNFORMATTED_VALUE so
+// Reads A3:N8 (up to 6 offers) under valueRenderOption=UNFORMATTED_VALUE so
 // real dates come back as numeric serials and prices/nights as numbers, then
 // returns only the ELIGIBLE offers (see parseOffers eligibility gate below).
 // Reuses getAccessToken() from sheets.js (same JWT service-account flow, same
 // module-scoped token cache). Like sheets.js, every catch logs ONLY a generic
 // string — never err.message — because a stack trace could carry
 // service-account private-key fragments.
+//
+// The offer objects returned here are the INTERNAL shape (they carry the raw
+// tier rate + discount parameters + type, which the /price engine needs). The
+// public /offers response projects these to a generic shape that hides the
+// tier rates and discount params (see toPublicOffer / the route handler).
 
 import { getAccessToken } from './sheets.js';
 
 const SHEETS_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
-// Column layout of the A3:M8 range, as row-array indices (A is index 0).
+// Column layout of the A3:N8 range, as row-array indices (A is index 0).
 const COL = {
   label: 0,          // A "Offer 1" (display/debug)
   startDate: 1,      // B real date serial | free text | blank
@@ -21,12 +26,13 @@ const COL = {
   midPrice: 4,       // E per-night Mid tier
   lowPrice: 5,       // F per-night Low tier
   priceTier: 6,      // G "High" | "Mid" | "Low"
-  minimumToBook: 7,  // H number
-  paidNights: 8,     // I number
-  freeNights: 9,     // J number (= H − I)
-  v1: 10,            // K TRUE/FALSE
-  v2: 11,            // L TRUE/FALSE
-  enabled: 12,       // M only literal true enables
+  discountPct: 7,    // H Type-1: whole-number % (20 = 20% off)
+  discountPerDay: 8, // I Type-1: fixed € off per in-window night
+  discountTotal: 9,  // J Type-1: flat € off the in-window portion
+  minimumToBook: 10, // K number
+  paidNights: 11,    // L number
+  freeNights: 12,    // M number (= K − L)
+  type: 13,          // N "Type 1" | "Type 2" | empty(hide)
 };
 
 // Google Sheets serial epoch is 1899-12-30 (UTC). day 1 = 1899-12-31.
@@ -64,12 +70,14 @@ function toNumber(raw) {
   return null;
 }
 
-// A TRUE/FALSE cell → boolean. Accepts real booleans (UNFORMATTED_VALUE) and
-// string forms ('TRUE'/'true'). Anything else → false.
-function toBool(raw) {
-  if (typeof raw === 'boolean') return raw;
-  if (typeof raw === 'string') return raw.trim().toLowerCase() === 'true';
-  return false;
+// The Type 1/2 cell (column N) → 'Type 1' | 'Type 2' | null. Case/space
+// insensitive; anything else (blank, junk) → null, which hides the offer.
+function resolveType(raw) {
+  if (typeof raw !== 'string') return null;
+  const t = raw.trim().toLowerCase();
+  if (t === 'type 1') return 'Type 1';
+  if (t === 'type 2') return 'Type 2';
+  return null;
 }
 
 // Map a Price Tier label to its canonical form + the price-column index that
@@ -85,15 +93,19 @@ function resolveTier(raw) {
 }
 
 /**
- * Map + filter the raw Sheets `values` 2-D array into Offer objects.
- * An offer is returned ONLY if ALL eligibility rules hold; else it is
- * silently dropped (never throws). See task brief for the exact rules:
- *  1. Enabled (M) trimmed+lowercased === 'true'.
+ * Map + filter the raw Sheets `values` 2-D array into internal Offer objects.
+ * An offer is returned ONLY if ALL eligibility rules hold; else it is silently
+ * dropped (never throws). Rules:
+ *  1. Type 1/2 (N) resolves to 'Type 1' or 'Type 2' (blank/junk → drop).
  *  2. Real Start (B) AND End (C) dates (both parse to real serials).
  *  3. Price Tier (G) ∈ {High,Mid,Low} AND matching D/E/F price > 0 → rate.
- *  4. Exactly one method: K→V1, L→V2, both→V1, neither→drop.
- *  5. minimumToBook ≥ 1 AND paidNights ≥ 1.
- * Order preserved.
+ *  4. minimumToBook (K) ≥ 1.
+ *  5a. Type 1 → EXACTLY ONE of Discount% (H) / per-day (I) / total (J) present,
+ *      and valid (%: whole 1..99; per-day/total: > 0).
+ *  5b. Type 2 → paidNights (L) ≥ 1 AND paid + free === minimumToBook.
+ * Order preserved. The returned object is the INTERNAL shape (carries rate +
+ * the discount param + type); the /offers route projects it to a public shape
+ * that omits rate/tier/discount params.
  */
 export function parseOffers(rows) {
   if (!Array.isArray(rows)) return [];
@@ -101,13 +113,9 @@ export function parseOffers(rows) {
   for (const row of rows) {
     if (!Array.isArray(row)) continue;
 
-    // 1. Enabled — accept a real boolean TRUE (checkbox / UNFORMATTED_VALUE)
-    //    OR the string 'true'. Uses the same toBool() as the V1/V2 flags so a
-    //    checkbox-typed Enabled cell isn't silently rejected (it arrives as a
-    //    JS boolean under valueRenderOption=UNFORMATTED_VALUE, not "TRUE").
-    if (!toBool(row[COL.enabled])) {
-      continue;
-    }
+    // 1. Type 1/2 (N) — the enable + method selector in one dropdown.
+    const type = resolveType(row[COL.type]);
+    if (!type) continue;
 
     // 2. Real Start AND End dates
     const startDate = serialToISO(row[COL.startDate]);
@@ -120,39 +128,53 @@ export function parseOffers(rows) {
     const rate = toNumber(row[resolved.col]);
     if (rate === null || rate <= 0) continue;
 
-    // 4. Exactly one method (both → V1)
-    const v1 = toBool(row[COL.v1]);
-    const v2 = toBool(row[COL.v2]);
-    let method;
-    if (v1) method = 'V1';
-    else if (v2) method = 'V2';
-    else continue;
-
-    // 5. minimumToBook ≥ 1 AND paidNights ≥ 1
+    // 4. minimumToBook ≥ 1
     const minimumToBook = toNumber(row[COL.minimumToBook]);
-    const paidNights = toNumber(row[COL.paidNights]);
     if (minimumToBook === null || minimumToBook < 1) continue;
-    if (paidNights === null || paidNights < 1) continue;
 
+    // Common numeric fields
+    const paidNights = toNumber(row[COL.paidNights]);
     const freeNights = toNumber(row[COL.freeNights]);
-    const label = typeof row[COL.label] === 'string' ? row[COL.label] : String(row[COL.label] ?? '');
+    const label = typeof row[COL.label] === 'string'
+      ? row[COL.label] : String(row[COL.label] ?? '');
 
-    offers.push({
+    const base = {
       label,
       startDate,
       endDate,
-      // For eligible offers B/C are real dates, so raw mirrors the formatted
-      // ISO source. The field stays for the frontend's free-text display path
-      // (free-text offers are dropped, so raw is always the ISO here).
+      // For eligible offers B/C are real dates, so raw mirrors the ISO source.
       startRaw: startDate,
       endRaw: endDate,
       rate,
       tier: resolved.tier,
       minimumToBook,
-      paidNights,
-      freeNights,
-      method,
-    });
+      type,
+    };
+
+    if (type === 'Type 2') {
+      // 5b. pay-X-get-Y-free: paid ≥ 1 and paid + free === minimumToBook.
+      if (paidNights === null || paidNights < 1) continue;
+      if (freeNights === null || paidNights + freeNights !== minimumToBook) continue;
+      offers.push({ ...base, paidNights, freeNights });
+      continue;
+    }
+
+    // type === 'Type 1' — 5a. exactly one discount mechanism, valid.
+    const pct = toNumber(row[COL.discountPct]);
+    const perDay = toNumber(row[COL.discountPerDay]);
+    const total = toNumber(row[COL.discountTotal]);
+    const present = [pct, perDay, total].filter((v) => v !== null);
+    if (present.length !== 1) continue;
+    if (pct !== null) {
+      if (!(Number.isInteger(pct) && pct >= 1 && pct <= 99)) continue;
+      offers.push({ ...base, discountPct: pct });
+    } else if (perDay !== null) {
+      if (!(perDay > 0)) continue;
+      offers.push({ ...base, discountPerDay: perDay });
+    } else {
+      if (!(total > 0)) continue;
+      offers.push({ ...base, discountTotal: total });
+    }
   }
   return offers;
 }
@@ -170,7 +192,7 @@ export async function fetchOffers(env) {
   }
   const token = await getAccessToken(env);
   const range = encodeURIComponent(
-    `'${env.GSHEETS_OFFERS_TAB.replace(/'/g, "''")}'!A3:M8`,
+    `'${env.GSHEETS_OFFERS_TAB.replace(/'/g, "''")}'!A3:N8`,
   );
   const url =
     `${SHEETS_BASE}/${encodeURIComponent(env.GSHEETS_SHEET_ID)}` +
