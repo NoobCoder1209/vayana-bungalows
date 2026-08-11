@@ -151,3 +151,56 @@ export function computeOfferPrice(offer, checkin, checkout) {
   // Unknown type → not an offer.
   return { total: plainTotal, applied: false };
 }
+
+// Month/day ordinal (MM*100 + DD) of an ISO date, or null. Used to match a
+// booked night against a rate band IGNORING the year — the sheet's bands are a
+// per-season template (Apr–Sep) that applies to any booking year. All bands sit
+// within one calendar year (no band wraps Dec→Jan), so a plain numeric compare
+// on the ordinal is a correct "is this day within [start,end]" test.
+function isoMonthDay(iso) {
+  if (typeof iso !== 'string' || !ISO_RE.test(iso)) return null;
+  const m = Number(iso.slice(5, 7));
+  const d = Number(iso.slice(8, 10));
+  return m * 100 + d;
+}
+
+/**
+ * Standard (no-offer) price for a stay: each booked night (checkin..checkout-1)
+ * is charged at the seasonal band whose date range covers that night's
+ * month/day. Band End is INCLUSIVE (the last night charged). Matching ignores
+ * the year (bands are a template), first matching band wins. The total is the
+ * sum across all nights, rounded to cents.
+ * @param {string} checkin  ISO 'YYYY-MM-DD'
+ * @param {string} checkout ISO 'YYYY-MM-DD'
+ * @param {Array<{startISO,endISO,rate}>} bands
+ * @returns {{ total:number } | null}  null if dates are bad/non-positive OR any
+ *   booked night falls in no band (caller should 400 — never guess a price).
+ */
+export function standardPrice(checkin, checkout, bands) {
+  const ci = isoToDayNumber(checkin);
+  const co = isoToDayNumber(checkout);
+  if (ci === null || co === null || co <= ci) return null;
+  if (!Array.isArray(bands) || bands.length === 0) return null;
+
+  // Precompute each band's month/day ordinal range once.
+  const ranges = [];
+  for (const b of bands) {
+    const s = isoMonthDay(b.startISO);
+    const e = isoMonthDay(b.endISO);
+    if (s === null || e === null || typeof b.rate !== 'number' || !Number.isFinite(b.rate)) {
+      continue; // skip a malformed band defensively (parseRateBands already filters)
+    }
+    ranges.push({ s, e, rate: b.rate });
+  }
+
+  let total = 0;
+  // Walk each night by its UTC day-number, deriving that day's month/day.
+  for (let day = ci; day < co; day += 1) {
+    const iso = new Date(day * 86400000).toISOString().slice(0, 10);
+    const md = isoMonthDay(iso);
+    const band = ranges.find((r) => r.s <= md && md <= r.e);
+    if (!band) return null; // an uncovered night → cannot price the stay
+    total += band.rate;
+  }
+  return { total: round2(total) };
+}
