@@ -46,6 +46,25 @@ test('standardPrice: bad / non-positive date range → null, never throws', () =
   assert.equal(standardPrice('2026-06-13', '2026-06-17', []), null);    // no bands
 });
 
+test('standardPrice: null / non-array bands → null (no throw)', () => {
+  assert.equal(standardPrice('2026-06-13', '2026-06-17', null), null);
+  assert.equal(standardPrice('2026-06-13', '2026-06-17', undefined), null);
+  assert.equal(standardPrice('2026-06-13', '2026-06-17', 'nope'), null);
+});
+
+test('standardPrice: overlapping bands → first match wins (deterministic)', () => {
+  const overlap = [
+    { startISO: '2026-06-01', endISO: '2026-06-30', rate: 50 },
+    { startISO: '2026-06-10', endISO: '2026-06-20', rate: 999 },
+  ];
+  // Jun 15 & 16 both fall in both bands → first (50) wins → 2 × 50 = 100.
+  assert.deepEqual(standardPrice('2026-06-15', '2026-06-17', overlap), { total: 100 });
+});
+
+test('standardPrice: impossible date (Feb 30) is rejected → null', () => {
+  assert.equal(standardPrice('2026-02-30', '2026-03-02', BANDS), null);
+});
+
 // ── nightsInWindow ────────────────────────────────────────────────────────
 // Nights are the dates slept: checkin..checkout-1. A booked night N is
 // "in-window" when winStart <= N < winEnd (End = checkout day, exclusive).

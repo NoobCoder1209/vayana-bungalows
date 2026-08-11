@@ -39,6 +39,19 @@ function round2(n) {
 }
 
 /**
+ * Parse a booking's two ISO dates into UTC day-numbers, requiring a positive
+ * night span (checkout strictly after checkin). Shared by the functions that
+ * price/count a whole stay so the "parse + reject non-positive" contract lives
+ * in one place. @returns {{ci:number, co:number} | null}
+ */
+function parseNightSpan(checkin, checkout) {
+  const ci = isoToDayNumber(checkin);
+  const co = isoToDayNumber(checkout);
+  if (ci === null || co === null || co <= ci) return null;
+  return { ci, co };
+}
+
+/**
  * Whole nights between two ISO dates (checkout − checkin), or null on bad
  * input / non-positive span. Used by the /price no-offer (standard-rate) path.
  * @param {string} checkin  ISO 'YYYY-MM-DD'
@@ -46,11 +59,8 @@ function round2(n) {
  * @returns {number|null}
  */
 export function nightsBetween(checkin, checkout) {
-  const ci = isoToDayNumber(checkin);
-  const co = isoToDayNumber(checkout);
-  if (ci === null || co === null) return null;
-  const n = co - ci;
-  return n > 0 ? n : null;
+  const span = parseNightSpan(checkin, checkout);
+  return span ? span.co - span.ci : null;
 }
 
 /**
@@ -177,9 +187,9 @@ function isoMonthDay(iso) {
  *   booked night falls in no band (caller should 400 — never guess a price).
  */
 export function standardPrice(checkin, checkout, bands) {
-  const ci = isoToDayNumber(checkin);
-  const co = isoToDayNumber(checkout);
-  if (ci === null || co === null || co <= ci) return null;
+  const span = parseNightSpan(checkin, checkout);
+  if (!span) return null;
+  const { ci, co } = span;
   if (!Array.isArray(bands) || bands.length === 0) return null;
 
   // Precompute each band's month/day ordinal range once.
