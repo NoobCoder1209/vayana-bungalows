@@ -90,8 +90,9 @@ function closeModal(modal) {
 
 /**
  * Populate and open the offer detail modal for one offer object.
- * offer: { label, startDate, endDate, startRaw, endRaw, rate, tier,
- *          minimumToBook, paidNights, freeNights, method }.
+ * offer: the PUBLIC shape — { label, startDate, endDate, startRaw, endRaw,
+ *          price, minimumToBook, type, (Type 2: paidNights, freeNights |
+ *          Type 1: one of discountPct/discountPerDay/discountTotal) }.
  * triggerEl: the card CTA button that opened it (for focus restore).
  */
 export function openOfferModal(offer, triggerEl) {

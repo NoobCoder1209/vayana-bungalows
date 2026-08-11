@@ -45,7 +45,12 @@ function makeModal() {
 }
 
 let currentModal = makeModal();
-const offersContainer = { dataset: { nightsDealLabel: 'stay minimum {min} nights get {free} free' } };
+const offersContainer = { dataset: {
+  nightsDealLabel: 'stay minimum {min} nights get {free} free',
+  discountPctLabel: '{pct}% off',
+  discountPerDayLabel: '€{amount}/night off',
+  discountTotalLabel: '€{amount} off',
+} };
 
 globalThis.window = { location: { origin: 'https://example.test' } };
 globalThis.document = {
@@ -148,6 +153,21 @@ test('openOfferModal populates dates/hero/nights slots; struck/save stay hidden'
   assert.equal(currentModal._slots.callout.hidden, false);
   // Take anchor got a prefilled href.
   assert.ok(currentModal._take.getAttribute('href').includes('/enquiries/'));
+});
+
+test('openOfferModal renders Type-1 discount framing in the nights slot', () => {
+  htmlLang = 'en';
+  currentModal = makeModal();
+  // A Type-1 % offer routes through the SAME offerDealLine helper as the card.
+  openOfferModal({
+    label: 'T1', startDate: '2026-07-01', endDate: '2026-07-31',
+    startRaw: '2026-07-01', endRaw: '2026-07-31', price: 100,
+    minimumToBook: 5, type: 'Type 1', discountPct: 20,
+  }, null);
+  const s = currentModal._slots;
+  assert.equal(s.hero.textContent, '€100');
+  assert.equal(s.nights.textContent, '20% off');
+  assert.equal(s.nights.hidden, false);
 });
 
 test('openOfferModal: no nights deal → nights slot hidden', () => {

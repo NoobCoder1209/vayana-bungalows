@@ -96,13 +96,17 @@ export function offerDealLine(offer, ds) {
       .replace(/\{free\}/g, String(offer.freeNights));
   }
   if (offer.type === 'Type 1') {
-    if (typeof offer.discountPct === 'number') {
+    // Each discount param is only usable when a finite positive number — a 0 /
+    // negative / NaN must not render "0% off" / "NaN% off" (same guard class as
+    // euro()). The Worker already validates these, so this is defence-in-depth.
+    const pos = (v) => typeof v === 'number' && Number.isFinite(v) && v > 0;
+    if (pos(offer.discountPct)) {
       return (ds.discountPctLabel || '{pct}% off').replace(/\{pct\}/g, String(offer.discountPct));
     }
-    if (typeof offer.discountPerDay === 'number') {
+    if (pos(offer.discountPerDay)) {
       return (ds.discountPerDayLabel || '€{amount}/night off').replace(/\{amount\}/g, String(offer.discountPerDay));
     }
-    if (typeof offer.discountTotal === 'number') {
+    if (pos(offer.discountTotal)) {
       return (ds.discountTotalLabel || '€{amount} off').replace(/\{amount\}/g, String(offer.discountTotal));
     }
   }

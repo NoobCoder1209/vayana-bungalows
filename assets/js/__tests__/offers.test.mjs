@@ -180,6 +180,23 @@ test('Type 1 per-day and total offers → their discount framing', () => {
   assert.equal(txt(c2.querySelectorAll('.offer-card')[0], '.offer-card__nights'), '€50 off');
 });
 
+test('Type 1 discount framing: precedence pct > perDay > total when multiple present', () => {
+  htmlLang = 'en';
+  const c = container();
+  renderOffers(c, [{ ...type1Pct(), discountPct: 20, discountPerDay: 10, discountTotal: 50 }]);
+  assert.equal(txt(c.querySelectorAll('.offer-card')[0], '.offer-card__nights'), '20% off');
+});
+
+test('Type 1 discount framing: 0 / negative / NaN discount → no line (guarded)', () => {
+  htmlLang = 'en';
+  for (const bad of [0, -5, NaN]) {
+    const c = container();
+    renderOffers(c, [{ ...type1Pct(), discountPct: bad }]);
+    assert.equal(txt(c.querySelectorAll('.offer-card')[0], '.offer-card__nights'), null,
+      `discountPct ${bad} must not render a deal line`);
+  }
+});
+
 test('all Worker-returned offers are rendered (no dead-field drop-filter)', () => {
   htmlLang = 'en';
   const c = container();
