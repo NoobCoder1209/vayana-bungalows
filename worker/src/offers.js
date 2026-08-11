@@ -245,20 +245,6 @@ export function toPublicOffer(offer) {
 }
 
 /**
- * Read the offers range from the sheet and return INTERNAL offer objects
- * (they carry rate + discount params, which the /price engine needs). The
- * /offers route projects each via toPublicOffer before sending to the browser;
- * /price consumes them directly. Requests valueRenderOption=UNFORMATTED_VALUE
- * so dates arrive as numeric serials and prices/nights as numbers. Throws a
- * generic Error on any failure (config missing, token, fetch, parse) — the
- * route handler turns that into a 502 without leaking detail.
- */
-export async function fetchOffers(env) {
-  const { offers } = await fetchSheetData(env);
-  return offers;
-}
-
-/**
  * Read BOTH the offers block (A3:N8) and the seasonal rate-band table
  * (A16:C25) in a single Sheets values.batchGet round-trip, and return
  * `{ offers, bands }` (internal offer shape + parsed rate bands). One request

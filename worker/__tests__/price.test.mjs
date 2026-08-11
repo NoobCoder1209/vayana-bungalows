@@ -133,6 +133,7 @@ test('POST /price: no offer + a night outside all bands → 400', async () => {
     // Sep is in no band (bands only cover Jul/Aug here) → standardPrice null → 400.
     const res = await worker.fetch(priceReq({ checkin: '2026-09-10', checkout: '2026-09-13' }), env, {});
     assert.equal(res.status, 400);
+    assert.equal((await res.json()).error, 'bad-dates');
   });
 });
 

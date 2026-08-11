@@ -52,18 +52,6 @@ function parseNightSpan(checkin, checkout) {
 }
 
 /**
- * Whole nights between two ISO dates (checkout − checkin), or null on bad
- * input / non-positive span. Used by the /price no-offer (standard-rate) path.
- * @param {string} checkin  ISO 'YYYY-MM-DD'
- * @param {string} checkout ISO 'YYYY-MM-DD'
- * @returns {number|null}
- */
-export function nightsBetween(checkin, checkout) {
-  const span = parseNightSpan(checkin, checkout);
-  return span ? span.co - span.ci : null;
-}
-
-/**
  * Split a booking (checkin..checkout) into nights inside vs outside an offer
  * window (winStart..winEnd). All args are ISO 'YYYY-MM-DD'. End dates are the
  * checkout day (exclusive), so a night N counts as in-window when

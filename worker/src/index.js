@@ -142,9 +142,10 @@ export default {
         }
       }
       if (!applied) {
-        // No offer applies → standard rate: each night at its seasonal band
-        // rate (worker/src/pricing.standardPrice, sourced from the rate table).
-        // A night outside every band yields null → the total===null 400 below.
+        // No offer applies → standard rate: standardPrice() charges each night
+        // at its seasonal band rate (bands read from the sheet via
+        // getCachedRateBands). A night outside every band → null → the
+        // total===null 400 below (we never guess a price).
         const std = standardPrice(checkin, checkout, bands);
         total = std === null ? null : std.total;
       }
