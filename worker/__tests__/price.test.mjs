@@ -263,7 +263,8 @@ test('POST /price: a zero-band read is NOT cached — the next call re-reads and
   }
 });
 
-test('POST /price: warm cache is still served even if the sheet later errors', async () => {  const real = globalThis.fetch;
+test('POST /price: warm cache is still served even if the sheet later errors', async () => {
+  const real = globalThis.fetch;
   let mode = 'ok';
   globalThis.fetch = async (url) => {
     const u = String(url);

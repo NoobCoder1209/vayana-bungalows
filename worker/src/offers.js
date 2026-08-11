@@ -321,6 +321,12 @@ async function getCachedData(env) {
   // (→ 502) — the intermittent blank-price bug. Returning WITHOUT caching lets
   // the very next request re-read and self-heal. Offers CAN legitimately be
   // empty (all promotions expired), so only `bands` gates caching.
+  //
+  // Side effect: while bands are empty, /offers (which reads only .offers via
+  // getCachedOffers → getCachedData) also won't cache, so it re-reads Sheets
+  // per request during that window. Benign: empty bands are transient (short
+  // window), and even a sustained outage just degrades /offers to the
+  // pre-cache "read every request" behavior — it never breaks /offers.
   if (Array.isArray(data.bands) && data.bands.length > 0) {
     cachedData = data;
     cachedExpiry = now + OFFERS_CACHE_TTL_MS;
