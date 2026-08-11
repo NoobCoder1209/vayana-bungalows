@@ -79,10 +79,40 @@ function bannerPct(offer) {
   return null;
 }
 
-// Build one Price Hero card from the new offer shape (Task 1):
-// { label, startDate, endDate, startRaw, endRaw, rate, tier, minimumToBook,
-//   paidNights, freeNights, method }. `rate` (per-night, a Number) drives the
-// hero and is always rendered.
+// Build the localized "deal line" for an offer, shared by the card and the
+// modal so they never drift. Reads templates from the [data-offers] dataset
+// (baked at build time; English fallbacks until then), interpolating the
+// offer's own numbers. Returns '' when there's nothing to show.
+//   Type 2 → "stay minimum {min} nights get {free} free" (dataset.nightsDealLabel)
+//   Type 1 discountPct     → "{pct}% off"        (dataset.discountPctLabel)
+//   Type 1 discountPerDay  → "€{amount}/night off" (dataset.discountPerDayLabel)
+//   Type 1 discountTotal   → "€{amount} off"      (dataset.discountTotalLabel)
+export function offerDealLine(offer, ds) {
+  if (offer.type === 'Type 2') {
+    if (!(offer.minimumToBook >= 1 && offer.freeNights >= 1)) return '';
+    const tmpl = ds.nightsDealLabel || 'stay minimum {min} nights get {free} free';
+    return tmpl
+      .replace(/\{min\}/g, String(offer.minimumToBook))
+      .replace(/\{free\}/g, String(offer.freeNights));
+  }
+  if (offer.type === 'Type 1') {
+    if (typeof offer.discountPct === 'number') {
+      return (ds.discountPctLabel || '{pct}% off').replace(/\{pct\}/g, String(offer.discountPct));
+    }
+    if (typeof offer.discountPerDay === 'number') {
+      return (ds.discountPerDayLabel || '€{amount}/night off').replace(/\{amount\}/g, String(offer.discountPerDay));
+    }
+    if (typeof offer.discountTotal === 'number') {
+      return (ds.discountTotalLabel || '€{amount} off').replace(/\{amount\}/g, String(offer.discountTotal));
+    }
+  }
+  return '';
+}
+
+// Build one Price Hero card from the PUBLIC offer shape (Task 3):
+// { label, startDate, endDate, startRaw, endRaw, price, minimumToBook, type,
+//   (Type 2: paidNights, freeNights | Type 1: one of discountPct/PerDay/Total) }.
+// `price` (per-night, a Number) drives the hero and is always rendered.
 // `index` is the card's position among the rendered offers (for the CTA's
 // data-offer-index, useful for tests/debugging).
 function buildCard(container, offer, index) {
@@ -110,26 +140,27 @@ function buildCard(container, offer, index) {
 
   // Struck price (DORMANT): no priceBefore in the new shape → not rendered.
 
-  // Hero: per-night rate, e.g. "€100". Guard against a malformed/stale offer
-  // whose rate isn't a usable number — euro() returns '' for those, and we skip
-  // the element entirely rather than render an empty/"€NaN" hero.
-  const heroText = euro(offer.rate);
+  // Hero: generic per-night price, e.g. "€100". The public /offers payload
+  // sends `price` (the resolved tier value; the tier NAME + High/Mid/Low
+  // structure are hidden by the Worker). euro() returns '' for a malformed/
+  // stale value, so we skip the element rather than render "€NaN".
+  const heroText = euro(offer.price);
   if (heroText) add('offer-card__hero', heroText);
 
   // Save pill (DORMANT): no savings data in the new shape → not rendered.
 
-  // Nights-deal line: "stay minimum {min} nights get {free} free" when both
-  // numbers are present & >= 1. Template comes from the [data-offers] dataset
-  // key `nightsDealLabel` (Task 4 supplies the real localized value); English
-  // fallback until then. Divider precedes it, mirroring the old hasFooter gate
-  // (footer is now the nights line only — message is gone).
-  const hasNights = offer.minimumToBook >= 1 && offer.freeNights >= 1;
-  if (hasNights) {
+  // Deal line — depends on the offer type:
+  //   Type 2 → "stay minimum {min} nights get {free} free" (night counts).
+  //   Type 1 → per-mechanism discount framing ("20% off" / "€10/night off" /
+  //            "€50 off"), from the single discount param the payload carries.
+  // Templates come from the [data-offers] dataset (localized at build time);
+  // English fallbacks until baked. A divider precedes whichever line renders.
+  const dealText = offerDealLine(offer, ds);
+  if (dealText) {
     const d = document.createElement('span');
     d.className = 'offer-card__divider';
     card.append(d);
-    const tmpl = ds.nightsDealLabel || 'stay minimum {min} nights get {free} free';
-    add('offer-card__nights', tmpl.replace(/\{min\}/g, String(offer.minimumToBook)).replace(/\{free\}/g, String(offer.freeNights)));
+    add('offer-card__nights', dealText);
   }
 
   // Gold pill CTA → opens the offer detail modal (offer-modal.js) with the

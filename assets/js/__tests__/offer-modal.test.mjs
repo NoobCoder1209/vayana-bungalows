@@ -61,8 +61,8 @@ const { buildEnquiryUrl, openOfferModal } = await import('../offer-modal.js');
 // New offer shape (Task 1). rate is a Number; startDate/endDate ISO-or-null.
 const offer = () => ({
   label: 'Offer 1', startDate: '2026-07-01', endDate: '2026-07-15',
-  startRaw: '2026-07-01', endRaw: '2026-07-15', rate: 100, tier: 'Mid',
-  minimumToBook: 7, paidNights: 5, freeNights: 2, method: 'V1',
+  startRaw: '2026-07-01', endRaw: '2026-07-15', price: 100,
+  minimumToBook: 7, paidNights: 5, freeNights: 2, type: 'Type 2',
 });
 
 test('default locale (EN): links to enquiries/ with prefilled ?offer= + checkin/checkout, no price', () => {
