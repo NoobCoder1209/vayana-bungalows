@@ -260,3 +260,32 @@ export async function fetchOffers(env) {
   }
   return parseOffers(payload.values);
 }
+
+// Module-scoped 60s cache of the parsed INTERNAL offers, shared by the /offers
+// and /price routes so repeated /price calls (one per date toggle) mostly hit
+// cache instead of round-tripping to Google Sheets. Mirrors the token-cache
+// pattern in sheets.js. New Worker isolates start cold; that's fine.
+const OFFERS_CACHE_TTL_MS = 60 * 1000;
+let cachedOffers = null;
+let cachedOffersExpiry = 0;
+
+/**
+ * Return the parsed INTERNAL offers, served from a 60s module cache when warm.
+ * Throws (like fetchOffers) on a cold-cache read failure so the route can 502.
+ */
+export async function getCachedOffers(env) {
+  const now = Date.now();
+  if (cachedOffers !== null && now < cachedOffersExpiry) {
+    return cachedOffers;
+  }
+  const offers = await fetchOffers(env);
+  cachedOffers = offers;
+  cachedOffersExpiry = now + OFFERS_CACHE_TTL_MS;
+  return offers;
+}
+
+// For tests only — wipe the offers cache so a fresh isolate is simulated.
+export function _resetOffersCacheForTests() {
+  cachedOffers = null;
+  cachedOffersExpiry = 0;
+}

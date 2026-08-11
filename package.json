@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test scripts/__tests__/i18n-plugin.test.mjs scripts/__tests__/i18n-lint.test.mjs scripts/__tests__/i18n-smoke.test.mjs assets/js/__tests__/lang.test.mjs assets/js/__tests__/is-primary-click.test.mjs assets/js/__tests__/header.test.mjs assets/js/__tests__/current-locale.test.mjs assets/js/__tests__/availability-calendar.test.mjs assets/js/__tests__/calendar-selection.test.mjs worker/__tests__/locale.test.mjs worker/__tests__/offers.test.mjs worker/__tests__/pricing.test.mjs worker/__tests__/append-row.test.mjs assets/js/__tests__/offers.test.mjs assets/js/__tests__/offer-modal.test.mjs",
+    "test": "node --test scripts/__tests__/i18n-plugin.test.mjs scripts/__tests__/i18n-lint.test.mjs scripts/__tests__/i18n-smoke.test.mjs assets/js/__tests__/lang.test.mjs assets/js/__tests__/is-primary-click.test.mjs assets/js/__tests__/header.test.mjs assets/js/__tests__/current-locale.test.mjs assets/js/__tests__/availability-calendar.test.mjs assets/js/__tests__/calendar-selection.test.mjs worker/__tests__/locale.test.mjs worker/__tests__/offers.test.mjs worker/__tests__/pricing.test.mjs worker/__tests__/price.test.mjs worker/__tests__/append-row.test.mjs assets/js/__tests__/offers.test.mjs assets/js/__tests__/offer-modal.test.mjs",
     "i18n:lint": "node scripts/i18n-lint.js"
   },
   "dependencies": {

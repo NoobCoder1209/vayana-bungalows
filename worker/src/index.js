@@ -22,7 +22,8 @@
 import { verifyTurnstile } from './turnstile.js';
 import { validateBody } from './validation.js';
 import { appendEnquiry } from './sheets.js';
-import { fetchOffers, toPublicOffer } from './offers.js';
+import { fetchOffers, toPublicOffer, getCachedOffers } from './offers.js';
+import { computeOfferPrice, nightsBetween } from './pricing.js';
 import { checkRateLimit } from './rate-limit.js';
 import {
   jsonResponse,
@@ -42,6 +43,12 @@ import { hashIp } from './lib/ip-hash.js';
 // update BOTH this constant AND validation.js's ALLOWED_LOCALES.
 const KNOWN_LOCALES = new Set(['en', 'bg']);
 const DEFAULT_LOCALE = 'en';
+
+// Standard per-night rate used by /price when NO offer applies. This is the
+// single source of the off-offer price (the frontend keeps no hardcoded
+// fallback). A future task will source this from the sheet instead of a
+// constant here.
+const STANDARD_RATE = 100;
 function sniffLocale(body) {
   if (!body || typeof body !== 'object') return DEFAULT_LOCALE;
   const raw = typeof body.locale === 'string' ? body.locale.trim() : '';
@@ -74,7 +81,7 @@ export default {
         return jsonResponse({ ok: false, error: 'method' }, 405, request, env);
       }
       try {
-        const offers = await fetchOffers(env);
+        const offers = await getCachedOffers(env);
         // Project to the PUBLIC shape before sending — hides the tier name and
         // the High/Mid/Low structure; exposes only a generic per-night `price`.
         const publicOffers = offers.map(toPublicOffer);
@@ -84,6 +91,69 @@ export default {
         console.error('offers.fetch failed');
         return jsonResponse({ ok: false, error: 'offers-unavailable' }, 502, request, env);
       }
+    }
+
+    // Price route — POST /price only. Computes the discounted TOTAL for a
+    // guest's selected dates server-side and returns ONLY the number, so the
+    // tier rates + discount params never reach the browser. Read-only like
+    // /offers (no captcha/IP/rate-limit gate — those are submit concerns; a
+    // pricing lookup must not consume the enquiry rate budget). Placed before
+    // the /submit path gate so it isn't swallowed by the 404.
+    if (pathname === '/price') {
+      if (request.method !== 'POST') {
+        return jsonResponse({ ok: false, error: 'method' }, 405, request, env);
+      }
+      const ct = (request.headers.get('content-type') || '').toLowerCase();
+      if (!ct.startsWith('application/json')) {
+        return jsonResponse({ ok: false, error: 'content-type' }, 415, request, env);
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: 'bad-request' }, 400, request, env);
+      }
+      if (!body || typeof body !== 'object') {
+        return jsonResponse({ ok: false, error: 'bad-request' }, 400, request, env);
+      }
+      const checkin = typeof body.checkin === 'string' ? body.checkin : '';
+      const checkout = typeof body.checkout === 'string' ? body.checkout : '';
+      // Strict ISO shape; the pricing engine re-validates real dates + ordering.
+      const ISO = /^\d{4}-\d{2}-\d{2}$/;
+      if (!ISO.test(checkin) || !ISO.test(checkout) || !(checkin < checkout)) {
+        return jsonResponse({ ok: false, error: 'bad-dates' }, 400, request, env);
+      }
+      let offers;
+      try {
+        offers = await getCachedOffers(env);
+      } catch {
+        console.error('price.offers-fetch failed');
+        return jsonResponse({ ok: false, error: 'price-unavailable' }, 502, request, env);
+      }
+      // Find the first offer that APPLIES to this selection (order = sheet order).
+      // Offers are date-window promotions; bungalow is accepted but not used to
+      // match today (availability already gates which dates are selectable).
+      let total = null;
+      let applied = false;
+      for (const offer of offers) {
+        const r = computeOfferPrice(offer, checkin, checkout);
+        if (r.applied && r.total !== null) {
+          total = r.total;
+          applied = true;
+          break;
+        }
+      }
+      if (!applied) {
+        // No offer applies → standard rate. Single source of the standard
+        // per-night price lives here (no hardcoded fallback on the frontend);
+        // a future task will source it from the sheet.
+        const nights = nightsBetween(checkin, checkout);
+        total = nights === null ? null : nights * STANDARD_RATE;
+      }
+      if (total === null) {
+        return jsonResponse({ ok: false, error: 'bad-dates' }, 400, request, env);
+      }
+      return jsonResponse({ ok: true, total, applied }, 200, request, env);
     }
 
     // 2. Path gate — Worker has exactly one route. Refuse everything else

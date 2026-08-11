@@ -316,6 +316,7 @@ test('jsonCacheableResponse sets public max-age and echoes allowed origin', asyn
 import { generateKeyPairSync } from 'node:crypto';
 import worker from '../src/index.js';
 import { _resetForTests } from '../src/sheets.js';
+import { _resetOffersCacheForTests } from '../src/offers.js';
 
 // Minimal env for the /offers path. GSHEETS_SA_JSON carries a throwaway RSA key
 // generated fresh per test run (must be a real PKCS8 key — getAccessToken()
@@ -364,7 +365,7 @@ function withMockedSheets(valuesOrThrow, run) {
   };
   return Promise.resolve()
     .then(run)
-    .finally(() => { globalThis.fetch = real; _resetForTests(); });
+    .finally(() => { globalThis.fetch = real; _resetForTests(); _resetOffersCacheForTests(); });
 }
 
 test('GET /offers returns eligible offers as JSON with cache header', async () => {

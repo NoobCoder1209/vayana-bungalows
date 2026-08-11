@@ -39,6 +39,21 @@ function round2(n) {
 }
 
 /**
+ * Whole nights between two ISO dates (checkout − checkin), or null on bad
+ * input / non-positive span. Used by the /price no-offer (standard-rate) path.
+ * @param {string} checkin  ISO 'YYYY-MM-DD'
+ * @param {string} checkout ISO 'YYYY-MM-DD'
+ * @returns {number|null}
+ */
+export function nightsBetween(checkin, checkout) {
+  const ci = isoToDayNumber(checkin);
+  const co = isoToDayNumber(checkout);
+  if (ci === null || co === null) return null;
+  const n = co - ci;
+  return n > 0 ? n : null;
+}
+
+/**
  * Split a booking (checkin..checkout) into nights inside vs outside an offer
  * window (winStart..winEnd). All args are ISO 'YYYY-MM-DD'. End dates are the
  * checkout day (exclusive), so a night N counts as in-window when
