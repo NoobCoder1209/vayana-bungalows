@@ -15,15 +15,6 @@ import { openOfferModal } from './offer-modal.js';
 import { currentLocale } from './util/current-locale.js';
 import { formatOfferDates } from './util/offer-dates.js';
 
-// Parse a raw sheet price string (bare number, maybe with € or spaces) to a
-// finite number, or NaN. Tolerates "€400", "400", " 400 ".
-// Exported so offer-modal.js can derive the same bare number for the ?price=
-// enquiry param (single source of truth with the card/modal formatting).
-export function parsePrice(v) {
-  if (v == null || v === '') return NaN;
-  return Number(String(v).replace(/[^0-9.]/g, ''));
-}
-
 // Prepend € unless the raw value already carries it (avoid €€). Returns '' for
 // a value that isn't a usable price (null/undefined/NaN/blank) so a malformed or
 // stale-shape offer can never render "€undefined"/"€NaN" — callers treat '' as
@@ -36,47 +27,6 @@ export function euro(raw) {
   // Reject values with no digit at all (e.g. pure junk); a leading € is fine.
   if (!/\d/.test(s)) return '';
   return s.startsWith('€') ? s : `€${s}`;
-}
-
-// DORMANT (kept for a future discount phase): pctValue / deriveSave / bannerPct
-// are defined-but-unused by the card in the current schema (discountPct and the
-// before/after prices are gone). deriveSave/parsePrice/euro stay EXPORTED
-// because offer-modal.js imports euro; deriveSave/parsePrice are retained for
-// the planned discount phase. Do not delete.
-// A positive integer-ish discount, or null.
-function pctValue(v) {
-  if (v == null || v === '') return null;
-  const n = Number(String(v).replace(/[^0-9.]/g, ''));
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
-
-// Decide the save pill: euro saving preferred, pct fallback, else null.
-// Returns the ready-to-render text or null.
-// Exported so offer-modal.js derives the same savings text as the card.
-export function deriveSave(offer, dataset) {
-  const before = parsePrice(offer.priceBefore);
-  const after = parsePrice(offer.priceAfter);
-  const saveLabel = dataset.saveLabel || 'Save';
-  const offLabel = dataset.offLabel || 'off';
-  if (Number.isFinite(before) && Number.isFinite(after) && before > after) {
-    return `${saveLabel} €${before - after}`;
-  }
-  const pct = pctValue(offer.discountPct);
-  if (pct != null) return `${pct}% ${offLabel}`;
-  return null;
-}
-
-// Banner discount %: prefer the sheet's Discount % (col C); if blank, derive
-// from prices (round(before−after)/before). Returns a positive integer % or null.
-function bannerPct(offer) {
-  const c = pctValue(offer.discountPct);
-  if (c != null) return c;
-  const before = parsePrice(offer.priceBefore);
-  const after = parsePrice(offer.priceAfter);
-  if (Number.isFinite(before) && Number.isFinite(after) && before > after) {
-    return Math.round(((before - after) / before) * 100);
-  }
-  return null;
 }
 
 // Build the localized "deal line" for an offer, shared by the card and the
@@ -132,10 +82,8 @@ function buildCard(container, offer, index) {
     return el;
   };
 
-  // Banner (DORMANT): the old discount-% banner has no data source in the new
-  // shape (discountPct/prices are gone), so it is not rendered. bannerPct /
-  // deriveSave / pctValue remain defined-but-unused (see dormant note above),
-  // kept for a future discount phase.
+  // No discount banner: the new schema has no before/after prices or a
+  // percentage banner. Type-1 discount framing is shown by offerDealLine below.
 
   // Eyebrow: localized dates from the offer object (formatOfferDates now takes
   // the offer, resolving ISO range → pretty, or falling back to raw verbatim).

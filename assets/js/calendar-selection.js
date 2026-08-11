@@ -71,6 +71,29 @@ export function nightsBetween(checkInIso, checkOutIso) {
 }
 
 /**
+ * Two selections are the "same" when key + both ISO endpoints match. Used by
+ * the async /price flow to tell whether a response still belongs to the live
+ * selection. Null-safe.
+ */
+export function sameSelection(a, b) {
+  return !!a && !!b && a.key === b.key
+    && a.checkIn === b.checkIn && a.checkOut === b.checkOut;
+}
+
+/**
+ * The staleness gate for an async /price response: discard it when a newer
+ * request has since fired (reqId !== currentReqId) OR the live selection no
+ * longer matches the one this request was fired for. Pure so the race guard is
+ * unit-testable without the DOM/flatpickr wiring.
+ * @returns {boolean} true → the response is stale and must NOT paint the pill.
+ */
+export function priceResponseIsStale(currentSelection, snapshot, reqId, currentReqId) {
+  if (reqId !== currentReqId) return true;
+  if (!sameSelection(currentSelection, snapshot)) return true;
+  return false;
+}
+
+/**
  * Is every night of the range [checkIn, checkOut) available for this bungalow?
  * Walks each night from check-in up to (but not including) check-out — the
  * check-out day itself is a departure, not an occupied night — and rejects if
@@ -398,9 +421,6 @@ export function initCalendarSelection() {
   let priceReqId = 0;
   let priceTimer = null;
 
-  const selectionMatches = (a, b) =>
-    !!a && !!b && a.key === b.key && a.checkIn === b.checkIn && a.checkOut === b.checkOut;
-
   const fetchPrice = (sel) => {
     const reqId = ++priceReqId;
     const snapshot = { key: sel.key, checkIn: sel.checkIn, checkOut: sel.checkOut };
@@ -422,10 +442,9 @@ export function initCalendarSelection() {
           || !Number.isFinite(data.total)) {
           throw new Error('bad-shape');
         }
-        // Race guard: discard if a newer fetch has since fired OR the live
-        // selection no longer matches the one this fetch was fired for.
-        if (reqId !== priceReqId) return;
-        if (!selectionMatches(selection, snapshot)) return;
+        // Race guard (pure, unit-tested): discard if a newer fetch has since
+        // fired OR the live selection no longer matches this fetch's snapshot.
+        if (priceResponseIsStale(selection, snapshot, reqId, priceReqId)) return;
         const pill = pillByKey.get(snapshot.key);
         if (!pill || pill.hidden) return; // pill was hidden (selection cleared)
         const total = data.total;
@@ -452,7 +471,7 @@ export function initCalendarSelection() {
     priceTimer = setTimeout(() => {
       priceTimer = null;
       // Only fire if the selection is still the one we scheduled for.
-      if (selectionMatches(selection, snapshot)) fetchPrice(snapshot);
+      if (sameSelection(selection, snapshot)) fetchPrice(snapshot);
     }, PRICE_DEBOUNCE_MS);
   };
 

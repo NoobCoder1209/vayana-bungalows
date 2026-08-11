@@ -156,6 +156,12 @@ export default {
         // round-trip guard rejects it, and no offer applied. Treat as bad input.
         return jsonResponse({ ok: false, error: 'bad-dates' }, 400, request, env);
       }
+      // Round the total to a WHOLE euro before returning. A per-day / total
+      // discount can produce a fractional total (e.g. €437.50), which the pill
+      // would display but the enquiry price field + Worker validation reject
+      // (integer-only), silently dropping the price. Rounding here keeps the
+      // displayed price and the recorded ?price identical and always integer.
+      total = Math.round(total);
       return jsonResponse({ ok: true, total, applied }, 200, request, env);
     }
 

@@ -81,6 +81,22 @@ test('POST /price: Type 1 % applies to all in-window nights', async () => {
   });
 });
 
+test('POST /price: fractional offer total is rounded to a whole euro', async () => {
+  // Type-1 per-day €12.50 off, Mid €100, book 5 in-window nights (>= min 5):
+  // 5 * (100 - 12.5) = 437.5 → rounded to 438. Must be an integer so the
+  // enquiry price field / Worker validation (integer-only) can record it.
+  const OFFER_FRACTION = [
+    'Offer F', 46204, 46234, '', 100, '', 'Mid', '', 12.5, '', 5, '', '', 'Type 1',
+  ];
+  await withMockedSheets([OFFER_FRACTION], async () => {
+    const res = await worker.fetch(priceReq({ checkin: '2026-07-01', checkout: '2026-07-06' }), env, {});
+    const body = await res.json();
+    assert.equal(body.applied, true);
+    assert.equal(body.total, 438);
+    assert.equal(Number.isInteger(body.total), true);
+  });
+});
+
 test('POST /price: no offer applies → standard rate (nights * 100)', async () => {
   await withMockedSheets([OFFER_T2], async () => {
     // Dates entirely outside the offer window → no offer; 4 nights * 100 = 400.

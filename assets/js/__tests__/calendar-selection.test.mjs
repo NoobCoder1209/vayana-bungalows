@@ -58,13 +58,15 @@ function loadLogic() {
   const body = [
     deps,
     sliceFn(SEL_SRC, 'nightsBetween'),
+    sliceFn(SEL_SRC, 'sameSelection'),
+    sliceFn(SEL_SRC, 'priceResponseIsStale'),
     sliceFn(SEL_SRC, 'isRangeContiguous'),
     sliceFn(SEL_SRC, 'evaluateSelection'),
     sliceFn(SEL_SRC, 'isBookableDockDate'),
     sliceFn(SEL_SRC, 'firstAvailableBungalow'),
     sliceFn(SEL_SRC, 'dayState'),
     sliceFn(SEL_SRC, 'reduceClick'),
-    'return { nightsBetween, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, KEY_ORDER };',
+    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -87,6 +89,38 @@ test('nightsBetween: 6 and 10 nights', () => {
 
 test('nightsBetween: reversed order is non-positive', () => {
   assert.ok(L.nightsBetween('2026-08-15', '2026-08-10') <= 0);
+});
+
+// ── async /price race guard (pure decision) ──────────────────────────────────
+
+const SNAP = { key: 'B1', checkIn: '2026-08-10', checkOut: '2026-08-15' };
+
+test('sameSelection: matches on key + both endpoints; null-safe', () => {
+  assert.equal(L.sameSelection(SNAP, { ...SNAP }), true);
+  assert.equal(L.sameSelection(SNAP, { ...SNAP, checkOut: '2026-08-16' }), false);
+  assert.equal(L.sameSelection(SNAP, { ...SNAP, key: 'B2' }), false);
+  assert.equal(L.sameSelection(null, SNAP), false);
+  assert.equal(L.sameSelection(SNAP, null), false);
+});
+
+test('priceResponseIsStale: fresh response for the current selection is NOT stale', () => {
+  // reqId matches current, live selection === snapshot → paint it.
+  assert.equal(L.priceResponseIsStale(SNAP, { ...SNAP }, 3, 3), false);
+});
+
+test('priceResponseIsStale: a newer request having fired makes an older one stale', () => {
+  // Response captured reqId 2, but priceReqId has advanced to 3 → discard.
+  assert.equal(L.priceResponseIsStale(SNAP, { ...SNAP }, 2, 3), true);
+});
+
+test('priceResponseIsStale: selection changed since the request → stale (cross-bungalow)', () => {
+  // Same reqId, but the guest moved to B2 / a different range before it resolved.
+  const live = { key: 'B2', checkIn: '2026-09-01', checkOut: '2026-09-06' };
+  assert.equal(L.priceResponseIsStale(live, SNAP, 5, 5), true);
+});
+
+test('priceResponseIsStale: selection cleared (deselect) → stale', () => {
+  assert.equal(L.priceResponseIsStale(null, SNAP, 4, 4), true);
 });
 
 // ── contiguity walk ─────────────────────────────────────────────────────────
