@@ -2105,17 +2105,20 @@
 
 /* ── Loading (pricing) state ───────────────────────────────────────────────
    While POST /price resolves, the pill shows a spinner + "Pricing your stay…"
-   and is non-clickable (JS removes the href and sets aria-disabled). Greyed
-   out, no hover affordance, default cursor so it reads as "wait". */
+   and is non-clickable (JS also removes the href and sets aria-disabled).
+   Greyed out, default cursor, and pointer-events:none as belt-and-suspenders
+   so it can't be clicked/keyboard-activated mid-request even if the JS href/
+   aria-disabled toggle lags (matches the pointer-events guard used elsewhere
+   in this file). */
 .stay-select__pill--loading {
   opacity: 0.72;
   cursor: default;
+  pointer-events: none;
 }
-.stay-select__pill--loading:hover {
-  background: #6f5e40; /* suppress the darker hover — nothing to click yet */
-}
-/* Spinner: a small ring with one transparent quadrant, rotating. Sized to the
-   pill text; sits inline before the label with a small gap. */
+/* Spinner: a ring with three faint sides and one brighter top quadrant,
+   rotating. Sized to the pill text; sits inline before the label with a small
+   gap. Under reduced motion the ring is frozen (see the reduce block below) —
+   still a visible loading indicator, just not animated. */
 .stay-select__spinner {
   display: inline-block;
   width: 0.95em;
@@ -2203,9 +2206,9 @@
   }
 }
 
-/* Reduced motion: don't spin. Keep the ring as a static "loading" indicator
-   (a steady 3/4 circle) so the wait is still visually signalled without
-   animation. */
+/* Reduced motion: don't spin. The ring stays visible as a static loading
+   indicator (a frozen circle with one brighter quadrant) so the wait is still
+   signalled without animation. */
 @media (prefers-reduced-motion: reduce) {
   .stay-select__spinner {
     animation: none;
