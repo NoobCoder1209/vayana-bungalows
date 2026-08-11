@@ -2103,6 +2103,31 @@
   display: none !important;
 }
 
+/* ── Loading (pricing) state ───────────────────────────────────────────────
+   While POST /price resolves, the pill shows a spinner + "Pricing your stay…"
+   and is non-clickable (JS removes the href and sets aria-disabled). Greyed
+   out, no hover affordance, default cursor so it reads as "wait". */
+.stay-select__pill--loading {
+  opacity: 0.72;
+  cursor: default;
+}
+.stay-select__pill--loading:hover {
+  background: #6f5e40; /* suppress the darker hover — nothing to click yet */
+}
+/* Spinner: a small ring with one transparent quadrant, rotating. Sized to the
+   pill text; sits inline before the label with a small gap. */
+.stay-select__spinner {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  margin-right: 0.6em;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: var(--bg-light);
+  border-radius: 50%;
+  vertical-align: -0.15em;
+  animation: stay-spin 0.7s linear infinite;
+}
+
 /* ── "Selected X nights" caption ───────────────────────────────────────────
    Plain italic text (no pill/button styling). Per the owner it sits on its own
    line, left-aligned under the calendar column (above the pill) — a bare grid
@@ -2172,6 +2197,18 @@
   @keyframes stay-dock-in {
     from { opacity: 0; transform: translate(-50%, 8px); }
     to { opacity: 1; transform: translate(-50%, 0); }
+  }
+  @keyframes stay-spin {
+    to { transform: rotate(360deg); }
+  }
+}
+
+/* Reduced motion: don't spin. Keep the ring as a static "loading" indicator
+   (a steady 3/4 circle) so the wait is still visually signalled without
+   animation. */
+@media (prefers-reduced-motion: reduce) {
+  .stay-select__spinner {
+    animation: none;
   }
 }
 
