@@ -4,8 +4,8 @@
 // and an ad-hoc booked-day `disable[]` list on the booking widget side. This
 // module layers TWO extra constraints on top:
 //
-//   1. Off-season block — Vayana Bungalows only operates May..September;
-//      Oct..Apr days should render greyed out and be non-clickable. Soft
+//   1. Off-season block — Vayana Bungalows only operates April..September;
+//      Oct..Mar days should render greyed out and be non-clickable. Soft
 //      block (visible in the grid, unselectable) matches the existing
 //      "past dates" and ".is-booked" visual treatment so users understand
 //      why the day is there but greyed.
@@ -23,16 +23,16 @@
 //
 // Server-side validation.js does NOT mirror this yet — this module is
 // UX-only. Enforcing seasons on the Worker is a follow-up: for now the
-// operator can still see any Oct..Apr enquiry that manages to slip past
+// operator can still see any Oct..Mar enquiry that manages to slip past
 // (DevTools bypass, JS disabled) as a normal sheet row, and decide
 // manually whether to accept.
 
-// Months are 0-indexed in JavaScript's Date API. May..Sep inclusive is
-// months 4..8. Anything outside that range is off-season.
-const OPEN_SEASON_MONTHS = new Set([4, 5, 6, 7, 8]);
+// Months are 0-indexed in JavaScript's Date API. April..Sep inclusive is
+// months 3..8. Anything outside that range is off-season.
+const OPEN_SEASON_MONTHS = new Set([3, 4, 5, 6, 7, 8]);
 
 /**
- * True if this date falls outside the May..September open season.
+ * True if this date falls outside the April..September open season.
  * Flatpickr calls disable[] predicates with a Date argument; returning
  * true from any predicate marks the day as disabled.
  */
