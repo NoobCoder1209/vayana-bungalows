@@ -182,6 +182,33 @@ export function parseOffers(rows) {
 }
 
 /**
+ * Parse the seasonal rate-band table (Offers tab A16:C25) into
+ * `[{ startISO, endISO, rate }]`. Each row is `Start Date | End Date | Night
+ * Price`. Under UNFORMATTED_VALUE the dates are serials and the price a number.
+ * A row is DROPPED (never throws) unless both dates parse to real dates AND the
+ * price is a positive number. Order preserved (first-match-wins downstream).
+ *
+ * NOTE on semantics (handled downstream in pricing.standardPrice): the End date
+ * here is INCLUSIVE — the last night charged at this rate — unlike offer windows
+ * where End is the exclusive checkout day. And matching is by month/day only
+ * (year-agnostic), so the sheet's 2026 dates act as a template for any year.
+ */
+export function parseRateBands(rows) {
+  if (!Array.isArray(rows)) return [];
+  const bands = [];
+  for (const row of rows) {
+    if (!Array.isArray(row)) continue;
+    const startISO = serialToISO(row[0]);
+    const endISO = serialToISO(row[1]);
+    if (startISO === null || endISO === null) continue;
+    const rate = toNumber(row[2]);
+    if (rate === null || rate <= 0) continue;
+    bands.push({ startISO, endISO, rate });
+  }
+  return bands;
+}
+
+/**
  * Project an INTERNAL offer object to the PUBLIC shape sent to the browser via
  * /offers. Hides the tier STRUCTURE — the tier name ('Mid') and the fact that
  * three tiers (High/Mid/Low) exist and how they're derived. The resolved
@@ -226,16 +253,28 @@ export function toPublicOffer(offer) {
  * route handler turns that into a 502 without leaking detail.
  */
 export async function fetchOffers(env) {
+  const { offers } = await fetchSheetData(env);
+  return offers;
+}
+
+/**
+ * Read BOTH the offers block (A3:N8) and the seasonal rate-band table
+ * (A16:C25) in a single Sheets values.batchGet round-trip, and return
+ * `{ offers, bands }` (internal offer shape + parsed rate bands). One request
+ * keeps the /price hot path cheap. Throws a generic Error on any failure
+ * (config/token/fetch/parse) — the route turns that into a 502 without leaking.
+ */
+export async function fetchSheetData(env) {
   if (!env.GSHEETS_SHEET_ID || !env.GSHEETS_OFFERS_TAB) {
     throw new Error('offers-config-missing');
   }
   const token = await getAccessToken(env);
-  const range = encodeURIComponent(
-    `'${env.GSHEETS_OFFERS_TAB.replace(/'/g, "''")}'!A3:N8`,
-  );
+  const tab = env.GSHEETS_OFFERS_TAB.replace(/'/g, "''");
+  const ranges = [`'${tab}'!A3:N8`, `'${tab}'!A16:C25`];
+  const qs = ranges.map((r) => `ranges=${encodeURIComponent(r)}`).join('&');
   const url =
     `${SHEETS_BASE}/${encodeURIComponent(env.GSHEETS_SHEET_ID)}` +
-    `/values/${range}?majorDimension=ROWS&valueRenderOption=UNFORMATTED_VALUE`;
+    `/values:batchGet?majorDimension=ROWS&valueRenderOption=UNFORMATTED_VALUE&${qs}`;
 
   let res;
   try {
@@ -252,40 +291,51 @@ export async function fetchOffers(env) {
   } catch {
     throw new Error('offers-parse-failed');
   }
-  if (!payload || !Array.isArray(payload.values)) {
-    // A 200 with no values[] is either a legitimately empty range OR a
-    // shaped-differently response. The Sheets API omits `values` entirely
-    // for a fully-empty range, so treat missing values as empty (not error).
-    return parseOffers([]);
-  }
-  return parseOffers(payload.values);
+  // batchGet → { valueRanges: [ { values }, { values } ] } in request order.
+  // A fully-empty range omits `values`; treat missing as [] (not an error).
+  const vr = (payload && Array.isArray(payload.valueRanges)) ? payload.valueRanges : [];
+  const offerRows = vr[0] && Array.isArray(vr[0].values) ? vr[0].values : [];
+  const bandRows = vr[1] && Array.isArray(vr[1].values) ? vr[1].values : [];
+  return { offers: parseOffers(offerRows), bands: parseRateBands(bandRows) };
 }
 
-// Module-scoped 60s cache of the parsed INTERNAL offers, shared by the /offers
-// and /price routes so repeated /price calls (one per date toggle) mostly hit
-// cache instead of round-tripping to Google Sheets. Mirrors the token-cache
-// pattern in sheets.js. New Worker isolates start cold; that's fine.
+// Module-scoped 60s cache of the parsed offers + rate bands, shared by the
+// /offers and /price routes so repeated /price calls (one per date toggle)
+// mostly hit cache instead of round-tripping to Google Sheets. Mirrors the
+// token-cache pattern in sheets.js. New Worker isolates start cold; that's fine.
 const OFFERS_CACHE_TTL_MS = 60 * 1000;
-let cachedOffers = null;
-let cachedOffersExpiry = 0;
+let cachedData = null;      // { offers, bands }
+let cachedExpiry = 0;
+
+async function getCachedData(env) {
+  const now = Date.now();
+  if (cachedData !== null && now < cachedExpiry) {
+    return cachedData;
+  }
+  const data = await fetchSheetData(env);
+  cachedData = data;
+  cachedExpiry = now + OFFERS_CACHE_TTL_MS;
+  return data;
+}
 
 /**
- * Return the parsed INTERNAL offers, served from a 60s module cache when warm.
- * Throws (like fetchOffers) on a cold-cache read failure so the route can 502.
+ * Return the parsed INTERNAL offers, served from the 60s module cache when warm.
+ * Throws (like fetchSheetData) on a cold-cache read failure so the route 502s.
  */
 export async function getCachedOffers(env) {
-  const now = Date.now();
-  if (cachedOffers !== null && now < cachedOffersExpiry) {
-    return cachedOffers;
-  }
-  const offers = await fetchOffers(env);
-  cachedOffers = offers;
-  cachedOffersExpiry = now + OFFERS_CACHE_TTL_MS;
-  return offers;
+  return (await getCachedData(env)).offers;
 }
 
-// For tests only — wipe the offers cache so a fresh isolate is simulated.
+/**
+ * Return the parsed seasonal rate bands, from the same 60s cache as the offers
+ * (shares the single batchGet). Used by /price's no-offer standard-rate path.
+ */
+export async function getCachedRateBands(env) {
+  return (await getCachedData(env)).bands;
+}
+
+// For tests only — wipe the cache so a fresh isolate is simulated.
 export function _resetOffersCacheForTests() {
-  cachedOffers = null;
-  cachedOffersExpiry = 0;
+  cachedData = null;
+  cachedExpiry = 0;
 }

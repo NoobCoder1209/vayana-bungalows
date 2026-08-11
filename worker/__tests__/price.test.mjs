@@ -45,7 +45,7 @@ function withMockedSheets(valuesOrThrow, run) {
     }
     if (u.includes('sheets.googleapis.com')) {
       if (valuesOrThrow === 'ERR') return new Response('nope', { status: 500 });
-      return new Response(JSON.stringify({ values: valuesOrThrow }), { status: 200 });
+      return new Response(JSON.stringify({ valueRanges: [{ values: valuesOrThrow }, { values: [] }] }), { status: 200 });
     }
     return new Response('unexpected', { status: 418 });
   };
@@ -152,7 +152,7 @@ function withCountingSheets(values, run) {
     }
     if (u.includes('sheets.googleapis.com')) {
       sheetsHits += 1;
-      return new Response(JSON.stringify({ values }), { status: 200 });
+      return new Response(JSON.stringify({ valueRanges: [{ values }, { values: [] }] }), { status: 200 });
     }
     return new Response('unexpected', { status: 418 });
   };
@@ -181,7 +181,7 @@ test('POST /price: warm cache is still served even if the sheet later errors', a
     }
     if (u.includes('sheets.googleapis.com')) {
       return mode === 'ok'
-        ? new Response(JSON.stringify({ values: [OFFER_T2] }), { status: 200 })
+        ? new Response(JSON.stringify({ valueRanges: [{ values: [OFFER_T2] }, { values: [] }] }), { status: 200 })
         : new Response('nope', { status: 500 });
     }
     return new Response('unexpected', { status: 418 });

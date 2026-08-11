@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseOffers, serialToISO, toPublicOffer } from '../src/offers.js';
+import { parseOffers, serialToISO, toPublicOffer, parseRateBands } from '../src/offers.js';
 import { jsonCacheableResponse, corsHeaders } from '../src/lib/response.js';
 
 const req = (origin = 'http://localhost:5173') =>
@@ -298,6 +298,45 @@ test('toPublicOffer carries the per-day and total Type-1 framing params', () => 
   assert.equal('rate' in total, false);
 });
 
+// --- parseRateBands: seasonal rate table (A16:C25) --------------------------
+
+// Build a Sheets serial from a calendar date so the mapping is self-checking.
+const isoToSerial = (y, m, d) =>
+  Math.round((Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000);
+
+test('parseRateBands: maps valid rows to {startISO,endISO,rate}', () => {
+  const rows = [
+    [isoToSerial(2026, 4, 1), isoToSerial(2026, 4, 30), 75],
+    [isoToSerial(2026, 6, 15), isoToSerial(2026, 6, 30), 110],
+    [isoToSerial(2026, 7, 4), isoToSerial(2026, 7, 31), '130.00€'], // formatted price string still parses
+  ];
+  const bands = parseRateBands(rows);
+  assert.equal(bands.length, 3);
+  assert.deepEqual(bands[0], { startISO: '2026-04-01', endISO: '2026-04-30', rate: 75 });
+  assert.equal(bands[1].startISO, '2026-06-15');
+  assert.equal(bands[1].rate, 110);
+  assert.equal(bands[2].rate, 130);
+});
+
+test('parseRateBands: drops rows with a bad/blank date or non-positive price', () => {
+  assert.equal(parseRateBands([['', isoToSerial(2026, 4, 30), 75]]).length, 0);
+  assert.equal(parseRateBands([[isoToSerial(2026, 4, 1), 'soon', 75]]).length, 0);
+  assert.equal(parseRateBands([[isoToSerial(2026, 4, 1), isoToSerial(2026, 4, 30), 0]]).length, 0);
+  assert.equal(parseRateBands([[isoToSerial(2026, 4, 1), isoToSerial(2026, 4, 30), -5]]).length, 0);
+  assert.equal(parseRateBands([[isoToSerial(2026, 4, 1), isoToSerial(2026, 4, 30), '']]).length, 0);
+});
+
+test('parseRateBands: preserves order and is fail-safe on junk input', () => {
+  const rows = [
+    [isoToSerial(2026, 4, 1), isoToSerial(2026, 4, 30), 75],
+    'not-a-row',
+    [isoToSerial(2026, 9, 7), isoToSerial(2026, 9, 30), 80],
+  ];
+  assert.deepEqual(parseRateBands(rows).map((b) => b.rate), [75, 80]);
+  assert.deepEqual(parseRateBands(null), []);
+  assert.deepEqual(parseRateBands([]), []);
+});
+
 test('corsHeaders advertises GET alongside POST and OPTIONS', () => {
   const h = corsHeaders(req(), env);
   assert.match(h['access-control-allow-methods'], /GET/);
@@ -345,8 +384,10 @@ const validRow = [
 ];
 
 // Swap global fetch for a scripted stub over the two upstream calls the offers
-// path makes: (1) OAuth token exchange, (2) Sheets values.get. Captures the
-// Sheets URL so we can assert the range + valueRenderOption.
+// path makes: (1) OAuth token exchange, (2) Sheets values.batchGet (offers range
+// + rate-band range). Captures the Sheets URL so we can assert ranges + render
+// option. `valuesOrThrow` is the OFFER rows (or 'ERR'); the band range is empty
+// here (rate-band parsing is covered by its own unit tests).
 let lastSheetsUrl = null;
 function withMockedSheets(valuesOrThrow, run) {
   const real = globalThis.fetch;
@@ -359,7 +400,10 @@ function withMockedSheets(valuesOrThrow, run) {
     if (u.includes('sheets.googleapis.com')) {
       lastSheetsUrl = u;
       if (valuesOrThrow === 'ERR') return new Response('nope', { status: 500 });
-      return new Response(JSON.stringify({ values: valuesOrThrow }), { status: 200 });
+      // batchGet shape: valueRanges in request order (offers, then bands).
+      return new Response(JSON.stringify({
+        valueRanges: [{ values: valuesOrThrow }, { values: [] }],
+      }), { status: 200 });
     }
     return new Response('unexpected', { status: 418 });
   };
@@ -390,14 +434,17 @@ test('GET /offers returns eligible offers as JSON with cache header', async () =
   );
 });
 
-test('fetchOffers requests A3:N8 with valueRenderOption=UNFORMATTED_VALUE', async () => {
+test('sheet read: batchGet requests BOTH ranges (A3:N8 offers + A16:C25 bands) with UNFORMATTED_VALUE', async () => {
   await withMockedSheets(
     [validRow],
     async () => {
       await worker.fetch(getReq(), offersEnv, {});
       assert.ok(lastSheetsUrl, 'sheets URL was captured');
+      assert.match(lastSheetsUrl, /values:batchGet/);
       assert.match(lastSheetsUrl, /valueRenderOption=UNFORMATTED_VALUE/);
-      assert.match(decodeURIComponent(lastSheetsUrl), /!A3:N8/);
+      const decoded = decodeURIComponent(lastSheetsUrl);
+      assert.match(decoded, /!A3:N8/);   // offers block
+      assert.match(decoded, /!A16:C25/); // rate-band table
     },
   );
 });
