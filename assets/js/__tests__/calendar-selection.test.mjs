@@ -1,7 +1,9 @@
 // Unit tests for the /stay/ calendar-selection PURE logic: night counting,
-// pricing, the MIN_NIGHTS gate, the contiguity walk, and the completed-range
-// verdict table. The DOM wiring (click delegation, pill/dock) is not exercised
-// here — these lock the decision logic that would silently regress.
+// the MIN_NIGHTS gate, the contiguity walk, and the completed-range verdict
+// table. The DOM wiring (click delegation, pill/dock, the async POST /price
+// fetch) is not exercised here — these lock the decision logic that would
+// silently regress. The price is now sourced from the Worker's /price endpoint,
+// so there is no client-side price function to slice.
 //
 // calendar-selection.js can't be plain-imported in Node: it pulls in
 // availability-calendar.js (DOM/flatpickr chain) and bookings-data.js (reads
@@ -41,7 +43,6 @@ function sliceFn(src, name) {
 // free references resolve without importing that env-coupled module.
 function loadLogic() {
   const deps = `
-    const PRICE_PER_NIGHT = 100;
     const MIN_NIGHTS = 5;
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
     const KEY_ORDER = ['B1', 'B2', 'B3'];
@@ -57,14 +58,13 @@ function loadLogic() {
   const body = [
     deps,
     sliceFn(SEL_SRC, 'nightsBetween'),
-    sliceFn(SEL_SRC, 'priceForNights'),
     sliceFn(SEL_SRC, 'isRangeContiguous'),
     sliceFn(SEL_SRC, 'evaluateSelection'),
     sliceFn(SEL_SRC, 'isBookableDockDate'),
     sliceFn(SEL_SRC, 'firstAvailableBungalow'),
     sliceFn(SEL_SRC, 'dayState'),
     sliceFn(SEL_SRC, 'reduceClick'),
-    'return { nightsBetween, priceForNights, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, PRICE_PER_NIGHT, KEY_ORDER };',
+    'return { nightsBetween, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -74,7 +74,7 @@ const L = loadLogic();
 // in-season August dates used below.
 const TODAY = new Date(2026, 0, 1); // Jan 1 2026
 
-// ── nights + price ────────────────────────────────────────────────────────
+// ── nights ──────────────────────────────────────────────────────────────────
 
 test('nightsBetween: hotel convention (Aug 10 → Aug 15 = 5 nights)', () => {
   assert.equal(L.nightsBetween('2026-08-10', '2026-08-15'), 5);
@@ -87,12 +87,6 @@ test('nightsBetween: 6 and 10 nights', () => {
 
 test('nightsBetween: reversed order is non-positive', () => {
   assert.ok(L.nightsBetween('2026-08-15', '2026-08-10') <= 0);
-});
-
-test('priceForNights: €100/night', () => {
-  assert.equal(L.priceForNights(5), 500);
-  assert.equal(L.priceForNights(6), 600);
-  assert.equal(L.priceForNights(10), 1000);
 });
 
 // ── contiguity walk ─────────────────────────────────────────────────────────
@@ -132,11 +126,13 @@ test('evaluateSelection: incomplete when no check-out', () => {
   assert.equal(v.kind, 'incomplete');
 });
 
-test('evaluateSelection: valid ≥5-night contiguous range → price', () => {
+test('evaluateSelection: valid ≥5-night contiguous range → nights, NO price', () => {
   const v = L.evaluateSelection({ key: 'B1', checkIn: '2026-08-10', checkOut: '2026-08-15' }, new Set(), TODAY);
   assert.equal(v.kind, 'valid');
   assert.equal(v.nights, 5);
-  assert.equal(v.price, 500);
+  // The price is now fetched from the Worker's /price endpoint; the pure
+  // verdict must NOT carry a client-computed price.
+  assert.equal('price' in v, false);
 });
 
 test('evaluateSelection: 4-night range → tooShort (no price)', () => {
