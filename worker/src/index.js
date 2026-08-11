@@ -142,10 +142,25 @@ export default {
         }
       }
       if (!applied) {
-        // No offer applies → standard rate: standardPrice() charges each night
-        // at its seasonal band rate (bands read from the sheet via
-        // getCachedRateBands). A night outside every band → null → the
-        // total===null 400 below (we never guess a price).
+        // No offer applies → standard rate from the seasonal bands.
+        //
+        // An EMPTY bands array here is not "bad user dates" — it means the
+        // rate table read yielded no usable rows (a transient bad/partial
+        // Sheets read that still parsed structurally, or a misconfigured
+        // table). Pricing every no-offer stay off an empty table would 400
+        // (`bad-dates`) and silently blank the enquiry's price/Column L, and
+        // — because the empty read is cached for 60s — stick for a full
+        // minute. Treat it as a retryable server error (502) instead, so the
+        // client can retry and we never record a price-less enquiry from a
+        // rate-table hiccup. A genuinely-uncovered night with bands PRESENT
+        // still falls through to the 400 below (real bad input).
+        if (bands.length === 0) {
+          console.error('price.no-rate-bands');
+          return jsonResponse({ ok: false, error: 'price-unavailable' }, 502, request, env);
+        }
+        // standardPrice() charges each night at its seasonal band rate. A
+        // night outside every (present) band → null → the total===null 400
+        // below (we never guess a price).
         const std = standardPrice(checkin, checkout, bands);
         total = std === null ? null : std.total;
       }

@@ -137,6 +137,34 @@ test('POST /price: no offer + a night outside all bands → 400', async () => {
   });
 });
 
+test('POST /price: no offer + EMPTY rate-band table → 502 (retryable), never a silent 400', async () => {
+  // A structurally-valid read whose band range parses to zero rows (transient
+  // bad read, or misconfigured table). Pricing off an empty table must NOT
+  // 400/blank the enquiry price — it's a server-side rate-config failure, so
+  // 502 price-unavailable (retryable), distinct from the bands-present
+  // uncovered-night 400 above.
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('oauth2.googleapis.com/token')) {
+      return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
+    }
+    if (u.includes('sheets.googleapis.com')) {
+      // Offers present, band range present-but-empty (→ parseRateBands → []).
+      return new Response(JSON.stringify({ valueRanges: [{ values: [OFFER_T2] }, { values: [] }] }), { status: 200 });
+    }
+    return new Response('unexpected', { status: 418 });
+  };
+  try {
+    // Dates outside every offer window → no-offer branch, needs bands.
+    const res = await worker.fetch(priceReq({ checkin: '2026-08-01', checkout: '2026-08-05' }), env, {});
+    assert.equal(res.status, 502);
+    assert.equal((await res.json()).error, 'price-unavailable');
+  } finally {
+    globalThis.fetch = real; _resetForTests(); _resetOffersCacheForTests();
+  }
+});
+
 test('POST /price: first applicable offer wins (sheet order)', async () => {
   await withMockedSheets([OFFER_T1, OFFER_T2], async () => {
     // Both windows start 07-01; book 07-01..07-11 (10 nights).
