@@ -22,7 +22,7 @@
 import { verifyTurnstile } from './turnstile.js';
 import { validateBody } from './validation.js';
 import { appendEnquiry } from './sheets.js';
-import { fetchOffers, toPublicOffer, getCachedOffers } from './offers.js';
+import { toPublicOffer, getCachedOffers } from './offers.js';
 import { computeOfferPrice, nightsBetween } from './pricing.js';
 import { checkRateLimit } from './rate-limit.js';
 import {
@@ -151,6 +151,9 @@ export default {
         total = nights === null ? null : nights * STANDARD_RATE;
       }
       if (total === null) {
+        // Reachable only for a syntactically-valid-but-impossible date (e.g.
+        // 2026-02-30): it passes the ISO regex above but nightsBetween's
+        // round-trip guard rejects it, and no offer applied. Treat as bad input.
         return jsonResponse({ ok: false, error: 'bad-dates' }, 400, request, env);
       }
       return jsonResponse({ ok: true, total, applied }, 200, request, env);

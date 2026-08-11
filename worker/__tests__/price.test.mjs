@@ -63,9 +63,9 @@ test('POST /price: Type 2 offer applies — discounted total', async () => {
     assert.equal(body.ok, true);
     assert.equal(body.applied, true);
     assert.equal(body.total, 600);
-    // No rate/discount params leak in the response.
-    assert.equal('rate' in body, false);
-    assert.equal('tier' in body, false);
+    // The response must be EXACTLY {ok,total,applied} — no rate/tier/discount
+    // params or any other offer internals leak through /price.
+    assert.deepEqual(Object.keys(body).sort(), ['applied', 'ok', 'total']);
   });
 });
 
@@ -76,6 +76,8 @@ test('POST /price: Type 1 % applies to all in-window nights', async () => {
     const body = await res.json();
     assert.equal(body.applied, true);
     assert.equal(body.total, 800);
+    // Type-1 offers carry discountPct internally — assert it does NOT leak.
+    assert.deepEqual(Object.keys(body).sort(), ['applied', 'ok', 'total']);
   });
 });
 
@@ -111,11 +113,82 @@ test('POST /price: first applicable offer wins (sheet order)', async () => {
   });
 });
 
+test('POST /price: reversing offer order changes which applies (order-sensitive)', async () => {
+  // Both windows start 07-01; T2 first now. Book 07-01..07-11 (10 nights).
+  // OFFER_T2 (min 9, free 3) applies first → (10-3)*100 = 700 (differs from T1's
+  // 800), proving the loop is order-sensitive, not that T1 just always wins.
+  await withMockedSheets([OFFER_T2, OFFER_T1], async () => {
+    const res = await worker.fetch(priceReq({ checkin: '2026-07-01', checkout: '2026-07-11' }), env, {});
+    const body = await res.json();
+    assert.equal(body.applied, true);
+    assert.equal(body.total, 700);
+  });
+});
+
+// Cache tests need to count sheets round-trips, so they use a bespoke mock.
+function withCountingSheets(values, run) {
+  const real = globalThis.fetch;
+  let sheetsHits = 0;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('oauth2.googleapis.com/token')) {
+      return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
+    }
+    if (u.includes('sheets.googleapis.com')) {
+      sheetsHits += 1;
+      return new Response(JSON.stringify({ values }), { status: 200 });
+    }
+    return new Response('unexpected', { status: 418 });
+  };
+  return Promise.resolve()
+    .then(() => run(() => sheetsHits))
+    .finally(() => { globalThis.fetch = real; _resetForTests(); _resetOffersCacheForTests(); });
+}
+
+test('POST /price: second call within 60s serves offers from cache (no extra sheets hit)', async () => {
+  await withCountingSheets([OFFER_T2], async (hits) => {
+    await worker.fetch(priceReq({ checkin: '2026-07-01', checkout: '2026-07-10' }), env, {});
+    const afterFirst = hits();
+    await worker.fetch(priceReq({ checkin: '2026-07-01', checkout: '2026-07-10' }), env, {});
+    assert.equal(hits(), afterFirst, 'second /price call must not re-hit the sheet (cache warm)');
+    assert.equal(afterFirst, 1, 'first call reads the sheet exactly once');
+  });
+});
+
+test('POST /price: warm cache is still served even if the sheet later errors', async () => {
+  const real = globalThis.fetch;
+  let mode = 'ok';
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('oauth2.googleapis.com/token')) {
+      return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
+    }
+    if (u.includes('sheets.googleapis.com')) {
+      return mode === 'ok'
+        ? new Response(JSON.stringify({ values: [OFFER_T2] }), { status: 200 })
+        : new Response('nope', { status: 500 });
+    }
+    return new Response('unexpected', { status: 418 });
+  };
+  try {
+    const r1 = await worker.fetch(priceReq({ checkin: '2026-07-01', checkout: '2026-07-10' }), env, {});
+    assert.equal((await r1.json()).total, 600);   // warms the cache
+    mode = 'err';                                  // sheet now errors
+    const r2 = await worker.fetch(priceReq({ checkin: '2026-07-01', checkout: '2026-07-10' }), env, {});
+    assert.equal(r2.status, 200);                  // still served from warm cache
+    assert.equal((await r2.json()).total, 600);
+  } finally {
+    globalThis.fetch = real; _resetForTests(); _resetOffersCacheForTests();
+  }
+});
+
 test('POST /price: 400 on bad/missing dates', async () => {
   await withMockedSheets([OFFER_T2], async () => {
     for (const b of [
       { checkin: 'x', checkout: '2026-07-10' },
       { checkin: '2026-07-10', checkout: '2026-07-01' }, // reversed
+      { checkin: '2026-07-05', checkout: '2026-07-05' }, // equal (checkin < checkout fails)
+      { checkin: '2026-02-30', checkout: '2026-03-05' }, // impossible-but-ISO-shaped
       { checkin: '2026-07-01' }, // missing checkout
       {},
     ]) {
