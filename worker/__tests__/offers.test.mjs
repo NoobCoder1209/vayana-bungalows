@@ -507,7 +507,8 @@ test('fetchSheetData: both ranges populated → offers + bands parsed', async ()
   );
 });
 
-test('GET /offers returns [] when the sheet has no eligible rows', async () => {  await withMockedSheets(
+test('GET /offers returns [] when the sheet has no eligible rows', async () => {
+  await withMockedSheets(
     [['Offer 1', '', '', '', '', '', '', '', '', '', '', '', '', '']],
     async () => {
       const res = await worker.fetch(getReq(), offersEnv, {});
