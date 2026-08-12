@@ -2,6 +2,10 @@
 
 A boutique resort marketing site. Multi-page static site built with hand-written HTML, CSS, and vanilla JS, bundled by Vite.
 
+> **New to the project?** Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — a
+> diagram-led tour of how the static site, the Cloudflare Worker, and the Google
+> Sheet fit together, plus where to change what.
+
 ## Run locally
 
 Prerequisites: [Node.js](https://nodejs.org) 18 or newer.
