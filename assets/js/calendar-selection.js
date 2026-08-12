@@ -51,6 +51,26 @@ const PRICE_DEBOUNCE_MS = 250;
 // never stops. On a healthy request the fetch resolves well under this.
 const PRICE_TIMEOUT_MS = 12000;
 
+// Transient-failure retry for POST /price. A cold Worker isolate can, on its
+// first sheet read, return a 5xx (incomplete/transient upstream read) that the
+// very next call to a warm isolate would answer fine. Rather than drop straight
+// to the no-price fallback, retry a couple of times BEHIND the existing spinner
+// — the guest just waits ~1s longer. Only 5xx / network errors are retried; a
+// 4xx (e.g. 400 bad-dates for genuinely unpriceable/off-season nights) and a
+// 200-with-bad-shape are terminal — retrying them can't help.
+const PRICE_MAX_ATTEMPTS = 3;   // 1 initial call + 2 retries
+const PRICE_RETRY_DELAY_MS = 400;
+
+/**
+ * True if a POST /price HTTP status is a transient failure worth retrying —
+ * any 5xx. 4xx (bad request / bad dates) is a definitive "can't price this"
+ * and is NOT retried. Network errors (fetch throws, no status) are handled as
+ * retryable by the caller's catch path, separately from this predicate.
+ */
+export function isRetryablePriceStatus(status) {
+  return typeof status === 'number' && status >= 500 && status <= 599;
+}
+
 // Pure presentation resolver for the /stay/ pill: given a state and (for the
 // priced state) a total, return the label, whether the pill is `disabled`
 // (non-clickable while pricing), and whether it's `priced` (carries a real

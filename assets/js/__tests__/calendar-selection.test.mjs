@@ -68,7 +68,8 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'reduceClick'),
     sliceFn(SEL_SRC, 'pillPresentation'),
     sliceFn(SEL_SRC, 'applyPillState'),
-    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, pillPresentation, applyPillState, MIN_NIGHTS, KEY_ORDER };',
+    sliceFn(SEL_SRC, 'isRetryablePriceStatus'),
+    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, pillPresentation, applyPillState, isRetryablePriceStatus, MIN_NIGHTS, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -505,4 +506,18 @@ test('applyPillState priced with a non-finite total: degrades to fallback, no ?p
   L.applyPillState(pill, 'priced', SNAPSHOT, NaN, stubHref);
   assert.equal(pill.textContent, 'Continue to enquire');
   assert.ok(!/price=/.test(pill.href), `no NaN price leaked: ${pill.href}`);
+});
+
+// ── isRetryablePriceStatus: only 5xx is a transient /price failure ───────────
+
+test('isRetryablePriceStatus: 5xx → retryable', () => {
+  for (const s of [500, 502, 503, 599]) {
+    assert.equal(L.isRetryablePriceStatus(s), true, `${s} should retry`);
+  }
+});
+
+test('isRetryablePriceStatus: 4xx / 2xx / bogus → NOT retryable', () => {
+  for (const s of [200, 400, 404, 415, 429, 300, 600, 0, undefined, null, '502']) {
+    assert.equal(L.isRetryablePriceStatus(s), false, `${s} should NOT retry`);
+  }
 });
