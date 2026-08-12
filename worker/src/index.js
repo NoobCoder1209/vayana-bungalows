@@ -135,7 +135,7 @@ export default {
       let total = null;
       let applied = false;
       for (const offer of offers) {
-        const r = computeOfferPrice(offer, checkin, checkout);
+        const r = computeOfferPrice(offer, checkin, checkout, bands);
         if (r.applied && r.total !== null) {
           total = r.total;
           applied = true;

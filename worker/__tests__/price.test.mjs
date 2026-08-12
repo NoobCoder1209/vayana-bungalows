@@ -178,13 +178,78 @@ test('POST /price: first applicable offer wins (sheet order)', async () => {
 
 test('POST /price: reversing offer order changes which applies (order-sensitive)', async () => {
   // Both windows start 07-01; T2 first now. Book 07-01..07-11 (10 nights).
-  // OFFER_T2 (min 9, free 3) applies first → (10-3)*100 = 700 (differs from T1's
-  // 800), proving the loop is order-sensitive, not that T1 just always wins.
+  // OFFER_T2 (window 07-01..07-10, min 9, free 3) applies first: W=9 in-window
+  // → (9-3)*100 = 600; X=1 (the 10th) priced at the SEASONAL July band €130 = 130.
+  // Total 730 — differs from T1's 800 (which covers all 10 nights, X=0), proving
+  // the loop is order-sensitive. (Was 700 before outside nights were seasonal.)
   await withMockedSheets([OFFER_T2, OFFER_T1], async () => {
     const res = await worker.fetch(priceReq({ checkin: '2026-07-01', checkout: '2026-07-11' }), env, {});
     const body = await res.json();
     assert.equal(body.applied, true);
-    assert.equal(body.total, 700);
+    assert.equal(body.total, 730);
+  });
+});
+
+// ── straddle regression: outside-window nights priced seasonally (the owner bug) ──
+// A bespoke mock: the live Sep offer (Offer 4, window 20–25 Sep, Type 1, Low €20,
+// −€10/day, min 5) + the Sep seasonal bands (1–6 Sep=€100, 7–30 Sep=€80).
+// Serials: 46285=2026-09-20, 46290=2026-09-25, 46266=09-01, 46271=09-06,
+// 46272=09-07, 46295=09-30. Columns A–N: A label, B start, C end, D high, E mid,
+// F low, G tier, H pct, I perDay, J total, K min, L paid, M free, N type. The
+// tier is "Low" → the rate is read from column F, so €20 sits in F (index 5).
+const SEP_OFFER = [
+  'Offer 4', 46285, 46290, '', '', 20, 'Low', '', 10, '', 5, '', '', 'Type 1',
+];
+const SEP_BAND_ROWS = [
+  [46266, 46271, 100], // 1–6 Sep @ 100
+  [46272, 46295, 80],  // 7–30 Sep @ 80
+];
+function withSepSheets(bandRows, run) {
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('oauth2.googleapis.com/token')) {
+      return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
+    }
+    if (u.includes('sheets.googleapis.com')) {
+      return new Response(JSON.stringify({ valueRanges: [{ values: [SEP_OFFER] }, { values: bandRows }] }), { status: 200 });
+    }
+    return new Response('unexpected', { status: 418 });
+  };
+  return Promise.resolve()
+    .then(run)
+    .finally(() => { globalThis.fetch = real; _resetForTests(); _resetOffersCacheForTests(); });
+}
+
+test('POST /price: 19–25 Sep straddle = €130 (owner example — outside night seasonal)', async () => {
+  // W=5 in-window (20–24) at (20-10)=€10 → €50; the 19th outside at seasonal €80.
+  // 50 + 80 = 130. (Was €70 when outside nights were billed the offer's €20 tier.)
+  await withSepSheets(SEP_BAND_ROWS, async () => {
+    const res = await worker.fetch(priceReq({ checkin: '2026-09-19', checkout: '2026-09-25' }), env, {});
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.applied, true);
+    assert.equal(body.total, 130);
+  });
+});
+
+test('POST /price: pure in-window 20–25 Sep unchanged = €50', async () => {
+  await withSepSheets(SEP_BAND_ROWS, async () => {
+    const res = await worker.fetch(priceReq({ checkin: '2026-09-20', checkout: '2026-09-25' }), env, {});
+    const body = await res.json();
+    assert.equal(body.applied, true);
+    assert.equal(body.total, 50);
+  });
+});
+
+test('POST /price: straddle with an outside night in no band → 400 bad-dates', async () => {
+  // Drop the early-Sep band so 5,6 Sep are uncovered; book 05–25 Sep. The offer
+  // applies in-window but an outside night (5th) has no seasonal band →
+  // computeOfferPrice returns null → the route 400s (never guesses).
+  await withSepSheets([[46272, 46295, 80]], async () => {
+    const res = await worker.fetch(priceReq({ checkin: '2026-09-05', checkout: '2026-09-25' }), env, {});
+    assert.equal(res.status, 400);
+    assert.equal((await res.json()).error, 'bad-dates');
   });
 });
 
