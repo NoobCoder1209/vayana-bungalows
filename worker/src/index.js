@@ -132,6 +132,14 @@ export default {
       // Find the first offer that APPLIES to this selection (order = sheet order).
       // Offers are date-window promotions; bungalow is accepted but not used to
       // match today (availability already gates which dates are selectable).
+      //
+      // computeOfferPrice now prices out-of-window nights at the seasonal rate,
+      // so an eligible offer can return { applied:true, total:null } when a
+      // straddle's outside night has no seasonal band. The `total !== null`
+      // guard skips such a result and falls through to the no-offer branch,
+      // which runs standardPrice over the WHOLE stay. That is safe (not a
+      // misprice): the same uncovered night makes whole-stay standardPrice
+      // return null too → the total===null 400 below. Never a guessed price.
       let total = null;
       let applied = false;
       for (const offer of offers) {

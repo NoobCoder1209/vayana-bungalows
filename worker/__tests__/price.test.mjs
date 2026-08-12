@@ -244,7 +244,7 @@ test('POST /price: pure in-window 20–25 Sep unchanged = €50', async () => {
 
 test('POST /price: straddle with an outside night in no band → 400 bad-dates', async () => {
   // Drop the early-Sep band so 5,6 Sep are uncovered; book 05–25 Sep. The offer
-  // applies in-window but an outside night (5th) has no seasonal band →
+  // applies in-window but an outside night (5th/6th) has no seasonal band →
   // computeOfferPrice returns null → the route 400s (never guesses).
   await withSepSheets([[46272, 46295, 80]], async () => {
     const res = await worker.fetch(priceReq({ checkin: '2026-09-05', checkout: '2026-09-25' }), env, {});
