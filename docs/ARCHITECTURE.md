@@ -53,17 +53,19 @@ two.
 flowchart TD
     Root["vayana-bungalows/"]
 
-    Root --> Pages["index.html + page folders<br/>stay/ · enquiries/ · 3× bungalow/ · contacts/ …"]
-    Root --> Assets["assets/"]
+    Root --> Pages["index.html + page folders<br/>stay/ · enquiries/ · contacts/ …<br/>+ 3 bungalow pages (see below)"]
+    Root --> Assets["assets/ (source)"]
     Root --> Worker["worker/"]
     Root --> Locales["locales/<br/>en.json · bg.json"]
     Root --> Scripts["scripts/<br/>fetch-bookings · i18n-plugin · i18n-lint"]
     Root --> WF[".github/workflows/<br/>4 pipelines"]
-    Root --> Docs["docs/<br/>ARCHITECTURE.md · specs/"]
+    Root --> Docs["docs/<br/>ARCHITECTURE.md · superpowers/ (specs)"]
+
+    Pages --> Bungalows["premier-oceanview-villa/<br/>deluxe-hilltop-residence/<br/>premier-beachfront-suite/"]
 
     Assets --> CSS["css/ — hand-written styles"]
     Assets --> JS["js/ — vanilla ES modules"]
-    Assets --> Data["data/bookings.json<br/>(generated, not hand-edited)"]
+    Root --> Public["public/assets/data/bookings.json<br/>(GENERATED at build → deployed;<br/>NOT committed, not hand-edited)"]
 
     JS --> JScore["main.js — boots each page's modules"]
     JS --> JSbook["calendar-selection.js · availability-calendar.js<br/>booking.js · season.js — date picking"]
@@ -96,7 +98,7 @@ flowchart TD
     CORS -->|yes| P204["204 + CORS headers"]
     CORS -->|no| Route{"path?"}
 
-    Route -->|GET /offers| Offers["Read offers from the Sheet<br/>(hide tier/rate)<br/>→ public offer list"]
+    Route -->|GET /offers| Offers["Read offers from the Sheet<br/>(hide tier NAME + High/Mid/Low structure;<br/>per-night price IS shown)<br/>→ public offer list"]
     Route -->|POST /price| Price["Compute the total for<br/>the selected dates<br/>→ just a number"]
     Route -->|POST /submit| Submit["Validate + captcha +<br/>append the enquiry row"]
     Route -->|anything else| P404["404 not-found"]
@@ -106,9 +108,12 @@ flowchart TD
     Submit --> Sheet
 ```
 
-- **`GET /offers`** — public, cacheable. Powers the home-page offers section.
+- **`GET /offers`** — public, cacheable. Powers the home-page offers section. It
+  hides the tier **name** and the High/Mid/Low **structure**, but exposes the
+  selected tier's per-night price as a generic `price` field.
 - **`POST /price`** — public. Given check-in/out, returns *only* the total euro
-  price (the per-night tier rates never reach the browser).
+  price — the raw per-night rates and how the total was derived never reach the
+  browser.
 - **`POST /submit`** — the enquiry form action. Guarded (see §6).
 
 All three read the **same Google Sheet**; `/offers` and `/price` share one cached
@@ -149,6 +154,11 @@ param, dropped into a hidden field, and written by the Worker into the **Price
 column (L)** of the Enquires tab. If `/price` can't produce a number, the guest
 can still enquire — the price is just left blank for the owner to fill.
 
+> **Note:** the `/stay/` pill is the only source of `?price` today. The home-page
+> Offers modal links to the enquiry with the offer message (`?offer=…`) but does
+> **not** pass a price in the current phase — the enquiry form reads `?price`
+> either way, so a modal-originated enquiry simply arrives price-less.
+
 ---
 
 ## 5. Offers & pricing — how the Sheet drives money
@@ -169,17 +179,17 @@ flowchart TD
 
     Sheet -->|one batchGet| Cache["60s in-memory cache<br/>{ offers, bands }"]
 
-    Cache --> OffersRoute["GET /offers<br/>→ hide tier/rate, return public list"]
+    Cache --> OffersRoute["GET /offers<br/>→ hide tier NAME/structure,<br/>expose per-night price"]
     Cache --> PriceRoute["POST /price"]
 
     PriceRoute --> Match{"does an offer<br/>apply to these dates?"}
-    Match -->|yes| OfferCalc["price via the offer<br/>(discount / pay-X-get-Y)"]
-    Match -->|no| Standard["standardPrice():<br/>sum each night at its<br/>seasonal band rate"]
-    OfferCalc --> Total["round to whole € → total"]
+    Match -->|yes| OfferCalc["price via the offer<br/>(discount / pay-X-get-Y)<br/>→ cents"]
+    Match -->|no| Standard["standardPrice():<br/>sum each night at its<br/>seasonal band rate → cents"]
+    OfferCalc --> Total["route rounds to whole € → total"]
     Standard --> Total
 ```
 
-**Two things a new dev must know here:**
+**Three things a new dev must know here:**
 
 1. **The cache never stores an *empty* rate table.** An empty read is treated as a
    transient glitch (the table is a permanent fixture), so it isn't cached — the
@@ -189,6 +199,10 @@ flowchart TD
    2026 dates are a *template* that applies to April–September of any year. Band
    **End is inclusive** (the last night charged), which is the *opposite* of an
    offer window's end (the checkout day, exclusive). Don't conflate them.
+3. **Rounding is two-stage.** Both the offer path (`computeOfferPrice`) and the
+   standard path (`standardPrice`) round to **cents** internally; the `/price`
+   *route* then does a single `Math.round` to a **whole euro** on the merged
+   total (so the enquiry's integer-only price field always gets a clean number).
 
 ---
 
@@ -203,8 +217,9 @@ flowchart TD
     In([POST /submit]) --> M{"method POST?"} -->|no| E405[405]
     M -->|yes| CT{"JSON / form?"} -->|no| E415[415]
     CT -->|yes| Size{"body ≤ 16KB?"} -->|no| E413[413]
-    Size -->|yes| IP{"has client IP?"} -->|no| E400a[400]
-    IP -->|yes| RL{"under rate limit?<br/>(per hashed IP)"} -->|no| E429[429]
+    Size -->|yes| IP{"client IP present<br/>+ hashable?"} -->|no IP| E400a[400]
+    IP -->|salt missing / hash fails| E500[500]
+    IP -->|ok| RL{"under rate limit?<br/>(per hashed IP)"} -->|no| E429[429]
     RL -->|yes| Parse{"body parses?"} -->|no| E400b[400]
     Parse -->|yes| Valid{"fields valid?"} -->|no| E400c[400]
     Valid -->|yes| Honey{"honeypot filled?<br/>(bot trap)"} -->|yes| Fake["200 / 303<br/>(fake success, NO write)"]
@@ -231,7 +246,7 @@ so the calendar knows which nights are taken *without* any live call at page loa
 flowchart LR
     Owner([Owner edits reservations<br/>on B1/B2/B3 tabs]) --> Sheet[("Google Sheet")]
     Sheet -->|"every 10 min (cron)<br/>fetch-bookings.mjs"| Action["GitHub Action:<br/>Refresh bookings"]
-    Action -->|"commits/deploys"| JSON["assets/data/bookings.json<br/>{ unavailable[], checkIn[] } per bungalow"]
+    Action -->|"rebuilds + deploys to Pages<br/>(NOT committed to the repo)"| JSON["public/assets/data/bookings.json<br/>{ unavailable[], checkIn[] } per bungalow"]
     JSON -->|"page load fetch"| Cal["availability-calendar.js<br/>greys out booked nights"]
 ```
 
@@ -269,23 +284,23 @@ Four GitHub Actions workflows in `.github/workflows/`:
 
 ```mermaid
 flowchart TD
-    subgraph OnPR["On every push / PR (any branch)"]
-      CI["CI (ci.yml)<br/>build · npm test · i18n:lint"]
+    subgraph OnPR["CI (ci.yml): pushes to any branch + PRs targeting main"]
+      CI["build · npm test · i18n:lint"]
     end
 
-    subgraph OnMain["On merge to main"]
-      DeployPages["Deploy to GitHub Pages (deploy.yml)<br/>fetch bookings → build → publish dist/"]
-      DeployWorker["Deploy Worker to Cloudflare (deploy-worker.yml)<br/>wrangler deploy"]
+    subgraph OnMain["On push to main"]
+      DeployPages["Deploy to GitHub Pages (deploy.yml)<br/>fetch bookings → build → publish"]
+      DeployWorker["Deploy Worker to Cloudflare (deploy-worker.yml)<br/>wrangler deploy — only when worker/** changed"]
     end
 
-    subgraph Cron["Every 10 minutes"]
-      Refresh["Refresh bookings (refresh-bookings.yml)<br/>fetch-bookings.mjs → commit if changed"]
+    subgraph Cron["Every ~10 minutes"]
+      Refresh["Refresh bookings (refresh-bookings.yml)<br/>fetch-bookings.mjs → rebuild + deploy<br/>(no commit)"]
     end
 
     PR([Feature branch + PR]) --> CI
     CI -->|green + review| Merge([Merge to main])
     Merge --> DeployPages
-    Merge --> DeployWorker
+    Merge -->|"if worker/** changed"| DeployWorker
 ```
 
 **Developer workflow:** branch (`feature/…`, `fix/…`, `docs/…`) → PR → CI green +
