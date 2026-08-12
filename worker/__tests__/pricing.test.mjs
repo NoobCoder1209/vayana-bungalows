@@ -14,6 +14,14 @@ const BANDS = [
   { startISO: '2026-06-15', endISO: '2026-06-30', rate: 110 },
 ];
 
+// September bands used by the offer-straddle tests: Sep 7–30 = €80 (matches the
+// live rate table's late-Sep band). computeOfferPrice prices any night OUTSIDE
+// an offer window at these seasonal rates.
+const SEP_BANDS = [
+  { startISO: '2026-09-01', endISO: '2026-09-06', rate: 100 },
+  { startISO: '2026-09-07', endISO: '2026-09-30', rate: 80 },
+];
+
 test('standardPrice: 28 Apr → 3 May (owner example) = 5 nights × €75 = €375', () => {
   // nights 28,29,30 Apr + 1,2 May (checkout 3 May not a night).
   assert.deepEqual(standardPrice('2026-04-28', '2026-05-03', BANDS), { total: 375 });
@@ -115,11 +123,13 @@ test('Type 2: exact window booking → (W - free) * rate', () => {
   assert.equal(r.total, 600);
 });
 
-test('Type 2: window + extra nights outside → discount on window, extras full', () => {
-  // Book 09-01..09-12 → W=9, X=2. (9-3)*100 + 2*100 = 800.
-  const r = computeOfferPrice(t2(), '2026-09-01', '2026-09-12');
+test('Type 2: window + extra nights outside → discount on window, extras at SEASONAL rate', () => {
+  // Book 09-01..09-12 → W=9, X=2 (10,11 Sep). In-window (9-3)*100 = 600.
+  // Outside 10,11 Sep at the seasonal €80 band = 160. Total = 760
+  // (was 800 under the old X*offerRate bug — the extras are seasonal now).
+  const r = computeOfferPrice(t2(), '2026-09-01', '2026-09-12', SEP_BANDS);
   assert.equal(r.applied, true);
-  assert.equal(r.total, 800);
+  assert.equal(r.total, 760);
 });
 
 test('Type 2: below minimum in-window → NOT applied, plain nights * rate', () => {
@@ -190,16 +200,19 @@ test('Type 1 total: flat € off the in-window portion', () => {
   assert.equal(r.total, 340);
 });
 
-test('Type 1 total: extras added at full rate on top of the flat-discounted window', () => {
-  // window 1-5 (4 nights), discountTotal 60, book 09-01..09-07 → W=4, X=2.
-  // (4*100 - 60) + 2*100 = 340 + 200 = 540.
+test('Type 1 total: outside-window nights priced at the SEASONAL rate, not the offer tier', () => {
+  // Window 10–14 Sep (4 nights), offer rate €100, discountTotal 60. Book 10–16 →
+  // W=4, X=2 (14,15 Sep). In-window: (4*100 - 60) = 340. Outside 14,15 Sep at the
+  // seasonal €80 band = 160. Total = 340 + 160 = 500. Discriminating: the offer
+  // rate is €100 but the outside nights cost €80 (seasonal), proving they are NOT
+  // billed at the offer tier (that would give 340 + 200 = 540, the old bug).
   const r = computeOfferPrice(
     { type: 'Type 1', rate: 100, minimumToBook: 4, discountTotal: 60,
-      startDate: '2026-09-01', endDate: '2026-09-05' },
-    '2026-09-01', '2026-09-07',
+      startDate: '2026-09-10', endDate: '2026-09-14' },
+    '2026-09-10', '2026-09-16', SEP_BANDS,
   );
   assert.equal(r.applied, true);
-  assert.equal(r.total, 540);
+  assert.equal(r.total, 500);
 });
 
 test('Type 1 total: no clamp — window discount may exceed cost (trust the sheet)', () => {
@@ -212,6 +225,97 @@ test('Type 1 total: no clamp — window discount may exceed cost (trust the shee
   );
   assert.equal(r.applied, true);
   assert.equal(r.total, -100);
+});
+
+// ── computeOfferPrice: straddling stays — outside nights at the SEASONAL rate ──
+// The owner-reported bug: nights outside the offer window were charged at the
+// offer's own tier rate instead of the seasonal band. These lock the fix.
+
+// Offer 4 (the live Sep offer): window 20–25 Sep, Type 1, Low €20, −€10/day, min 5.
+const offer4 = (over = {}) => ({
+  type: 'Type 1', rate: 20, minimumToBook: 5, discountPerDay: 10,
+  startDate: '2026-09-20', endDate: '2026-09-25',
+  ...over,
+});
+
+test('straddle: 19–25 Sep under Offer 4 = €130 (owner example)', () => {
+  // W=5 in-window (20–24) at (20-10)=€10 → €50. Outside: the 19th at seasonal €80.
+  // 50 + 80 = 130. (Was €70 under the old X*offerRate bug — the 19th billed €20.)
+  const r = computeOfferPrice(offer4(), '2026-09-19', '2026-09-25', SEP_BANDS);
+  assert.equal(r.applied, true);
+  assert.equal(r.total, 130);
+});
+
+test('straddle: pure in-window (20–25 Sep) unchanged = €50', () => {
+  const r = computeOfferPrice(offer4(), '2026-09-20', '2026-09-25', SEP_BANDS);
+  assert.equal(r.applied, true);
+  assert.equal(r.total, 50);
+});
+
+test('straddle: outside nights AFTER the window priced seasonally', () => {
+  // Move the window earlier (12–17), book 12–20 → W=5 (12–16) at €10 = €50;
+  // outside 17,18,19 Sep at seasonal €80 = €240. Total 290.
+  const r = computeOfferPrice(
+    offer4({ startDate: '2026-09-12', endDate: '2026-09-17' }),
+    '2026-09-12', '2026-09-20', SEP_BANDS,
+  );
+  assert.equal(r.applied, true);
+  assert.equal(r.total, 290); // 50 + 3*80
+});
+
+test('straddle: outside nights on BOTH sides priced seasonally', () => {
+  // Book 19–26 → in-window 20–24 = 5 nights at €10 = €50; outside 19 (before)
+  // and 25 (after) at seasonal €80 each = €160. Total 210.
+  const r = computeOfferPrice(offer4(), '2026-09-19', '2026-09-26', SEP_BANDS);
+  assert.equal(r.applied, true);
+  assert.equal(r.total, 210); // 50 + 2*80
+});
+
+test('straddle: Type 2 outside nights priced seasonally', () => {
+  // Type 2 window 10–20 Sep, €100, min 4, pay 2 / free 2. Book 15–22 →
+  // W=5 (15–19) → (5-2)*100 = 300; outside 20,21 Sep at seasonal €80 = 160. Total 460.
+  const r = computeOfferPrice(
+    { type: 'Type 2', rate: 100, minimumToBook: 4, paidNights: 2, freeNights: 2,
+      startDate: '2026-09-10', endDate: '2026-09-20' },
+    '2026-09-15', '2026-09-22', SEP_BANDS,
+  );
+  assert.equal(r.applied, true);
+  assert.equal(r.total, 460);
+});
+
+test('straddle: Type 1 % outside nights priced seasonally', () => {
+  // 20% off window 10–20 (€100), book 15–22 → W=5 at 100*0.8 = 400; outside
+  // 20,21 Sep at seasonal €80 = 160. Total 560.
+  const r = computeOfferPrice(
+    { type: 'Type 1', rate: 100, minimumToBook: 4, discountPct: 20,
+      startDate: '2026-09-10', endDate: '2026-09-20' },
+    '2026-09-15', '2026-09-22', SEP_BANDS,
+  );
+  assert.equal(r.applied, true);
+  assert.equal(r.total, 560);
+});
+
+test('straddle: an outside night with NO seasonal band → null (never guess)', () => {
+  // Book 5–25 Sep. The 5th & 6th fall in the €100 band, fine — but drop that
+  // band so 5,6 Sep are uncovered → outside pricing fails → null.
+  const bandsNoEarlySep = [{ startISO: '2026-09-07', endISO: '2026-09-30', rate: 80 }];
+  const r = computeOfferPrice(offer4(), '2026-09-05', '2026-09-25', bandsNoEarlySep);
+  assert.equal(r.total, null);
+  assert.equal(r.applied, false);
+});
+
+test('straddle: empty bands + a straddling stay → null (outside cannot be priced)', () => {
+  const r = computeOfferPrice(offer4(), '2026-09-19', '2026-09-25', []);
+  assert.equal(r.total, null);
+  assert.equal(r.applied, false);
+});
+
+test('no-straddle: fully in-window stay prices fine even with EMPTY bands', () => {
+  // X=0 → bands never consulted. Regression guard: empty bands must not break
+  // an offer stay that has no outside nights.
+  const r = computeOfferPrice(offer4(), '2026-09-20', '2026-09-25', []);
+  assert.equal(r.applied, true);
+  assert.equal(r.total, 50);
 });
 
 // ── fail-safe / no-throw ──────────────────────────────────────────────────

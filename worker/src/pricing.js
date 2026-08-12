@@ -74,17 +74,44 @@ export function nightsInWindow(checkin, checkout, winStart, winEnd) {
 }
 
 /**
+ * The booking's nights that fall OUTSIDE a contiguous offer window, as an array
+ * of [checkinISO, checkoutISO) sub-ranges (0, 1, or 2 of them):
+ *   before: [checkin, min(checkout, winStart))
+ *   after:  [max(checkin, winEnd), checkout)
+ * Only non-empty sub-ranges (start < end) are returned. ISO 'YYYY-MM-DD' strings
+ * compare lexicographically in date order, so min/max are plain string compares;
+ * standardPrice re-parses each boundary. Returns null if any date is unparseable.
+ * @returns {Array<[string,string]> | null}
+ */
+function outsideSubRanges(checkin, checkout, winStart, winEnd) {
+  if ([checkin, checkout, winStart, winEnd].some((d) => isoToDayNumber(d) === null)) {
+    return null;
+  }
+  const ranges = [];
+  const beforeEnd = checkout < winStart ? checkout : winStart; // min(checkout, winStart)
+  if (checkin < beforeEnd) ranges.push([checkin, beforeEnd]);
+  const afterStart = checkin > winEnd ? checkin : winEnd;       // max(checkin, winEnd)
+  if (afterStart < checkout) ranges.push([afterStart, checkout]);
+  return ranges;
+}
+
+/**
  * Compute the total price for a stay under an offer.
  * @param {object} offer - { type:'Type 1'|'Type 2', rate:number, minimumToBook:number,
  *   freeNights?, paidNights?, discountPct?, discountPerDay?, discountTotal?,
  *   startDate, endDate } (ISO window dates).
  * @param {string} checkin  ISO 'YYYY-MM-DD'
  * @param {string} checkout ISO 'YYYY-MM-DD'
+ * @param {Array<{startISO,endISO,rate}>} bands - the seasonal rate table, used to
+ *   price the nights of the stay that fall OUTSIDE the offer window (those nights
+ *   are NOT part of the promo, so they cost the normal seasonal rate — never the
+ *   offer's tier rate). Same array standardPrice() consumes.
  * @returns {{ total: number|null, applied: boolean }}
- *   total=null when it can't be priced at all (bad dates / missing rate); never throws.
+ *   total=null when it can't be priced at all (bad dates / missing rate / an
+ *   outside night falls outside every seasonal band); never throws.
  *   applied=false with a plain (rate·nights) total when the offer's eligibility fails.
  */
-export function computeOfferPrice(offer, checkin, checkout) {
+export function computeOfferPrice(offer, checkin, checkout, bands) {
   const fail = { total: null, applied: false };
   if (!offer || typeof offer !== 'object') return fail;
 
@@ -106,7 +133,27 @@ export function computeOfferPrice(offer, checkin, checkout) {
     return { total: plainTotal, applied: false };
   }
 
-  const extras = X * rate;
+  // Price the nights OUTSIDE the offer window at the SEASONAL rate (not the
+  // offer's tier). The window is contiguous, so a straddling stay has at most
+  // two outside sub-ranges: before the window [checkin, min(checkout,winStart))
+  // and after it [max(checkin,winEnd), checkout). Each is priced with the same
+  // standardPrice() the no-offer path uses. If an outside night falls outside
+  // every seasonal band, standardPrice returns null and we propagate null (the
+  // caller then 400s bad-dates, or 502s if the band table is empty — either way
+  // we never guess, and never fall back to the offer rate).
+  // Note: extras sums per-segment totals that standardPrice already round2'd,
+  // then the final offer total is round2'd again. Bands are whole-euro rates so
+  // there is no drift; if bands ever gain sub-cent rates, round once at the end.
+  let extras = 0;
+  if (X > 0) {
+    const outsideRanges = outsideSubRanges(checkin, checkout, offer.startDate, offer.endDate);
+    if (outsideRanges === null) return fail; // unparseable window/booking
+    for (const [subIn, subOut] of outsideRanges) {
+      const seg = standardPrice(subIn, subOut, bands);
+      if (seg === null) return fail; // an outside night has no seasonal band → can't price
+      extras += seg.total;
+    }
+  }
 
   if (offer.type === 'Type 2') {
     const free = offer.freeNights;
