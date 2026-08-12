@@ -71,6 +71,17 @@ export function isRetryablePriceStatus(status) {
   return typeof status === 'number' && status >= 500 && status <= 599;
 }
 
+/**
+ * Whether a failed /price attempt should schedule another (true) or give up to
+ * the fallback (false). Pure so the attempt-count / off-by-one decision is
+ * unit-testable without the async loop. `attemptNo` is 1-based; with
+ * maxAttempts=3 this is true for attempts 1 and 2 (→ schedule attempt 2, 3) and
+ * false at attempt 3 (→ give up: 3 fetches total, no 4th).
+ */
+export function shouldRetryAttempt(attemptNo, maxAttempts) {
+  return attemptNo < maxAttempts;
+}
+
 // Pure presentation resolver for the /stay/ pill: given a state and (for the
 // priced state) a total, return the label, whether the pill is `disabled`
 // (non-clickable while pricing), and whether it's `priced` (carries a real
@@ -562,7 +573,7 @@ export function initCalendarSelection() {
       // A newer selection has superseded this one → stop the chain (don't keep
       // firing network calls for a dead request; settle would no-op anyway).
       if (priceResponseIsStale(selection, snapshot, reqId, priceReqId)) return;
-      if (attemptNo >= PRICE_MAX_ATTEMPTS) {
+      if (!shouldRetryAttempt(attemptNo, PRICE_MAX_ATTEMPTS)) {
         console.warn(`[stay] could not price selection after ${attemptNo} attempts:`, reason);
         toFallback();
         return;
@@ -595,14 +606,18 @@ export function initCalendarSelection() {
             }
             return HANDLED_NON_2XX; // stop this attempt's chain
           }
-          return r.json();
+          // A 200 with a non-JSON body (truncated response, a proxy/CDN
+          // interstitial served with status 200) is a bad BODY, not a transient
+          // network fault — parse defensively to null so it lands in the
+          // bad-shape terminal branch below rather than being retried.
+          return r.json().catch(() => null);
         })
         .then((data) => {
           if (data === HANDLED_NON_2XX) return; // non-2xx already handled above
           if (!data || data.ok !== true || typeof data.total !== 'number'
             || !Number.isFinite(data.total)) {
-            // Server answered 200 but the body is malformed/empty/null — a
-            // contract issue a retry won't fix. Terminal fallback.
+            // Server answered 200 but the body is malformed/empty/null/non-JSON
+            // — a contract issue a retry won't fix. Terminal fallback.
             toFallback();
             return;
           }
@@ -616,7 +631,9 @@ export function initCalendarSelection() {
           });
         })
         .catch((err) => {
-          // Network error / thrown fetch → transient, retry (or give up). Never throw.
+          // Only a genuine network error / thrown fetch reaches here now (a bad
+          // 200 body is caught above and made terminal). Transient → retry (or
+          // give up at the last attempt). Never throw.
           onRetryableFailure(attemptNo, err && err.message ? err.message : 'network');
         });
     };
