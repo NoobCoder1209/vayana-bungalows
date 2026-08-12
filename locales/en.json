@@ -141,7 +141,75 @@
     }
   },
   "stay": {
-    "_stub": "This section is filled by issue #48 — marketing pages."
+    "meta": {
+      "title": "Stay — Vayana Bungalows",
+      "description": "The Vayana bungalows in Tsarevo, Bulgaria: three boutique villas on the Black Sea coast — oceanview, hilltop, and beachfront. Pick the one that fits your stay.",
+      "og_description": "Three boutique bungalows on the Black Sea coast in Tsarevo, Bulgaria. Pick the one that fits your stay."
+    },
+    "hero": {
+      "eyebrow": "The bungalows",
+      "title": "Our Bungalows",
+      "sub": "Three handcrafted villas on the Tsarevo coast — each with its own live availability."
+    },
+    "specs": {
+      "sr_title": "Bungalow specifications",
+      "size_label": "Size",
+      "occupancy_label": "Occupancy",
+      "occupancy_value": "2 adults",
+      "bed_label": "Bed",
+      "bed_value": "King",
+      "view_label": "View",
+      "view_value": "Ocean",
+      "floor_label": "Floor",
+      "floor_value": "Single level"
+    },
+    "villas": {
+      "eyebrow": "The three villas",
+      "card1_title": "Bungalow 1",
+      "card2_title": "Bungalow 2",
+      "card3_title": "Bungalow 3",
+      "cal1_aria": "Bungalow 1 availability calendar",
+      "cal2_aria": "Bungalow 2 availability calendar",
+      "cal3_aria": "Bungalow 3 availability calendar"
+    },
+    "amenities": {
+      "eyebrow": "In every bungalow",
+      "title": "Amenities",
+      "wifi": "Free WiFi",
+      "aircon": "Air conditioning",
+      "kitchen": "Fully Equipped Kitchen",
+      "parking": "Free parking",
+      "tv": "Smart TV",
+      "bbq": "BBQ",
+      "coffee": "Coffee Machine",
+      "washing": "Washing Machine",
+      "iron": "Iron",
+      "hairdryer": "Hair Dryer",
+      "linens": "Premium Linens & Towels",
+      "crib": "Baby Crib"
+    },
+    "gallery": {
+      "eyebrow": "A glimpse of the bungalows",
+      "title": "Gallery",
+      "prev_photo_aria": "Previous photo",
+      "next_photo_aria": "Next photo",
+      "prev_photos_aria": "Previous photos",
+      "next_photos_aria": "Next photos",
+      "alt_beach": "Beach at golden hour",
+      "alt_terrace": "Open-air villa terrace",
+      "alt_pool": "Pool deck overlooking the sea",
+      "alt_lagoon": "Palms over a turquoise lagoon",
+      "alt_spa": "Spa pavilion at dusk"
+    },
+    "lightbox": {
+      "viewer_aria": "Photo viewer"
+    },
+    "cta": {
+      "eyebrow": "Already have a plan",
+      "title": "Have questions?",
+      "lede": "Tell us your dates and a little about your party and we'll reply within 24-48 hours with availability and a tailored proposal.",
+      "button": "Send an enquiry"
+    }
   },
   "bungalows": {
     "_stub": "This section is filled by issue #48 — marketing pages (three bungalow detail pages)."
