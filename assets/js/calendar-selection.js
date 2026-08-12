@@ -570,6 +570,14 @@ export function initCalendarSelection() {
       retryTimer = setTimeout(() => attempt(attemptNo + 1), PRICE_RETRY_DELAY_MS);
     };
 
+    // Unique marker the first .then returns when it has ALREADY handled a
+    // non-2xx (retry scheduled or terminal fallback). Using a Symbol — not
+    // `null` — means a legit 200 whose body is literally `null` (a proxy/CDN
+    // interstitial; the Worker never emits it) is NOT mistaken for "handled":
+    // it falls into the bad-shape branch → immediate fallback, instead of
+    // silently stalling the spinner until the safety timeout.
+    const HANDLED_NON_2XX = Symbol('handled-non-2xx');
+
     const attempt = (attemptNo) => {
       if (settled) return;
       fetch(SITE_CONFIG.endpoints.price, {
@@ -585,16 +593,16 @@ export function initCalendarSelection() {
             } else {
               toFallback();
             }
-            return null; // stop this attempt's chain
+            return HANDLED_NON_2XX; // stop this attempt's chain
           }
           return r.json();
         })
         .then((data) => {
-          if (data === null) return; // already handled (non-2xx) above
+          if (data === HANDLED_NON_2XX) return; // non-2xx already handled above
           if (!data || data.ok !== true || typeof data.total !== 'number'
             || !Number.isFinite(data.total)) {
-            // Server answered 200 but the body is malformed — a contract issue
-            // a retry won't fix. Terminal fallback.
+            // Server answered 200 but the body is malformed/empty/null — a
+            // contract issue a retry won't fix. Terminal fallback.
             toFallback();
             return;
           }
