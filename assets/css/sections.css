@@ -2103,6 +2103,34 @@
   display: none !important;
 }
 
+/* ── Loading (pricing) state ───────────────────────────────────────────────
+   While POST /price resolves, the pill shows a spinner + "Pricing your stay…"
+   and is non-clickable (JS also removes the href and sets aria-disabled).
+   Greyed out, default cursor, and pointer-events:none as belt-and-suspenders
+   so it can't be clicked/keyboard-activated mid-request even if the JS href/
+   aria-disabled toggle lags (matches the pointer-events guard used elsewhere
+   in this file). */
+.stay-select__pill--loading {
+  opacity: 0.72;
+  cursor: default;
+  pointer-events: none;
+}
+/* Spinner: a ring with three faint sides and one brighter top quadrant,
+   rotating. Sized to the pill text; sits inline before the label with a small
+   gap. Under reduced motion the ring is frozen (see the reduce block below) —
+   still a visible loading indicator, just not animated. */
+.stay-select__spinner {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  margin-right: 0.6em;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: var(--bg-light);
+  border-radius: 50%;
+  vertical-align: -0.15em;
+  animation: stay-spin 0.7s linear infinite;
+}
+
 /* ── "Selected X nights" caption ───────────────────────────────────────────
    Plain italic text (no pill/button styling). Per the owner it sits on its own
    line, left-aligned under the calendar column (above the pill) — a bare grid
@@ -2172,6 +2200,18 @@
   @keyframes stay-dock-in {
     from { opacity: 0; transform: translate(-50%, 8px); }
     to { opacity: 1; transform: translate(-50%, 0); }
+  }
+  @keyframes stay-spin {
+    to { transform: rotate(360deg); }
+  }
+}
+
+/* Reduced motion: don't spin. The ring stays visible as a static loading
+   indicator (a frozen circle with one brighter quadrant) so the wait is still
+   signalled without animation. */
+@media (prefers-reduced-motion: reduce) {
+  .stay-select__spinner {
+    animation: none;
   }
 }
 

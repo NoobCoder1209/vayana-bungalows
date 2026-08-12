@@ -66,7 +66,9 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'firstAvailableBungalow'),
     sliceFn(SEL_SRC, 'dayState'),
     sliceFn(SEL_SRC, 'reduceClick'),
-    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, MIN_NIGHTS, KEY_ORDER };',
+    sliceFn(SEL_SRC, 'pillPresentation'),
+    sliceFn(SEL_SRC, 'applyPillState'),
+    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, pillPresentation, applyPillState, MIN_NIGHTS, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -362,4 +364,145 @@ test('post-load invalidation: contiguous-at-click range → invalid once booking
   // Bookings arrive: Aug 4–9 now booked → same range is invalid.
   const loaded = new Set(['2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09']);
   assert.equal(L.evaluateSelection(sel, loaded, TODAY).kind, 'invalid');
+});
+
+// ── pillPresentation: the pill's copy + disabled flag per state ──────────────
+// Pure resolver used by the DOM writer (applyPillState) to decide the /stay/
+// pill's label and whether it's clickable while POST /price is in flight.
+
+test('pillPresentation: loading → spinner label, disabled (guest waits)', () => {
+  assert.deepEqual(L.pillPresentation('loading'), {
+    label: 'Pricing your stay…', disabled: true, priced: false,
+  });
+});
+
+test('pillPresentation: priced → "…for X€", enabled, priced', () => {
+  assert.deepEqual(L.pillPresentation('priced', 375), {
+    label: 'Stay with us only for 375€', disabled: false, priced: true,
+  });
+});
+
+test('pillPresentation: fallback → neutral clickable label, not priced', () => {
+  assert.deepEqual(L.pillPresentation('fallback'), {
+    label: 'Continue to enquire', disabled: false, priced: false,
+  });
+});
+
+test('pillPresentation: priced with a non-finite/absent total degrades to fallback copy', () => {
+  // A "priced" state that somehow lacks a real number must NOT render "…for X€"
+  // with a blank/NaN — it falls through to the neutral clickable label, and is
+  // NOT marked priced (so the href won't append ?price).
+  for (const bad of [undefined, NaN, Infinity, '375', null]) {
+    assert.deepEqual(L.pillPresentation('priced', bad), {
+      label: 'Continue to enquire', disabled: false, priced: false,
+    });
+  }
+});
+
+test('pillPresentation: unknown state → safe clickable fallback', () => {
+  assert.deepEqual(L.pillPresentation('bogus'), {
+    label: 'Continue to enquire', disabled: false, priced: false,
+  });
+});
+
+// ── applyPillState: the DOM writer (class / aria / spinner / href contract) ──
+// applyPillState is sliced as a plain function; it uses `document.createElement`
+// + `document.createTextNode` (loading branch only) and an injected enquiryHref.
+// We give it a minimal fake pill + a tiny globalThis.document stub — no jsdom,
+// matching the repo's zero-dependency test convention. This locks the exact
+// class/aria/href contract the CSS (.stay-select__pill--loading / .stay-select__
+// spinner) depends on, which the pure pillPresentation test can't cover.
+
+function makePill() {
+  const attrs = {};
+  const classes = new Set();
+  const children = [];
+  return {
+    _attrs: attrs, _children: children,
+    href: undefined,
+    textContent: '',
+    set innerHTML(v) { if (v === '') children.length = 0; },
+    classList: {
+      add: (c) => classes.add(c),
+      remove: (c) => classes.delete(c),
+      contains: (c) => classes.has(c),
+    },
+    setAttribute: (k, v) => { attrs[k] = v; },
+    removeAttribute: (k) => { delete attrs[k]; },
+    getAttribute: (k) => (k in attrs ? attrs[k] : null),
+    appendChild: (n) => children.push(n),
+    hasClass: (c) => classes.has(c),
+  };
+}
+
+// Minimal document stub for the spinner span + text node the loading branch
+// builds. Installed per-test (not at module scope) so it's present when the
+// test BODY runs, and torn down after — Node runs test bodies after full module
+// evaluation, so a module-level install+restore would restore before any body.
+function withDocumentStub(run) {
+  const orig = globalThis.document;
+  globalThis.document = {
+    createElement: () => {
+      const a = {};
+      return { className: '', setAttribute: (k, v) => { a[k] = v; }, getAttribute: (k) => a[k] ?? null };
+    },
+    createTextNode: (t) => ({ _text: t }),
+  };
+  try { run(); } finally { globalThis.document = orig; }
+}
+
+// A stub enquiryHref matching the real one's shape: appends &price only when a
+// finite positive number is passed.
+const stubHref = (snap, price) => {
+  const base = `../enquiries/?checkin=${snap.checkIn}&checkout=${snap.checkOut}`;
+  return (typeof price === 'number' && Number.isFinite(price) && price > 0)
+    ? `${base}&price=${price}` : base;
+};
+const SNAPSHOT = { key: 'B1', checkIn: '2026-08-10', checkOut: '2026-08-15' };
+
+test('applyPillState loading: --loading class, aria-disabled/busy, spinner span, NO href', () => {
+  withDocumentStub(() => {
+    const pill = makePill();
+    pill.href = '../enquiries/?stale'; // ensure a prior href is cleared
+    L.applyPillState(pill, 'loading', SNAPSHOT, undefined, stubHref);
+    assert.equal(pill.hasClass('stay-select__pill--loading'), true);
+    assert.equal(pill.getAttribute('aria-disabled'), 'true');
+    assert.equal(pill.getAttribute('aria-busy'), 'true');
+    assert.equal('href' in pill._attrs, false); // href attribute removed
+    // One spinner span + one text node child.
+    const spinner = pill._children.find((c) => c.className === 'stay-select__spinner');
+    assert.ok(spinner, 'spinner span appended');
+    assert.equal(spinner.getAttribute('aria-hidden'), 'true');
+    assert.ok(pill._children.some((c) => c._text === 'Pricing your stay…'), 'label text node appended');
+  });
+});
+
+test('applyPillState priced: enabled, "…only for X€", href carries ?price', () => {
+  const pill = makePill();
+  // Pre-set the loading flags to confirm they get cleared.
+  pill.classList.add('stay-select__pill--loading');
+  pill.setAttribute('aria-disabled', 'true');
+  pill.setAttribute('aria-busy', 'true');
+  L.applyPillState(pill, 'priced', SNAPSHOT, 375, stubHref);
+  assert.equal(pill.hasClass('stay-select__pill--loading'), false);
+  assert.equal(pill.getAttribute('aria-disabled'), null);
+  assert.equal(pill.getAttribute('aria-busy'), null);
+  assert.equal(pill.textContent, 'Stay with us only for 375€');
+  assert.match(pill.href, /&price=375\b/);
+});
+
+test('applyPillState fallback: enabled, "Continue to enquire", href WITHOUT ?price', () => {
+  const pill = makePill();
+  L.applyPillState(pill, 'fallback', SNAPSHOT, undefined, stubHref);
+  assert.equal(pill.hasClass('stay-select__pill--loading'), false);
+  assert.equal(pill.getAttribute('aria-disabled'), null);
+  assert.equal(pill.textContent, 'Continue to enquire');
+  assert.ok(pill.href && !/price=/.test(pill.href), `href has no price: ${pill.href}`);
+});
+
+test('applyPillState priced with a non-finite total: degrades to fallback, no ?price', () => {
+  const pill = makePill();
+  L.applyPillState(pill, 'priced', SNAPSHOT, NaN, stubHref);
+  assert.equal(pill.textContent, 'Continue to enquire');
+  assert.ok(!/price=/.test(pill.href), `no NaN price leaked: ${pill.href}`);
 });
