@@ -525,57 +525,95 @@ export function initCalendarSelection() {
     // outcome for this fetch touches the pill, and only if this fetch is still
     // the current one and its pill is still shown for the same selection.
     let settled = false;
+    let retryTimer = null;
     const settle = (apply) => {
       if (settled) return;
       settled = true;
       clearTimeout(timeoutId);
+      clearTimeout(retryTimer); // cancel any pending retry — this is the outcome
       if (priceResponseIsStale(selection, snapshot, reqId, priceReqId)) return;
       const pill = pillByKey.get(snapshot.key);
       if (!pill || pill.hidden) return; // pill was hidden (selection cleared)
       apply(pill);
     };
 
-    // Fallback used by BOTH a failed fetch and the safety timeout: leave the
-    // pill clickable with the neutral no-price label so a slow/failed /price
-    // never traps the guest behind a permanent spinner.
+    // Fallback used by a give-up (all attempts failed) and the safety timeout:
+    // leave the pill clickable with the neutral no-price label so a slow/failed
+    // /price never traps the guest behind a permanent spinner.
     const toFallback = () => settle((pill) => {
       applyPillState(pill, 'fallback', snapshot, undefined, enquiryHref);
       announce('');
       announce('Continue to enquire.');
     });
 
-    // Safety timeout: a request that never resolves or rejects still clears the
-    // spinner. The fetch's own outcome (settle) will no-op afterwards.
+    // Safety timeout: a request (or retry chain) that never resolves still
+    // clears the spinner. The fetch's own outcome (settle) will no-op afterwards.
     const timeoutId = setTimeout(toFallback, PRICE_TIMEOUT_MS);
 
-    fetch(SITE_CONFIG.endpoints.price, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        if (!data || data.ok !== true || typeof data.total !== 'number'
-          || !Number.isFinite(data.total)) {
-          throw new Error('bad-shape');
-        }
-        const total = data.total;
-        settle((pill) => {
-          applyPillState(pill, 'priced', snapshot, total, enquiryHref);
-          // Reset the live region before re-announcing so screen readers still
-          // read an identical euro total when the guest re-selects the same range.
-          announce('');
-          announce(`Stay with us for ${total} euros.`);
-        });
-      })
-      .catch((err) => {
-        // No fallback number: neutral clickable pill. Never throw.
-        console.warn('[stay] could not price selection:', err.message);
+    // Retry only TRANSIENT failures (5xx / network error), up to
+    // PRICE_MAX_ATTEMPTS behind the spinner. Each retry is a fresh /price call
+    // that likely lands on a different (warm) Worker isolate, dodging a cold
+    // isolate's transient first-read failure. A 4xx (bad dates) and a
+    // 200-with-bad-shape are terminal — retrying can't help, so fall back at once.
+    // `attemptNo` is 1-based. A retryable failure with attempts remaining
+    // schedules the next attempt; otherwise we give up to the fallback.
+    const onRetryableFailure = (attemptNo, reason) => {
+      if (settled) return;
+      // A newer selection has superseded this one → stop the chain (don't keep
+      // firing network calls for a dead request; settle would no-op anyway).
+      if (priceResponseIsStale(selection, snapshot, reqId, priceReqId)) return;
+      if (attemptNo >= PRICE_MAX_ATTEMPTS) {
+        console.warn(`[stay] could not price selection after ${attemptNo} attempts:`, reason);
         toFallback();
-      });
+        return;
+      }
+      retryTimer = setTimeout(() => attempt(attemptNo + 1), PRICE_RETRY_DELAY_MS);
+    };
+
+    const attempt = (attemptNo) => {
+      if (settled) return;
+      fetch(SITE_CONFIG.endpoints.price, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+        .then((r) => {
+          if (!r.ok) {
+            // 5xx → retryable; 4xx → terminal fallback (no retry).
+            if (isRetryablePriceStatus(r.status)) {
+              onRetryableFailure(attemptNo, `HTTP ${r.status}`);
+            } else {
+              toFallback();
+            }
+            return null; // stop this attempt's chain
+          }
+          return r.json();
+        })
+        .then((data) => {
+          if (data === null) return; // already handled (non-2xx) above
+          if (!data || data.ok !== true || typeof data.total !== 'number'
+            || !Number.isFinite(data.total)) {
+            // Server answered 200 but the body is malformed — a contract issue
+            // a retry won't fix. Terminal fallback.
+            toFallback();
+            return;
+          }
+          const total = data.total;
+          settle((pill) => {
+            applyPillState(pill, 'priced', snapshot, total, enquiryHref);
+            // Reset the live region before re-announcing so screen readers still
+            // read an identical euro total when the guest re-selects the same range.
+            announce('');
+            announce(`Stay with us for ${total} euros.`);
+          });
+        })
+        .catch((err) => {
+          // Network error / thrown fetch → transient, retry (or give up). Never throw.
+          onRetryableFailure(attemptNo, err && err.message ? err.message : 'network');
+        });
+    };
+
+    attempt(1);
   };
 
   // Debounced entry point: schedule a priced fetch for the current selection.
