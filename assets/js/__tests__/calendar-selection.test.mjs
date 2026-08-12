@@ -68,7 +68,9 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'reduceClick'),
     sliceFn(SEL_SRC, 'pillPresentation'),
     sliceFn(SEL_SRC, 'applyPillState'),
-    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, pillPresentation, applyPillState, MIN_NIGHTS, KEY_ORDER };',
+    sliceFn(SEL_SRC, 'isRetryablePriceStatus'),
+    sliceFn(SEL_SRC, 'shouldRetryAttempt'),
+    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, pillPresentation, applyPillState, isRetryablePriceStatus, shouldRetryAttempt, MIN_NIGHTS, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -505,4 +507,30 @@ test('applyPillState priced with a non-finite total: degrades to fallback, no ?p
   L.applyPillState(pill, 'priced', SNAPSHOT, NaN, stubHref);
   assert.equal(pill.textContent, 'Continue to enquire');
   assert.ok(!/price=/.test(pill.href), `no NaN price leaked: ${pill.href}`);
+});
+
+// ── isRetryablePriceStatus: only 5xx is a transient /price failure ───────────
+
+test('isRetryablePriceStatus: 5xx → retryable', () => {
+  for (const s of [500, 502, 503, 599]) {
+    assert.equal(L.isRetryablePriceStatus(s), true, `${s} should retry`);
+  }
+});
+
+test('isRetryablePriceStatus: 4xx / 2xx / bogus → NOT retryable', () => {
+  for (const s of [200, 400, 404, 415, 429, 300, 600, 0, undefined, null, '502']) {
+    assert.equal(L.isRetryablePriceStatus(s), false, `${s} should NOT retry`);
+  }
+});
+
+// ── shouldRetryAttempt: the 1-based attempt-count / give-up decision ─────────
+
+test('shouldRetryAttempt: with max 3, retries after attempts 1 and 2, gives up at 3', () => {
+  assert.equal(L.shouldRetryAttempt(1, 3), true);  // → schedule attempt 2
+  assert.equal(L.shouldRetryAttempt(2, 3), true);  // → schedule attempt 3
+  assert.equal(L.shouldRetryAttempt(3, 3), false); // 3 fetches done → give up, no 4th
+});
+
+test('shouldRetryAttempt: max 1 = no retries at all (single attempt)', () => {
+  assert.equal(L.shouldRetryAttempt(1, 1), false);
 });
