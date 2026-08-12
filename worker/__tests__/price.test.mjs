@@ -204,7 +204,7 @@ const SEP_BAND_ROWS = [
   [46266, 46271, 100], // 1–6 Sep @ 100
   [46272, 46295, 80],  // 7–30 Sep @ 80
 ];
-function withSepSheets(bandRows, run) {
+function withSepSheets(bandRows, run, offerRows = [SEP_OFFER]) {
   const real = globalThis.fetch;
   globalThis.fetch = async (url) => {
     const u = String(url);
@@ -212,7 +212,7 @@ function withSepSheets(bandRows, run) {
       return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
     }
     if (u.includes('sheets.googleapis.com')) {
-      return new Response(JSON.stringify({ valueRanges: [{ values: [SEP_OFFER] }, { values: bandRows }] }), { status: 200 });
+      return new Response(JSON.stringify({ valueRanges: [{ values: offerRows }, { values: bandRows }] }), { status: 200 });
     }
     return new Response('unexpected', { status: 418 });
   };
@@ -252,6 +252,31 @@ test('POST /price: straddle with an outside night in no band → 400 bad-dates',
     assert.equal((await res.json()).error, 'bad-dates');
   });
 });
+
+test('POST /price: an earlier offer whose straddle hits an uncovered night is skipped for a later one', async () => {
+  // Behavior change from the straddle fix: first-eligible-WITH-A-PRICEABLE-TOTAL
+  // wins, not merely first-eligible. Book 05–10 Sep with bands 7–30 Sep=€80 only
+  // (5,6 Sep uncovered).
+  //   Offer A (earlier): window 07–10, Type 1 10% off Mid €100, min 3. Straddles
+  //     05–10 → outside 5,6 Sep uncovered → returns null → SKIPPED.
+  //   Offer B (later): window 05–10, same terms, covers all 5 nights in-window →
+  //     5*100*0.9 = 450, applied.
+  // Serials: 46270=09-05, 46272=09-07, 46275=09-10.
+  const OFFER_A = ['Offer A', 46272, 46275, '', 100, '', 'Mid', 10, '', '', 3, '', '', 'Type 1'];
+  const OFFER_B = ['Offer B', 46270, 46275, '', 100, '', 'Mid', 10, '', '', 3, '', '', 'Type 1'];
+  await withSepSheets(
+    [[46272, 46295, 80]],
+    async () => {
+      const res = await worker.fetch(priceReq({ checkin: '2026-09-05', checkout: '2026-09-10' }), env, {});
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      assert.equal(body.applied, true);
+      assert.equal(body.total, 450); // Offer B won because Offer A couldn't be priced
+    },
+    [OFFER_A, OFFER_B],
+  );
+});
+
 
 // Cache tests need to count sheets round-trips, so they use a bespoke mock.
 function withCountingSheets(values, run) {

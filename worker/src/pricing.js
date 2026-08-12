@@ -139,7 +139,11 @@ export function computeOfferPrice(offer, checkin, checkout, bands) {
   // and after it [max(checkin,winEnd), checkout). Each is priced with the same
   // standardPrice() the no-offer path uses. If an outside night falls outside
   // every seasonal band, standardPrice returns null and we propagate null (the
-  // caller 400s — we never guess, and never fall back to the offer rate).
+  // caller then 400s bad-dates, or 502s if the band table is empty — either way
+  // we never guess, and never fall back to the offer rate).
+  // Note: extras sums per-segment totals that standardPrice already round2'd,
+  // then the final offer total is round2'd again. Bands are whole-euro rates so
+  // there is no drift; if bands ever gain sub-cent rates, round once at the end.
   let extras = 0;
   if (X > 0) {
     const outsideRanges = outsideSubRanges(checkin, checkout, offer.startDate, offer.endDate);
