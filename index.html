@@ -535,16 +535,14 @@
     <div class="booking-dock" data-booking-dock>
       <form class="booking-dock__form" data-booking-mode="availability-link" novalidate>
         <div class="booking-dock__field">
-          <label for="dock-checkin">Check-in</label>
-          <input type="text" id="dock-checkin" name="checkin" placeholder="Add date" autocomplete="off" />
+          <input type="text" id="dock-checkin" name="checkin" placeholder="Check-in" aria-label="Check-in" autocomplete="off" />
         </div>
         <div class="booking-dock__field">
-          <label for="dock-checkout">Check-out</label>
-          <input type="text" id="dock-checkout" name="checkout" placeholder="Add date" autocomplete="off" />
+          <input type="text" id="dock-checkout" name="checkout" placeholder="Check-out" aria-label="Check-out" autocomplete="off" />
         </div>
         <div class="booking-dock__field">
-          <label for="dock-rooms">Rooms</label>
-          <select id="dock-rooms" name="rooms">
+          <select id="dock-rooms" name="rooms" aria-label="Rooms" required>
+            <option value="" disabled selected>Rooms</option>
             <option>1 room</option>
             <option>2 rooms</option>
             <option>3 rooms</option>
@@ -552,8 +550,8 @@
           </select>
         </div>
         <div class="booking-dock__field">
-          <label for="dock-guests">Guests</label>
-          <select id="dock-guests" name="guests">
+          <select id="dock-guests" name="guests" aria-label="Guests" required>
+            <option value="" disabled selected>Guests</option>
             <option>1 adult</option>
             <option>2 adults</option>
             <option>2 adults, 1 child</option>

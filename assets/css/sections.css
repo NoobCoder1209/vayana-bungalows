@@ -212,7 +212,7 @@
   min-height: 104px;
   padding: 0 2.25rem;
   font-size: 1rem;
-  /* Keep the Book Now button sharp-cornered (it spans the full height of the
+  /* Keep the Check Availability button sharp-cornered (it spans the full height of the
      booking bar and reads better squared off), overriding the global
      --radius-button. */
   border-radius: 0;
@@ -241,7 +241,7 @@
 /* A pill-shaped bar fixed to the bottom-centre of the viewport carrying the
    enquiry-link form. Sits above page content but BELOW modals/lightbox
    (--z-sticky range). On mobile the multi-field pill is hidden and a single
-   "Book Now" pill link shows instead. */
+   "Check Availability" pill link shows instead. */
 .booking-dock {
   position: fixed;
   left: 50%;
@@ -267,24 +267,16 @@
 
 .booking-dock__field {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0.7rem 1.25rem;
+  align-items: center;
+  /* Single line per field now (no stacked caption), so the vertical padding
+     drives the pill height — kept tight for a short pill. */
+  padding: 0.6rem 1.25rem;
   min-width: 0;
   /* Thin separators between fields (not before the first). */
   border-left: 1px solid var(--border);
 }
 .booking-dock__field:first-child {
   border-left: 0;
-}
-
-.booking-dock__field label {
-  font-family: var(--font-body);
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 0.2rem;
 }
 
 .booking-dock__field input,
@@ -298,12 +290,28 @@
   color: var(--text-dark);
   cursor: pointer;
 }
+/* The empty state (input placeholder / the disabled first <option>) is the
+   field's caption. Muting it keeps a chosen value reading as the "filled"
+   state, and keeps the four fields' empty states visually uniform. Same
+   font-size as a value so the row height doesn't shift between empty and picked. */
+.booking-dock__field input::placeholder {
+  color: var(--text-muted);
+  opacity: 1; /* Firefox lowers placeholder opacity by default */
+}
+/* Selects carry `required` + a value="" placeholder option, so while unpicked
+   they match :invalid — mute them to match the date inputs' placeholder. Once a
+   real option is chosen the select is :valid and shows --text-dark. (The form
+   is novalidate + JS preventDefault, so `required` never blocks submit; it's
+   purely the styling hook.) */
+.booking-dock__field select:invalid {
+  color: var(--text-muted);
+}
 .booking-dock__field input:focus,
 .booking-dock__field select:focus {
   outline: none;
 }
 
-/* Book Now — the filled pill end. Round only the right side so it hugs the
+/* Check Availability — the filled pill end. Round only the right side so it hugs the
    container's pill edge; the left stays square where it meets the last field
    (the container's overflow:hidden + border-radius rounds the outer corner). */
 .booking-dock__submit {
@@ -315,7 +323,7 @@
   white-space: nowrap;
 }
 
-/* Mobile Book Now pill — hidden on desktop; shown when the full form is
+/* Mobile Check Availability pill — hidden on desktop; shown when the full form is
    hidden below the breakpoint. */
 .booking-dock__mobile-cta {
   display: none;
