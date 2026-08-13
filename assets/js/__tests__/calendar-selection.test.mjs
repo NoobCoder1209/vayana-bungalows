@@ -556,3 +556,11 @@ test('parseOfferMonth: junk / out-of-range / wrong shape → null', () => {
     assert.equal(L.parseOfferMonth(bad), null, `${bad} should be null`);
   }
 });
+
+test('parseOfferMonth: 2-digit year (JS 1900-mapping trap) → null', () => {
+  // `new Date(50, 5, 1)` maps year 50 → 1950; the rolled-over guard must reject
+  // "0050-06" (and friends) rather than silently return a 1950 date.
+  for (const bad of ['0050-06', '0001-01', '0000-01', '0099-12']) {
+    assert.equal(L.parseOfferMonth(bad), null, `${bad} should be null`);
+  }
+});
