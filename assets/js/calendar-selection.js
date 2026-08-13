@@ -276,6 +276,24 @@ export function isBookableDockDate(iso, today) {
 }
 
 /**
+ * Parse an `?offerMonth=YYYY-MM` scroll hint into a Date at the 1st of that
+ * month (local midnight), or null if the string isn't a strict, real YYYY-MM.
+ * Pure (DOM-free) so the parse is unit-testable. Month is 01–12; the day is
+ * always 1 (goToMonth only cares about the month). No season/past checks here —
+ * goToMonth clamps to the pickable nav bounds, so an out-of-range month just
+ * lands as close as allowed.
+ */
+export function parseOfferMonth(str) {
+  if (typeof str !== 'string' || !/^\d{4}-\d{2}$/.test(str)) return null;
+  const [y, m] = str.split('-').map(Number);
+  if (m < 1 || m > 12) return null;
+  const d = new Date(y, m - 1, 1);
+  // Guard against a rolled-over / non-finite date.
+  if (Number.isNaN(d.getTime()) || d.getFullYear() !== y || d.getMonth() !== m - 1) return null;
+  return d;
+}
+
+/**
  * Home-dock deep link resolver: given every bungalow's unavailable-night set,
  * a candidate [checkInIso, checkOutIso) range, and today, return the FIRST
  * bungalow key (in `keyOrder`) that could actually host this stay, or null.
@@ -784,6 +802,31 @@ export function initCalendarSelection() {
     const params = new URLSearchParams(window.location.search);
     const ciRaw = params.get('checkin');
     const coRaw = params.get('checkout');
+    const offerMonthRaw = params.get('offerMonth');
+
+    // ?offerMonth=YYYY-MM — a SCROLL HINT from an offer's "Take the offer" CTA.
+    // Unlike ?checkin/?checkout it selects nothing: it just pages the calendars
+    // to the offer's month so the guest sees availability across all three
+    // bungalows and picks their own dates. A concrete ?checkin/?checkout range
+    // (below) takes precedence — offerMonth is only used when no real range is
+    // present. Handled before the no-deep-link early return.
+    if (offerMonthRaw && !(ciRaw && coRaw)) {
+      // Strip the param first (refresh/share must not re-scroll), like the range path.
+      window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+      const monthDate = parseOfferMonth(offerMonthRaw);
+      if (!monthDate) return; // junk → land at top, no scroll
+      // Page that month into view (goToMonth clamps to the pickable nav bounds),
+      // then bring the calendars region on-screen. No selection, no bungalow target.
+      goToMonth(monthDate);
+      const firstRoot = roots[0];
+      const section = (firstRoot && firstRoot.closest('.bungalow-split')) || firstRoot;
+      if (section) {
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        section.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+      }
+      return;
+    }
+
     if (!ciRaw && !coRaw) return; // no deep link present
 
     const today = todayMidnight();

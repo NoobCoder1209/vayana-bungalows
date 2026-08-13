@@ -63,6 +63,7 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'isRangeContiguous'),
     sliceFn(SEL_SRC, 'evaluateSelection'),
     sliceFn(SEL_SRC, 'isBookableDockDate'),
+    sliceFn(SEL_SRC, 'parseOfferMonth'),
     sliceFn(SEL_SRC, 'firstAvailableBungalow'),
     sliceFn(SEL_SRC, 'dayState'),
     sliceFn(SEL_SRC, 'reduceClick'),
@@ -70,7 +71,7 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'applyPillState'),
     sliceFn(SEL_SRC, 'isRetryablePriceStatus'),
     sliceFn(SEL_SRC, 'shouldRetryAttempt'),
-    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, firstAvailableBungalow, dayState, reduceClick, pillPresentation, applyPillState, isRetryablePriceStatus, shouldRetryAttempt, MIN_NIGHTS, KEY_ORDER };',
+    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, parseOfferMonth, firstAvailableBungalow, dayState, reduceClick, pillPresentation, applyPillState, isRetryablePriceStatus, shouldRetryAttempt, MIN_NIGHTS, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -533,4 +534,25 @@ test('shouldRetryAttempt: with max 3, retries after attempts 1 and 2, gives up a
 
 test('shouldRetryAttempt: max 1 = no retries at all (single attempt)', () => {
   assert.equal(L.shouldRetryAttempt(1, 1), false);
+});
+
+// ── parseOfferMonth: the ?offerMonth=YYYY-MM scroll-hint parser ──────────────
+
+test('parseOfferMonth: valid YYYY-MM → 1st of that month', () => {
+  const d = L.parseOfferMonth('2026-09');
+  assert.ok(d instanceof Date);
+  assert.equal(d.getFullYear(), 2026);
+  assert.equal(d.getMonth(), 8); // September = 8 (0-indexed)
+  assert.equal(d.getDate(), 1);
+});
+
+test('parseOfferMonth: month 01 and 12 accepted', () => {
+  assert.equal(L.parseOfferMonth('2027-01').getMonth(), 0);
+  assert.equal(L.parseOfferMonth('2027-12').getMonth(), 11);
+});
+
+test('parseOfferMonth: junk / out-of-range / wrong shape → null', () => {
+  for (const bad of ['2026-13', '2026-00', '2026-9', '2026/09', 'garbage', '', '2026-09-10', null, undefined, 202609]) {
+    assert.equal(L.parseOfferMonth(bad), null, `${bad} should be null`);
+  }
 });
