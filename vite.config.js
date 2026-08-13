@@ -53,6 +53,18 @@ const i18nContext = {
     privacy_url: `${BASE}privacy/`,
     email_href: 'mailto:contact@vayanabungalows.com',
     email_display: 'contact@vayanabungalows.com',
+    // Build-time SSOT tokens for the legal pages (terms/privacy/cancellation),
+    // where brand / licence / address appear mid-sentence inside translatable
+    // paragraphs. The data-i18n-html sanitizer allows only <a>/<strong>/<em>/
+    // <br>, so we can't embed the runtime data-site-config spans in a keyed
+    // value — instead the prose carries {brand}/{license}/{address_street}/
+    // {address_country} tokens the plugin fills at build. These are
+    // always-English literals (identical in both locales), kept in lockstep
+    // with assets/js/site-config.js — update both if the values change.
+    brand: 'Vayana Bungalows',
+    license: '1327673',
+    address_street: 'ul. Kraybrezhna 1, Tsarevo',
+    address_country: 'Bulgaria',
     // Runtime-interpolated tokens: the offers nights-deal template
     // (home.offers.nights_deal) carries {min}/{free}, which offers.js /
     // offer-modal.js fill from offer.minimumToBook / offer.freeNights at
@@ -78,6 +90,12 @@ const i18nContext = {
     privacy_url: `${BASE}bg/privacy/`,
     email_href: 'mailto:contact@vayanabungalows.com',
     email_display: 'contact@vayanabungalows.com',
+    // Same always-English SSOT tokens as EN (see note above) — brand /
+    // licence / physical address are not translated.
+    brand: 'Vayana Bungalows',
+    license: '1327673',
+    address_street: 'ul. Kraybrezhna 1, Tsarevo',
+    address_country: 'Bulgaria',
     // See EN note above — {min}/{free} in home.offers.nights_deal are
     // runtime tokens; resolve them to the literal token so the plugin
     // leaves them intact for the client-side interpolation.

@@ -538,12 +538,300 @@
     }
   },
   "privacy": {
-    "_stub": "This section is filled by issue #49 — legal pages."
+    "meta": {
+      "title": "Privacy Policy — Vayana Bungalows",
+      "description": "Privacy Policy for Vayana Bungalows — what we collect, why, how long we keep it, and your rights under GDPR.",
+      "og_description": "What we collect, why, how long we keep it, and your rights under GDPR."
+    },
+    "head": {
+      "title": "Privacy Policy",
+      "updated_label": "Last updated:",
+      "lede": "This page explains what personal data Vayana Bungalows collects, why we collect it, how long we keep it, and what rights you have over it under the EU General Data Protection Regulation (GDPR) and Bulgarian data-protection law."
+    },
+    "updated": {
+      "title": "1. Last updated",
+      "para_before": "This Privacy Policy was last updated on",
+      "para_after": ". See <a href=\"#changes\">§12 Changes to this policy</a> for how we handle future updates."
+    },
+    "who": {
+      "title": "2. Who we are",
+      "para1": "We are <strong>{brand}</strong>, operated by Vayana di Mare, a Bulgarian hospitality business operating under licence number {license}.",
+      "para2_before": "Our registered location is {address_street}, {address_country}. For any privacy-related question you can reach us by email at",
+      "para2_after": ".",
+      "para3": "For the purposes of GDPR, we are the <em>data controller</em> for any personal data submitted through this website."
+    },
+    "collect": {
+      "title": "3. What data we collect",
+      "intro": "We only collect personal data that you actively provide to us, plus a small amount of technical data that our anti-spam tools need to operate. We do not run any analytics, advertising, or behavioural-tracking tools on this site.",
+      "form_title": "3.1 Data you give us through the enquiry form",
+      "form_intro_before": "The <a href=\"/enquiries/\">enquiry form</a> on",
+      "form_intro_after": "collects the following fields. All are submitted only when you choose to submit the form:",
+      "form_field_name": "Full name",
+      "form_field_email": "Email address",
+      "form_field_phone": "Phone number",
+      "form_field_dates": "Preferred check-in and check-out dates",
+      "form_field_guests": "Number of guests (adults, children, infants)",
+      "form_field_message": "A free-text message describing your enquiry",
+      "form_field_consent": "A consent checkbox confirming you agree to be contacted (this is logged together with the submission, so we have a record of your consent — see <a href=\"#why\">§4</a>)",
+      "form_flow": "When you submit the form, your data is sent to a <strong>Cloudflare Worker</strong> running on Cloudflare's global edge network, which validates the submission and appends a row to a Google Sheet held in Google Workspace (EU region). See <a href=\"#sharing\">§6 Who we share data with</a> and <a href=\"#storage\">§7 Where data is stored</a> for the processors involved, and <a href=\"#retention\">§8 How long we keep data</a> for the retention period.",
+      "captcha_title": "3.2 Technical data via Cloudflare Turnstile (anti-spam)",
+      "captcha_intro": "The enquiry form is protected against bots by <strong>Cloudflare Turnstile</strong> in managed mode. When you submit the form, Turnstile collects, on Cloudflare's behalf:",
+      "captcha_ip_before": "Your IP address — sent by your browser directly to Cloudflare's",
+      "captcha_ip_after": "endpoint together with the challenge token",
+      "captcha_browser": "Browser characteristics (user agent, screen size, plug-in list)",
+      "captcha_signals": "Interaction signals on the form page (mouse / keyboard movement timing)",
+      "captcha_note_before": "The captcha data above does not pass through our servers in clear form — it goes directly from your browser to Cloudflare, which returns only a success / failure result to our Worker. Our Worker logs only a salted SHA-256 <strong>hash</strong> of your IP address (not the raw address) into the Google Sheet, as",
+      "captcha_note_after": ", so we can correlate repeat enquiries without storing identifying data. We rotate the salt periodically; rotation makes earlier hashes uncorrelatable with any future submission, which is the intended privacy property.",
+      "maps_title": "3.3 Cookies and tracking from embedded Google Maps",
+      "maps_body": "The map on the <a href=\"/\">homepage</a> and on <a href=\"/contacts/\">Contacts</a> / <a href=\"/destination/\">Destination</a> embeds a Google Maps iframe. When the page loads the iframe, Google may set cookies in your browser and receive your IP address — this happens automatically as soon as the page is rendered, whether or not you interact with the map. We have no control over what Google collects in that context — please see Google's own privacy policy.",
+      "newsletter_title": "3.4 Newsletter signup",
+      "newsletter_body": "The newsletter signup form on the homepage accepts an email address into an input field but, in version 1, that email is <strong>not stored anywhere and is not transmitted off your device</strong> — submitting the form opens a \"thank you\" modal and discards what you typed. When a real email-service-provider integration ships, this section will be updated in the same release to list the provider and what they receive."
+    },
+    "why": {
+      "title": "4. Why we collect it (legal basis)",
+      "consent": "<strong>Your consent (GDPR Art. 6(1)(a)).</strong> The enquiry form processes your data on the basis of the consent you give by ticking the checkbox above the submit button. You can withdraw that consent at any time — see <a href=\"#your-rights\">§9</a>.",
+      "legitimate": "<strong>Our legitimate interest (GDPR Art. 6(1)(f)).</strong> The captcha service that runs alongside the form processes the technical data listed in §3.2 to protect our site from automated spam submissions. We have weighed this interest against your rights and consider it proportionate, since the data captured is the minimum required to score a request as bot-or-human."
+    },
+    "use": {
+      "title": "5. How we use it",
+      "intro": "We use the data you give us solely to:",
+      "item_reply": "Reply to your enquiry with a tailored proposal",
+      "item_record": "Hold a record of your stated preferences in case you reply later in the same thread",
+      "item_spam": "Detect and block spam submissions (captcha)",
+      "outro": "We do not use enquiry data for marketing. We do not share it with advertising networks. We do not run any automated decision-making or profiling on it."
+    },
+    "third": {
+      "title": "6. Third parties",
+      "intro": "When you use this site, the following third parties may process some of your personal data on our behalf:",
+      "google": "<strong>Google LLC</strong> — for the embedded Google Maps iframe (§3.3) and for storing enquiry submissions in a Google Sheet held in Google Workspace (EU region, §7). Google's processing is governed by its own <a href=\"https://policies.google.com/privacy\" rel=\"noopener noreferrer\">privacy policy</a> and the <a href=\"https://workspace.google.com/terms/dpa_terms.html\" rel=\"noopener noreferrer\">Google Workspace Data Processing Addendum</a>.",
+      "cloudflare": "<strong>Cloudflare, Inc.</strong> — for hosting the <strong>Cloudflare Worker</strong> that accepts your enquiry submission (§3.1) and for the <strong>Cloudflare Turnstile</strong> anti-spam check that runs before submission (§3.2). Cloudflare's processing is governed by its own <a href=\"https://www.cloudflare.com/privacypolicy/\" rel=\"noopener noreferrer\">privacy policy</a> and its <a href=\"https://www.cloudflare.com/cloudflare-customer-dpa/\" rel=\"noopener noreferrer\">customer Data Processing Addendum</a>.",
+      "github": "<strong>GitHub, Inc.</strong> — this website is served as a static site through GitHub Pages. GitHub receives your IP address and basic request metadata in the course of serving the page. GitHub's processing is governed by its own <a href=\"https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement\" rel=\"noopener noreferrer\">privacy statement</a>."
+    },
+    "storage": {
+      "title": "7. Where data is stored",
+      "intro": "The static website itself contains no stored personal data. When you submit the enquiry form:",
+      "item_edge": "Your submission passes through Cloudflare's globally distributed edge network — the Worker that processes it runs on Cloudflare's edge close to your location, then writes only to the destinations below.",
+      "item_sheet": "The validated submission is appended as a row to a Google Sheet held in Google Workspace, with the storage region set to the European Union.",
+      "item_hash_before": "Only a salted SHA-256 hash of your IP address is written to the sheet (in the",
+      "item_hash_after": "column) — the raw IP is never stored at rest on our side.",
+      "encryption": "In-flight TLS encryption is provided by Cloudflare (between your browser and the Worker) and by Google (between the Worker and the Sheets API). At-rest encryption on Google Workspace is provided by Google."
+    },
+    "retention": {
+      "title": "8. How long we keep it",
+      "para1": "We keep enquiry data for the minimum time necessary to respond to you and follow up. Our current target is to delete enquiry records <strong>12 months</strong> after the last interaction in that thread.",
+      "para2": "If your enquiry becomes a booking, the booking-related data is retained under our booking terms (not this policy). If your enquiry does not become a booking, the 12-month window applies.",
+      "para3": "The \"12 months\" figure is provisional and will be confirmed before launch."
+    },
+    "rights": {
+      "title": "9. Your rights",
+      "intro_before": "Under GDPR, you have the following rights over the data we hold about you. To exercise any of them, email us at",
+      "intro_after": "and we will respond within one calendar month.",
+      "access": "<strong>Access</strong> (Art. 15) — ask us for a copy of what we hold about you.",
+      "rectification": "<strong>Rectification</strong> (Art. 16) — ask us to correct inaccurate or incomplete data.",
+      "erasure": "<strong>Erasure</strong> (Art. 17) — ask us to delete your data, where one of the grounds in Art. 17(1) applies.",
+      "restriction": "<strong>Restriction</strong> (Art. 18) — ask us to pause processing while we investigate a dispute.",
+      "portability": "<strong>Portability</strong> (Art. 20) — ask us to send you (or another controller) a machine-readable copy.",
+      "object": "<strong>Object</strong> (Art. 21) — object to processing carried out on the basis of legitimate interest (§4).",
+      "withdraw": "<strong>Withdraw consent</strong> (Art. 7(3)) — withdraw the consent you gave on the enquiry form at any time, by emailing us. Withdrawing consent does not affect the lawfulness of any processing carried out before the withdrawal.",
+      "complaint": "You also have the right to lodge a complaint with the Bulgarian Commission for Personal Data Protection (<a href=\"https://www.cpdp.bg/en/\" rel=\"noopener noreferrer\">CPDP</a>) if you believe we have mishandled your data."
+    },
+    "cookies": {
+      "title": "10. Cookies",
+      "intro": "We do not set any first-party cookies on this site. Cookies are only set by embedded third-party content:",
+      "maps": "<strong>Google Maps</strong> — sets cookies and receives your IP address when the embedded map iframe loads on the <a href=\"/\">homepage</a>, the <a href=\"/contacts/\">Contacts</a> page, and the <a href=\"/destination/\">Destination</a> page; see Google's own cookie disclosures",
+      "turnstile_before": "<strong>Cloudflare Turnstile</strong> — in managed mode, Turnstile does not set cookies for most visitors. If a visitor is challenged for pre-clearance (rare; happens for traffic that looks abusive), Cloudflare may set a",
+      "turnstile_after": "cookie scoped to the Turnstile challenge domain. See <a href=\"https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/\" rel=\"noopener noreferrer\">Cloudflare's cookie reference</a>.",
+      "outro": "We do not run any analytics, advertising, or behavioural-tracking cookies. If that changes — for example if we add a newsletter analytics tool — we will add a cookie banner before doing so and update this section."
+    },
+    "contact": {
+      "title": "11. How to contact us about data",
+      "intro": "For anything related to your data — access requests, corrections, deletions, complaints, or just questions about this policy — please email us:",
+      "email_label": "Email:",
+      "postal_label": "Postal address:",
+      "postal_value": "{address_street}, {address_country}",
+      "outro": "We aim to acknowledge data-related emails within five working days, and to substantively reply within one calendar month, as GDPR requires."
+    },
+    "changes": {
+      "title": "12. Changes to this policy",
+      "para1": "We may update this policy from time to time — for example when we add a new third-party service, change our retention schedule, or in response to a regulatory update. Whenever we update it, we change the \"last updated\" date at the top.",
+      "para2": "For material changes (anything that affects what we collect, why we collect it, or how long we keep it), we will additionally announce the change on the <a href=\"/\">homepage</a> for a reasonable period of time so that returning visitors notice."
+    }
   },
   "terms": {
-    "_stub": "This section is filled by issue #49 — legal pages."
+    "meta": {
+      "title": "Terms & Conditions — Vayana Bungalows",
+      "description": "Terms and Conditions for Vayana Bungalows — booking process, payment, cancellation, house rules, liability, and governing law.",
+      "og_description": "Booking process, payment, cancellation, house rules, liability, and governing law."
+    },
+    "head": {
+      "title": "Terms & Conditions",
+      "updated_label": "Last updated:",
+      "lede1": "These Terms & Conditions (\"Terms\") govern your use of the <strong>{brand}</strong> website and the booking of any of our bungalows. By using the site or making an enquiry you accept these Terms.",
+      "lede2_pre": "This page is a draft.",
+      "lede2_before": "Every claim marked",
+      "lede2_after": "is a working assumption and MUST be reviewed and replaced by a Bulgarian lawyer before this site goes live to paying guests."
+    },
+    "updated": {
+      "title": "1. Last updated",
+      "body_before": "These Terms were last updated on",
+      "body_after": ".",
+      "see_contact": "See <a href=\"#contact\">§12 Contact</a> for who to email if anything below is unclear."
+    },
+    "who": {
+      "title": "2. Who we are",
+      "para1": "<strong>{brand}</strong> is operated by Vayana di Mare, a Bulgarian operator with tourist-licence number {license}, located at {address_street}, {address_country}.",
+      "para2": "In these Terms, <em>\"we\", \"us\"</em> and <em>\"our\"</em> refer to Vayana di Mare; <em>\"you\"</em> and <em>\"your\"</em> refer to the person visiting the site or making an enquiry."
+    },
+    "acceptance": {
+      "title": "3. Acceptance of these Terms",
+      "para1": "By using this website, submitting an enquiry, or making a reservation, you confirm that you have read these Terms and that you agree to be bound by them. If you do not agree with any part of these Terms, please do not use the site or make a reservation.",
+      "para2": "We may update these Terms from time to time. The version published on this page on the date you make a reservation is the version that applies to that reservation."
+    },
+    "booking": {
+      "title": "4. Booking & reservation process",
+      "intro": "A reservation is made in four steps:",
+      "step1": "<strong>Enquiry.</strong> You complete the form on the <a href=\"/enquiries/\">Enquiries</a> page with your preferred dates, party size, and any questions you have.",
+      "step2": "<strong>Reply.</strong> We get back to you by email, normally within <em>[placeholder: 24–48 hours on working days]</em>, confirming availability, the nightly rate for your dates, and the deposit required to hold the booking.",
+      "step3": "<strong>Deposit & confirmation.</strong> The reservation is confirmed once we receive the deposit described in §5. The booking is provisional until the deposit has cleared. <em>[placeholder: deposit amount and method to be confirmed]</em>",
+      "step4": "<strong>Final payment.</strong> The balance is due <em>[placeholder: on arrival / X days before check-in]</em> in the manner described in §5.",
+      "no_contract": "No contract exists between you and us until step 3 is complete (deposit cleared and confirmation email sent from us)."
+    },
+    "payment": {
+      "title": "5. Payment",
+      "currency": "<strong>Currency.</strong> <em>[placeholder: prices are quoted in EUR and BGN; payment is taken in BGN at the rate quoted on the confirmation email]</em>.",
+      "methods": "<strong>Accepted methods.</strong> <em>[placeholder: bank transfer to the IBAN on the confirmation email; card payments and cash on arrival are not yet accepted]</em>.",
+      "due": "<strong>When payment is due.</strong> <em>[placeholder: deposit of 30% within 7 days of the confirmation email; balance on arrival]</em>.",
+      "vat": "<strong>VAT & tourist tax.</strong> <em>[placeholder: prices include VAT at the prevailing Bulgarian rate; the local tourist tax of [amount] per guest per night is collected on arrival in cash]</em>.",
+      "no_card_storage": "We do not store payment-card data on this site. Today the site does not process card payments at all; payment is arranged by email and bank transfer."
+    },
+    "cancellation": {
+      "title": "6. Cancellation",
+      "summary": "In short: <em>[placeholder: cancellations more than 30 days before check-in receive a full refund of the deposit; cancellations within 30 days forfeit the deposit; no-shows are charged the full stay]</em>.",
+      "full_before": "The full cancellation schedule, including how refunds are processed and what happens in cases of force majeure (§10), is on the dedicated",
+      "link_label": "Cancellation Policy",
+      "full_after": "page. If anything on that page conflicts with the summary here, the dedicated page governs."
+    },
+    "checkinout": {
+      "title": "7. Check-in and check-out",
+      "checkin": "<strong>Check-in:</strong> <em>[placeholder: from 15:00 on the day of arrival]</em>. Earlier check-in may be possible if the bungalow is ready; please ask in advance.",
+      "checkout": "<strong>Check-out:</strong> <em>[placeholder: by 11:00 on the day of departure]</em>. Later check-out may be available subject to the next booking; please ask in advance.",
+      "late_arrival": "If you expect to arrive outside our normal reception hours, please let us know on the <a href=\"/enquiries/\">Enquiries</a> form or by email so that we can arrange key handover."
+    },
+    "house": {
+      "title": "8. House rules",
+      "intro": "When you stay with us, we ask you to:",
+      "rule_quiet": "<em>[placeholder: respect quiet hours between 22:00 and 08:00 — Tsarevo is a small coastal town and noise carries between bungalows]</em>.",
+      "rule_smoking": "<em>[placeholder: not smoke indoors; smoking is allowed only on the outdoor terrace away from the door]</em>.",
+      "rule_pets": "<em>[placeholder: keep pets to the bungalows that allow them; the policy per bungalow is shown on the Stay page]</em> — see <a href=\"/stay/\">Stay</a>.",
+      "rule_occupancy": "<em>[placeholder: not exceed the maximum occupancy printed on the bungalow listing; additional guests require prior approval and an extra-bed fee]</em>.",
+      "rule_checkout_state": "<em>[placeholder: leave the bungalow in a reasonable state on check-out — the cleaning fee is included in the rate, but excessive damage may be charged separately under §9]</em>."
+    },
+    "liability": {
+      "title": "9. Liability",
+      "para1": "<em>[placeholder: We take reasonable care of the bungalows and the surrounding grounds. We are not liable for personal injury or property loss except where caused by our negligence or wilful misconduct, and except where Bulgarian consumer-protection law makes such limitation unenforceable.]</em>",
+      "para2": "<em>[placeholder: You are responsible for any damage to the bungalow or its contents caused by you or your party during the stay. We may charge the cost of repair or replacement to the card or payment method on file, against an itemised invoice.]</em>",
+      "para3": "<em>[placeholder: We strongly recommend that you take out travel insurance covering cancellation, illness, accidents, and loss of belongings.]</em>"
+    },
+    "force": {
+      "title": "10. Force majeure",
+      "body": "<em>[placeholder: Neither party is liable for failure to perform these Terms where the failure is caused by events outside that party's reasonable control — for example natural disasters, war, civil unrest, pandemic-related public-health measures, or government action. In such cases we will work with you in good faith to reschedule your booking or, where rescheduling is not practical, issue a refund as set out in the cancellation policy]</em>. When the dedicated",
+      "link_label": "Cancellation Policy",
+      "body_after": "is published (#18), it will set out the refund schedule for force-majeure cancellations."
+    },
+    "law": {
+      "title": "11. Governing law and jurisdiction",
+      "para1": "These Terms are governed by the laws of the <em>[placeholder: Republic of Bulgaria]</em>. Any dispute arising out of or in connection with these Terms or your stay will be submitted to the exclusive jurisdiction of the <em>[placeholder: Tsarevo Regional Court, or its competent Bulgarian successor court for consumer disputes]</em>.",
+      "para2": "Nothing in this section limits any non-waivable rights you may have as a consumer under Bulgarian or EU consumer-protection law."
+    },
+    "contact": {
+      "title": "12. Contact",
+      "intro": "Questions about these Terms? Please email us:",
+      "email_label": "Email:",
+      "address_label": "Postal address:",
+      "privacy_before": "For data-protection matters (access requests, deletion, consent withdrawal), please see the dedicated",
+      "privacy_link_label": "Privacy Policy",
+      "privacy_after": "instead."
+    }
   },
   "cancellation": {
-    "_stub": "This section is filled by issue #49 — legal pages."
+    "meta": {
+      "title": "Cancellation Policy — Vayana Bungalows",
+      "description": "Cancellation Policy for Vayana Bungalows — refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes.",
+      "og_description": "Refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes."
+    },
+    "head": {
+      "eyebrow": "Vayana Bungalows",
+      "title": "Cancellation Policy",
+      "updated_label": "Last updated:",
+      "lede1": "This Cancellation Policy explains what happens if you need to cancel or modify a reservation at <strong>{brand}</strong>. It is part of, and should be read together with, our <a href=\"/terms/\">Terms & Conditions</a>.",
+      "lede2": "<strong>This page is a draft.</strong> Every figure rendered in a yellow highlight (lead-time threshold, refund percentage, SLA, currency) is a working assumption and MUST be reviewed and replaced before this site goes live to paying guests."
+    },
+    "updated": {
+      "title": "1. Last updated",
+      "body_a": "This Policy was last updated on",
+      "body_b": ". See <a href=\"#contact\">§9 Contact</a> for who to email if anything below is unclear."
+    },
+    "tiers": {
+      "title": "2. Cancellation tiers",
+      "intro": "If you need to cancel a confirmed reservation, the refund you receive depends on how many days before your check-in date we receive the written cancellation request:",
+      "tier1_a": "More than",
+      "tier1_b": "before check-in — we refund",
+      "tier1_c": "of any amount you have paid. <strong>Free cancellation tier.</strong>",
+      "tier2_a": "Between",
+      "tier2_b": "and",
+      "tier2_c": "before check-in — we refund",
+      "tier2_d": "of any amount you have paid. <strong>Partial-refund tier.</strong>",
+      "tier3_a": "Less than",
+      "tier3_b": "before check-in — we refund",
+      "tier3_c": ". <strong>No-refund tier.</strong>",
+      "lead_time": "The lead time is counted from the date and time we <em>receive</em> your written cancellation (see §3), not the date you sent it. Tiers apply to the total amount you have paid us toward the reservation, including any deposit described in §5 of the <a href=\"/terms/\">Terms & Conditions</a>."
+    },
+    "how_to_cancel": {
+      "title": "3. How to cancel",
+      "email_intro": "To cancel a reservation, please email us at",
+      "email_rest": "with your booking reference (sent in the confirmation email), the dates of your reservation, and a short note that you wish to cancel.",
+      "ack_a": "We will acknowledge your cancellation in writing within",
+      "ack_b": ", confirm the applicable refund tier per §2, and let you know the timeline for the refund per §7. Until you have received that written acknowledgement from us, please consider the cancellation as pending."
+    },
+    "modifications": {
+      "title": "4. Modifications",
+      "intro": "Date changes and guest-count changes are treated differently from full cancellations and are usually handled at no charge if requested far enough in advance:",
+      "date_a": "<strong>Date changes.</strong> Requests received more than",
+      "date_b": "before the original check-in date, for new dates of equal length and the same bungalow, are free of charge subject to availability. Closer to check-in, or for longer stays / different bungalows, a price difference or fee may apply.",
+      "guest_count": "<strong>Guest-count changes.</strong> Adding or removing guests within the bungalow's stated occupancy limit is free of charge; we ask you to let us know in advance so we can prepare the bungalow accordingly. Exceeding the occupancy limit is not permitted; see §8 House rules of the <a href=\"/terms/\">Terms & Conditions</a>.",
+      "fallback": "If a modification cannot be accommodated and you choose to cancel instead, the cancellation tier in §2 applies based on the original check-in date."
+    },
+    "no_shows": {
+      "title": "5. No-shows",
+      "body_a": "If you do not arrive on your check-in date and have not cancelled in writing before the check-in time, the reservation is treated as a no-show. The default refund for a no-show is",
+      "body_b": ".",
+      "exceptions": "If circumstances beyond your control prevent you from arriving, please contact us as soon as you can — see §6 Force majeure for how we handle exceptions."
+    },
+    "force_majeure": {
+      "title": "6. Force majeure",
+      "body": "Sometimes events beyond either party's control — natural disasters, sudden travel restrictions, or regional emergencies — make a stay impossible. In those cases we will work with you in good faith to find a fair outcome, which may include moving the dates free of charge, holding the amount you have paid as credit toward a future stay, or issuing a refund outside the standard tiers in §2.",
+      "legal_basis": "The legal basis for force majeure (what qualifies, who bears which costs, and how the refund is calculated) is set out in §10 of the <a href=\"/terms/#force-majeure\">Terms & Conditions</a>. This Policy and those Terms should be read together."
+    },
+    "refund_processing": {
+      "title": "7. Refund processing",
+      "timeline_a": "Once the refund tier is confirmed under §2 (or under §6 for force majeure), refunds are issued within",
+      "timeline_b": "of our written cancellation acknowledgement.",
+      "method_a": "Refunds are issued in",
+      "method_b": "to the same payment method you used to pay the original deposit and balance. If that is not possible (for example, the card has expired), we will contact you to agree an alternative method."
+    },
+    "disputes": {
+      "title": "8. Disputes",
+      "body_a": "If you disagree with how this Policy has been applied to your reservation, please first contact us at the email in §3 and describe what you would like us to reconsider. We will respond in writing and try to find a resolution within",
+      "body_b": ".",
+      "governing_law": "If we cannot reach an agreement, the dispute-resolution and governing-law provisions in §11 of the <a href=\"/terms/\">Terms & Conditions</a> apply, including the courts named there. Nothing in this Policy limits any consumer rights you may have under applicable mandatory law."
+    },
+    "contact": {
+      "title": "9. Contact",
+      "intro": "For all questions about this Policy or about a specific reservation, please contact:",
+      "email_label": "<strong>Email:</strong>",
+      "phone_label": "<strong>Phone:</strong>",
+      "post_label": "<strong>Post:</strong>",
+      "operator_details": "The brand and licence details for the operator are in §2 of the <a href=\"/terms/\">Terms & Conditions</a>."
+    }
   }
 }

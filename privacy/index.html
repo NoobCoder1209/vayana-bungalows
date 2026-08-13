@@ -7,22 +7,22 @@
          the JS-on hamburger doesn't flash invisible during the deferred
          module's load window. CSS uses html.no-js for the no-JS fallback. -->
     <script>document.documentElement.classList.replace('no-js','js-on');</script>
-    <title>Privacy Policy &mdash; Vayana Bungalows</title>
-    <meta name="description" content="Privacy Policy for Vayana Bungalows — what we collect, why, how long we keep it, and your rights under GDPR." />
+    <title data-i18n="privacy.meta.title">Privacy Policy &mdash; Vayana Bungalows</title>
+    <meta name="description" data-i18n-meta="privacy.meta.description" content="Privacy Policy for Vayana Bungalows — what we collect, why, how long we keep it, and your rights under GDPR." />
     <link rel="canonical" href="https://noobcoder1209.github.io/vayana-bungalows/privacy/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Privacy Policy — Vayana Bungalows" />
-    <meta property="og:description" content="What we collect, why, how long we keep it, and your rights under GDPR." />
+    <meta property="og:title" data-i18n-meta="privacy.meta.title" content="Privacy Policy — Vayana Bungalows" />
+    <meta property="og:description" data-i18n-meta="privacy.meta.og_description" content="What we collect, why, how long we keep it, and your rights under GDPR." />
     <meta property="og:url" content="https://noobcoder1209.github.io/vayana-bungalows/privacy/" />
     <meta property="og:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
     <meta property="og:site_name" content="Vayana Bungalows" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Privacy Policy — Vayana Bungalows" />
-    <meta name="twitter:description" content="What we collect, why, how long we keep it, and your rights under GDPR." />
+    <meta name="twitter:title" data-i18n-meta="privacy.meta.title" content="Privacy Policy — Vayana Bungalows" />
+    <meta name="twitter:description" data-i18n-meta="privacy.meta.og_description" content="What we collect, why, how long we keep it, and your rights under GDPR." />
     <meta name="twitter:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
 
     <meta name="theme-color" content="#0e0d0a" />
@@ -78,7 +78,7 @@
        Reference: github.com/NoobCoder1209/vayana-bungalows/issues/16
        ========================================================================== -->
   <body class="body--cream">
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main" data-i18n="common.skip_link">Skip to content</a>
 
     <!-- Sticky header (KEEP IN SYNC across all pages, cf. #11 /
          contacts/index.html for the canonical block). Same as elsewhere:
@@ -97,7 +97,11 @@
     <div id="header-sentinel" aria-hidden="true"></div>
     <header class="site-header" id="site-header">
       <div class="container site-header__inner">
-        <button class="site-header__menu" type="button" aria-label="Open menu"
+        <button class="site-header__menu" type="button"
+                data-i18n-attr="aria-label:common.header.menu_open_aria; data-nav-label-open:common.header.menu_open_aria; data-nav-label-close:common.header.menu_close_aria"
+                aria-label="Open menu"
+                data-nav-label-open="Open menu"
+                data-nav-label-close="Close menu"
                 aria-controls="primary-nav" aria-expanded="false"
                 aria-haspopup="dialog" data-nav-toggle>
           <span></span><span></span><span></span>
@@ -109,13 +113,15 @@
         </a>
 
         <div class="site-header__cta">
-          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call" aria-label="Call us at +359 88 888 8888" data-call-cta>
+          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call"
+             data-i18n-attr="aria-label:common.header.call_aria"
+             aria-label="Call us at +359 88 888 8888" data-call-cta>
             <span class="site-header__call-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
             </span>
             <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
           </a>
-          <a href="../enquiries/" class="btn btn-primary site-header__enquiries">Enquiries</a>
+          <a href="../enquiries/" class="btn btn-primary site-header__enquiries" data-i18n="common.header.enquiries_cta">Enquiries</a>
           <!-- Language toggle pill. Two <a> segments, one per locale.
                data-lang identifies each segment; lang.js swaps hrefs to the
                plugin-generated hreflang alternates and toggles .is-active +
@@ -140,7 +146,9 @@
 
     <!-- Backdrop + side drawer. -->
     <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
-    <nav id="primary-nav" class="primary-nav__panel" aria-label="Primary"
+    <nav id="primary-nav" class="primary-nav__panel"
+         data-i18n-attr="aria-label:common.drawer.primary_aria"
+         aria-label="Primary"
          role="dialog"
          aria-hidden="true" tabindex="-1" hidden>
       <a href="../" class="primary-nav__brand" data-nav-link>
@@ -148,11 +156,11 @@
       </a>
 
       <ul class="primary-nav__list">
-        <li><a href="../" data-nav-link>Home</a></li>
-        <li><a href="../stay/" data-nav-link>Stay</a></li>
-        <li><a href="../destination/" data-nav-link>Destination</a></li>
-        <li><a href="../contacts/" data-nav-link>Contacts</a></li>
-        <li><a href="../enquiries/" data-nav-link>Enquiries</a></li>
+        <li><a href="../" data-nav-link data-i18n="common.drawer.nav_home">Home</a></li>
+        <li><a href="../stay/" data-nav-link data-i18n="common.drawer.nav_stay">Stay</a></li>
+        <li><a href="../destination/" data-nav-link data-i18n="common.drawer.nav_destination">Destination</a></li>
+        <li><a href="../contacts/" data-nav-link data-i18n="common.drawer.nav_contacts">Contacts</a></li>
+        <li><a href="../enquiries/" data-nav-link data-i18n="common.drawer.nav_enquiries">Enquiries</a></li>
       </ul>
 
       <a class="primary-nav__phone" data-site-config-href="phone.href" href="tel:+359888888888" data-nav-link>
@@ -162,12 +170,12 @@
 
     <!-- JS-disabled fallback. -->
     <noscript>
-      <nav class="primary-nav__noscript" aria-label="Primary (no JavaScript)">
+      <nav class="primary-nav__noscript" data-i18n-attr="aria-label:common.drawer.noscript_aria" aria-label="Primary (no JavaScript)">
         <ul>
-          <li><a href="../">Home</a></li>
-          <li><a href="../stay/">Stay</a></li>
-          <li><a href="../destination/">Destination</a></li>
-          <li><a href="../contacts/">Contacts</a></li>
+          <li><a href="../" data-i18n="common.drawer.nav_home">Home</a></li>
+          <li><a href="../stay/" data-i18n="common.drawer.nav_stay">Stay</a></li>
+          <li><a href="../destination/" data-i18n="common.drawer.nav_destination">Destination</a></li>
+          <li><a href="../contacts/" data-i18n="common.drawer.nav_contacts">Contacts</a></li>
         </ul>
       </nav>
     </noscript>
@@ -181,13 +189,13 @@
       <article class="legal-page">
         <div class="container legal-page__inner">
           <header class="legal-page__head">
-            <span class="eyebrow">Vayana Bungalows</span>
-            <h1>Privacy Policy</h1>
+            <span class="eyebrow" data-site-config="brand">Vayana Bungalows</span>
+            <h1 data-i18n="privacy.head.title">Privacy Policy</h1>
             <p class="legal-page__updated">
-              Last updated:
+              <span data-i18n="privacy.head.updated_label">Last updated:</span>
               <time datetime="2026-06-23">23 June 2026</time>
             </p>
-            <p class="legal-page__lede">
+            <p class="legal-page__lede" data-i18n="privacy.head.lede">
               This page explains what personal data Vayana Bungalows
               collects, why we collect it, how long we keep it, and what
               rights you have over it under the EU General Data Protection
@@ -200,12 +208,10 @@
                above counts. We keep a short pointer here so the
                numbering stays 1 → 12 in the body. -->
           <section id="updated" aria-labelledby="updated-title">
-            <h2 id="updated-title">1. Last updated</h2>
+            <h2 id="updated-title" data-i18n="privacy.updated.title">1. Last updated</h2>
             <p>
-              This Privacy Policy was last updated on
-              <time datetime="2026-06-23">23 June 2026</time>. See
-              <a href="#changes">§12 Changes to this policy</a> for how
-              we handle future updates.
+              <span data-i18n="privacy.updated.para_before">This Privacy Policy was last updated on</span>
+              <time datetime="2026-06-23">23 June 2026</time><span data-i18n-html="privacy.updated.para_after">. See <a href="#changes">§12 Changes to this policy</a> for how we handle future updates.</span>
             </p>
           </section>
 
@@ -215,25 +221,16 @@
                config defaults so the page degrades gracefully if JS
                is off. SSOT: edit site-config.js, not this file. -->
           <section id="who-we-are" aria-labelledby="who-we-are-title">
-            <h2 id="who-we-are-title">2. Who we are</h2>
-            <p>
-              We are <strong data-site-config="brand">Vayana Bungalows</strong>,
-              operated by Vayana di Mare, a Bulgarian hospitality
-              business operating under licence number
-              <span data-site-config="license">1327673</span>.
+            <h2 id="who-we-are-title" data-i18n="privacy.who.title">2. Who we are</h2>
+            <p data-i18n-html="privacy.who.para1">
+              We are <strong>{brand}</strong>, operated by Vayana di Mare, a Bulgarian hospitality business operating under licence number {license}.
             </p>
             <p>
-              Our registered location is
-              <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span>,
-              <span data-site-config="address.country">Bulgaria</span>.
-              For any privacy-related question you can reach us by email
-              at
-              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com"><span data-site-config="email.display">contact@vayanabungalows.com</span></a>.
+              <span data-i18n-html="privacy.who.para2_before">Our registered location is {address_street}, {address_country}. For any privacy-related question you can reach us by email at</span>
+              <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com"><span data-site-config="email.display">contact@vayanabungalows.com</span></a><span data-i18n="privacy.who.para2_after">.</span>
             </p>
-            <p>
-              For the purposes of GDPR, we are the
-              <em>data controller</em> for any personal data submitted
-              through this website.
+            <p data-i18n-html="privacy.who.para3">
+              For the purposes of GDPR, we are the <em>data controller</em> for any personal data submitted through this website.
             </p>
           </section>
 
@@ -243,8 +240,8 @@
                from #16: the policy must NOT claim data we don't
                collect, and MUST list data we do collect. -->
           <section id="what-we-collect" aria-labelledby="what-we-collect-title">
-            <h2 id="what-we-collect-title">3. What data we collect</h2>
-            <p>
+            <h2 id="what-we-collect-title" data-i18n="privacy.collect.title">3. What data we collect</h2>
+            <p data-i18n="privacy.collect.intro">
               We only collect personal data that you actively provide to
               us, plus a small amount of technical data that our
               anti-spam tools need to operate. We do not run any
@@ -252,120 +249,78 @@
               this site.
             </p>
 
-            <h3>3.1 Data you give us through the enquiry form</h3>
+            <h3 data-i18n="privacy.collect.form_title">3.1 Data you give us through the enquiry form</h3>
             <p>
-              The <a href="../enquiries/">enquiry form</a> on
-              <code>/enquiries/</code> collects the following fields. All
-              are submitted only when you choose to submit the form:
+              <span data-i18n-html="privacy.collect.form_intro_before">The <a href="../enquiries/">enquiry form</a> on</span>
+              <code>/enquiries/</code><span data-i18n="privacy.collect.form_intro_after">collects the following fields. All are submitted only when you choose to submit the form:</span>
             </p>
             <ul>
-              <li>Full name</li>
-              <li>Email address</li>
-              <li>Phone number</li>
-              <li>Preferred check-in and check-out dates</li>
-              <li>Number of guests (adults, children, infants)</li>
-              <li>A free-text message describing your enquiry</li>
-              <li>A consent checkbox confirming you agree to be contacted (this is logged together with the submission, so we have a record of your consent — see <a href="#why">§4</a>)</li>
+              <li data-i18n="privacy.collect.form_field_name">Full name</li>
+              <li data-i18n="privacy.collect.form_field_email">Email address</li>
+              <li data-i18n="privacy.collect.form_field_phone">Phone number</li>
+              <li data-i18n="privacy.collect.form_field_dates">Preferred check-in and check-out dates</li>
+              <li data-i18n="privacy.collect.form_field_guests">Number of guests (adults, children, infants)</li>
+              <li data-i18n="privacy.collect.form_field_message">A free-text message describing your enquiry</li>
+              <li data-i18n-html="privacy.collect.form_field_consent">A consent checkbox confirming you agree to be contacted (this is logged together with the submission, so we have a record of your consent — see <a href="#why">§4</a>)</li>
             </ul>
-            <p>
-              When you submit the form, your data is sent to a
-              <strong>Cloudflare Worker</strong> running on Cloudflare's
-              global edge network, which validates the submission and
-              appends a row to a Google Sheet held in Google Workspace
-              (EU region). See <a href="#sharing">§6 Who we share data
-              with</a> and <a href="#storage">§7 Where data is
-              stored</a> for the processors involved, and
-              <a href="#retention">§8 How long we keep data</a> for the
-              retention period.
+            <p data-i18n-html="privacy.collect.form_flow">
+              When you submit the form, your data is sent to a <strong>Cloudflare Worker</strong> running on Cloudflare's global edge network, which validates the submission and appends a row to a Google Sheet held in Google Workspace (EU region). See <a href="#sharing">§6 Who we share data with</a> and <a href="#storage">§7 Where data is stored</a> for the processors involved, and <a href="#retention">§8 How long we keep data</a> for the retention period.
             </p>
 
-            <h3>3.2 Technical data via Cloudflare Turnstile (anti-spam)</h3>
-            <p>
-              The enquiry form is protected against bots by
-              <strong>Cloudflare Turnstile</strong> in managed mode.
-              When you submit the form, Turnstile collects, on
-              Cloudflare's behalf:
+            <h3 data-i18n="privacy.collect.captcha_title">3.2 Technical data via Cloudflare Turnstile (anti-spam)</h3>
+            <p data-i18n-html="privacy.collect.captcha_intro">
+              The enquiry form is protected against bots by <strong>Cloudflare Turnstile</strong> in managed mode. When you submit the form, Turnstile collects, on Cloudflare's behalf:
             </p>
             <ul>
-              <li>Your IP address — sent by your browser directly to Cloudflare's <code>siteverify</code> endpoint together with the challenge token</li>
-              <li>Browser characteristics (user agent, screen size, plug-in list)</li>
-              <li>Interaction signals on the form page (mouse / keyboard movement timing)</li>
+              <li>
+                <span data-i18n="privacy.collect.captcha_ip_before">Your IP address — sent by your browser directly to Cloudflare's</span>
+                <code>siteverify</code>
+                <span data-i18n="privacy.collect.captcha_ip_after">endpoint together with the challenge token</span>
+              </li>
+              <li data-i18n="privacy.collect.captcha_browser">Browser characteristics (user agent, screen size, plug-in list)</li>
+              <li data-i18n="privacy.collect.captcha_signals">Interaction signals on the form page (mouse / keyboard movement timing)</li>
             </ul>
             <p>
-              The captcha data above does not pass through our servers
-              in clear form — it goes directly from your browser to
-              Cloudflare, which returns only a success / failure result
-              to our Worker. Our Worker logs only a salted SHA-256
-              <strong>hash</strong> of your IP address (not the raw
-              address) into the Google Sheet, as <code>source_ip_hash</code>,
-              so we can correlate repeat enquiries without storing
-              identifying data. We rotate the salt periodically;
-              rotation makes earlier hashes uncorrelatable with any
-              future submission, which is the intended privacy property.
+              <span data-i18n-html="privacy.collect.captcha_note_before">The captcha data above does not pass through our servers in clear form — it goes directly from your browser to Cloudflare, which returns only a success / failure result to our Worker. Our Worker logs only a salted SHA-256 <strong>hash</strong> of your IP address (not the raw address) into the Google Sheet, as</span>
+              <code>source_ip_hash</code><span data-i18n="privacy.collect.captcha_note_after">, so we can correlate repeat enquiries without storing identifying data. We rotate the salt periodically; rotation makes earlier hashes uncorrelatable with any future submission, which is the intended privacy property.</span>
             </p>
 
-            <h3>3.3 Cookies and tracking from embedded Google Maps</h3>
-            <p>
-              The map on the <a href="../">homepage</a> and on
-              <a href="../contacts/">Contacts</a> /
-              <a href="../destination/">Destination</a> embeds a
-              Google Maps iframe. When the page loads the iframe,
-              Google may set cookies in your browser and receive your
-              IP address — this happens automatically as soon as the
-              page is rendered, whether or not you interact with the
-              map. We have no control over what Google collects in
-              that context — please see Google's own privacy policy.
+            <h3 data-i18n="privacy.collect.maps_title">3.3 Cookies and tracking from embedded Google Maps</h3>
+            <p data-i18n-html="privacy.collect.maps_body">
+              The map on the <a href="../">homepage</a> and on <a href="../contacts/">Contacts</a> / <a href="../destination/">Destination</a> embeds a Google Maps iframe. When the page loads the iframe, Google may set cookies in your browser and receive your IP address — this happens automatically as soon as the page is rendered, whether or not you interact with the map. We have no control over what Google collects in that context — please see Google's own privacy policy.
             </p>
 
-            <h3>3.4 Newsletter signup</h3>
-            <p>
-              The newsletter signup form on the homepage accepts an
-              email address into an input field but, in version 1,
-              that email is <strong>not stored anywhere and is not
-              transmitted off your device</strong> — submitting the
-              form opens a "thank you" modal and discards what you
-              typed. When a real email-service-provider integration
-              ships, this section will be updated in the same release
-              to list the provider and what they receive.
+            <h3 data-i18n="privacy.collect.newsletter_title">3.4 Newsletter signup</h3>
+            <p data-i18n-html="privacy.collect.newsletter_body">
+              The newsletter signup form on the homepage accepts an email address into an input field but, in version 1, that email is <strong>not stored anywhere and is not transmitted off your device</strong> — submitting the form opens a "thank you" modal and discards what you typed. When a real email-service-provider integration ships, this section will be updated in the same release to list the provider and what they receive.
             </p>
           </section>
 
           <!-- 4 — Legal basis. -->
           <section id="why" aria-labelledby="why-title">
-            <h2 id="why-title">4. Why we collect it (legal basis)</h2>
+            <h2 id="why-title" data-i18n="privacy.why.title">4. Why we collect it (legal basis)</h2>
             <ul>
-              <li>
-                <strong>Your consent (GDPR Art. 6(1)(a)).</strong> The
-                enquiry form processes your data on the basis of the
-                consent you give by ticking the checkbox above the
-                submit button. You can withdraw that consent at any
-                time — see <a href="#your-rights">§9</a>.
+              <li data-i18n-html="privacy.why.consent">
+                <strong>Your consent (GDPR Art. 6(1)(a)).</strong> The enquiry form processes your data on the basis of the consent you give by ticking the checkbox above the submit button. You can withdraw that consent at any time — see <a href="#your-rights">§9</a>.
               </li>
-              <li>
-                <strong>Our legitimate interest (GDPR Art. 6(1)(f)).</strong>
-                The captcha service that runs alongside the form
-                processes the technical data listed in §3.2 to protect
-                our site from automated spam submissions. We have
-                weighed this interest against your rights and consider
-                it proportionate, since the data captured is the
-                minimum required to score a request as
-                bot-or-human.
+              <li data-i18n-html="privacy.why.legitimate">
+                <strong>Our legitimate interest (GDPR Art. 6(1)(f)).</strong> The captcha service that runs alongside the form processes the technical data listed in §3.2 to protect our site from automated spam submissions. We have weighed this interest against your rights and consider it proportionate, since the data captured is the minimum required to score a request as bot-or-human.
               </li>
             </ul>
           </section>
 
           <!-- 5 — How we use it. -->
           <section id="how-we-use" aria-labelledby="how-we-use-title">
-            <h2 id="how-we-use-title">5. How we use it</h2>
-            <p>
+            <h2 id="how-we-use-title" data-i18n="privacy.use.title">5. How we use it</h2>
+            <p data-i18n="privacy.use.intro">
               We use the data you give us solely to:
             </p>
             <ul>
-              <li>Reply to your enquiry with a tailored proposal</li>
-              <li>Hold a record of your stated preferences in case you reply later in the same thread</li>
-              <li>Detect and block spam submissions (captcha)</li>
+              <li data-i18n="privacy.use.item_reply">Reply to your enquiry with a tailored proposal</li>
+              <li data-i18n="privacy.use.item_record">Hold a record of your stated preferences in case you reply later in the same thread</li>
+              <li data-i18n="privacy.use.item_spam">Detect and block spam submissions (captcha)</li>
             </ul>
-            <p>
+            <p data-i18n="privacy.use.outro">
               We do not use enquiry data for marketing. We do not
               share it with advertising networks. We do not run any
               automated decision-making or profiling on it.
@@ -374,56 +329,41 @@
 
           <!-- 6 — Third parties. -->
           <section id="third-parties" aria-labelledby="third-parties-title">
-            <h2 id="third-parties-title">6. Third parties</h2>
-            <p>
+            <h2 id="third-parties-title" data-i18n="privacy.third.title">6. Third parties</h2>
+            <p data-i18n="privacy.third.intro">
               When you use this site, the following third parties may
               process some of your personal data on our behalf:
             </p>
             <ul>
-              <li>
-                <strong>Google LLC</strong> — for the embedded Google
-                Maps iframe (§3.3) and for storing enquiry submissions
-                in a Google Sheet held in Google Workspace (EU region,
-                §7). Google's processing is governed by its own
-                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>
-                and the
-                <a href="https://workspace.google.com/terms/dpa_terms.html" target="_blank" rel="noopener noreferrer">Google Workspace Data Processing Addendum</a>.
+              <li data-i18n-html="privacy.third.google">
+                <strong>Google LLC</strong> — for the embedded Google Maps iframe (§3.3) and for storing enquiry submissions in a Google Sheet held in Google Workspace (EU region, §7). Google's processing is governed by its own <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a> and the <a href="https://workspace.google.com/terms/dpa_terms.html" target="_blank" rel="noopener noreferrer">Google Workspace Data Processing Addendum</a>.
               </li>
-              <li>
-                <strong>Cloudflare, Inc.</strong> — for hosting the
-                <strong>Cloudflare Worker</strong> that accepts your
-                enquiry submission (§3.1) and for the
-                <strong>Cloudflare Turnstile</strong> anti-spam check
-                that runs before submission (§3.2). Cloudflare's
-                processing is governed by its own
-                <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">privacy policy</a>
-                and its
-                <a href="https://www.cloudflare.com/cloudflare-customer-dpa/" target="_blank" rel="noopener noreferrer">customer Data Processing Addendum</a>.
+              <li data-i18n-html="privacy.third.cloudflare">
+                <strong>Cloudflare, Inc.</strong> — for hosting the <strong>Cloudflare Worker</strong> that accepts your enquiry submission (§3.1) and for the <strong>Cloudflare Turnstile</strong> anti-spam check that runs before submission (§3.2). Cloudflare's processing is governed by its own <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">privacy policy</a> and its <a href="https://www.cloudflare.com/cloudflare-customer-dpa/" target="_blank" rel="noopener noreferrer">customer Data Processing Addendum</a>.
               </li>
-              <li>
-                <strong>GitHub, Inc.</strong> — this website is
-                served as a static site through GitHub Pages. GitHub
-                receives your IP address and basic request metadata
-                in the course of serving the page. GitHub's
-                processing is governed by its own
-                <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">privacy statement</a>.
+              <li data-i18n-html="privacy.third.github">
+                <strong>GitHub, Inc.</strong> — this website is served as a static site through GitHub Pages. GitHub receives your IP address and basic request metadata in the course of serving the page. GitHub's processing is governed by its own <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">privacy statement</a>.
               </li>
             </ul>
           </section>
 
           <!-- 7 — Storage. -->
           <section id="storage" aria-labelledby="storage-title">
-            <h2 id="storage-title">7. Where data is stored</h2>
-            <p>
+            <h2 id="storage-title" data-i18n="privacy.storage.title">7. Where data is stored</h2>
+            <p data-i18n="privacy.storage.intro">
               The static website itself contains no stored personal
               data. When you submit the enquiry form:
             </p>
             <ul>
-              <li>Your submission passes through Cloudflare's globally distributed edge network — the Worker that processes it runs on Cloudflare's edge close to your location, then writes only to the destinations below.</li>
-              <li>The validated submission is appended as a row to a Google Sheet held in Google Workspace, with the storage region set to the European Union.</li>
-              <li>Only a salted SHA-256 hash of your IP address is written to the sheet (in the <code>source_ip_hash</code> column) — the raw IP is never stored at rest on our side.</li>
+              <li data-i18n="privacy.storage.item_edge">Your submission passes through Cloudflare's globally distributed edge network — the Worker that processes it runs on Cloudflare's edge close to your location, then writes only to the destinations below.</li>
+              <li data-i18n="privacy.storage.item_sheet">The validated submission is appended as a row to a Google Sheet held in Google Workspace, with the storage region set to the European Union.</li>
+              <li>
+                <span data-i18n="privacy.storage.item_hash_before">Only a salted SHA-256 hash of your IP address is written to the sheet (in the</span>
+                <code>source_ip_hash</code>
+                <span data-i18n="privacy.storage.item_hash_after">column) — the raw IP is never stored at rest on our side.</span>
+              </li>
             </ul>
-            <p>
+            <p data-i18n="privacy.storage.encryption">
               In-flight TLS encryption is provided by Cloudflare (between
               your browser and the Worker) and by Google (between the
               Worker and the Sheets API). At-rest encryption on Google
@@ -433,20 +373,17 @@
 
           <!-- 8 — Retention. -->
           <section id="retention" aria-labelledby="retention-title">
-            <h2 id="retention-title">8. How long we keep it</h2>
-            <p>
-              We keep enquiry data for the minimum time necessary to
-              respond to you and follow up. Our current target is to
-              delete enquiry records <strong>12 months</strong> after
-              the last interaction in that thread.
+            <h2 id="retention-title" data-i18n="privacy.retention.title">8. How long we keep it</h2>
+            <p data-i18n-html="privacy.retention.para1">
+              We keep enquiry data for the minimum time necessary to respond to you and follow up. Our current target is to delete enquiry records <strong>12 months</strong> after the last interaction in that thread.
             </p>
-            <p>
+            <p data-i18n="privacy.retention.para2">
               If your enquiry becomes a booking, the booking-related
               data is retained under our booking terms (not this
               policy). If your enquiry does not become a booking, the
               12-month window applies.
             </p>
-            <p>
+            <p data-i18n="privacy.retention.para3">
               The "12 months" figure is provisional and will be
               confirmed before launch.
             </p>
@@ -454,44 +391,44 @@
 
           <!-- 9 — Your rights. -->
           <section id="your-rights" aria-labelledby="your-rights-title">
-            <h2 id="your-rights-title">9. Your rights</h2>
+            <h2 id="your-rights-title" data-i18n="privacy.rights.title">9. Your rights</h2>
             <p>
-              Under GDPR, you have the following rights over the data
-              we hold about you. To exercise any of them, email us at
+              <span data-i18n="privacy.rights.intro_before">Under GDPR, you have the following rights over the data we hold about you. To exercise any of them, email us at</span>
               <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com"><span data-site-config="email.display">contact@vayanabungalows.com</span></a>
-              and we will respond within one calendar month.
+              <span data-i18n="privacy.rights.intro_after">and we will respond within one calendar month.</span>
             </p>
             <ul>
-              <li><strong>Access</strong> (Art. 15) — ask us for a copy of what we hold about you.</li>
-              <li><strong>Rectification</strong> (Art. 16) — ask us to correct inaccurate or incomplete data.</li>
-              <li><strong>Erasure</strong> (Art. 17) — ask us to delete your data, where one of the grounds in Art. 17(1) applies.</li>
-              <li><strong>Restriction</strong> (Art. 18) — ask us to pause processing while we investigate a dispute.</li>
-              <li><strong>Portability</strong> (Art. 20) — ask us to send you (or another controller) a machine-readable copy.</li>
-              <li><strong>Object</strong> (Art. 21) — object to processing carried out on the basis of legitimate interest (§4).</li>
-              <li>
+              <li data-i18n-html="privacy.rights.access"><strong>Access</strong> (Art. 15) — ask us for a copy of what we hold about you.</li>
+              <li data-i18n-html="privacy.rights.rectification"><strong>Rectification</strong> (Art. 16) — ask us to correct inaccurate or incomplete data.</li>
+              <li data-i18n-html="privacy.rights.erasure"><strong>Erasure</strong> (Art. 17) — ask us to delete your data, where one of the grounds in Art. 17(1) applies.</li>
+              <li data-i18n-html="privacy.rights.restriction"><strong>Restriction</strong> (Art. 18) — ask us to pause processing while we investigate a dispute.</li>
+              <li data-i18n-html="privacy.rights.portability"><strong>Portability</strong> (Art. 20) — ask us to send you (or another controller) a machine-readable copy.</li>
+              <li data-i18n-html="privacy.rights.object"><strong>Object</strong> (Art. 21) — object to processing carried out on the basis of legitimate interest (§4).</li>
+              <li data-i18n-html="privacy.rights.withdraw">
                 <strong>Withdraw consent</strong> (Art. 7(3)) — withdraw the consent you gave on the enquiry form at any time, by emailing us. Withdrawing consent does not affect the lawfulness of any processing carried out before the withdrawal.
               </li>
             </ul>
-            <p>
-              You also have the right to lodge a complaint with the
-              Bulgarian Commission for Personal Data Protection
-              (<a href="https://www.cpdp.bg/en/" target="_blank" rel="noopener noreferrer">CPDP</a>)
-              if you believe we have mishandled your data.
+            <p data-i18n-html="privacy.rights.complaint">
+              You also have the right to lodge a complaint with the Bulgarian Commission for Personal Data Protection (<a href="https://www.cpdp.bg/en/" target="_blank" rel="noopener noreferrer">CPDP</a>) if you believe we have mishandled your data.
             </p>
           </section>
 
           <!-- 10 — Cookies. -->
           <section id="cookies" aria-labelledby="cookies-title">
-            <h2 id="cookies-title">10. Cookies</h2>
-            <p>
+            <h2 id="cookies-title" data-i18n="privacy.cookies.title">10. Cookies</h2>
+            <p data-i18n="privacy.cookies.intro">
               We do not set any first-party cookies on this site.
               Cookies are only set by embedded third-party content:
             </p>
             <ul>
-              <li><strong>Google Maps</strong> — sets cookies and receives your IP address when the embedded map iframe loads on the <a href="../">homepage</a>, the <a href="../contacts/">Contacts</a> page, and the <a href="../destination/">Destination</a> page; see Google's own cookie disclosures</li>
-              <li><strong>Cloudflare Turnstile</strong> — in managed mode, Turnstile does not set cookies for most visitors. If a visitor is challenged for pre-clearance (rare; happens for traffic that looks abusive), Cloudflare may set a <code>cf_clearance</code> cookie scoped to the Turnstile challenge domain. See <a href="https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" target="_blank" rel="noopener noreferrer">Cloudflare's cookie reference</a>.</li>
+              <li data-i18n-html="privacy.cookies.maps"><strong>Google Maps</strong> — sets cookies and receives your IP address when the embedded map iframe loads on the <a href="../">homepage</a>, the <a href="../contacts/">Contacts</a> page, and the <a href="../destination/">Destination</a> page; see Google's own cookie disclosures</li>
+              <li>
+                <span data-i18n-html="privacy.cookies.turnstile_before"><strong>Cloudflare Turnstile</strong> — in managed mode, Turnstile does not set cookies for most visitors. If a visitor is challenged for pre-clearance (rare; happens for traffic that looks abusive), Cloudflare may set a</span>
+                <code>cf_clearance</code>
+                <span data-i18n-html="privacy.cookies.turnstile_after">cookie scoped to the Turnstile challenge domain. See <a href="https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" target="_blank" rel="noopener noreferrer">Cloudflare's cookie reference</a>.</span>
+              </li>
             </ul>
-            <p>
+            <p data-i18n="privacy.cookies.outro">
               We do not run any analytics, advertising, or
               behavioural-tracking cookies. If that changes — for
               example if we add a newsletter analytics tool — we will
@@ -502,24 +439,23 @@
 
           <!-- 11 — Contact. -->
           <section id="contact" aria-labelledby="contact-title">
-            <h2 id="contact-title">11. How to contact us about data</h2>
-            <p>
+            <h2 id="contact-title" data-i18n="privacy.contact.title">11. How to contact us about data</h2>
+            <p data-i18n="privacy.contact.intro">
               For anything related to your data — access requests,
               corrections, deletions, complaints, or just questions
               about this policy — please email us:
             </p>
             <ul class="legal-page__contact">
               <li>
-                <strong>Email:</strong>
+                <strong data-i18n="privacy.contact.email_label">Email:</strong>
                 <a data-site-config-href="email.href" href="mailto:contact@vayanabungalows.com"><span data-site-config="email.display">contact@vayanabungalows.com</span></a>
               </li>
               <li>
-                <strong>Postal address:</strong>
-                <span data-site-config="address.street">ul. Kraybrezhna 1, Tsarevo</span>,
-                <span data-site-config="address.country">Bulgaria</span>
+                <strong data-i18n="privacy.contact.postal_label">Postal address:</strong>
+                <span data-i18n-html="privacy.contact.postal_value">{address_street}, {address_country}</span>
               </li>
             </ul>
-            <p>
+            <p data-i18n="privacy.contact.outro">
               We aim to acknowledge data-related emails within five
               working days, and to substantively reply within one
               calendar month, as GDPR requires.
@@ -528,20 +464,16 @@
 
           <!-- 12 — Changes. -->
           <section id="changes" aria-labelledby="changes-title">
-            <h2 id="changes-title">12. Changes to this policy</h2>
-            <p>
+            <h2 id="changes-title" data-i18n="privacy.changes.title">12. Changes to this policy</h2>
+            <p data-i18n="privacy.changes.para1">
               We may update this policy from time to time — for
               example when we add a new third-party service, change
               our retention schedule, or in response to a regulatory
               update. Whenever we update it, we change the "last
               updated" date at the top.
             </p>
-            <p>
-              For material changes (anything that affects what we
-              collect, why we collect it, or how long we keep it), we
-              will additionally announce the change on the
-              <a href="../">homepage</a> for a reasonable period of
-              time so that returning visitors notice.
+            <p data-i18n-html="privacy.changes.para2">
+              For material changes (anything that affects what we collect, why we collect it, or how long we keep it), we will additionally announce the change on the <a href="../">homepage</a> for a reasonable period of time so that returning visitors notice.
             </p>
           </section>
         </div>
@@ -573,15 +505,15 @@
         </div>
         <!-- Column 2 — Follow us -->
         <div class="site-footer__col site-footer__col--social">
-          <span class="eyebrow eyebrow--light">Follow us</span>
+          <span class="eyebrow eyebrow--light" data-i18n="common.footer.follow_eyebrow">Follow us</span>
           <ul class="social-list">
             <li>
-              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" data-i18n-attr="aria-label:common.footer.follow_facebook_aria" aria-label="Facebook">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg>
               </a>
             </li>
             <li>
-              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" data-i18n-attr="aria-label:common.footer.follow_instagram_aria" aria-label="Instagram">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg>
               </a>
             </li>
@@ -591,19 +523,19 @@
              the Enquire entry that used to live here has moved to the header
              CTA + drawer. aria-current="page" marks Privacy Policy as the current
              page on this footer. KEEP IN SYNC across all pages. -->
-        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies">
-          <span class="eyebrow eyebrow--light">Policies</span>
+        <nav class="site-footer__col site-footer__col--policies" data-i18n-attr="aria-label:common.footer.policies_aria" aria-label="Policies">
+          <span class="eyebrow eyebrow--light" data-i18n="common.footer.policies_eyebrow">Policies</span>
           <ul>
-            <li><a data-site-config-path="policies.terms" href="/terms/">Terms &amp; Conditions</a></li>
-            <li><a data-site-config-path="policies.cancellation" href="/cancellation/">Cancellation Policy</a></li>
-            <li><a data-site-config-path="policies.privacy" href="/privacy/" aria-current="page">Privacy Policy</a></li>
+            <li><a data-site-config-path="policies.terms" href="/terms/" data-i18n="common.footer.terms">Terms &amp; Conditions</a></li>
+            <li><a data-site-config-path="policies.cancellation" href="/cancellation/" data-i18n="common.footer.cancellation">Cancellation Policy</a></li>
+            <li><a data-site-config-path="policies.privacy" href="/privacy/" aria-current="page" data-i18n="common.footer.privacy">Privacy Policy</a></li>
           </ul>
         </nav>
       </div>
       <div class="site-footer__bar">
         <div class="container site-footer__bar-inner">
           <p data-site-config="copyright">&copy; 2026 Made with &#10084;&#65039; by Vayana di Mare</p>
-          <p class="site-footer__license">License number: <span data-site-config="license">1327673</span></p>
+          <p class="site-footer__license"><span data-i18n="common.footer.license_prefix">License number:</span> <span data-site-config="license">1327673</span></p>
         </div>
       </div>
     </footer>
