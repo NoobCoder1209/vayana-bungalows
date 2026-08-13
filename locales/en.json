@@ -1,19 +1,19 @@
 {
   "meta": {
-    "brand": "Vayana Bungalows",
-    "brand_credit": "Vayana di Mare",
-    "tagline": "Boutique Bungalows in Tsarevo, Bulgaria"
+    "brand": "Code 100· Vayana Bungalows",
+    "brand_credit": "Code 101· Vayana di Mare",
+    "tagline": "Code 102· Boutique Bungalows in Tsarevo, Bulgaria"
   },
   "common": {
-    "skip_link": "Skip to content",
+    "skip_link": "Code 103· Skip to content",
     "header": {
       "menu_open_aria": "Open menu",
       "menu_close_aria": "Close menu",
       "call_aria": "Call us at {phone}",
-      "enquiries_cta": "Enquiries",
+      "enquiries_cta": "Code 104· Enquiries",
       "lang_group_aria": "Language",
-      "lang_en_label": "EN",
-      "lang_bg_label": "BG",
+      "lang_en_label": "Code 105· EN",
+      "lang_bg_label": "Code 106· BG",
       "lang_en_current_aria": "English, current language",
       "lang_bg_current_aria": "Bulgarian, current language",
       "lang_switch_to_en_aria": "Switch to English",
@@ -21,176 +21,176 @@
       "_note_DO_NOT_TRANSLATE_lang_aria_keys": "The four lang_*_aria keys above (lang_en_current_aria, lang_bg_current_aria, lang_switch_to_en_aria, lang_switch_to_bg_aria) are referenced by index.html's .site-header__lang segments via data-i18n-attr (data-aria-current / data-aria-switch). The i18n plugin bakes both strings onto each segment; assets/js/lang.js promotes the correct one to aria-label based on the segment's is-active state. If you delete a segment's data-i18n-attr marker these will orphan — leave them keyed. This _note key itself is orphan by design; leave it here as future-editor guidance. This note key's value is kept identical across all locales — do NOT translate it, or a future dev reading a translated identifier list will not be able to grep for the identifiers in code."
     },
     "drawer": {
-      "nav_home": "Home",
-      "nav_stay": "Stay",
-      "nav_destination": "Destination",
-      "nav_contacts": "Contacts",
-      "nav_enquiries": "Enquiries",
+      "nav_home": "Code 107· Home",
+      "nav_stay": "Code 108· Stay",
+      "nav_destination": "Code 109· Destination",
+      "nav_contacts": "Code 110· Contacts",
+      "nav_enquiries": "Code 111· Enquiries",
       "primary_aria": "Primary",
       "noscript_aria": "Primary (no JavaScript)"
     },
     "footer": {
-      "brand_eyebrow": "Vayana Bungalows",
-      "follow_eyebrow": "Follow us",
+      "brand_eyebrow": "Code 112· Vayana Bungalows",
+      "follow_eyebrow": "Code 113· Follow us",
       "follow_facebook_aria": "Facebook",
       "follow_instagram_aria": "Instagram",
-      "policies_eyebrow": "Policies",
+      "policies_eyebrow": "Code 114· Policies",
       "policies_aria": "Policies",
-      "terms": "Terms & Conditions",
-      "cancellation": "Cancellation Policy",
-      "privacy": "Privacy Policy",
-      "copyright": "© 2026 Made with ❤️ by {credit}",
-      "license_prefix": "License number:"
+      "terms": "Code 115· Terms & Conditions",
+      "cancellation": "Code 116· Cancellation Policy",
+      "privacy": "Code 117· Privacy Policy",
+      "copyright": "Code 118· © 2026 Made with ❤️ by {credit}",
+      "license_prefix": "Code 119· License number:"
     },
     "close_aria": "Close"
   },
   "home": {
     "meta": {
-      "title": "Vayana Bungalows — Boutique Bungalows in Tsarevo, Bulgaria",
-      "description": "Vayana Bungalows: a boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days.",
-      "og_description": "A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days."
+      "title": "Code 120· Vayana Bungalows — Boutique Bungalows in Tsarevo, Bulgaria",
+      "description": "Code 121· Vayana Bungalows: a boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days.",
+      "og_description": "Code 122· A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days."
     },
     "hero": {
-      "eyebrow": "Welcome to Vayana Bungalows",
-      "title_html": "Boutique Bungalows<br />on the Black Sea",
-      "subtitle": "Where the pines meet the coast and the days run on tide and appetite."
+      "eyebrow": "Code 123· Welcome to Vayana Bungalows",
+      "title_html": "Code 124· Boutique Bungalows<br />on the Black Sea",
+      "subtitle": "Code 125· Where the pines meet the coast and the days run on tide and appetite."
     },
     "intro": {
-      "eyebrow": "Welcome to Vayana Bungalows",
-      "title": "On the Black Sea coast, at the foot of the Strandzha mountains.",
-      "body_para1": "Vayana Bungalows is a small family-run retreat in Tsarevo, Bulgaria — a handful of hardwood bungalows tucked between the pines and the sea, hand-built and run with the same care we’d put into our own home.",
-      "body_para2": "Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the drive back.",
-      "cta": "Discover the resort",
+      "eyebrow": "Code 126· Welcome to Vayana Bungalows",
+      "title": "Code 127· On the Black Sea coast, at the foot of the Strandzha mountains.",
+      "body_para1": "Code 128· Vayana Bungalows is a small family-run retreat in Tsarevo, Bulgaria — a handful of hardwood bungalows tucked between the pines and the sea, hand-built and run with the same care we’d put into our own home.",
+      "body_para2": "Code 129· Our guests come for the quiet, the daybreak swims, and the kind of unhurried hospitality that you remember long after the drive back.",
+      "cta": "Code 130· Discover the resort",
       "img_alt": "Wooden bungalow terrace at sunset"
     },
     "gallery": {
-      "eyebrow": "A glimpse of the coast",
-      "title": "Moments at Vayana Bungalows",
+      "eyebrow": "Code 131· A glimpse of the coast",
+      "title": "Code 132· Moments at Vayana Bungalows",
       "prev_aria": "Previous photos",
       "next_aria": "Next photos"
     },
     "rooms": {
-      "eyebrow": "Enjoy a world-class stay",
-      "title": "The accommodations",
-      "card1_title": "Bungalow 1",
-      "card2_title": "Bungalow 2",
-      "card3_title": "Bungalow 3",
-      "card1_price_html": "From <strong>$960</strong> / night",
-      "card2_price_html": "From <strong>$1,240</strong> / night",
-      "card3_price_html": "From <strong>$1,480</strong> / night",
-      "card_more": "Discover more",
+      "eyebrow": "Code 133· Enjoy a world-class stay",
+      "title": "Code 134· The accommodations",
+      "card1_title": "Code 135· Bungalow 1",
+      "card2_title": "Code 136· Bungalow 2",
+      "card3_title": "Code 137· Bungalow 3",
+      "card1_price_html": "Code 138· From <strong>$960</strong> / night",
+      "card2_price_html": "Code 139· From <strong>$1,240</strong> / night",
+      "card3_price_html": "Code 140· From <strong>$1,480</strong> / night",
+      "card_more": "Code 141· Discover more",
       "card1_img_alt": "Bungalow 1",
       "card2_img_alt": "Bungalow 2",
       "card3_img_alt": "Bungalow 3"
     },
     "offers": {
-      "eyebrow": "Special offers",
-      "title": "Current offers",
-      "save": "Save",
-      "off": "off",
-      "nights": "nights",
-      "nights_deal": "stay minimum {min} nights get {free} free",
-      "discount_pct": "{pct}% off",
-      "discount_per_day": "€{amount}/night off",
-      "discount_total": "€{amount} off",
-      "discount": "Discount",
-      "cta": "Check the offer",
-      "empty": "No current offers at the moment.",
-      "error": "Offers are temporarily unavailable. Please try again later.",
-      "modal_eyebrow": "Special offer",
-      "modal_title": "Offer details",
-      "modal_fixed_dates": "These dates are fixed and cannot be changed or extended:",
-      "modal_rules_title": "Offer terms",
-      "modal_rule_1": "The offer is valid only for the dates shown above and cannot be moved, split, or extended.",
-      "modal_rule_2": "The price covers the full stay for the stated number of nights; it is not a per-night rate.",
-      "modal_rule_3": "The offer is subject to availability and confirmation, and may be withdrawn at any time before you enquire.",
-      "modal_rule_4": "This offer cannot be combined with any other promotion or discount.",
-      "modal_take": "Take the offer",
-      "take_message": "I'm taking the offer"
+      "eyebrow": "Code 142· Special offers",
+      "title": "Code 143· Current offers",
+      "save": "Code 144· Save",
+      "off": "Code 145· off",
+      "nights": "Code 146· nights",
+      "nights_deal": "Code 147· stay minimum {min} nights get {free} free",
+      "discount_pct": "Code 148· {pct}% off",
+      "discount_per_day": "Code 149· €{amount}/night off",
+      "discount_total": "Code 150· €{amount} off",
+      "discount": "Code 151· Discount",
+      "cta": "Code 152· Check the offer",
+      "empty": "Code 153· No current offers at the moment.",
+      "error": "Code 154· Offers are temporarily unavailable. Please try again later.",
+      "modal_eyebrow": "Code 155· Special offer",
+      "modal_title": "Code 156· Offer details",
+      "modal_fixed_dates": "Code 157· These dates are fixed and cannot be changed or extended:",
+      "modal_rules_title": "Code 158· Offer terms",
+      "modal_rule_1": "Code 159· The offer is valid only for the dates shown above and cannot be moved, split, or extended.",
+      "modal_rule_2": "Code 160· The price covers the full stay for the stated number of nights; it is not a per-night rate.",
+      "modal_rule_3": "Code 161· The offer is subject to availability and confirmation, and may be withdrawn at any time before you enquire.",
+      "modal_rule_4": "Code 162· This offer cannot be combined with any other promotion or discount.",
+      "modal_take": "Code 163· Take the offer",
+      "take_message": "Code 164· I'm taking the offer"
     },
     "services": {
-      "eyebrow": "Discover the services we offer",
-      "title": "All the essentials for a cozy and comfortable stay.",
-      "wifi_title": "Free WiFi",
-      "wifi_body": "Fast fibre throughout, from the villa to the beach.",
-      "aircon_title": "Air conditioning",
-      "aircon_body": "Individually controlled cooling in every room.",
-      "kitchen_title": "Fully Equipped Kitchen",
-      "kitchen_body": "Full cooktop, cookware, and everything to self-cater.",
-      "parking_title": "Free parking",
-      "parking_body": "Private on-site parking, no charge, right at your door.",
-      "tv_title": "Smart TV",
-      "tv_body": "Streaming-ready smart TVs with your favourite apps.",
-      "bbq_title": "BBQ",
-      "bbq_body": "Your own grill for long evenings under the stars."
+      "eyebrow": "Code 165· Discover the services we offer",
+      "title": "Code 166· All the essentials for a cozy and comfortable stay.",
+      "wifi_title": "Code 167· Free WiFi",
+      "wifi_body": "Code 168· Fast fibre throughout, from the villa to the beach.",
+      "aircon_title": "Code 169· Air conditioning",
+      "aircon_body": "Code 170· Individually controlled cooling in every room.",
+      "kitchen_title": "Code 171· Fully Equipped Kitchen",
+      "kitchen_body": "Code 172· Full cooktop, cookware, and everything to self-cater.",
+      "parking_title": "Code 173· Free parking",
+      "parking_body": "Code 174· Private on-site parking, no charge, right at your door.",
+      "tv_title": "Code 175· Smart TV",
+      "tv_body": "Code 176· Streaming-ready smart TVs with your favourite apps.",
+      "bbq_title": "Code 177· BBQ",
+      "bbq_body": "Code 178· Your own grill for long evenings under the stars."
     },
     "newsletter": {
-      "eyebrow": "Notes from the bay",
-      "title": "Stay with us",
-      "lede": "Quiet notes from the coast — three or four a year, never more.",
-      "email_label": "Email address",
-      "email_placeholder": "Your email address",
-      "hp_label": "Website",
-      "submit": "Subscribe",
-      "consent_html": "I agree to the <a href=\"{privacy_url}\">Privacy Policy</a> and consent to receiving occasional emails from Vayana Bungalows.",
-      "noscript_html": "Subscribe by emailing <a href=\"{email_href}\">{email_display}</a> with the subject \"Subscribe\".",
-      "modal_eyebrow": "Subscribed",
-      "modal_title": "Thank you — you’re on the list.",
-      "modal_body": "We’ll send a quiet note when there’s something worth sharing — no more than four a year.",
-      "modal_close": "Close"
+      "eyebrow": "Code 179· Notes from the bay",
+      "title": "Code 180· Stay with us",
+      "lede": "Code 181· Quiet notes from the coast — three or four a year, never more.",
+      "email_label": "Code 182· Email address",
+      "email_placeholder": "Code 183· Your email address",
+      "hp_label": "Code 184· Website",
+      "submit": "Code 185· Subscribe",
+      "consent_html": "Code 186· I agree to the <a href=\"{privacy_url}\">Privacy Policy</a> and consent to receiving occasional emails from Vayana Bungalows.",
+      "noscript_html": "Code 187· Subscribe by emailing <a href=\"{email_href}\">{email_display}</a> with the subject \"Subscribe\".",
+      "modal_eyebrow": "Code 188· Subscribed",
+      "modal_title": "Code 189· Thank you — you’re on the list.",
+      "modal_body": "Code 190· We’ll send a quiet note when there’s something worth sharing — no more than four a year.",
+      "modal_close": "Code 191· Close"
     }
   },
   "stay": {
     "meta": {
-      "title": "Stay — Vayana Bungalows",
-      "description": "The Vayana bungalows in Tsarevo, Bulgaria: three boutique villas on the Black Sea coast — oceanview, hilltop, and beachfront. Pick the one that fits your stay.",
-      "og_description": "Three boutique bungalows on the Black Sea coast in Tsarevo, Bulgaria. Pick the one that fits your stay."
+      "title": "Code 192· Stay — Vayana Bungalows",
+      "description": "Code 193· The Vayana bungalows in Tsarevo, Bulgaria: three boutique villas on the Black Sea coast — oceanview, hilltop, and beachfront. Pick the one that fits your stay.",
+      "og_description": "Code 194· Three boutique bungalows on the Black Sea coast in Tsarevo, Bulgaria. Pick the one that fits your stay."
     },
     "hero": {
-      "eyebrow": "The bungalows",
-      "title": "Our Bungalows",
-      "sub": "Three handcrafted villas on the Tsarevo coast — each with its own live availability."
+      "eyebrow": "Code 195· The bungalows",
+      "title": "Code 196· Our Bungalows",
+      "sub": "Code 197· Three handcrafted villas on the Tsarevo coast — each with its own live availability."
     },
     "specs": {
-      "sr_title": "Bungalow specifications",
-      "size_label": "Size",
-      "occupancy_label": "Occupancy",
-      "occupancy_value": "2 adults",
-      "bed_label": "Bed",
-      "bed_value": "King",
-      "view_label": "View",
-      "view_value": "Ocean",
-      "floor_label": "Floor",
-      "floor_value": "Single level"
+      "sr_title": "Code 198· Bungalow specifications",
+      "size_label": "Code 199· Size",
+      "occupancy_label": "Code 200· Occupancy",
+      "occupancy_value": "Code 201· 2 adults",
+      "bed_label": "Code 202· Bed",
+      "bed_value": "Code 203· King",
+      "view_label": "Code 204· View",
+      "view_value": "Code 205· Ocean",
+      "floor_label": "Code 206· Floor",
+      "floor_value": "Code 207· Single level"
     },
     "villas": {
-      "eyebrow": "The three villas",
-      "card1_title": "Bungalow 1",
-      "card2_title": "Bungalow 2",
-      "card3_title": "Bungalow 3",
+      "eyebrow": "Code 208· The three villas",
+      "card1_title": "Code 209· Bungalow 1",
+      "card2_title": "Code 210· Bungalow 2",
+      "card3_title": "Code 211· Bungalow 3",
       "cal1_aria": "Bungalow 1 availability calendar",
       "cal2_aria": "Bungalow 2 availability calendar",
       "cal3_aria": "Bungalow 3 availability calendar"
     },
     "amenities": {
-      "eyebrow": "In every bungalow",
-      "title": "Amenities",
-      "wifi": "Free WiFi",
-      "aircon": "Air conditioning",
-      "kitchen": "Fully Equipped Kitchen",
-      "parking": "Free parking",
-      "tv": "Smart TV",
-      "bbq": "BBQ",
-      "coffee": "Coffee Machine",
-      "washing": "Washing Machine",
-      "iron": "Iron",
-      "hairdryer": "Hair Dryer",
-      "linens": "Premium Linens & Towels",
-      "crib": "Baby Crib"
+      "eyebrow": "Code 212· In every bungalow",
+      "title": "Code 213· Amenities",
+      "wifi": "Code 214· Free WiFi",
+      "aircon": "Code 215· Air conditioning",
+      "kitchen": "Code 216· Fully Equipped Kitchen",
+      "parking": "Code 217· Free parking",
+      "tv": "Code 218· Smart TV",
+      "bbq": "Code 219· BBQ",
+      "coffee": "Code 220· Coffee Machine",
+      "washing": "Code 221· Washing Machine",
+      "iron": "Code 222· Iron",
+      "hairdryer": "Code 223· Hair Dryer",
+      "linens": "Code 224· Premium Linens & Towels",
+      "crib": "Code 225· Baby Crib"
     },
     "gallery": {
-      "eyebrow": "A glimpse of the bungalows",
-      "title": "Gallery",
+      "eyebrow": "Code 226· A glimpse of the bungalows",
+      "title": "Code 227· Gallery",
       "prev_photo_aria": "Previous photo",
       "next_photo_aria": "Next photo",
       "prev_photos_aria": "Previous photos",
@@ -205,55 +205,55 @@
       "viewer_aria": "Photo viewer"
     },
     "cta": {
-      "eyebrow": "Already have a plan",
-      "title": "Have questions?",
-      "lede": "Tell us your dates and a little about your party and we'll reply within 24-48 hours with availability and a tailored proposal.",
-      "button": "Send an enquiry"
+      "eyebrow": "Code 228· Already have a plan",
+      "title": "Code 229· Have questions?",
+      "lede": "Code 230· Tell us your dates and a little about your party and we'll reply within 24-48 hours with availability and a tailored proposal.",
+      "button": "Code 231· Send an enquiry"
     }
   },
   "bungalows": {
     "common": {
       "booking": {
-        "checkin_label": "Check-in",
-        "checkout_label": "Check-out",
-        "date_placeholder": "Add date",
-        "rooms_label": "Rooms",
-        "rooms_1": "1 room",
-        "rooms_2": "2 rooms",
-        "rooms_3": "3 rooms",
-        "rooms_4": "4 rooms",
-        "guests_label": "Guests",
-        "guests_1a": "1 adult",
-        "guests_2a": "2 adults",
-        "guests_2a1c": "2 adults, 1 child",
-        "guests_2a2c": "2 adults, 2 children",
-        "guests_3a": "3 adults",
-        "guests_4a": "4 adults",
-        "submit": "Book Now",
+        "checkin_label": "Code 232· Check-in",
+        "checkout_label": "Code 233· Check-out",
+        "date_placeholder": "Code 234· Add date",
+        "rooms_label": "Code 235· Rooms",
+        "rooms_1": "Code 236· 1 room",
+        "rooms_2": "Code 237· 2 rooms",
+        "rooms_3": "Code 238· 3 rooms",
+        "rooms_4": "Code 239· 4 rooms",
+        "guests_label": "Code 240· Guests",
+        "guests_1a": "Code 241· 1 adult",
+        "guests_2a": "Code 242· 2 adults",
+        "guests_2a1c": "Code 243· 2 adults, 1 child",
+        "guests_2a2c": "Code 244· 2 adults, 2 children",
+        "guests_3a": "Code 245· 3 adults",
+        "guests_4a": "Code 246· 4 adults",
+        "submit": "Code 247· Book Now",
         "legend_aria": "Date availability legend",
-        "legend_available": "Available",
-        "legend_booked": "Already booked",
-        "legend_turnover": "Turnover (check-out only)",
-        "legend_past": "Past dates"
+        "legend_available": "Code 248· Available",
+        "legend_booked": "Code 249· Already booked",
+        "legend_turnover": "Code 250· Turnover (check-out only)",
+        "legend_past": "Code 251· Past dates"
       },
       "specs": {
-        "sr_title": "Bungalow specifications",
-        "size_label": "Size",
-        "occupancy_label": "Occupancy",
-        "bed_label": "Bed",
-        "view_label": "View",
-        "floor_label": "Floor"
+        "sr_title": "Code 252· Bungalow specifications",
+        "size_label": "Code 253· Size",
+        "occupancy_label": "Code 254· Occupancy",
+        "bed_label": "Code 255· Bed",
+        "view_label": "Code 256· View",
+        "floor_label": "Code 257· Floor"
       },
       "description": {
-        "eyebrow": "Inside the bungalow"
+        "eyebrow": "Code 258· Inside the bungalow"
       },
       "amenities": {
-        "eyebrow": "In every bungalow",
-        "title": "Amenities"
+        "eyebrow": "Code 259· In every bungalow",
+        "title": "Code 260· Amenities"
       },
       "gallery": {
-        "eyebrow": "A glimpse of the bungalow",
-        "title": "Gallery",
+        "eyebrow": "Code 261· A glimpse of the bungalow",
+        "title": "Code 262· Gallery",
         "prev_photos_aria": "Previous photos",
         "next_photos_aria": "Next photos",
         "prev_photo_aria": "Previous photo",
@@ -269,569 +269,569 @@
         "alt_cocktail": "Cocktail at the beach bar"
       },
       "cta": {
-        "eyebrow": "Reserve your stay",
-        "title": "Ready to book this villa?",
-        "lede": "Send us your dates and we'll reply within 24-48 hours with availability and a tailored proposal.",
-        "button": "Send an enquiry"
+        "eyebrow": "Code 263· Reserve your stay",
+        "title": "Code 264· Ready to book this villa?",
+        "lede": "Code 265· Send us your dates and we'll reply within 24-48 hours with availability and a tailored proposal.",
+        "button": "Code 266· Send an enquiry"
       },
       "lightbox": {
         "viewer_aria": "Photo viewer"
       },
       "modal": {
-        "eyebrow": "Reservation request received",
-        "title": "Thank you — we'll be in touch.",
-        "body": "A reservations specialist will follow up within twenty-four hours to confirm availability and tailor your stay.",
-        "close_button": "Close"
+        "eyebrow": "Code 267· Reservation request received",
+        "title": "Code 268· Thank you — we'll be in touch.",
+        "body": "Code 269· A reservations specialist will follow up within twenty-four hours to confirm availability and tailor your stay.",
+        "close_button": "Code 270· Close"
       }
     },
     "villa1": {
       "meta": {
-        "title": "Bungalow 1 — Vayana Bungalows",
-        "description": "A private hardwood bungalow with garden views, plunge pool, and butler service. From $960 per night."
+        "title": "Code 271· Bungalow 1 — Vayana Bungalows",
+        "description": "Code 272· A private hardwood bungalow with garden views, plunge pool, and butler service. From $960 per night."
       },
       "hero": {
-        "eyebrow": "From $960 / night",
-        "title": "Bungalow 1",
-        "sub": "A hardwood villa wrapped in trade winds, with an uninterrupted line to the horizon."
+        "eyebrow": "Code 273· From $960 / night",
+        "title": "Code 274· Bungalow 1",
+        "sub": "Code 275· A hardwood villa wrapped in trade winds, with an uninterrupted line to the horizon."
       },
       "booking": {
-        "sr_title": "Book your stay at Bungalow 1"
+        "sr_title": "Code 276· Book your stay at Bungalow 1"
       },
       "specs": {
-        "occupancy_value": "2 adults",
-        "bed_value": "King",
-        "view_value": "Ocean",
-        "floor_value": "Single level"
+        "occupancy_value": "Code 277· 2 adults",
+        "bed_value": "Code 278· King",
+        "view_value": "Code 279· Ocean",
+        "floor_value": "Code 280· Single level"
       },
       "description": {
-        "title": "A hardwood retreat, open to the Black Sea.",
-        "p1": "Set on a low rise above the lagoon, Bungalow 1 is a single-level pavilion of local hardwoods, with a deep timber deck, a salt-water plunge pool, and louvered walls that fold back to the trade winds.",
-        "p2": "Inside, a king bed faces the sea through a wall of glass; a freestanding stone tub looks the same direction. Mornings begin with the sun coming up through the palms; evenings end with the lagoon's soft phosphorescence under the stars.",
-        "p3": "Bungalow 1 includes a dedicated butler, twice-daily housekeeping, and a private outrigger berth at the resort dock for guests who'd like to take to the water on their own schedule."
+        "title": "Code 281· A hardwood retreat, open to the Black Sea.",
+        "p1": "Code 282· Set on a low rise above the lagoon, Bungalow 1 is a single-level pavilion of local hardwoods, with a deep timber deck, a salt-water plunge pool, and louvered walls that fold back to the trade winds.",
+        "p2": "Code 283· Inside, a king bed faces the sea through a wall of glass; a freestanding stone tub looks the same direction. Mornings begin with the sun coming up through the palms; evenings end with the lagoon's soft phosphorescence under the stars.",
+        "p3": "Code 284· Bungalow 1 includes a dedicated butler, twice-daily housekeeping, and a private outrigger berth at the resort dock for guests who'd like to take to the water on their own schedule."
       }
     },
     "villa2": {
       "meta": {
-        "title": "Bungalow 2 — Vayana Bungalows",
-        "description": "A two-level hilltop residence with infinity pool, private chef's table, and panoramic views. From $1,240 per night."
+        "title": "Code 285· Bungalow 2 — Vayana Bungalows",
+        "description": "Code 286· A two-level hilltop residence with infinity pool, private chef's table, and panoramic views. From $1,240 per night."
       },
       "hero": {
-        "eyebrow": "From $1,240 / night",
-        "title": "Bungalow 2",
-        "sub": "A two-level hardwood pavilion above the lagoon, with the whole island laid out below."
+        "eyebrow": "Code 287· From $1,240 / night",
+        "title": "Code 288· Bungalow 2",
+        "sub": "Code 289· A two-level hardwood pavilion above the lagoon, with the whole island laid out below."
       },
       "booking": {
-        "sr_title": "Book your stay at Bungalow 2"
+        "sr_title": "Code 290· Book your stay at Bungalow 2"
       },
       "specs": {
-        "occupancy_value": "2 adults, 2 children",
-        "bed_value": "King + twin",
-        "view_value": "Island & ocean",
-        "floor_value": "Two levels"
+        "occupancy_value": "Code 291· 2 adults, 2 children",
+        "bed_value": "Code 292· King + twin",
+        "view_value": "Code 293· Island & ocean",
+        "floor_value": "Code 294· Two levels"
       },
       "description": {
-        "title": "A two-level pavilion above the lagoon.",
-        "p1": "Bungalow 2 is a two-level hardwood pavilion set into the slope above the lagoon. The lower floor opens to a long infinity pool that reads, from the water, as a single sheet to the horizon; the upper floor is the private bedroom, with the island falling away in every direction.",
-        "p2": "A chef's table on the deck seats six and is paired with a kitchen for in-residence dining; on most evenings the resort's executive chef will cook for guests on request, with a single-day notice. The view shifts every half hour from the trade-wind palms to the open sea.",
-        "p3": "Bungalow 2 includes a dedicated butler, twice-daily housekeeping, and an electric buggy for the run down to the beach club. Children are welcome; the second bedroom converts to twin beds on request."
+        "title": "Code 295· A two-level pavilion above the lagoon.",
+        "p1": "Code 296· Bungalow 2 is a two-level hardwood pavilion set into the slope above the lagoon. The lower floor opens to a long infinity pool that reads, from the water, as a single sheet to the horizon; the upper floor is the private bedroom, with the island falling away in every direction.",
+        "p2": "Code 297· A chef's table on the deck seats six and is paired with a kitchen for in-residence dining; on most evenings the resort's executive chef will cook for guests on request, with a single-day notice. The view shifts every half hour from the trade-wind palms to the open sea.",
+        "p3": "Code 298· Bungalow 2 includes a dedicated butler, twice-daily housekeeping, and an electric buggy for the run down to the beach club. Children are welcome; the second bedroom converts to twin beds on request."
       }
     },
     "villa3": {
       "meta": {
-        "title": "Bungalow 3 — Vayana Bungalows",
-        "description": "A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night."
+        "title": "Code 299· Bungalow 3 — Vayana Bungalows",
+        "description": "Code 300· A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night."
       },
       "hero": {
-        "eyebrow": "From $1,480 / night",
-        "title": "Bungalow 3",
-        "sub": "Sand at your doorstep, the lagoon a few barefoot steps beyond."
+        "eyebrow": "Code 301· From $1,480 / night",
+        "title": "Code 302· Bungalow 3",
+        "sub": "Code 303· Sand at your doorstep, the lagoon a few barefoot steps beyond."
       },
       "booking": {
-        "sr_title": "Book your stay at Bungalow 3"
+        "sr_title": "Code 304· Book your stay at Bungalow 3"
       },
       "specs": {
-        "occupancy_value": "2 adults, 1 child",
-        "bed_value": "King",
-        "view_value": "Beach & lagoon",
-        "floor_value": "Single level"
+        "occupancy_value": "Code 305· 2 adults, 1 child",
+        "bed_value": "Code 306· King",
+        "view_value": "Code 307· Beach & lagoon",
+        "floor_value": "Code 308· Single level"
       },
       "description": {
-        "title": "Right on the sand, just above the tide.",
-        "p1": "Bungalow 3 sits on the long shallow arc of the resort's main beach. The deck is the sand; a few steps from the bed and you're in the lagoon, where the water is calf-deep and warm for fifty metres out.",
-        "p2": "Inside, the suite is a single open volume with a king bed, a deep tub on the seaward wall, and a soft palette of bleached oak and natural linen. A separate outdoor shower under the palms is the way most guests start the day.",
-        "p3": "Bungalow 3 includes a dedicated butler, twice-daily housekeeping, and a private cabana on the beach with a daybed for two and a service bell. The cabana is the kind of place that quietly redraws an afternoon."
+        "title": "Code 309· Right on the sand, just above the tide.",
+        "p1": "Code 310· Bungalow 3 sits on the long shallow arc of the resort's main beach. The deck is the sand; a few steps from the bed and you're in the lagoon, where the water is calf-deep and warm for fifty metres out.",
+        "p2": "Code 311· Inside, the suite is a single open volume with a king bed, a deep tub on the seaward wall, and a soft palette of bleached oak and natural linen. A separate outdoor shower under the palms is the way most guests start the day.",
+        "p3": "Code 312· Bungalow 3 includes a dedicated butler, twice-daily housekeeping, and a private cabana on the beach with a daybed for two and a service bell. The cabana is the kind of place that quietly redraws an afternoon."
       }
     }
   },
   "destination": {
     "meta": {
-      "title": "Destination — Vayana Bungalows",
-      "description": "Tsarevo on the Black Sea coast of Bulgaria — what to do, what to eat, where to walk, and how to find us. The home base of the Vayana bungalows.",
-      "og_description": "Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows — beach, food, hiking, nearby villages, and directions.",
-      "twitter_description": "Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows."
+      "title": "Code 313· Destination — Vayana Bungalows",
+      "description": "Code 314· Tsarevo on the Black Sea coast of Bulgaria — what to do, what to eat, where to walk, and how to find us. The home base of the Vayana bungalows.",
+      "og_description": "Code 315· Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows — beach, food, hiking, nearby villages, and directions.",
+      "twitter_description": "Code 316· Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows."
     },
     "hero": {
-      "eyebrow": "Tsarevo, Bulgaria",
-      "title": "On the Black Sea coast",
-      "sub": "A small port town on Bulgaria's southern Black Sea coast, framed by the Strandzha pine forest and a long ribbon of quiet beaches."
+      "eyebrow": "Code 317· Tsarevo, Bulgaria",
+      "title": "Code 318· On the Black Sea coast",
+      "sub": "Code 319· A small port town on Bulgaria's southern Black Sea coast, framed by the Strandzha pine forest and a long ribbon of quiet beaches."
     },
     "guide": {
-      "sr_title": "About Tsarevo",
-      "lede": "Tsarevo sits at the southern end of the Bulgarian Black Sea coast, where the Strandzha National Park's pine ridges run all the way down to the water.",
-      "intro_para1": "It's an old fishing port that grew slowly — small harbour, a single ridge, a tight grid of low-rise streets — and the seasonality is gentle. The beaches stretch in both directions: Veleka and Sinemorets to the south, the sweep of Tsarevo bay to the north, and a string of unnamed coves in between.",
-      "intro_para2": "It's reachable by car in a little over an hour from Burgas Airport (BOJ, ~85 km) and by a long drive from Sofia (SOF, ~410 km). Most guests fly into BOJ; the route hugs the coast from Burgas south, with the sea on the left almost all the way down."
+      "sr_title": "Code 320· About Tsarevo",
+      "lede": "Code 321· Tsarevo sits at the southern end of the Bulgarian Black Sea coast, where the Strandzha National Park's pine ridges run all the way down to the water.",
+      "intro_para1": "Code 322· It's an old fishing port that grew slowly — small harbour, a single ridge, a tight grid of low-rise streets — and the seasonality is gentle. The beaches stretch in both directions: Veleka and Sinemorets to the south, the sweep of Tsarevo bay to the north, and a string of unnamed coves in between.",
+      "intro_para2": "Code 323· It's reachable by car in a little over an hour from Burgas Airport (BOJ, ~85 km) and by a long drive from Sofia (SOF, ~410 km). Most guests fly into BOJ; the route hugs the coast from Burgas south, with the sea on the left almost all the way down."
     },
     "beach": {
       "img_alt": "A wide stretch of soft sand running into the Black Sea — characteristic of the long, quiet beaches around Tsarevo",
-      "eyebrow": "The shoreline",
-      "title": "Beaches and coves",
-      "body": "Long open beaches give way to small, half-hidden coves the further south you walk. Veleka, just down the coast, is one of the cleanest river-mouth beaches in the country; the smaller bays north of town are reachable only on foot or by water and rarely crowded, even in August."
+      "eyebrow": "Code 324· The shoreline",
+      "title": "Code 325· Beaches and coves",
+      "body": "Code 326· Long open beaches give way to small, half-hidden coves the further south you walk. Veleka, just down the coast, is one of the cleanest river-mouth beaches in the country; the smaller bays north of town are reachable only on foot or by water and rarely crowded, even in August."
     },
     "food": {
       "img_alt": "An aerial view of clear turquoise water meeting a palm-fringed white sand beach",
-      "eyebrow": "On the table",
-      "title": "Restaurants and local food",
-      "body": "Most of what's good is within walking distance of the harbour: fresh Black Sea catch, mussels and rapana from the bay, and a handful of small family kitchens that serve mezze under grapevines. A few inland wineries in the Strandzha foothills run tasting days through the warm months."
+      "eyebrow": "Code 327· On the table",
+      "title": "Code 328· Restaurants and local food",
+      "body": "Code 329· Most of what's good is within walking distance of the harbour: fresh Black Sea catch, mussels and rapana from the bay, and a handful of small family kitchens that serve mezze under grapevines. A few inland wineries in the Strandzha foothills run tasting days through the warm months."
     },
     "hiking": {
       "img_alt": "A warm sunrise over a calm sea, with soft pink and gold light on the shoreline",
-      "eyebrow": "Inland",
-      "title": "Hiking and nature",
-      "body": "Strandzha National Park — the largest protected area in Bulgaria — begins at the edge of town and runs inland for tens of kilometres. Marked trails follow the river valleys; the migratory bird routes overhead in spring and autumn are reason enough for a long walk, even if you don't normally count yourself a birder."
+      "eyebrow": "Code 330· Inland",
+      "title": "Code 331· Hiking and nature",
+      "body": "Code 332· Strandzha National Park — the largest protected area in Bulgaria — begins at the edge of town and runs inland for tens of kilometres. Marked trails follow the river valleys; the migratory bird routes overhead in spring and autumn are reason enough for a long walk, even if you don't normally count yourself a birder."
     },
     "villages": {
       "img_alt": "A jagged mountain peak rising above a sea of clouds at sunset, washed in pink and gold light",
-      "eyebrow": "Around the coast",
-      "title": "Nearby villages and culture",
-      "body": "Sinemorets and Ahtopol are short drives down the coast, each with its own character — Sinemorets quieter and built around its river-mouth beach, Ahtopol with a working harbour and a small old town on a headland. Inland, Strandzha villages keep older traditions alive, including the fire-dancing rituals that the region is known for."
+      "eyebrow": "Code 333· Around the coast",
+      "title": "Code 334· Nearby villages and culture",
+      "body": "Code 335· Sinemorets and Ahtopol are short drives down the coast, each with its own character — Sinemorets quieter and built around its river-mouth beach, Ahtopol with a working harbour and a small old town on a headland. Inland, Strandzha villages keep older traditions alive, including the fire-dancing rituals that the region is known for."
     },
     "cta": {
-      "eyebrow": "Already have a plan",
-      "title": "Ready to visit?",
-      "lede": "Tell us your dates and we'll reply within 24-48 hours with availability and a tailored proposal for your stay in Tsarevo.",
-      "button": "Send an enquiry"
+      "eyebrow": "Code 336· Already have a plan",
+      "title": "Code 337· Ready to visit?",
+      "lede": "Code 338· Tell us your dates and we'll reply within 24-48 hours with availability and a tailored proposal for your stay in Tsarevo.",
+      "button": "Code 339· Send an enquiry"
     }
   },
   "contacts": {
     "meta": {
-      "title": "Contacts — Vayana Bungalows",
-      "description": "Get in touch with Vayana Bungalows in Tsarevo, Bulgaria — phone, email, address, and a map. Or send a detailed enquiry online.",
-      "og_description": "Phone, email, address, and map for Vayana Bungalows in Tsarevo, Bulgaria."
+      "title": "Code 340· Contacts — Vayana Bungalows",
+      "description": "Code 341· Get in touch with Vayana Bungalows in Tsarevo, Bulgaria — phone, email, address, and a map. Or send a detailed enquiry online.",
+      "og_description": "Code 342· Phone, email, address, and map for Vayana Bungalows in Tsarevo, Bulgaria."
     },
     "hero": {
-      "title": "Get in touch",
-      "sub": "Three ways to reach us — a phone call, an email, or a detailed enquiry."
+      "title": "Code 343· Get in touch",
+      "sub": "Code 344· Three ways to reach us — a phone call, an email, or a detailed enquiry."
     },
     "details": {
-      "sr_title": "Contact details",
-      "phone_label": "Phone",
-      "email_label": "Email",
-      "address_label": "Address",
-      "reply_note": "We reply within 24-48 hours."
+      "sr_title": "Code 345· Contact details",
+      "phone_label": "Code 346· Phone",
+      "email_label": "Code 347· Email",
+      "address_label": "Code 348· Address",
+      "reply_note": "Code 349· We reply within 24-48 hours."
     },
     "map": {
-      "eyebrow": "Find us",
-      "title": "On the map",
-      "fallback": "Map unavailable — see address below.",
-      "iframe_title": "Map showing Vayana Bungalows in Tsarevo, Bulgaria",
-      "directions_button": "Open in Google Maps",
-      "directions_sr": "(opens Google Maps in a new tab)"
+      "eyebrow": "Code 350· Find us",
+      "title": "Code 351· On the map",
+      "fallback": "Code 352· Map unavailable — see address below.",
+      "iframe_title": "Code 353· Map showing Vayana Bungalows in Tsarevo, Bulgaria",
+      "directions_button": "Code 354· Open in Google Maps",
+      "directions_sr": "Code 355· (opens Google Maps in a new tab)"
     },
     "cta": {
-      "eyebrow": "Already have a plan",
-      "title": "Or send us a detailed enquiry",
-      "lede": "If you'd like to share your dates, party size, and which bungalow you have in mind, the enquiry form keeps everything in one place and we'll come back to you with a tailored proposal.",
-      "button": "Send an enquiry"
+      "eyebrow": "Code 356· Already have a plan",
+      "title": "Code 357· Or send us a detailed enquiry",
+      "lede": "Code 358· If you'd like to share your dates, party size, and which bungalow you have in mind, the enquiry form keeps everything in one place and we'll come back to you with a tailored proposal.",
+      "button": "Code 359· Send an enquiry"
     }
   },
   "enquiries": {
     "meta": {
-      "title": "Enquiries — Vayana Bungalows",
-      "description": "Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests — we reply within 24-48 hours."
+      "title": "Code 360· Enquiries — Vayana Bungalows",
+      "description": "Code 361· Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests — we reply within 24-48 hours."
     },
     "hero": {
-      "eyebrow": "Already have a plan",
-      "title": "Send us an enquiry",
-      "lede": "Leave your contact information and we will reach out to you shortly."
+      "eyebrow": "Code 362· Already have a plan",
+      "title": "Code 363· Send us an enquiry",
+      "lede": "Code 364· Leave your contact information and we will reach out to you shortly."
     },
     "form": {
-      "name_placeholder": "FULL NAME*",
-      "checkin_placeholder": "CHECK-IN*",
-      "checkout_placeholder": "CHECK-OUT*",
-      "adults_placeholder": "ADULTS*",
-      "children_placeholder": "CHILDREN",
-      "infants_placeholder": "INFANTS",
-      "email_placeholder": "EMAIL*",
-      "phone_placeholder": "TELEPHONE*",
-      "message_placeholder": "MESSAGE",
-      "submit_label": "Send enquiry",
-      "submit_busy_label": "Sending…"
+      "name_placeholder": "Code 365· FULL NAME*",
+      "checkin_placeholder": "Code 366· CHECK-IN*",
+      "checkout_placeholder": "Code 367· CHECK-OUT*",
+      "adults_placeholder": "Code 368· ADULTS*",
+      "children_placeholder": "Code 369· CHILDREN",
+      "infants_placeholder": "Code 370· INFANTS",
+      "email_placeholder": "Code 371· EMAIL*",
+      "phone_placeholder": "Code 372· TELEPHONE*",
+      "message_placeholder": "Code 373· MESSAGE",
+      "submit_label": "Code 374· Send enquiry",
+      "submit_busy_label": "Code 375· Sending…"
     },
     "a11y": {
-      "name_label": "Full name (required)",
-      "checkin_label": "Check-in date (required)",
-      "checkout_label": "Check-out date (required)",
-      "adults_label": "Adults (required)",
-      "children_label": "Children (optional)",
-      "infants_label": "Infants (optional)",
-      "email_label": "Email (required)",
-      "phone_label": "Telephone (required)",
-      "message_label": "Message",
-      "honeypot_label": "Website",
+      "name_label": "Code 376· Full name (required)",
+      "checkin_label": "Code 377· Check-in date (required)",
+      "checkout_label": "Code 378· Check-out date (required)",
+      "adults_label": "Code 379· Adults (required)",
+      "children_label": "Code 380· Children (optional)",
+      "infants_label": "Code 381· Infants (optional)",
+      "email_label": "Code 382· Email (required)",
+      "phone_label": "Code 383· Telephone (required)",
+      "message_label": "Code 384· Message",
+      "honeypot_label": "Code 385· Website",
       "honeypot_aria": "Leave this field empty"
     },
     "consent": {
-      "prefix": "I accept the",
-      "link_label": "Privacy Policy",
-      "suffix": "and consent to being contacted by Vayana Bungalows regarding my enquiry."
+      "prefix": "Code 386· I accept the",
+      "link_label": "Code 387· Privacy Policy",
+      "suffix": "Code 388· and consent to being contacted by Vayana Bungalows regarding my enquiry."
     },
     "noscript": {
-      "prefix": "JavaScript is disabled in your browser. To send an enquiry, email us at",
-      "suffix": "with your dates and a short note."
+      "prefix": "Code 389· JavaScript is disabled in your browser. To send an enquiry, email us at",
+      "suffix": "Code 390· with your dates and a short note."
     },
     "modal": {
       "close_aria": "Close",
-      "close_button": "Close",
-      "eyebrow": "Enquiry received",
-      "title": "Thank you — we'll be in touch.",
-      "body": "A member of the Vayana team will reply within 24-48 hours with availability and a tailored proposal for your stay."
+      "close_button": "Code 391· Close",
+      "eyebrow": "Code 392· Enquiry received",
+      "title": "Code 393· Thank you — we'll be in touch.",
+      "body": "Code 394· A member of the Vayana team will reply within 24-48 hours with availability and a tailored proposal for your stay."
     },
     "errors": {
-      "validation": "Please check the highlighted fields and try again.",
-      "captcha": "The anti-spam check failed. Please tick the box if shown, or refresh the page.",
-      "rate_limit": "Too many enquiries from this connection. Please try again in a few minutes.",
-      "content_type": "Sorry, something went wrong sending your enquiry. Please refresh and try again.",
-      "too_large": "Your message is too long. Please shorten it and try again.",
-      "method": "Sorry, something went wrong sending your enquiry. Please refresh and try again.",
-      "downstream": "Sorry, we couldn’t save your enquiry. Please try again, or email us at the address in the footer.",
-      "network": "Network error — please check your connection and try again.",
-      "default": "Sorry, something went wrong. Please try again or email us directly."
+      "validation": "Code 395· Please check the highlighted fields and try again.",
+      "captcha": "Code 396· The anti-spam check failed. Please tick the box if shown, or refresh the page.",
+      "rate_limit": "Code 397· Too many enquiries from this connection. Please try again in a few minutes.",
+      "content_type": "Code 398· Sorry, something went wrong sending your enquiry. Please refresh and try again.",
+      "too_large": "Code 399· Your message is too long. Please shorten it and try again.",
+      "method": "Code 400· Sorry, something went wrong sending your enquiry. Please refresh and try again.",
+      "downstream": "Code 401· Sorry, we couldn’t save your enquiry. Please try again, or email us at the address in the footer.",
+      "network": "Code 402· Network error — please check your connection and try again.",
+      "default": "Code 403· Sorry, something went wrong. Please try again or email us directly."
     },
     "field_errors": {
-      "name": "Please enter your full name.",
-      "date": "Please pick check-in and check-out dates.",
-      "date_order": "Check-out must be after check-in.",
-      "past_date": "Check-in cannot be in the past.",
-      "email": "Please enter a valid email address.",
-      "phone": "Please enter a valid phone number."
+      "name": "Code 404· Please enter your full name.",
+      "date": "Code 405· Please pick check-in and check-out dates.",
+      "date_order": "Code 406· Check-out must be after check-in.",
+      "past_date": "Code 407· Check-in cannot be in the past.",
+      "email": "Code 408· Please enter a valid email address.",
+      "phone": "Code 409· Please enter a valid phone number."
     }
   },
   "enquiries_thanks": {
     "meta": {
-      "title": "Thank you — Vayana Bungalows",
-      "description": "Your enquiry was received. We will reply within 24-48 hours."
+      "title": "Code 410· Thank you — Vayana Bungalows",
+      "description": "Code 411· Your enquiry was received. We will reply within 24-48 hours."
     },
     "hero": {
-      "eyebrow": "Enquiry sent",
-      "title": "Thank you for your enquiry",
-      "lede": "We've received your message and a member of the team will reply within 24-48 hours with availability and a tailored proposal."
+      "eyebrow": "Code 412· Enquiry sent",
+      "title": "Code 413· Thank you for your enquiry",
+      "lede": "Code 414· We've received your message and a member of the team will reply within 24-48 hours with availability and a tailored proposal."
     },
     "next": {
-      "title": "What happens next",
-      "body": "Our reply will arrive at the email address you provided. If you don't see it within 48 hours, please check your spam folder, or get in touch directly using the details below.",
-      "phone_label": "Phone:",
-      "email_label": "Email:"
+      "title": "Code 415· What happens next",
+      "body": "Code 416· Our reply will arrive at the email address you provided. If you don't see it within 48 hours, please check your spam folder, or get in touch directly using the details below.",
+      "phone_label": "Code 417· Phone:",
+      "email_label": "Code 418· Email:"
     },
     "back": {
-      "home": "← Back to home",
-      "another": "Send another enquiry"
+      "home": "Code 419· ← Back to home",
+      "another": "Code 420· Send another enquiry"
     }
   },
   "privacy": {
     "meta": {
-      "title": "Privacy Policy — Vayana Bungalows",
-      "description": "Privacy Policy for Vayana Bungalows — what we collect, why, how long we keep it, and your rights under GDPR.",
-      "og_description": "What we collect, why, how long we keep it, and your rights under GDPR."
+      "title": "Code 421· Privacy Policy — Vayana Bungalows",
+      "description": "Code 422· Privacy Policy for Vayana Bungalows — what we collect, why, how long we keep it, and your rights under GDPR.",
+      "og_description": "Code 423· What we collect, why, how long we keep it, and your rights under GDPR."
     },
     "head": {
-      "title": "Privacy Policy",
-      "updated_label": "Last updated:",
-      "lede": "This page explains what personal data Vayana Bungalows collects, why we collect it, how long we keep it, and what rights you have over it under the EU General Data Protection Regulation (GDPR) and Bulgarian data-protection law."
+      "title": "Code 424· Privacy Policy",
+      "updated_label": "Code 425· Last updated:",
+      "lede": "Code 426· This page explains what personal data Vayana Bungalows collects, why we collect it, how long we keep it, and what rights you have over it under the EU General Data Protection Regulation (GDPR) and Bulgarian data-protection law."
     },
     "updated": {
-      "title": "1. Last updated",
-      "para_before": "This Privacy Policy was last updated on",
-      "para_after": ". See <a href=\"#changes\">§12 Changes to this policy</a> for how we handle future updates."
+      "title": "Code 427· 1. Last updated",
+      "para_before": "Code 428· This Privacy Policy was last updated on",
+      "para_after": "Code 429· . See <a href=\"#changes\">§12 Changes to this policy</a> for how we handle future updates."
     },
     "who": {
-      "title": "2. Who we are",
-      "para1": "We are <strong>{brand}</strong>, operated by Vayana di Mare, a Bulgarian hospitality business operating under licence number {license}.",
-      "para2_before": "Our registered location is {address_street}, {address_country}. For any privacy-related question you can reach us by email at",
-      "para2_after": ".",
-      "para3": "For the purposes of GDPR, we are the <em>data controller</em> for any personal data submitted through this website."
+      "title": "Code 430· 2. Who we are",
+      "para1": "Code 431· We are <strong>{brand}</strong>, operated by Vayana di Mare, a Bulgarian hospitality business operating under licence number {license}.",
+      "para2_before": "Code 432· Our registered location is {address_street}, {address_country}. For any privacy-related question you can reach us by email at",
+      "para2_after": "Code 433· .",
+      "para3": "Code 434· For the purposes of GDPR, we are the <em>data controller</em> for any personal data submitted through this website."
     },
     "collect": {
-      "title": "3. What data we collect",
-      "intro": "We only collect personal data that you actively provide to us, plus a small amount of technical data that our anti-spam tools need to operate. We do not run any analytics, advertising, or behavioural-tracking tools on this site.",
-      "form_title": "3.1 Data you give us through the enquiry form",
-      "form_intro_before": "The <a href=\"/enquiries/\">enquiry form</a> on",
-      "form_intro_after": "collects the following fields. All are submitted only when you choose to submit the form:",
-      "form_field_name": "Full name",
-      "form_field_email": "Email address",
-      "form_field_phone": "Phone number",
-      "form_field_dates": "Preferred check-in and check-out dates",
-      "form_field_guests": "Number of guests (adults, children, infants)",
-      "form_field_message": "A free-text message describing your enquiry",
-      "form_field_consent": "A consent checkbox confirming you agree to be contacted (this is logged together with the submission, so we have a record of your consent — see <a href=\"#why\">§4</a>)",
-      "form_flow": "When you submit the form, your data is sent to a <strong>Cloudflare Worker</strong> running on Cloudflare's global edge network, which validates the submission and appends a row to a Google Sheet held in Google Workspace (EU region). See <a href=\"#sharing\">§6 Who we share data with</a> and <a href=\"#storage\">§7 Where data is stored</a> for the processors involved, and <a href=\"#retention\">§8 How long we keep data</a> for the retention period.",
-      "captcha_title": "3.2 Technical data via Cloudflare Turnstile (anti-spam)",
-      "captcha_intro": "The enquiry form is protected against bots by <strong>Cloudflare Turnstile</strong> in managed mode. When you submit the form, Turnstile collects, on Cloudflare's behalf:",
-      "captcha_ip_before": "Your IP address — sent by your browser directly to Cloudflare's",
-      "captcha_ip_after": "endpoint together with the challenge token",
-      "captcha_browser": "Browser characteristics (user agent, screen size, plug-in list)",
-      "captcha_signals": "Interaction signals on the form page (mouse / keyboard movement timing)",
-      "captcha_note_before": "The captcha data above does not pass through our servers in clear form — it goes directly from your browser to Cloudflare, which returns only a success / failure result to our Worker. Our Worker logs only a salted SHA-256 <strong>hash</strong> of your IP address (not the raw address) into the Google Sheet, as",
-      "captcha_note_after": ", so we can correlate repeat enquiries without storing identifying data. We rotate the salt periodically; rotation makes earlier hashes uncorrelatable with any future submission, which is the intended privacy property.",
-      "maps_title": "3.3 Cookies and tracking from embedded Google Maps",
-      "maps_body": "The map on the <a href=\"/\">homepage</a> and on <a href=\"/contacts/\">Contacts</a> / <a href=\"/destination/\">Destination</a> embeds a Google Maps iframe. When the page loads the iframe, Google may set cookies in your browser and receive your IP address — this happens automatically as soon as the page is rendered, whether or not you interact with the map. We have no control over what Google collects in that context — please see Google's own privacy policy.",
-      "newsletter_title": "3.4 Newsletter signup",
-      "newsletter_body": "The newsletter signup form on the homepage accepts an email address into an input field but, in version 1, that email is <strong>not stored anywhere and is not transmitted off your device</strong> — submitting the form opens a \"thank you\" modal and discards what you typed. When a real email-service-provider integration ships, this section will be updated in the same release to list the provider and what they receive."
+      "title": "Code 435· 3. What data we collect",
+      "intro": "Code 436· We only collect personal data that you actively provide to us, plus a small amount of technical data that our anti-spam tools need to operate. We do not run any analytics, advertising, or behavioural-tracking tools on this site.",
+      "form_title": "Code 437· 3.1 Data you give us through the enquiry form",
+      "form_intro_before": "Code 438· The <a href=\"/enquiries/\">enquiry form</a> on",
+      "form_intro_after": "Code 439· collects the following fields. All are submitted only when you choose to submit the form:",
+      "form_field_name": "Code 440· Full name",
+      "form_field_email": "Code 441· Email address",
+      "form_field_phone": "Code 442· Phone number",
+      "form_field_dates": "Code 443· Preferred check-in and check-out dates",
+      "form_field_guests": "Code 444· Number of guests (adults, children, infants)",
+      "form_field_message": "Code 445· A free-text message describing your enquiry",
+      "form_field_consent": "Code 446· A consent checkbox confirming you agree to be contacted (this is logged together with the submission, so we have a record of your consent — see <a href=\"#why\">§4</a>)",
+      "form_flow": "Code 447· When you submit the form, your data is sent to a <strong>Cloudflare Worker</strong> running on Cloudflare's global edge network, which validates the submission and appends a row to a Google Sheet held in Google Workspace (EU region). See <a href=\"#sharing\">§6 Who we share data with</a> and <a href=\"#storage\">§7 Where data is stored</a> for the processors involved, and <a href=\"#retention\">§8 How long we keep data</a> for the retention period.",
+      "captcha_title": "Code 448· 3.2 Technical data via Cloudflare Turnstile (anti-spam)",
+      "captcha_intro": "Code 449· The enquiry form is protected against bots by <strong>Cloudflare Turnstile</strong> in managed mode. When you submit the form, Turnstile collects, on Cloudflare's behalf:",
+      "captcha_ip_before": "Code 450· Your IP address — sent by your browser directly to Cloudflare's",
+      "captcha_ip_after": "Code 451· endpoint together with the challenge token",
+      "captcha_browser": "Code 452· Browser characteristics (user agent, screen size, plug-in list)",
+      "captcha_signals": "Code 453· Interaction signals on the form page (mouse / keyboard movement timing)",
+      "captcha_note_before": "Code 454· The captcha data above does not pass through our servers in clear form — it goes directly from your browser to Cloudflare, which returns only a success / failure result to our Worker. Our Worker logs only a salted SHA-256 <strong>hash</strong> of your IP address (not the raw address) into the Google Sheet, as",
+      "captcha_note_after": "Code 455· , so we can correlate repeat enquiries without storing identifying data. We rotate the salt periodically; rotation makes earlier hashes uncorrelatable with any future submission, which is the intended privacy property.",
+      "maps_title": "Code 456· 3.3 Cookies and tracking from embedded Google Maps",
+      "maps_body": "Code 457· The map on the <a href=\"/\">homepage</a> and on <a href=\"/contacts/\">Contacts</a> / <a href=\"/destination/\">Destination</a> embeds a Google Maps iframe. When the page loads the iframe, Google may set cookies in your browser and receive your IP address — this happens automatically as soon as the page is rendered, whether or not you interact with the map. We have no control over what Google collects in that context — please see Google's own privacy policy.",
+      "newsletter_title": "Code 458· 3.4 Newsletter signup",
+      "newsletter_body": "Code 459· The newsletter signup form on the homepage accepts an email address into an input field but, in version 1, that email is <strong>not stored anywhere and is not transmitted off your device</strong> — submitting the form opens a \"thank you\" modal and discards what you typed. When a real email-service-provider integration ships, this section will be updated in the same release to list the provider and what they receive."
     },
     "why": {
-      "title": "4. Why we collect it (legal basis)",
-      "consent": "<strong>Your consent (GDPR Art. 6(1)(a)).</strong> The enquiry form processes your data on the basis of the consent you give by ticking the checkbox above the submit button. You can withdraw that consent at any time — see <a href=\"#your-rights\">§9</a>.",
-      "legitimate": "<strong>Our legitimate interest (GDPR Art. 6(1)(f)).</strong> The captcha service that runs alongside the form processes the technical data listed in §3.2 to protect our site from automated spam submissions. We have weighed this interest against your rights and consider it proportionate, since the data captured is the minimum required to score a request as bot-or-human."
+      "title": "Code 460· 4. Why we collect it (legal basis)",
+      "consent": "Code 461· <strong>Your consent (GDPR Art. 6(1)(a)).</strong> The enquiry form processes your data on the basis of the consent you give by ticking the checkbox above the submit button. You can withdraw that consent at any time — see <a href=\"#your-rights\">§9</a>.",
+      "legitimate": "Code 462· <strong>Our legitimate interest (GDPR Art. 6(1)(f)).</strong> The captcha service that runs alongside the form processes the technical data listed in §3.2 to protect our site from automated spam submissions. We have weighed this interest against your rights and consider it proportionate, since the data captured is the minimum required to score a request as bot-or-human."
     },
     "use": {
-      "title": "5. How we use it",
-      "intro": "We use the data you give us solely to:",
-      "item_reply": "Reply to your enquiry with a tailored proposal",
-      "item_record": "Hold a record of your stated preferences in case you reply later in the same thread",
-      "item_spam": "Detect and block spam submissions (captcha)",
-      "outro": "We do not use enquiry data for marketing. We do not share it with advertising networks. We do not run any automated decision-making or profiling on it."
+      "title": "Code 463· 5. How we use it",
+      "intro": "Code 464· We use the data you give us solely to:",
+      "item_reply": "Code 465· Reply to your enquiry with a tailored proposal",
+      "item_record": "Code 466· Hold a record of your stated preferences in case you reply later in the same thread",
+      "item_spam": "Code 467· Detect and block spam submissions (captcha)",
+      "outro": "Code 468· We do not use enquiry data for marketing. We do not share it with advertising networks. We do not run any automated decision-making or profiling on it."
     },
     "third": {
-      "title": "6. Third parties",
-      "intro": "When you use this site, the following third parties may process some of your personal data on our behalf:",
-      "google": "<strong>Google LLC</strong> — for the embedded Google Maps iframe (§3.3) and for storing enquiry submissions in a Google Sheet held in Google Workspace (EU region, §7). Google's processing is governed by its own <a href=\"https://policies.google.com/privacy\" rel=\"noopener noreferrer\">privacy policy</a> and the <a href=\"https://workspace.google.com/terms/dpa_terms.html\" rel=\"noopener noreferrer\">Google Workspace Data Processing Addendum</a>.",
-      "cloudflare": "<strong>Cloudflare, Inc.</strong> — for hosting the <strong>Cloudflare Worker</strong> that accepts your enquiry submission (§3.1) and for the <strong>Cloudflare Turnstile</strong> anti-spam check that runs before submission (§3.2). Cloudflare's processing is governed by its own <a href=\"https://www.cloudflare.com/privacypolicy/\" rel=\"noopener noreferrer\">privacy policy</a> and its <a href=\"https://www.cloudflare.com/cloudflare-customer-dpa/\" rel=\"noopener noreferrer\">customer Data Processing Addendum</a>.",
-      "github": "<strong>GitHub, Inc.</strong> — this website is served as a static site through GitHub Pages. GitHub receives your IP address and basic request metadata in the course of serving the page. GitHub's processing is governed by its own <a href=\"https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement\" rel=\"noopener noreferrer\">privacy statement</a>."
+      "title": "Code 469· 6. Third parties",
+      "intro": "Code 470· When you use this site, the following third parties may process some of your personal data on our behalf:",
+      "google": "Code 471· <strong>Google LLC</strong> — for the embedded Google Maps iframe (§3.3) and for storing enquiry submissions in a Google Sheet held in Google Workspace (EU region, §7). Google's processing is governed by its own <a href=\"https://policies.google.com/privacy\" rel=\"noopener noreferrer\">privacy policy</a> and the <a href=\"https://workspace.google.com/terms/dpa_terms.html\" rel=\"noopener noreferrer\">Google Workspace Data Processing Addendum</a>.",
+      "cloudflare": "Code 472· <strong>Cloudflare, Inc.</strong> — for hosting the <strong>Cloudflare Worker</strong> that accepts your enquiry submission (§3.1) and for the <strong>Cloudflare Turnstile</strong> anti-spam check that runs before submission (§3.2). Cloudflare's processing is governed by its own <a href=\"https://www.cloudflare.com/privacypolicy/\" rel=\"noopener noreferrer\">privacy policy</a> and its <a href=\"https://www.cloudflare.com/cloudflare-customer-dpa/\" rel=\"noopener noreferrer\">customer Data Processing Addendum</a>.",
+      "github": "Code 473· <strong>GitHub, Inc.</strong> — this website is served as a static site through GitHub Pages. GitHub receives your IP address and basic request metadata in the course of serving the page. GitHub's processing is governed by its own <a href=\"https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement\" rel=\"noopener noreferrer\">privacy statement</a>."
     },
     "storage": {
-      "title": "7. Where data is stored",
-      "intro": "The static website itself contains no stored personal data. When you submit the enquiry form:",
-      "item_edge": "Your submission passes through Cloudflare's globally distributed edge network — the Worker that processes it runs on Cloudflare's edge close to your location, then writes only to the destinations below.",
-      "item_sheet": "The validated submission is appended as a row to a Google Sheet held in Google Workspace, with the storage region set to the European Union.",
-      "item_hash_before": "Only a salted SHA-256 hash of your IP address is written to the sheet (in the",
-      "item_hash_after": "column) — the raw IP is never stored at rest on our side.",
-      "encryption": "In-flight TLS encryption is provided by Cloudflare (between your browser and the Worker) and by Google (between the Worker and the Sheets API). At-rest encryption on Google Workspace is provided by Google."
+      "title": "Code 474· 7. Where data is stored",
+      "intro": "Code 475· The static website itself contains no stored personal data. When you submit the enquiry form:",
+      "item_edge": "Code 476· Your submission passes through Cloudflare's globally distributed edge network — the Worker that processes it runs on Cloudflare's edge close to your location, then writes only to the destinations below.",
+      "item_sheet": "Code 477· The validated submission is appended as a row to a Google Sheet held in Google Workspace, with the storage region set to the European Union.",
+      "item_hash_before": "Code 478· Only a salted SHA-256 hash of your IP address is written to the sheet (in the",
+      "item_hash_after": "Code 479· column) — the raw IP is never stored at rest on our side.",
+      "encryption": "Code 480· In-flight TLS encryption is provided by Cloudflare (between your browser and the Worker) and by Google (between the Worker and the Sheets API). At-rest encryption on Google Workspace is provided by Google."
     },
     "retention": {
-      "title": "8. How long we keep it",
-      "para1": "We keep enquiry data for the minimum time necessary to respond to you and follow up. Our current target is to delete enquiry records <strong>12 months</strong> after the last interaction in that thread.",
-      "para2": "If your enquiry becomes a booking, the booking-related data is retained under our booking terms (not this policy). If your enquiry does not become a booking, the 12-month window applies.",
-      "para3": "The \"12 months\" figure is provisional and will be confirmed before launch."
+      "title": "Code 481· 8. How long we keep it",
+      "para1": "Code 482· We keep enquiry data for the minimum time necessary to respond to you and follow up. Our current target is to delete enquiry records <strong>12 months</strong> after the last interaction in that thread.",
+      "para2": "Code 483· If your enquiry becomes a booking, the booking-related data is retained under our booking terms (not this policy). If your enquiry does not become a booking, the 12-month window applies.",
+      "para3": "Code 484· The \"12 months\" figure is provisional and will be confirmed before launch."
     },
     "rights": {
-      "title": "9. Your rights",
-      "intro_before": "Under GDPR, you have the following rights over the data we hold about you. To exercise any of them, email us at",
-      "intro_after": "and we will respond within one calendar month.",
-      "access": "<strong>Access</strong> (Art. 15) — ask us for a copy of what we hold about you.",
-      "rectification": "<strong>Rectification</strong> (Art. 16) — ask us to correct inaccurate or incomplete data.",
-      "erasure": "<strong>Erasure</strong> (Art. 17) — ask us to delete your data, where one of the grounds in Art. 17(1) applies.",
-      "restriction": "<strong>Restriction</strong> (Art. 18) — ask us to pause processing while we investigate a dispute.",
-      "portability": "<strong>Portability</strong> (Art. 20) — ask us to send you (or another controller) a machine-readable copy.",
-      "object": "<strong>Object</strong> (Art. 21) — object to processing carried out on the basis of legitimate interest (§4).",
-      "withdraw": "<strong>Withdraw consent</strong> (Art. 7(3)) — withdraw the consent you gave on the enquiry form at any time, by emailing us. Withdrawing consent does not affect the lawfulness of any processing carried out before the withdrawal.",
-      "complaint": "You also have the right to lodge a complaint with the Bulgarian Commission for Personal Data Protection (<a href=\"https://www.cpdp.bg/en/\" rel=\"noopener noreferrer\">CPDP</a>) if you believe we have mishandled your data."
+      "title": "Code 485· 9. Your rights",
+      "intro_before": "Code 486· Under GDPR, you have the following rights over the data we hold about you. To exercise any of them, email us at",
+      "intro_after": "Code 487· and we will respond within one calendar month.",
+      "access": "Code 488· <strong>Access</strong> (Art. 15) — ask us for a copy of what we hold about you.",
+      "rectification": "Code 489· <strong>Rectification</strong> (Art. 16) — ask us to correct inaccurate or incomplete data.",
+      "erasure": "Code 490· <strong>Erasure</strong> (Art. 17) — ask us to delete your data, where one of the grounds in Art. 17(1) applies.",
+      "restriction": "Code 491· <strong>Restriction</strong> (Art. 18) — ask us to pause processing while we investigate a dispute.",
+      "portability": "Code 492· <strong>Portability</strong> (Art. 20) — ask us to send you (or another controller) a machine-readable copy.",
+      "object": "Code 493· <strong>Object</strong> (Art. 21) — object to processing carried out on the basis of legitimate interest (§4).",
+      "withdraw": "Code 494· <strong>Withdraw consent</strong> (Art. 7(3)) — withdraw the consent you gave on the enquiry form at any time, by emailing us. Withdrawing consent does not affect the lawfulness of any processing carried out before the withdrawal.",
+      "complaint": "Code 495· You also have the right to lodge a complaint with the Bulgarian Commission for Personal Data Protection (<a href=\"https://www.cpdp.bg/en/\" rel=\"noopener noreferrer\">CPDP</a>) if you believe we have mishandled your data."
     },
     "cookies": {
-      "title": "10. Cookies",
-      "intro": "We do not set any first-party cookies on this site. Cookies are only set by embedded third-party content:",
-      "maps": "<strong>Google Maps</strong> — sets cookies and receives your IP address when the embedded map iframe loads on the <a href=\"/\">homepage</a>, the <a href=\"/contacts/\">Contacts</a> page, and the <a href=\"/destination/\">Destination</a> page; see Google's own cookie disclosures",
-      "turnstile_before": "<strong>Cloudflare Turnstile</strong> — in managed mode, Turnstile does not set cookies for most visitors. If a visitor is challenged for pre-clearance (rare; happens for traffic that looks abusive), Cloudflare may set a",
-      "turnstile_after": "cookie scoped to the Turnstile challenge domain. See <a href=\"https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/\" rel=\"noopener noreferrer\">Cloudflare's cookie reference</a>.",
-      "outro": "We do not run any analytics, advertising, or behavioural-tracking cookies. If that changes — for example if we add a newsletter analytics tool — we will add a cookie banner before doing so and update this section."
+      "title": "Code 496· 10. Cookies",
+      "intro": "Code 497· We do not set any first-party cookies on this site. Cookies are only set by embedded third-party content:",
+      "maps": "Code 498· <strong>Google Maps</strong> — sets cookies and receives your IP address when the embedded map iframe loads on the <a href=\"/\">homepage</a>, the <a href=\"/contacts/\">Contacts</a> page, and the <a href=\"/destination/\">Destination</a> page; see Google's own cookie disclosures",
+      "turnstile_before": "Code 499· <strong>Cloudflare Turnstile</strong> — in managed mode, Turnstile does not set cookies for most visitors. If a visitor is challenged for pre-clearance (rare; happens for traffic that looks abusive), Cloudflare may set a",
+      "turnstile_after": "Code 500· cookie scoped to the Turnstile challenge domain. See <a href=\"https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/\" rel=\"noopener noreferrer\">Cloudflare's cookie reference</a>.",
+      "outro": "Code 501· We do not run any analytics, advertising, or behavioural-tracking cookies. If that changes — for example if we add a newsletter analytics tool — we will add a cookie banner before doing so and update this section."
     },
     "contact": {
-      "title": "11. How to contact us about data",
-      "intro": "For anything related to your data — access requests, corrections, deletions, complaints, or just questions about this policy — please email us:",
-      "email_label": "Email:",
-      "postal_label": "Postal address:",
-      "postal_value": "{address_street}, {address_country}",
-      "outro": "We aim to acknowledge data-related emails within five working days, and to substantively reply within one calendar month, as GDPR requires."
+      "title": "Code 502· 11. How to contact us about data",
+      "intro": "Code 503· For anything related to your data — access requests, corrections, deletions, complaints, or just questions about this policy — please email us:",
+      "email_label": "Code 504· Email:",
+      "postal_label": "Code 505· Postal address:",
+      "postal_value": "Code 506· {address_street}, {address_country}",
+      "outro": "Code 507· We aim to acknowledge data-related emails within five working days, and to substantively reply within one calendar month, as GDPR requires."
     },
     "changes": {
-      "title": "12. Changes to this policy",
-      "para1": "We may update this policy from time to time — for example when we add a new third-party service, change our retention schedule, or in response to a regulatory update. Whenever we update it, we change the \"last updated\" date at the top.",
-      "para2": "For material changes (anything that affects what we collect, why we collect it, or how long we keep it), we will additionally announce the change on the <a href=\"/\">homepage</a> for a reasonable period of time so that returning visitors notice."
+      "title": "Code 508· 12. Changes to this policy",
+      "para1": "Code 509· We may update this policy from time to time — for example when we add a new third-party service, change our retention schedule, or in response to a regulatory update. Whenever we update it, we change the \"last updated\" date at the top.",
+      "para2": "Code 510· For material changes (anything that affects what we collect, why we collect it, or how long we keep it), we will additionally announce the change on the <a href=\"/\">homepage</a> for a reasonable period of time so that returning visitors notice."
     }
   },
   "terms": {
     "meta": {
-      "title": "Terms & Conditions — Vayana Bungalows",
-      "description": "Terms and Conditions for Vayana Bungalows — booking process, payment, cancellation, house rules, liability, and governing law.",
-      "og_description": "Booking process, payment, cancellation, house rules, liability, and governing law."
+      "title": "Code 511· Terms & Conditions — Vayana Bungalows",
+      "description": "Code 512· Terms and Conditions for Vayana Bungalows — booking process, payment, cancellation, house rules, liability, and governing law.",
+      "og_description": "Code 513· Booking process, payment, cancellation, house rules, liability, and governing law."
     },
     "head": {
-      "title": "Terms & Conditions",
-      "updated_label": "Last updated:",
-      "lede1": "These Terms & Conditions (\"Terms\") govern your use of the <strong>{brand}</strong> website and the booking of any of our bungalows. By using the site or making an enquiry you accept these Terms.",
-      "lede2_pre": "This page is a draft.",
-      "lede2_before": "Every claim marked",
-      "lede2_after": "is a working assumption and MUST be reviewed and replaced by a Bulgarian lawyer before this site goes live to paying guests."
+      "title": "Code 514· Terms & Conditions",
+      "updated_label": "Code 515· Last updated:",
+      "lede1": "Code 516· These Terms & Conditions (\"Terms\") govern your use of the <strong>{brand}</strong> website and the booking of any of our bungalows. By using the site or making an enquiry you accept these Terms.",
+      "lede2_pre": "Code 517· This page is a draft.",
+      "lede2_before": "Code 518· Every claim marked",
+      "lede2_after": "Code 519· is a working assumption and MUST be reviewed and replaced by a Bulgarian lawyer before this site goes live to paying guests."
     },
     "updated": {
-      "title": "1. Last updated",
-      "body_before": "These Terms were last updated on",
-      "body_after": ".",
-      "see_contact": "See <a href=\"#contact\">§12 Contact</a> for who to email if anything below is unclear."
+      "title": "Code 520· 1. Last updated",
+      "body_before": "Code 521· These Terms were last updated on",
+      "body_after": "Code 522· .",
+      "see_contact": "Code 523· See <a href=\"#contact\">§12 Contact</a> for who to email if anything below is unclear."
     },
     "who": {
-      "title": "2. Who we are",
-      "para1": "<strong>{brand}</strong> is operated by Vayana di Mare, a Bulgarian operator with tourist-licence number {license}, located at {address_street}, {address_country}.",
-      "para2": "In these Terms, <em>\"we\", \"us\"</em> and <em>\"our\"</em> refer to Vayana di Mare; <em>\"you\"</em> and <em>\"your\"</em> refer to the person visiting the site or making an enquiry."
+      "title": "Code 524· 2. Who we are",
+      "para1": "Code 525· <strong>{brand}</strong> is operated by Vayana di Mare, a Bulgarian operator with tourist-licence number {license}, located at {address_street}, {address_country}.",
+      "para2": "Code 526· In these Terms, <em>\"we\", \"us\"</em> and <em>\"our\"</em> refer to Vayana di Mare; <em>\"you\"</em> and <em>\"your\"</em> refer to the person visiting the site or making an enquiry."
     },
     "acceptance": {
-      "title": "3. Acceptance of these Terms",
-      "para1": "By using this website, submitting an enquiry, or making a reservation, you confirm that you have read these Terms and that you agree to be bound by them. If you do not agree with any part of these Terms, please do not use the site or make a reservation.",
-      "para2": "We may update these Terms from time to time. The version published on this page on the date you make a reservation is the version that applies to that reservation."
+      "title": "Code 527· 3. Acceptance of these Terms",
+      "para1": "Code 528· By using this website, submitting an enquiry, or making a reservation, you confirm that you have read these Terms and that you agree to be bound by them. If you do not agree with any part of these Terms, please do not use the site or make a reservation.",
+      "para2": "Code 529· We may update these Terms from time to time. The version published on this page on the date you make a reservation is the version that applies to that reservation."
     },
     "booking": {
-      "title": "4. Booking & reservation process",
-      "intro": "A reservation is made in four steps:",
-      "step1": "<strong>Enquiry.</strong> You complete the form on the <a href=\"/enquiries/\">Enquiries</a> page with your preferred dates, party size, and any questions you have.",
-      "step2": "<strong>Reply.</strong> We get back to you by email, normally within <em>[placeholder: 24–48 hours on working days]</em>, confirming availability, the nightly rate for your dates, and the deposit required to hold the booking.",
-      "step3": "<strong>Deposit & confirmation.</strong> The reservation is confirmed once we receive the deposit described in §5. The booking is provisional until the deposit has cleared. <em>[placeholder: deposit amount and method to be confirmed]</em>",
-      "step4": "<strong>Final payment.</strong> The balance is due <em>[placeholder: on arrival / X days before check-in]</em> in the manner described in §5.",
-      "no_contract": "No contract exists between you and us until step 3 is complete (deposit cleared and confirmation email sent from us)."
+      "title": "Code 530· 4. Booking & reservation process",
+      "intro": "Code 531· A reservation is made in four steps:",
+      "step1": "Code 532· <strong>Enquiry.</strong> You complete the form on the <a href=\"/enquiries/\">Enquiries</a> page with your preferred dates, party size, and any questions you have.",
+      "step2": "Code 533· <strong>Reply.</strong> We get back to you by email, normally within <em>[placeholder: 24–48 hours on working days]</em>, confirming availability, the nightly rate for your dates, and the deposit required to hold the booking.",
+      "step3": "Code 534· <strong>Deposit & confirmation.</strong> The reservation is confirmed once we receive the deposit described in §5. The booking is provisional until the deposit has cleared. <em>[placeholder: deposit amount and method to be confirmed]</em>",
+      "step4": "Code 535· <strong>Final payment.</strong> The balance is due <em>[placeholder: on arrival / X days before check-in]</em> in the manner described in §5.",
+      "no_contract": "Code 536· No contract exists between you and us until step 3 is complete (deposit cleared and confirmation email sent from us)."
     },
     "payment": {
-      "title": "5. Payment",
-      "currency": "<strong>Currency.</strong> <em>[placeholder: prices are quoted in EUR and BGN; payment is taken in BGN at the rate quoted on the confirmation email]</em>.",
-      "methods": "<strong>Accepted methods.</strong> <em>[placeholder: bank transfer to the IBAN on the confirmation email; card payments and cash on arrival are not yet accepted]</em>.",
-      "due": "<strong>When payment is due.</strong> <em>[placeholder: deposit of 30% within 7 days of the confirmation email; balance on arrival]</em>.",
-      "vat": "<strong>VAT & tourist tax.</strong> <em>[placeholder: prices include VAT at the prevailing Bulgarian rate; the local tourist tax of [amount] per guest per night is collected on arrival in cash]</em>.",
-      "no_card_storage": "We do not store payment-card data on this site. Today the site does not process card payments at all; payment is arranged by email and bank transfer."
+      "title": "Code 537· 5. Payment",
+      "currency": "Code 538· <strong>Currency.</strong> <em>[placeholder: prices are quoted in EUR and BGN; payment is taken in BGN at the rate quoted on the confirmation email]</em>.",
+      "methods": "Code 539· <strong>Accepted methods.</strong> <em>[placeholder: bank transfer to the IBAN on the confirmation email; card payments and cash on arrival are not yet accepted]</em>.",
+      "due": "Code 540· <strong>When payment is due.</strong> <em>[placeholder: deposit of 30% within 7 days of the confirmation email; balance on arrival]</em>.",
+      "vat": "Code 541· <strong>VAT & tourist tax.</strong> <em>[placeholder: prices include VAT at the prevailing Bulgarian rate; the local tourist tax of [amount] per guest per night is collected on arrival in cash]</em>.",
+      "no_card_storage": "Code 542· We do not store payment-card data on this site. Today the site does not process card payments at all; payment is arranged by email and bank transfer."
     },
     "cancellation": {
-      "title": "6. Cancellation",
-      "summary": "In short: <em>[placeholder: cancellations more than 30 days before check-in receive a full refund of the deposit; cancellations within 30 days forfeit the deposit; no-shows are charged the full stay]</em>.",
-      "full_before": "The full cancellation schedule, including how refunds are processed and what happens in cases of force majeure (§10), is on the dedicated",
-      "link_label": "Cancellation Policy",
-      "full_after": "page. If anything on that page conflicts with the summary here, the dedicated page governs."
+      "title": "Code 543· 6. Cancellation",
+      "summary": "Code 544· In short: <em>[placeholder: cancellations more than 30 days before check-in receive a full refund of the deposit; cancellations within 30 days forfeit the deposit; no-shows are charged the full stay]</em>.",
+      "full_before": "Code 545· The full cancellation schedule, including how refunds are processed and what happens in cases of force majeure (§10), is on the dedicated",
+      "link_label": "Code 546· Cancellation Policy",
+      "full_after": "Code 547· page. If anything on that page conflicts with the summary here, the dedicated page governs."
     },
     "checkinout": {
-      "title": "7. Check-in and check-out",
-      "checkin": "<strong>Check-in:</strong> <em>[placeholder: from 15:00 on the day of arrival]</em>. Earlier check-in may be possible if the bungalow is ready; please ask in advance.",
-      "checkout": "<strong>Check-out:</strong> <em>[placeholder: by 11:00 on the day of departure]</em>. Later check-out may be available subject to the next booking; please ask in advance.",
-      "late_arrival": "If you expect to arrive outside our normal reception hours, please let us know on the <a href=\"/enquiries/\">Enquiries</a> form or by email so that we can arrange key handover."
+      "title": "Code 548· 7. Check-in and check-out",
+      "checkin": "Code 549· <strong>Check-in:</strong> <em>[placeholder: from 15:00 on the day of arrival]</em>. Earlier check-in may be possible if the bungalow is ready; please ask in advance.",
+      "checkout": "Code 550· <strong>Check-out:</strong> <em>[placeholder: by 11:00 on the day of departure]</em>. Later check-out may be available subject to the next booking; please ask in advance.",
+      "late_arrival": "Code 551· If you expect to arrive outside our normal reception hours, please let us know on the <a href=\"/enquiries/\">Enquiries</a> form or by email so that we can arrange key handover."
     },
     "house": {
-      "title": "8. House rules",
-      "intro": "When you stay with us, we ask you to:",
-      "rule_quiet": "<em>[placeholder: respect quiet hours between 22:00 and 08:00 — Tsarevo is a small coastal town and noise carries between bungalows]</em>.",
-      "rule_smoking": "<em>[placeholder: not smoke indoors; smoking is allowed only on the outdoor terrace away from the door]</em>.",
-      "rule_pets": "<em>[placeholder: keep pets to the bungalows that allow them; the policy per bungalow is shown on the Stay page]</em> — see <a href=\"/stay/\">Stay</a>.",
-      "rule_occupancy": "<em>[placeholder: not exceed the maximum occupancy printed on the bungalow listing; additional guests require prior approval and an extra-bed fee]</em>.",
-      "rule_checkout_state": "<em>[placeholder: leave the bungalow in a reasonable state on check-out — the cleaning fee is included in the rate, but excessive damage may be charged separately under §9]</em>."
+      "title": "Code 552· 8. House rules",
+      "intro": "Code 553· When you stay with us, we ask you to:",
+      "rule_quiet": "Code 554· <em>[placeholder: respect quiet hours between 22:00 and 08:00 — Tsarevo is a small coastal town and noise carries between bungalows]</em>.",
+      "rule_smoking": "Code 555· <em>[placeholder: not smoke indoors; smoking is allowed only on the outdoor terrace away from the door]</em>.",
+      "rule_pets": "Code 556· <em>[placeholder: keep pets to the bungalows that allow them; the policy per bungalow is shown on the Stay page]</em> — see <a href=\"/stay/\">Stay</a>.",
+      "rule_occupancy": "Code 557· <em>[placeholder: not exceed the maximum occupancy printed on the bungalow listing; additional guests require prior approval and an extra-bed fee]</em>.",
+      "rule_checkout_state": "Code 558· <em>[placeholder: leave the bungalow in a reasonable state on check-out — the cleaning fee is included in the rate, but excessive damage may be charged separately under §9]</em>."
     },
     "liability": {
-      "title": "9. Liability",
-      "para1": "<em>[placeholder: We take reasonable care of the bungalows and the surrounding grounds. We are not liable for personal injury or property loss except where caused by our negligence or wilful misconduct, and except where Bulgarian consumer-protection law makes such limitation unenforceable.]</em>",
-      "para2": "<em>[placeholder: You are responsible for any damage to the bungalow or its contents caused by you or your party during the stay. We may charge the cost of repair or replacement to the card or payment method on file, against an itemised invoice.]</em>",
-      "para3": "<em>[placeholder: We strongly recommend that you take out travel insurance covering cancellation, illness, accidents, and loss of belongings.]</em>"
+      "title": "Code 559· 9. Liability",
+      "para1": "Code 560· <em>[placeholder: We take reasonable care of the bungalows and the surrounding grounds. We are not liable for personal injury or property loss except where caused by our negligence or wilful misconduct, and except where Bulgarian consumer-protection law makes such limitation unenforceable.]</em>",
+      "para2": "Code 561· <em>[placeholder: You are responsible for any damage to the bungalow or its contents caused by you or your party during the stay. We may charge the cost of repair or replacement to the card or payment method on file, against an itemised invoice.]</em>",
+      "para3": "Code 562· <em>[placeholder: We strongly recommend that you take out travel insurance covering cancellation, illness, accidents, and loss of belongings.]</em>"
     },
     "force": {
-      "title": "10. Force majeure",
-      "body": "<em>[placeholder: Neither party is liable for failure to perform these Terms where the failure is caused by events outside that party's reasonable control — for example natural disasters, war, civil unrest, pandemic-related public-health measures, or government action. In such cases we will work with you in good faith to reschedule your booking or, where rescheduling is not practical, issue a refund as set out in the cancellation policy]</em>. When the dedicated",
-      "link_label": "Cancellation Policy",
-      "body_after": "is published (#18), it will set out the refund schedule for force-majeure cancellations."
+      "title": "Code 563· 10. Force majeure",
+      "body": "Code 564· <em>[placeholder: Neither party is liable for failure to perform these Terms where the failure is caused by events outside that party's reasonable control — for example natural disasters, war, civil unrest, pandemic-related public-health measures, or government action. In such cases we will work with you in good faith to reschedule your booking or, where rescheduling is not practical, issue a refund as set out in the cancellation policy]</em>. When the dedicated",
+      "link_label": "Code 565· Cancellation Policy",
+      "body_after": "Code 566· is published (#18), it will set out the refund schedule for force-majeure cancellations."
     },
     "law": {
-      "title": "11. Governing law and jurisdiction",
-      "para1": "These Terms are governed by the laws of the <em>[placeholder: Republic of Bulgaria]</em>. Any dispute arising out of or in connection with these Terms or your stay will be submitted to the exclusive jurisdiction of the <em>[placeholder: Tsarevo Regional Court, or its competent Bulgarian successor court for consumer disputes]</em>.",
-      "para2": "Nothing in this section limits any non-waivable rights you may have as a consumer under Bulgarian or EU consumer-protection law."
+      "title": "Code 567· 11. Governing law and jurisdiction",
+      "para1": "Code 568· These Terms are governed by the laws of the <em>[placeholder: Republic of Bulgaria]</em>. Any dispute arising out of or in connection with these Terms or your stay will be submitted to the exclusive jurisdiction of the <em>[placeholder: Tsarevo Regional Court, or its competent Bulgarian successor court for consumer disputes]</em>.",
+      "para2": "Code 569· Nothing in this section limits any non-waivable rights you may have as a consumer under Bulgarian or EU consumer-protection law."
     },
     "contact": {
-      "title": "12. Contact",
-      "intro": "Questions about these Terms? Please email us:",
-      "email_label": "Email:",
-      "address_label": "Postal address:",
-      "privacy_before": "For data-protection matters (access requests, deletion, consent withdrawal), please see the dedicated",
-      "privacy_link_label": "Privacy Policy",
-      "privacy_after": "instead."
+      "title": "Code 570· 12. Contact",
+      "intro": "Code 571· Questions about these Terms? Please email us:",
+      "email_label": "Code 572· Email:",
+      "address_label": "Code 573· Postal address:",
+      "privacy_before": "Code 574· For data-protection matters (access requests, deletion, consent withdrawal), please see the dedicated",
+      "privacy_link_label": "Code 575· Privacy Policy",
+      "privacy_after": "Code 576· instead."
     }
   },
   "cancellation": {
     "meta": {
-      "title": "Cancellation Policy — Vayana Bungalows",
-      "description": "Cancellation Policy for Vayana Bungalows — refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes.",
-      "og_description": "Refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes."
+      "title": "Code 577· Cancellation Policy — Vayana Bungalows",
+      "description": "Code 578· Cancellation Policy for Vayana Bungalows — refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes.",
+      "og_description": "Code 579· Refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes."
     },
     "head": {
-      "eyebrow": "Vayana Bungalows",
-      "title": "Cancellation Policy",
-      "updated_label": "Last updated:",
-      "lede1": "This Cancellation Policy explains what happens if you need to cancel or modify a reservation at <strong>{brand}</strong>. It is part of, and should be read together with, our <a href=\"/terms/\">Terms & Conditions</a>.",
-      "lede2": "<strong>This page is a draft.</strong> Every figure rendered in a yellow highlight (lead-time threshold, refund percentage, SLA, currency) is a working assumption and MUST be reviewed and replaced before this site goes live to paying guests."
+      "eyebrow": "Code 580· Vayana Bungalows",
+      "title": "Code 581· Cancellation Policy",
+      "updated_label": "Code 582· Last updated:",
+      "lede1": "Code 583· This Cancellation Policy explains what happens if you need to cancel or modify a reservation at <strong>{brand}</strong>. It is part of, and should be read together with, our <a href=\"/terms/\">Terms & Conditions</a>.",
+      "lede2": "Code 584· <strong>This page is a draft.</strong> Every figure rendered in a yellow highlight (lead-time threshold, refund percentage, SLA, currency) is a working assumption and MUST be reviewed and replaced before this site goes live to paying guests."
     },
     "updated": {
-      "title": "1. Last updated",
-      "body_a": "This Policy was last updated on",
-      "body_b": ". See <a href=\"#contact\">§9 Contact</a> for who to email if anything below is unclear."
+      "title": "Code 585· 1. Last updated",
+      "body_a": "Code 586· This Policy was last updated on",
+      "body_b": "Code 587· . See <a href=\"#contact\">§9 Contact</a> for who to email if anything below is unclear."
     },
     "tiers": {
-      "title": "2. Cancellation tiers",
-      "intro": "If you need to cancel a confirmed reservation, the refund you receive depends on how many days before your check-in date we receive the written cancellation request:",
-      "tier1_a": "More than",
-      "tier1_b": "before check-in — we refund",
-      "tier1_c": "of any amount you have paid. <strong>Free cancellation tier.</strong>",
-      "tier2_a": "Between",
-      "tier2_b": "and",
-      "tier2_c": "before check-in — we refund",
-      "tier2_d": "of any amount you have paid. <strong>Partial-refund tier.</strong>",
-      "tier3_a": "Less than",
-      "tier3_b": "before check-in — we refund",
-      "tier3_c": ". <strong>No-refund tier.</strong>",
-      "lead_time": "The lead time is counted from the date and time we <em>receive</em> your written cancellation (see §3), not the date you sent it. Tiers apply to the total amount you have paid us toward the reservation, including any deposit described in §5 of the <a href=\"/terms/\">Terms & Conditions</a>."
+      "title": "Code 588· 2. Cancellation tiers",
+      "intro": "Code 589· If you need to cancel a confirmed reservation, the refund you receive depends on how many days before your check-in date we receive the written cancellation request:",
+      "tier1_a": "Code 590· More than",
+      "tier1_b": "Code 591· before check-in — we refund",
+      "tier1_c": "Code 592· of any amount you have paid. <strong>Free cancellation tier.</strong>",
+      "tier2_a": "Code 593· Between",
+      "tier2_b": "Code 594· and",
+      "tier2_c": "Code 595· before check-in — we refund",
+      "tier2_d": "Code 596· of any amount you have paid. <strong>Partial-refund tier.</strong>",
+      "tier3_a": "Code 597· Less than",
+      "tier3_b": "Code 598· before check-in — we refund",
+      "tier3_c": "Code 599· . <strong>No-refund tier.</strong>",
+      "lead_time": "Code 600· The lead time is counted from the date and time we <em>receive</em> your written cancellation (see §3), not the date you sent it. Tiers apply to the total amount you have paid us toward the reservation, including any deposit described in §5 of the <a href=\"/terms/\">Terms & Conditions</a>."
     },
     "how_to_cancel": {
-      "title": "3. How to cancel",
-      "email_intro": "To cancel a reservation, please email us at",
-      "email_rest": "with your booking reference (sent in the confirmation email), the dates of your reservation, and a short note that you wish to cancel.",
-      "ack_a": "We will acknowledge your cancellation in writing within",
-      "ack_b": ", confirm the applicable refund tier per §2, and let you know the timeline for the refund per §7. Until you have received that written acknowledgement from us, please consider the cancellation as pending."
+      "title": "Code 601· 3. How to cancel",
+      "email_intro": "Code 602· To cancel a reservation, please email us at",
+      "email_rest": "Code 603· with your booking reference (sent in the confirmation email), the dates of your reservation, and a short note that you wish to cancel.",
+      "ack_a": "Code 604· We will acknowledge your cancellation in writing within",
+      "ack_b": "Code 605· , confirm the applicable refund tier per §2, and let you know the timeline for the refund per §7. Until you have received that written acknowledgement from us, please consider the cancellation as pending."
     },
     "modifications": {
-      "title": "4. Modifications",
-      "intro": "Date changes and guest-count changes are treated differently from full cancellations and are usually handled at no charge if requested far enough in advance:",
-      "date_a": "<strong>Date changes.</strong> Requests received more than",
-      "date_b": "before the original check-in date, for new dates of equal length and the same bungalow, are free of charge subject to availability. Closer to check-in, or for longer stays / different bungalows, a price difference or fee may apply.",
-      "guest_count": "<strong>Guest-count changes.</strong> Adding or removing guests within the bungalow's stated occupancy limit is free of charge; we ask you to let us know in advance so we can prepare the bungalow accordingly. Exceeding the occupancy limit is not permitted; see §8 House rules of the <a href=\"/terms/\">Terms & Conditions</a>.",
-      "fallback": "If a modification cannot be accommodated and you choose to cancel instead, the cancellation tier in §2 applies based on the original check-in date."
+      "title": "Code 606· 4. Modifications",
+      "intro": "Code 607· Date changes and guest-count changes are treated differently from full cancellations and are usually handled at no charge if requested far enough in advance:",
+      "date_a": "Code 608· <strong>Date changes.</strong> Requests received more than",
+      "date_b": "Code 609· before the original check-in date, for new dates of equal length and the same bungalow, are free of charge subject to availability. Closer to check-in, or for longer stays / different bungalows, a price difference or fee may apply.",
+      "guest_count": "Code 610· <strong>Guest-count changes.</strong> Adding or removing guests within the bungalow's stated occupancy limit is free of charge; we ask you to let us know in advance so we can prepare the bungalow accordingly. Exceeding the occupancy limit is not permitted; see §8 House rules of the <a href=\"/terms/\">Terms & Conditions</a>.",
+      "fallback": "Code 611· If a modification cannot be accommodated and you choose to cancel instead, the cancellation tier in §2 applies based on the original check-in date."
     },
     "no_shows": {
-      "title": "5. No-shows",
-      "body_a": "If you do not arrive on your check-in date and have not cancelled in writing before the check-in time, the reservation is treated as a no-show. The default refund for a no-show is",
-      "body_b": ".",
-      "exceptions": "If circumstances beyond your control prevent you from arriving, please contact us as soon as you can — see §6 Force majeure for how we handle exceptions."
+      "title": "Code 612· 5. No-shows",
+      "body_a": "Code 613· If you do not arrive on your check-in date and have not cancelled in writing before the check-in time, the reservation is treated as a no-show. The default refund for a no-show is",
+      "body_b": "Code 614· .",
+      "exceptions": "Code 615· If circumstances beyond your control prevent you from arriving, please contact us as soon as you can — see §6 Force majeure for how we handle exceptions."
     },
     "force_majeure": {
-      "title": "6. Force majeure",
-      "body": "Sometimes events beyond either party's control — natural disasters, sudden travel restrictions, or regional emergencies — make a stay impossible. In those cases we will work with you in good faith to find a fair outcome, which may include moving the dates free of charge, holding the amount you have paid as credit toward a future stay, or issuing a refund outside the standard tiers in §2.",
-      "legal_basis": "The legal basis for force majeure (what qualifies, who bears which costs, and how the refund is calculated) is set out in §10 of the <a href=\"/terms/#force-majeure\">Terms & Conditions</a>. This Policy and those Terms should be read together."
+      "title": "Code 616· 6. Force majeure",
+      "body": "Code 617· Sometimes events beyond either party's control — natural disasters, sudden travel restrictions, or regional emergencies — make a stay impossible. In those cases we will work with you in good faith to find a fair outcome, which may include moving the dates free of charge, holding the amount you have paid as credit toward a future stay, or issuing a refund outside the standard tiers in §2.",
+      "legal_basis": "Code 618· The legal basis for force majeure (what qualifies, who bears which costs, and how the refund is calculated) is set out in §10 of the <a href=\"/terms/#force-majeure\">Terms & Conditions</a>. This Policy and those Terms should be read together."
     },
     "refund_processing": {
-      "title": "7. Refund processing",
-      "timeline_a": "Once the refund tier is confirmed under §2 (or under §6 for force majeure), refunds are issued within",
-      "timeline_b": "of our written cancellation acknowledgement.",
-      "method_a": "Refunds are issued in",
-      "method_b": "to the same payment method you used to pay the original deposit and balance. If that is not possible (for example, the card has expired), we will contact you to agree an alternative method."
+      "title": "Code 619· 7. Refund processing",
+      "timeline_a": "Code 620· Once the refund tier is confirmed under §2 (or under §6 for force majeure), refunds are issued within",
+      "timeline_b": "Code 621· of our written cancellation acknowledgement.",
+      "method_a": "Code 622· Refunds are issued in",
+      "method_b": "Code 623· to the same payment method you used to pay the original deposit and balance. If that is not possible (for example, the card has expired), we will contact you to agree an alternative method."
     },
     "disputes": {
-      "title": "8. Disputes",
-      "body_a": "If you disagree with how this Policy has been applied to your reservation, please first contact us at the email in §3 and describe what you would like us to reconsider. We will respond in writing and try to find a resolution within",
-      "body_b": ".",
-      "governing_law": "If we cannot reach an agreement, the dispute-resolution and governing-law provisions in §11 of the <a href=\"/terms/\">Terms & Conditions</a> apply, including the courts named there. Nothing in this Policy limits any consumer rights you may have under applicable mandatory law."
+      "title": "Code 624· 8. Disputes",
+      "body_a": "Code 625· If you disagree with how this Policy has been applied to your reservation, please first contact us at the email in §3 and describe what you would like us to reconsider. We will respond in writing and try to find a resolution within",
+      "body_b": "Code 626· .",
+      "governing_law": "Code 627· If we cannot reach an agreement, the dispute-resolution and governing-law provisions in §11 of the <a href=\"/terms/\">Terms & Conditions</a> apply, including the courts named there. Nothing in this Policy limits any consumer rights you may have under applicable mandatory law."
     },
     "contact": {
-      "title": "9. Contact",
-      "intro": "For all questions about this Policy or about a specific reservation, please contact:",
-      "email_label": "<strong>Email:</strong>",
-      "phone_label": "<strong>Phone:</strong>",
-      "post_label": "<strong>Post:</strong>",
-      "operator_details": "The brand and licence details for the operator are in §2 of the <a href=\"/terms/\">Terms & Conditions</a>."
+      "title": "Code 628· 9. Contact",
+      "intro": "Code 629· For all questions about this Policy or about a specific reservation, please contact:",
+      "email_label": "Code 630· <strong>Email:</strong>",
+      "phone_label": "Code 631· <strong>Phone:</strong>",
+      "post_label": "Code 632· <strong>Post:</strong>",
+      "operator_details": "Code 633· The brand and licence details for the operator are in §2 of the <a href=\"/terms/\">Terms & Conditions</a>."
     }
   }
 }
