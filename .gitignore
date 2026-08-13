@@ -23,3 +23,6 @@ worker/node_modules/
 # Superpowers SDD/brainstorm scratch — never committed.
 .superpowers/
 .sdd/
+
+# Local i18n scratch fragments (not for commit)
+.i18n-fragments/

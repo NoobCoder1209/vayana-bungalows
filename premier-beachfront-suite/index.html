@@ -26,22 +26,22 @@
          the JS-on hamburger doesn't flash invisible during the deferred
          module's load window. CSS uses html.no-js for the no-JS fallback. -->
     <script>document.documentElement.classList.replace('no-js','js-on');</script>
-    <title>Bungalow 3 &mdash; Vayana Bungalows</title>
-    <meta name="description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
+    <title data-i18n="bungalows.villa3.meta.title">Bungalow 3 &mdash; Vayana Bungalows</title>
+    <meta name="description" data-i18n-meta="bungalows.villa3.meta.description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
     <link rel="canonical" href="https://noobcoder1209.github.io/vayana-bungalows/premier-beachfront-suite/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Bungalow 3 — Vayana Bungalows" />
-    <meta property="og:description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
+    <meta property="og:title" data-i18n-meta="bungalows.villa3.meta.title" content="Bungalow 3 — Vayana Bungalows" />
+    <meta property="og:description" data-i18n-meta="bungalows.villa3.meta.description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
     <meta property="og:url" content="https://noobcoder1209.github.io/vayana-bungalows/premier-beachfront-suite/" />
     <meta property="og:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/room-3.jpg" />
     <meta property="og:site_name" content="Vayana Bungalows" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Bungalow 3 — Vayana Bungalows" />
-    <meta name="twitter:description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
+    <meta name="twitter:title" data-i18n-meta="bungalows.villa3.meta.title" content="Bungalow 3 — Vayana Bungalows" />
+    <meta name="twitter:description" data-i18n-meta="bungalows.villa3.meta.description" content="A beachfront suite that opens directly onto the sand, with a private outdoor shower and a beach cabana. From $1,480 per night." />
     <meta name="twitter:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/room-3.jpg" />
 
     <meta name="theme-color" content="#0e0d0a" />
@@ -56,7 +56,7 @@
     <link rel="stylesheet" href="/assets/css/sections.css" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main" data-i18n="common.skip_link">Skip to content</a>
 
     <!-- Sticky header -->
     <div id="header-sentinel" aria-hidden="true"></div>
@@ -73,7 +73,11 @@
                - ../contacts/index.html
                - ../premier-oceanview-villa/index.html
                - ../deluxe-hilltop-residence/index.html -->
-        <button class="site-header__menu" type="button" aria-label="Open menu"
+        <button class="site-header__menu" type="button"
+                data-i18n-attr="aria-label:common.header.menu_open_aria; data-nav-label-open:common.header.menu_open_aria; data-nav-label-close:common.header.menu_close_aria"
+                aria-label="Open menu"
+                data-nav-label-open="Open menu"
+                data-nav-label-close="Close menu"
                 aria-controls="primary-nav" aria-expanded="false"
                 aria-haspopup="dialog" data-nav-toggle>
           <span></span><span></span><span></span>
@@ -95,13 +99,15 @@
              rarely re-read; ops update it manually if the number ever
              changes (the visible span and tel: href will already update). -->
         <div class="site-header__cta">
-          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call" aria-label="Call us at +359 88 888 8888" data-call-cta>
+          <a data-site-config-href="phone.href" href="tel:+359888888888" class="site-header__call"
+             data-i18n-attr="aria-label:common.header.call_aria"
+             aria-label="Call us at +359 88 888 8888" data-call-cta>
             <span class="site-header__call-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
             </span>
             <span class="site-header__call-number" data-site-config="phone.display">+359 88 888 8888</span>
           </a>
-          <a href="../enquiries/" class="btn btn-primary site-header__enquiries">Enquiries</a>
+          <a href="../enquiries/" class="btn btn-primary site-header__enquiries" data-i18n="common.header.enquiries_cta">Enquiries</a>
           <!-- Language toggle pill. Two <a> segments, one per locale.
                data-lang identifies each segment; lang.js swaps hrefs to the
                plugin-generated hreflang alternates and toggles .is-active +
@@ -131,7 +137,9 @@
          aria-modal is added by JS only while the drawer is open — some
          screen readers special-case the attribute on closed dialogs. -->
     <div class="primary-nav__backdrop" data-nav-backdrop hidden></div>
-    <nav id="primary-nav" class="primary-nav__panel" aria-label="Primary"
+    <nav id="primary-nav" class="primary-nav__panel"
+         data-i18n-attr="aria-label:common.drawer.primary_aria"
+         aria-label="Primary"
          role="dialog"
          aria-hidden="true" tabindex="-1" hidden>
       <a href="../" class="primary-nav__brand" data-nav-link>
@@ -139,11 +147,11 @@
       </a>
 
       <ul class="primary-nav__list">
-        <li><a href="../" data-nav-link>Home</a></li>
-        <li><a href="../stay/" data-nav-link>Stay</a></li>
-        <li><a href="../destination/" data-nav-link>Destination</a></li>
-        <li><a href="../contacts/" data-nav-link>Contacts</a></li>
-        <li><a href="../enquiries/" data-nav-link>Enquiries</a></li>
+        <li><a href="../" data-nav-link data-i18n="common.drawer.nav_home">Home</a></li>
+        <li><a href="../stay/" data-nav-link data-i18n="common.drawer.nav_stay">Stay</a></li>
+        <li><a href="../destination/" data-nav-link data-i18n="common.drawer.nav_destination">Destination</a></li>
+        <li><a href="../contacts/" data-nav-link data-i18n="common.drawer.nav_contacts">Contacts</a></li>
+        <li><a href="../enquiries/" data-nav-link data-i18n="common.drawer.nav_enquiries">Enquiries</a></li>
       </ul>
 
       <a class="primary-nav__phone" data-site-config-href="phone.href" href="tel:+359888888888" data-nav-link>
@@ -155,12 +163,12 @@
          we surface the same 4 links inline here. Negative test #5 demands
          the site stays navigable when JS is off. -->
     <noscript>
-      <nav class="primary-nav__noscript" aria-label="Primary (no JavaScript)">
+      <nav class="primary-nav__noscript" data-i18n-attr="aria-label:common.drawer.noscript_aria" aria-label="Primary (no JavaScript)">
         <ul>
-          <li><a href="../">Home</a></li>
-          <li><a href="../stay/">Stay</a></li>
-          <li><a href="../destination/">Destination</a></li>
-          <li><a href="../contacts/">Contacts</a></li>
+          <li><a href="../" data-i18n="common.drawer.nav_home">Home</a></li>
+          <li><a href="../stay/" data-i18n="common.drawer.nav_stay">Stay</a></li>
+          <li><a href="../destination/" data-i18n="common.drawer.nav_destination">Destination</a></li>
+          <li><a href="../contacts/" data-i18n="common.drawer.nav_contacts">Contacts</a></li>
         </ul>
       </nav>
     </noscript>
@@ -170,64 +178,64 @@
       <!-- Hero -->
       <section class="bungalow-hero" aria-labelledby="bungalow-title" style="background-image: url('/assets/img/room-3.jpg');">
         <div class="container">
-          <span class="eyebrow eyebrow--light">From $1,480 / night</span>
-          <h1 id="bungalow-title">Bungalow 3</h1>
-          <p class="bungalow-hero__sub">Sand at your doorstep, the lagoon a few barefoot steps beyond.</p>
+          <span class="eyebrow eyebrow--light" data-i18n="bungalows.villa3.hero.eyebrow">From $1,480 / night</span>
+          <h1 id="bungalow-title" data-i18n="bungalows.villa3.hero.title">Bungalow 3</h1>
+          <p class="bungalow-hero__sub" data-i18n="bungalows.villa3.hero.sub">Sand at your doorstep, the lagoon a few barefoot steps beyond.</p>
         </div>
       </section>
 
       <!-- Booking widget -->
       <section class="booking" id="booking" aria-labelledby="booking-title">
         <div class="container">
-          <h2 id="booking-title" class="sr-only">Book your stay at Bungalow 3</h2>
+          <h2 id="booking-title" class="sr-only" data-i18n="bungalows.villa3.booking.sr_title">Book your stay at Bungalow 3</h2>
           <form class="booking__form" id="booking-form" data-bungalow-key="B3" novalidate>
             <input type="hidden" name="bungalow" value="Bungalow 3" />
             <div class="booking__field">
-              <label for="bk-checkin">Check-in</label>
-              <input type="text" id="bk-checkin" name="checkin" placeholder="Add date" autocomplete="off" />
+              <label for="bk-checkin" data-i18n="bungalows.common.booking.checkin_label">Check-in</label>
+              <input type="text" id="bk-checkin" name="checkin" data-i18n-attr="placeholder:bungalows.common.booking.date_placeholder" placeholder="Add date" autocomplete="off" />
             </div>
             <div class="booking__field">
-              <label for="bk-checkout">Check-out</label>
-              <input type="text" id="bk-checkout" name="checkout" placeholder="Add date" autocomplete="off" />
+              <label for="bk-checkout" data-i18n="bungalows.common.booking.checkout_label">Check-out</label>
+              <input type="text" id="bk-checkout" name="checkout" data-i18n-attr="placeholder:bungalows.common.booking.date_placeholder" placeholder="Add date" autocomplete="off" />
             </div>
             <div class="booking__field">
-              <label for="bk-rooms">Rooms</label>
+              <label for="bk-rooms" data-i18n="bungalows.common.booking.rooms_label">Rooms</label>
               <select id="bk-rooms" name="rooms">
-                <option>1 room</option>
-                <option>2 rooms</option>
-                <option>3 rooms</option>
-                <option>4 rooms</option>
+                <option data-i18n="bungalows.common.booking.rooms_1">1 room</option>
+                <option data-i18n="bungalows.common.booking.rooms_2">2 rooms</option>
+                <option data-i18n="bungalows.common.booking.rooms_3">3 rooms</option>
+                <option data-i18n="bungalows.common.booking.rooms_4">4 rooms</option>
               </select>
             </div>
             <div class="booking__field">
-              <label for="bk-guests">Guests</label>
+              <label for="bk-guests" data-i18n="bungalows.common.booking.guests_label">Guests</label>
               <select id="bk-guests" name="guests">
-                <option>1 adult</option>
-                <option>2 adults</option>
-                <option>2 adults, 1 child</option>
-                <option>2 adults, 2 children</option>
-                <option>3 adults</option>
-                <option>4 adults</option>
+                <option data-i18n="bungalows.common.booking.guests_1a">1 adult</option>
+                <option data-i18n="bungalows.common.booking.guests_2a">2 adults</option>
+                <option data-i18n="bungalows.common.booking.guests_2a1c">2 adults, 1 child</option>
+                <option data-i18n="bungalows.common.booking.guests_2a2c">2 adults, 2 children</option>
+                <option data-i18n="bungalows.common.booking.guests_3a">3 adults</option>
+                <option data-i18n="bungalows.common.booking.guests_4a">4 adults</option>
               </select>
             </div>
-            <button type="submit" class="btn btn-primary booking__submit">Book Now</button>
+            <button type="submit" class="btn btn-primary booking__submit" data-i18n="bungalows.common.booking.submit">Book Now</button>
           </form>
-          <div class="booking-legend" aria-label="Date availability legend">
+          <div class="booking-legend" data-i18n-attr="aria-label:bungalows.common.booking.legend_aria" aria-label="Date availability legend">
             <span class="booking-legend__item">
               <span class="booking-legend__swatch booking-legend__swatch--available" aria-hidden="true"></span>
-              Available
+              <span data-i18n="bungalows.common.booking.legend_available">Available</span>
             </span>
             <span class="booking-legend__item">
               <span class="booking-legend__swatch booking-legend__swatch--booked" aria-hidden="true"></span>
-              Already booked
+              <span data-i18n="bungalows.common.booking.legend_booked">Already booked</span>
             </span>
             <span class="booking-legend__item">
               <span class="booking-legend__swatch booking-legend__swatch--turnover" aria-hidden="true"></span>
-              Turnover (check-out only)
+              <span data-i18n="bungalows.common.booking.legend_turnover">Turnover (check-out only)</span>
             </span>
             <span class="booking-legend__item">
               <span class="booking-legend__swatch booking-legend__swatch--past" aria-hidden="true"></span>
-              Past dates
+              <span data-i18n="bungalows.common.booking.legend_past">Past dates</span>
             </span>
           </div>
         </div>
@@ -236,27 +244,27 @@
       <!-- Specs table -->
       <section class="bungalow-specs section" aria-labelledby="specs-title">
         <div class="container">
-          <h2 id="specs-title" class="sr-only">Bungalow specifications</h2>
+          <h2 id="specs-title" class="sr-only" data-i18n="bungalows.common.specs.sr_title">Bungalow specifications</h2>
           <div class="bungalow-specs__grid">
             <div class="bungalow-specs__cell">
-              <span class="eyebrow">Size</span>
+              <span class="eyebrow" data-i18n="bungalows.common.specs.size_label">Size</span>
               <strong>140 m&sup2;</strong>
             </div>
             <div class="bungalow-specs__cell">
-              <span class="eyebrow">Occupancy</span>
-              <strong>2 adults, 1 child</strong>
+              <span class="eyebrow" data-i18n="bungalows.common.specs.occupancy_label">Occupancy</span>
+              <strong data-i18n="bungalows.villa3.specs.occupancy_value">2 adults, 1 child</strong>
             </div>
             <div class="bungalow-specs__cell">
-              <span class="eyebrow">Bed</span>
-              <strong>King</strong>
+              <span class="eyebrow" data-i18n="bungalows.common.specs.bed_label">Bed</span>
+              <strong data-i18n="bungalows.villa3.specs.bed_value">King</strong>
             </div>
             <div class="bungalow-specs__cell">
-              <span class="eyebrow">View</span>
-              <strong>Beach &amp; lagoon</strong>
+              <span class="eyebrow" data-i18n="bungalows.common.specs.view_label">View</span>
+              <strong data-i18n="bungalows.villa3.specs.view_value">Beach &amp; lagoon</strong>
             </div>
             <div class="bungalow-specs__cell">
-              <span class="eyebrow">Floor</span>
-              <strong>Single level</strong>
+              <span class="eyebrow" data-i18n="bungalows.common.specs.floor_label">Floor</span>
+              <strong data-i18n="bungalows.villa3.specs.floor_value">Single level</strong>
             </div>
           </div>
         </div>
@@ -266,13 +274,13 @@
       <section class="bungalow-description" aria-labelledby="description-title">
         <div class="container bungalow-description__inner">
           <div class="bungalow-description__head reveal">
-            <span class="eyebrow">Inside the bungalow</span>
-            <h2 id="description-title">Right on the sand, just above the tide.</h2>
+            <span class="eyebrow" data-i18n="bungalows.common.description.eyebrow">Inside the bungalow</span>
+            <h2 id="description-title" data-i18n="bungalows.villa3.description.title">Right on the sand, just above the tide.</h2>
           </div>
           <div class="bungalow-description__body reveal">
-            <p>Bungalow 3 sits on the long shallow arc of the resort's main beach. The deck is the sand; a few steps from the bed and you're in the lagoon, where the water is calf-deep and warm for fifty metres out.</p>
-            <p>Inside, the suite is a single open volume with a king bed, a deep tub on the seaward wall, and a soft palette of bleached oak and natural linen. A separate outdoor shower under the palms is the way most guests start the day.</p>
-            <p>Bungalow 3 includes a dedicated butler, twice-daily housekeeping, and a private cabana on the beach with a daybed for two and a service bell. The cabana is the kind of place that quietly redraws an afternoon.</p>
+            <p data-i18n="bungalows.villa3.description.p1">Bungalow 3 sits on the long shallow arc of the resort's main beach. The deck is the sand; a few steps from the bed and you're in the lagoon, where the water is calf-deep and warm for fifty metres out.</p>
+            <p data-i18n="bungalows.villa3.description.p2">Inside, the suite is a single open volume with a king bed, a deep tub on the seaward wall, and a soft palette of bleached oak and natural linen. A separate outdoor shower under the palms is the way most guests start the day.</p>
+            <p data-i18n="bungalows.villa3.description.p3">Bungalow 3 includes a dedicated butler, twice-daily housekeeping, and a private cabana on the beach with a daybed for two and a service bell. The cabana is the kind of place that quietly redraws an afternoon.</p>
           </div>
         </div>
       </section>
@@ -281,8 +289,8 @@
       <section class="bungalow-amenities" aria-labelledby="amenities-title">
         <div class="container">
           <div class="bungalow-amenities__head reveal">
-            <span class="eyebrow">In every bungalow</span>
-            <h3 id="amenities-title">Amenities</h3>
+            <span class="eyebrow" data-i18n="bungalows.common.amenities.eyebrow">In every bungalow</span>
+            <h3 id="amenities-title" data-i18n="bungalows.common.amenities.title">Amenities</h3>
           </div>
           <div class="bungalow-amenities__grid">
             <div class="amenity"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.55a11 11 0 0114 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg><span data-i18n="stay.amenities.wifi">Free WiFi</span></div>
@@ -304,21 +312,21 @@
       <!-- Image gallery -->
       <section class="gallery section" aria-labelledby="gallery-title">
         <div class="container gallery__head reveal">
-          <span class="eyebrow">A glimpse of the bungalow</span>
-          <h3 id="gallery-title">Gallery</h3>
+          <span class="eyebrow" data-i18n="bungalows.common.gallery.eyebrow">A glimpse of the bungalow</span>
+          <h3 id="gallery-title" data-i18n="bungalows.common.gallery.title">Gallery</h3>
         </div>
         <div class="gallery__viewport">
-          <button class="gallery__arrow gallery__arrow--prev" aria-label="Previous photos" data-slider-prev="beachfront-gallery">
+          <button class="gallery__arrow gallery__arrow--prev" data-i18n-attr="aria-label:bungalows.common.gallery.prev_photos_aria" aria-label="Previous photos" data-slider-prev="beachfront-gallery">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <div class="gallery__track" data-slider="beachfront-gallery">
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-1.jpg" alt="Beach at golden hour" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-3.jpg" alt="Pool deck overlooking the sea" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-5.jpg" alt="Palms over a turquoise lagoon" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-7.jpg" alt="Sailboat anchored offshore" loading="lazy" /></a>
-            <a class="gallery__item" href="#"><img src="/assets/img/gallery-8.jpg" alt="Cocktail at the beach bar" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-1.jpg" data-i18n-attr="alt:bungalows.common.gallery.alt_beach" alt="Beach at golden hour" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-3.jpg" data-i18n-attr="alt:bungalows.common.gallery.alt_pool" alt="Pool deck overlooking the sea" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-5.jpg" data-i18n-attr="alt:bungalows.common.gallery.alt_lagoon" alt="Palms over a turquoise lagoon" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-7.jpg" data-i18n-attr="alt:bungalows.common.gallery.alt_sailboat" alt="Sailboat anchored offshore" loading="lazy" /></a>
+            <a class="gallery__item" href="#"><img src="/assets/img/gallery-8.jpg" data-i18n-attr="alt:bungalows.common.gallery.alt_cocktail" alt="Cocktail at the beach bar" loading="lazy" /></a>
           </div>
-          <button class="gallery__arrow gallery__arrow--next" aria-label="Next photos" data-slider-next="beachfront-gallery">
+          <button class="gallery__arrow gallery__arrow--next" data-i18n-attr="aria-label:bungalows.common.gallery.next_photos_aria" aria-label="Next photos" data-slider-next="beachfront-gallery">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg>
           </button>
         </div>
@@ -334,30 +342,30 @@
            message field. -->
       <section class="bungalow-cta" aria-labelledby="bungalow-cta-title">
         <div class="container bungalow-cta__inner">
-          <span class="eyebrow">Reserve your stay</span>
-          <h2 id="bungalow-cta-title">Ready to book this villa?</h2>
-          <p class="bungalow-cta__lede">Send us your dates and we'll reply within 24-48 hours with availability and a tailored proposal.</p>
-          <a class="btn btn-primary" href="../enquiries/?villa=premier-beachfront-suite">Send an enquiry</a>
+          <span class="eyebrow" data-i18n="bungalows.common.cta.eyebrow">Reserve your stay</span>
+          <h2 id="bungalow-cta-title" data-i18n="bungalows.common.cta.title">Ready to book this villa?</h2>
+          <p class="bungalow-cta__lede" data-i18n="bungalows.common.cta.lede">Send us your dates and we'll reply within 24-48 hours with availability and a tailored proposal.</p>
+          <a class="btn btn-primary" href="../enquiries/?villa=premier-beachfront-suite" data-i18n="bungalows.common.cta.button">Send an enquiry</a>
         </div>
       </section>
 
       <!-- Gallery lightbox (#lightbox). Shared overlay for the gallery on this
            page; lightbox.js fills it from the clicked gallery and cycles its
            photos. No share / favourite chrome by design. Hidden by default. -->
-      <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+      <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" data-i18n-attr="aria-label:bungalows.common.lightbox.viewer_aria" aria-label="Photo viewer">
         <div class="lightbox__backdrop" data-lightbox-close></div>
-        <button class="lightbox__close" type="button" aria-label="Close" data-lightbox-close>
+        <button class="lightbox__close" type="button" data-i18n-attr="aria-label:common.close_aria" aria-label="Close" data-lightbox-close>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          <span>Close</span>
+          <span data-i18n="common.close_aria">Close</span>
         </button>
         <p class="lightbox__counter" aria-live="polite"><span data-lightbox-index>1</span> / <span data-lightbox-total>1</span></p>
-        <button class="lightbox__nav lightbox__nav--prev" type="button" aria-label="Previous photo" data-lightbox-prev>
+        <button class="lightbox__nav lightbox__nav--prev" type="button" data-i18n-attr="aria-label:bungalows.common.gallery.prev_photo_aria" aria-label="Previous photo" data-lightbox-prev>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <figure class="lightbox__stage">
           <img data-lightbox-img alt="" />
         </figure>
-        <button class="lightbox__nav lightbox__nav--next" type="button" aria-label="Next photo" data-lightbox-next>
+        <button class="lightbox__nav lightbox__nav--next" type="button" data-i18n-attr="aria-label:bungalows.common.gallery.next_photo_aria" aria-label="Next photo" data-lightbox-next>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
         </button>
       </div>
@@ -388,15 +396,15 @@
         </div>
         <!-- Column 2 — Follow us -->
         <div class="site-footer__col site-footer__col--social">
-          <span class="eyebrow eyebrow--light">Follow us</span>
+          <span class="eyebrow eyebrow--light" data-i18n="common.footer.follow_eyebrow">Follow us</span>
           <ul class="social-list">
             <li>
-              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <a data-site-config-href="social.facebook" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" data-i18n-attr="aria-label:common.footer.follow_facebook_aria" aria-label="Facebook">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 9h3V6h-3a4 4 0 00-4 4v2H7v3h3v7h3v-7h3l1-3h-4v-2a1 1 0 011-1z"/></svg>
               </a>
             </li>
             <li>
-              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <a data-site-config-href="social.instagram" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer" data-i18n-attr="aria-label:common.footer.follow_instagram_aria" aria-label="Instagram">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1" fill="currentColor"/></svg>
               </a>
             </li>
@@ -406,19 +414,19 @@
              only; the Enquire entry that used to live here has moved to
              the header CTA + drawer, so the column carries a clean
              "Policies" aria-label. KEEP IN SYNC across all pages. -->
-        <nav class="site-footer__col site-footer__col--policies" aria-label="Policies">
-          <span class="eyebrow eyebrow--light">Policies</span>
+        <nav class="site-footer__col site-footer__col--policies" data-i18n-attr="aria-label:common.footer.policies_aria" aria-label="Policies">
+          <span class="eyebrow eyebrow--light" data-i18n="common.footer.policies_eyebrow">Policies</span>
           <ul>
-            <li><a data-site-config-path="policies.terms" href="/terms/">Terms &amp; Conditions</a></li>
-            <li><a data-site-config-path="policies.cancellation" href="/cancellation/">Cancellation Policy</a></li>
-            <li><a data-site-config-path="policies.privacy" href="/privacy/">Privacy Policy</a></li>
+            <li><a data-site-config-path="policies.terms" href="/terms/" data-i18n="common.footer.terms">Terms &amp; Conditions</a></li>
+            <li><a data-site-config-path="policies.cancellation" href="/cancellation/" data-i18n="common.footer.cancellation">Cancellation Policy</a></li>
+            <li><a data-site-config-path="policies.privacy" href="/privacy/" data-i18n="common.footer.privacy">Privacy Policy</a></li>
           </ul>
         </nav>
       </div>
       <div class="site-footer__bar">
         <div class="container site-footer__bar-inner">
           <p data-site-config="copyright">&copy; 2026 Made with &#10084;&#65039; by Vayana di Mare</p>
-          <p class="site-footer__license">License number: <span data-site-config="license">1327673</span></p>
+          <p class="site-footer__license"><span data-i18n="common.footer.license_prefix">License number:</span> <span data-site-config="license">1327673</span></p>
         </div>
       </div>
     </footer>
@@ -427,11 +435,11 @@
     <div class="modal" id="booking-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal__backdrop" data-modal-close></div>
       <div class="modal__panel">
-        <button class="modal__close" type="button" aria-label="Close" data-modal-close>&times;</button>
-        <span class="eyebrow">Reservation request received</span>
-        <h3 id="modal-title">Thank you &mdash; we'll be in touch.</h3>
-        <p id="modal-body">A reservations specialist will follow up within twenty-four hours to confirm availability and tailor your stay.</p>
-        <button type="button" class="btn btn-primary" data-modal-close>Close</button>
+        <button class="modal__close" type="button" data-i18n-attr="aria-label:common.close_aria" aria-label="Close" data-modal-close>&times;</button>
+        <span class="eyebrow" data-i18n="bungalows.common.modal.eyebrow">Reservation request received</span>
+        <h3 id="modal-title" data-i18n="bungalows.common.modal.title">Thank you &mdash; we'll be in touch.</h3>
+        <p id="modal-body" data-i18n="bungalows.common.modal.body">A reservations specialist will follow up within twenty-four hours to confirm availability and tailor your stay.</p>
+        <button type="button" class="btn btn-primary" data-modal-close data-i18n="bungalows.common.modal.close_button">Close</button>
       </div>
     </div>
 
