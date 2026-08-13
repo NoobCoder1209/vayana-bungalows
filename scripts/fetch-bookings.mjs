@@ -25,16 +25,19 @@
 // no CHECK IN is skipped (placeholder rows).
 //
 // Availability rule:
-//   - For each row whose status is Confirmed / Ongoing / Upcoming, mark
-//     the dates [CHECK IN .. CHECK OUT - 1] as unavailable.
+//   - For each row whose status is Confirmed / Ongoing / Upcoming / Completed,
+//     mark the dates [CHECK IN .. CHECK OUT - 1] as unavailable. "Completed" is
+//     included because the resort also uses it for paid/finalized FUTURE stays.
 //   - The CHECK OUT day itself is AVAILABLE (next guest can arrive).
-//   - Rows with status "Completed" or empty status are ignored.
-//   - Past dates (before today) are filtered out — flatpickr already
-//     blocks them via minDate, no point shipping them.
+//   - Rows with an empty/other status (e.g. cancelled) are ignored.
+//   - Past dates (before today) are filtered out — a genuinely-past Completed
+//     stay therefore drops out entirely; flatpickr also blocks past days via
+//     minDate, so there's no point shipping them.
 
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 import { google } from 'googleapis';
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
@@ -59,8 +62,13 @@ const COL_STATUS = 35;    // AJ — Статус
 const COL_CHECKIN = 36;   // AK — CHECK IN
 const COL_CHECKOUT = 37;  // AL — CHECK OUT
 
-// Statuses that block availability. Anything else (Completed, empty, unknown) is ignored.
-const BLOCKING_STATUSES = new Set(['confirmed', 'ongoing', 'upcoming']);
+// Statuses that block availability. "Completed" is included because the resort
+// also uses it for paid/finalized bookings whose stay is still in the FUTURE —
+// those must grey out the calendar. Genuinely-past completed stays are dropped
+// anyway by the `end.dt <= todayUtc` filter below, so including "completed"
+// only ever blocks future nights. Anything else (empty/unknown/cancelled) is
+// ignored.
+const BLOCKING_STATUSES = new Set(['confirmed', 'ongoing', 'upcoming', 'completed']);
 
 const HEADER_ROW = 10;        // 1-based row that contains "№ ... CHECK IN | CHECK OUT"
 const FIRST_DATA_ROW = 11;    // 1-based first reservation row
@@ -74,28 +82,39 @@ function fail(msg) {
 
 const info = (msg) => console.log(msg);
 
-if (!SPREADSHEET_ID) fail('SPREADSHEET_ID env var is required');
-if (!KEY_JSON) fail('GOOGLE_SHEETS_KEY env var is required (service-account JSON)');
+// Google Sheets client, created lazily on first use. Kept out of module scope
+// so importing this file (e.g. from a test of the pure parse logic) does NOT
+// validate env vars or build an auth client — only actually reading the sheet
+// does. Memoized so repeated readTab/listTabs share one client. `_saEmail`
+// caches the service-account email for the operator-facing log lines in main().
+let _sheets = null;
+let _saEmail = '(unknown)';
+function getSheets() {
+  if (_sheets) return _sheets;
+  if (!SPREADSHEET_ID) fail('SPREADSHEET_ID env var is required');
+  if (!KEY_JSON) fail('GOOGLE_SHEETS_KEY env var is required (service-account JSON)');
 
-let credentials;
-try {
-  credentials = JSON.parse(KEY_JSON);
-} catch {
-  // Don't echo e.message — Node may include offending input substrings
-  // ("Unexpected token X in JSON at position Y") which could leak private
-  // key fragments into the public Actions log if the secret is corrupted.
-  fail('GOOGLE_SHEETS_KEY is not valid JSON (rotate the secret and re-paste)');
+  let credentials;
+  try {
+    credentials = JSON.parse(KEY_JSON);
+  } catch {
+    // Don't echo e.message — Node may include offending input substrings
+    // ("Unexpected token X in JSON at position Y") which could leak private
+    // key fragments into the public Actions log if the secret is corrupted.
+    fail('GOOGLE_SHEETS_KEY is not valid JSON (rotate the secret and re-paste)');
+  }
+  _saEmail = credentials.client_email || '(unknown)';
+
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+  });
+  _sheets = google.sheets({ version: 'v4', auth });
+  return _sheets;
 }
 
-const auth = new google.auth.GoogleAuth({
-  credentials,
-  scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-});
-
-const sheets = google.sheets({ version: 'v4', auth });
-
 async function readTab(tabName) {
-  const res = await sheets.spreadsheets.values.get({
+  const res = await getSheets().spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range: `'${tabName}'`,
     valueRenderOption: 'FORMATTED_VALUE',
@@ -106,7 +125,7 @@ async function readTab(tabName) {
 // List the tab names in the spreadsheet so we can probe for next-year tabs
 // without triggering a 400 if they don't exist yet.
 async function listTabs() {
-  const res = await sheets.spreadsheets.get({
+  const res = await getSheets().spreadsheets.get({
     spreadsheetId: SPREADSHEET_ID,
     fields: 'sheets(properties(title))',
   });
@@ -160,12 +179,15 @@ function validateHeader(grid, tabLabel) {
   }
 }
 
-function parseReservationTable(grid, tabLabel) {
+export function parseReservationTable(grid, tabLabel, todayUtc = null) {
   validateHeader(grid, tabLabel);
 
-  // Today (UTC) — drop reservations that ended before today
-  const today = new Date();
-  const todayUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  // Today (UTC) — drop reservations that ended before today. Injectable so
+  // tests can pin "now"; defaults to the real current UTC midnight.
+  if (!todayUtc) {
+    const today = new Date();
+    todayUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  }
 
   const unavailable = new Set();
   // Check-in days are days when a *new* guest arrives. They're occupied
@@ -177,7 +199,7 @@ function parseReservationTable(grid, tabLabel) {
   const checkInDays = new Set();
   let scanned = 0;
   let blocked = 0;
-  let skippedCompleted = 0;
+  let skippedOther = 0;
   let skippedEmpty = 0;
 
   for (let r = FIRST_DATA_ROW - 1; r < grid.length; r++) {
@@ -195,7 +217,9 @@ function parseReservationTable(grid, tabLabel) {
     scanned++;
 
     if (!BLOCKING_STATUSES.has(status)) {
-      if (status === 'completed') skippedCompleted++;
+      // Non-blocking statuses (cancelled / unknown / anything not in the set).
+      // "Completed" is now a blocking status, so it no longer lands here.
+      skippedOther++;
       continue;
     }
 
@@ -235,13 +259,14 @@ function parseReservationTable(grid, tabLabel) {
     checkIn: [...checkInDays].sort(),
     scanned,
     blocked,
-    skippedCompleted,
+    skippedOther,
     skippedEmpty,
   };
 }
 
 async function main() {
-  info(`▶ Reading spreadsheet ${SPREADSHEET_ID} as ${credentials.client_email}`);
+  getSheets(); // validate env + build the client up front (also sets _saEmail)
+  info(`▶ Reading spreadsheet ${SPREADSHEET_ID} as ${_saEmail}`);
   info(`  current year is ${CURRENT_YEAR}`);
 
   const allTabsList = await listTabs();
@@ -250,7 +275,7 @@ async function main() {
       `spreadsheets.get returned zero tabs for ${SPREADSHEET_ID}. ` +
       `Likely causes: (a) wrong SPREADSHEET_ID, (b) the service account ` +
       `lacks at least Viewer access on the spreadsheet, (c) the spreadsheet ` +
-      `was deleted. Service account: ${credentials.client_email}`,
+      `was deleted. Service account: ${_saEmail}`,
     );
   }
   const allTabs = new Set(allTabsList);
@@ -291,7 +316,7 @@ async function main() {
       for (const d of r.checkIn) merged[key].checkIn.add(d);
       info(
         `    parsed ${r.scanned} reservation(s), ${r.blocked} blocking, ` +
-        `${r.skippedCompleted} completed, ${r.skippedEmpty} empty — ` +
+        `${r.skippedOther} non-blocking, ${r.skippedEmpty} empty — ` +
         `${r.unavailable.length} unavailable date(s), ${r.checkIn.length} check-in day(s)`,
       );
     }
@@ -324,8 +349,13 @@ async function main() {
   info(`✓ Wrote ${OUT_PATH}`);
 }
 
-main().catch((e) => {
-  console.error(`✗ ${e.message}`);
-  if (e.stack) console.error(e.stack);
-  process.exit(1);
-});
+// Run main() only when executed directly (node scripts/fetch-bookings.mjs),
+// not when imported by a test — importing must not hit the Google Sheets API.
+// pathToFileURL handles path/OS quirks the raw `file://` concat would miss.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((e) => {
+    console.error(`✗ ${e.message}`);
+    if (e.stack) console.error(e.stack);
+    process.exit(1);
+  });
+}
