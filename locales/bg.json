@@ -258,6 +258,7 @@
         "next_photos_aria": "Следващи снимки",
         "prev_photo_aria": "Предишна снимка",
         "next_photo_aria": "Следваща снимка",
+        "_note_alt_pool": "Shared gallery-image alt-text pool. The three bungalow pages each sample a DIFFERENT subset of these alt_* descriptors (the photo pool is shared, not per-villa), so they live under common.* by design — not every key is used by every page.",
         "alt_beach": "Плажът в златния час",
         "alt_terrace": "Открита тераса на вилата",
         "alt_pool": "Тераса с басейн с изглед към морето",
