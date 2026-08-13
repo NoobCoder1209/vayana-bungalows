@@ -56,7 +56,17 @@ export function makeSeasonPicker(input, opts = {}) {
     disableMobile,
     onReady,
   };
-  if (locale) config.locale = locale;
+  // Start every week on Monday (EU convention; matches the site's audience and
+  // the /stay/ availability grid). flatpickr reads firstDayOfWeek from the
+  // resolved l10n, NOT from a top-level config key — setupLocale() builds
+  // self.l10n = {...default, ...locale} and the grid uses self.l10n.
+  // firstDayOfWeek (flatpickr 4.6.13). So we must inject firstDayOfWeek into the
+  // LOCALE object: EN 'default' starts Sunday (0), BG already Monday (1) — merge
+  // firstDayOfWeek:1 onto whichever locale is passed so both are Monday-first.
+  // `locale: 'default'` (a string) isn't spreadable, so an empty-object base
+  // (spread onto flatpickr's default English l10n) suffices for EN.
+  const baseLocale = locale && typeof locale === 'object' ? locale : {};
+  config.locale = { ...baseLocale, firstDayOfWeek: 1 };
   if (onChange) config.onChange = onChange;
   if (onDayCreate) config.onDayCreate = onDayCreate;
 
