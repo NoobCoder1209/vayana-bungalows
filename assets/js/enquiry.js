@@ -78,12 +78,12 @@ const MAX_MESSAGE_LEN = 2000;
 // One generic message for any email-shape failure — empty / too long /
 // regex-failed all share this. Gives an attacker no signal about
 // thresholds. Same pattern as the newsletter form.
-const EMAIL_ERROR_MSG = 'Please enter a valid email address.';
-const PHONE_ERROR_MSG = 'Please enter a valid phone number.';
-const NAME_ERROR_MSG = 'Please enter your full name.';
-const DATE_ERROR_MSG = 'Please pick check-in and check-out dates.';
-const DATE_ORDER_ERROR_MSG = 'Check-out must be after check-in.';
-const PAST_DATE_ERROR_MSG = 'Check-in cannot be in the past.';
+let EMAIL_ERROR_MSG = 'Please enter a valid email address.';
+let PHONE_ERROR_MSG = 'Please enter a valid phone number.';
+let NAME_ERROR_MSG = 'Please enter your full name.';
+let DATE_ERROR_MSG = 'Please pick check-in and check-out dates.';
+let DATE_ORDER_ERROR_MSG = 'Check-out must be after check-in.';
+let PAST_DATE_ERROR_MSG = 'Check-in cannot be in the past.';
 const MESSAGE_TOO_LONG_MSG = 'Your message is too long (max 2000 characters).';
 // The consent label on /enquiries/ links to /privacy/ (shipped in #16)
 // and reads "I accept the Privacy Policy and consent to being contacted
@@ -217,6 +217,30 @@ export function initEnquiry() {
   // language swap (see issue #47 follow-up) can re-read the DOM value.
   const baked = submit.dataset.busyLabel;
   if (baked) SUBMIT_BUSY_TEXT = baked;
+
+  // Read the localized error strings baked onto the form element's
+  // data-err-* attributes (populated at build time by the i18n plugin
+  // from enquiries.errors.* / enquiries.field_errors.*). Same pattern as
+  // SUBMIT_BUSY_TEXT above — fall back to the module-scope English
+  // defaults when an attribute is missing (page not built with the
+  // plugin, or a test fixture). Assigned at init so a future runtime
+  // language swap can re-read the DOM.
+  const d = form.dataset;
+  if (d.errValidation) ERROR_MSGS.validation = d.errValidation;
+  if (d.errCaptcha) ERROR_MSGS.captcha = d.errCaptcha;
+  if (d.errRateLimit) ERROR_MSGS['rate-limit'] = d.errRateLimit;
+  if (d.errContentType) ERROR_MSGS['content-type'] = d.errContentType;
+  if (d.errTooLarge) ERROR_MSGS['too-large'] = d.errTooLarge;
+  if (d.errMethod) ERROR_MSGS.method = d.errMethod;
+  if (d.errDownstream) ERROR_MSGS.downstream = d.errDownstream;
+  if (d.errNetwork) ERROR_MSGS.network = d.errNetwork;
+  if (d.errDefault) ERROR_MSGS.default = d.errDefault;
+  if (d.errName) NAME_ERROR_MSG = d.errName;
+  if (d.errDate) DATE_ERROR_MSG = d.errDate;
+  if (d.errDateOrder) DATE_ORDER_ERROR_MSG = d.errDateOrder;
+  if (d.errPastDate) PAST_DATE_ERROR_MSG = d.errPastDate;
+  if (d.errEmail) EMAIL_ERROR_MSG = d.errEmail;
+  if (d.errPhone) PHONE_ERROR_MSG = d.errPhone;
 
   // Enable the submit button only once JS has wired up validation.
   // The HTML ships it disabled (JS-disabled fallback: button stays

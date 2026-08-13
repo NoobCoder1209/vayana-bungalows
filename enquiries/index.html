@@ -162,7 +162,23 @@
              Markup contracts (data-* attributes) are the JS module's hooks
              — keep them in sync with assets/js/enquiry.js. -->
         <div class="container enquiry-page__form-wrap">
-          <form class="enquiry-form" data-enquiry-form novalidate>
+          <form class="enquiry-form" data-enquiry-form novalidate
+                data-err-validation="Please check the highlighted fields and try again."
+                data-err-captcha="The anti-spam check failed. Please tick the box if shown, or refresh the page."
+                data-err-rate-limit="Too many enquiries from this connection. Please try again in a few minutes."
+                data-err-content-type="Sorry, something went wrong sending your enquiry. Please refresh and try again."
+                data-err-too-large="Your message is too long. Please shorten it and try again."
+                data-err-method="Sorry, something went wrong sending your enquiry. Please refresh and try again."
+                data-err-downstream="Sorry, we couldn’t save your enquiry. Please try again, or email us at the address in the footer."
+                data-err-network="Network error — please check your connection and try again."
+                data-err-default="Sorry, something went wrong. Please try again or email us directly."
+                data-err-name="Please enter your full name."
+                data-err-date="Please pick check-in and check-out dates."
+                data-err-date-order="Check-out must be after check-in."
+                data-err-past-date="Check-in cannot be in the past."
+                data-err-email="Please enter a valid email address."
+                data-err-phone="Please enter a valid phone number."
+                data-i18n-attr="data-err-validation:enquiries.errors.validation; data-err-captcha:enquiries.errors.captcha; data-err-rate-limit:enquiries.errors.rate_limit; data-err-content-type:enquiries.errors.content_type; data-err-too-large:enquiries.errors.too_large; data-err-method:enquiries.errors.method; data-err-downstream:enquiries.errors.downstream; data-err-network:enquiries.errors.network; data-err-default:enquiries.errors.default; data-err-name:enquiries.field_errors.name; data-err-date:enquiries.field_errors.date; data-err-date-order:enquiries.field_errors.date_order; data-err-past-date:enquiries.field_errors.past_date; data-err-email:enquiries.field_errors.email; data-err-phone:enquiries.field_errors.phone">
             <!-- Hidden locale field. JS-mode: enquiry.js includes the same
                  value in the JSON payload directly (site-config-driven).
                  If a future revision wires this form for no-JS submission
