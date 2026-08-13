@@ -8,8 +8,9 @@
 // localized at build time via data-i18n markers; there is no runtime dict).
 //
 // The modal is info-only except for the bottom "Take the offer" button, which
-// deep-links to /enquiries/ carrying a prefilled ?offer=<message> so the
-// enquiry form's message textarea is pre-populated with the offer details.
+// links to /stay/ scrolled to the offer's month (?offerMonth=YYYY-MM), so the
+// guest sees availability across all bungalows and picks their own dates
+// instead of landing on the enquiry with the whole offer window pre-filled.
 //
 // Reuses the .modal pattern (sections.css) and the focus-trap / Escape /
 // focus-restore conventions from enquiry.js.
@@ -21,36 +22,27 @@ import { currentLocale, isDefaultLocale } from './util/current-locale.js';
 // Remember what was focused before opening so we can restore it on close.
 let lastFocusBeforeModal = null;
 
-// Build the locale-aware /enquiries/ deep link with a prefilled ?offer=
-// message. Mirrors booking.js's BASE_URL + localePrefix pattern so it works
-// from any page depth under the GitHub Pages base (/vayana-bungalows/) and in
-// dev (/), and keeps a /bg/ visitor in Bulgarian. Exported for unit testing.
-export function buildEnquiryUrl(offer, takeMsg) {
+// Build the locale-aware /stay/ link the "Take the offer" button points at,
+// carrying the offer's START month as a scroll hint (?offerMonth=YYYY-MM) so
+// /stay/ pages its calendars to that month. Mirrors booking.js's BASE_URL +
+// localePrefix pattern so it works from any page depth under the GitHub Pages
+// base (/vayana-bungalows/) and in dev (/), and keeps a /bg/ visitor in
+// Bulgarian. No offer message and no date pre-select are carried — the guest
+// chooses freely against the live calendars. Exported for unit testing.
+export function buildStayUrl(offer) {
   // import.meta.env is a Vite build-time value; guard so `node --test` (which
   // has no import.meta.env) falls back to the dev base '/'.
   const base = (import.meta.env && import.meta.env.BASE_URL) || '/';
   const localePrefix = isDefaultLocale() ? '' : `${currentLocale()}/`;
-  const url = new URL(`${base}${localePrefix}enquiries/`, window.location.origin);
+  const url = new URL(`${base}${localePrefix}stay/`, window.location.origin);
 
-  // Compose the prefilled message: localized opener + the offer's own details.
-  // The structural glue words stay English — the guest can edit the free-text
-  // message anyway, and this avoids a fan-out of extra locale keys. Prose is
-  // kept minimal in the new schema: opener + a single Dates line (price prose
-  // is omitted this phase; there is no single "nights" value).
-  const parts = [takeMsg || 'I’m taking the offer'];
-  const formatted = formatOfferDates(offer, currentLocale());
-  if (formatted) parts.push(`Dates: ${formatted}`);
-  url.searchParams.set('offer', parts.join('. '));
-
-  // ?price is OMITTED this phase (no priceAfter in the new shape).
-
-  // Structured check-in/check-out for the enquiry date pickers, from the
-  // offer's real ISO sides only (offerPrefillDates omits freehand/blank sides,
-  // so those simply don't prefill). enquiry.js re-validates these (not past,
-  // in-season, checkout > checkin), so it stays the authority on bookable dates.
+  // The scroll hint is the offer's month, taken from its REAL ISO check-in side
+  // only (offerPrefillDates omits freehand/blank sides). A freehand-only or
+  // dateless offer yields no hint → a plain /stay/ link (lands at the top).
   const pf = offerPrefillDates(offer);
-  if (pf.checkin) url.searchParams.set('checkin', pf.checkin);
-  if (pf.checkout) url.searchParams.set('checkout', pf.checkout);
+  if (pf.checkin && /^\d{4}-\d{2}-\d{2}$/.test(pf.checkin)) {
+    url.searchParams.set('offerMonth', pf.checkin.slice(0, 7)); // YYYY-MM
+  }
 
   return url.toString();
 }
@@ -129,11 +121,12 @@ export function openOfferModal(offer, triggerEl) {
     }
   }
 
-  // "Take the offer" → locale-aware /enquiries/?offer=<prefill>. The take
-  // message template is baked onto the anchor as data-take-message at build.
+  // "Take the offer" → locale-aware /stay/?offerMonth=YYYY-MM. Sends the guest
+  // to the calendars (scrolled to the offer's month) to pick their own dates,
+  // rather than to the enquiry with the whole window pre-filled.
   const take = modal.querySelector('[data-offer-take]');
   if (take) {
-    take.setAttribute('href', buildEnquiryUrl(offer, take.dataset.takeMessage));
+    take.setAttribute('href', buildStayUrl(offer));
   }
 
   openModal(modal);

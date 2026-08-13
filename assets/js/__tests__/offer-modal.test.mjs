@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-// buildEnquiryUrl reads window.location.origin and (via current-locale.js)
+// buildStayUrl reads window.location.origin and (via current-locale.js)
 // document.documentElement.getAttribute('lang'). openOfferModal also reads
 // document.getElementById('offer-modal') and querySelector('[data-offers]').
 // A mutable lang lets us exercise the default (EN) and /bg/ locale paths.
@@ -61,7 +61,7 @@ globalThis.document = {
   activeElement: null,
 };
 
-const { buildEnquiryUrl, openOfferModal } = await import('../offer-modal.js');
+const { buildStayUrl, openOfferModal } = await import('../offer-modal.js');
 
 // New offer shape (Task 1). rate is a Number; startDate/endDate ISO-or-null.
 const offer = () => ({
@@ -70,66 +70,41 @@ const offer = () => ({
   minimumToBook: 7, paidNights: 5, freeNights: 2, type: 'Type 2',
 });
 
-test('default locale (EN): links to enquiries/ with prefilled ?offer= + checkin/checkout, no price', () => {
+test('default locale (EN): links to /stay/ with ?offerMonth from the offer start; no offer/checkin/price', () => {
   htmlLang = 'en';
-  const href = buildEnquiryUrl(offer(), "I'm taking the offer");
+  const href = buildStayUrl(offer());
   const url = new URL(href);
-  assert.equal(url.pathname, '/enquiries/');
-  // Structured date params from offerPrefillDates.
-  assert.equal(url.searchParams.get('checkin'), '2026-07-01');
-  assert.equal(url.searchParams.get('checkout'), '2026-07-15');
-  // No price param this phase.
-  assert.equal(url.searchParams.get('price'), null);
-  const msg = url.searchParams.get('offer');
-  assert.ok(msg.startsWith("I'm taking the offer"), 'starts with take message');
-  assert.ok(msg.includes('Dates: 1 Jul 2026 – 15 Jul 2026'), 'includes pretty dates');
-  assert.ok(!msg.includes('Price:'), 'no price prose');
-  assert.ok(!msg.includes('2026-07-01/2026-07-15'), 'no raw ISO range leak');
-  assert.ok(!msg.includes('Nights:'), 'no nights prose');
-});
-
-test('BG locale: prefixes /bg/ before enquiries/', () => {
-  htmlLang = 'bg';
-  const href = buildEnquiryUrl(offer(), 'Заявявам офертата');
-  const url = new URL(href);
-  assert.equal(url.pathname, '/bg/enquiries/');
-  assert.ok(url.searchParams.get('offer').startsWith('Заявявам офертата'));
-});
-
-test('start-only offer: only checkin, bare single-date prose, no price', () => {
-  htmlLang = 'en';
-  const href = buildEnquiryUrl(
-    { ...offer(), endDate: null, endRaw: null },
-    "I'm taking the offer",
-  );
-  const url = new URL(href);
-  assert.equal(url.searchParams.get('checkin'), '2026-07-01');
-  assert.equal(url.searchParams.get('checkout'), null);
-  assert.equal(url.searchParams.get('price'), null);
-  const msg = url.searchParams.get('offer');
-  assert.ok(msg.includes('Dates: 1 Jul 2026'), 'bare single-date prose');
-  assert.ok(!msg.includes('–'), 'no range separator for a single date');
-});
-
-test('missing take message falls back to a default opener', () => {
-  htmlLang = 'en';
-  const href = buildEnquiryUrl(offer(), undefined);
-  const msg = new URL(href).searchParams.get('offer');
-  assert.ok(msg.length > 0);
-  assert.ok(msg.includes('taking the offer'));
-});
-
-test('freehand-dates offer: NO checkin/checkout, prose keeps raw text, no price', () => {
-  htmlLang = 'en';
-  const href = buildEnquiryUrl(
-    { ...offer(), startDate: null, endDate: null, startRaw: 'The whole July', endRaw: null },
-    "I'm taking the offer",
-  );
-  const url = new URL(href);
+  assert.equal(url.pathname, '/stay/');
+  assert.equal(url.searchParams.get('offerMonth'), '2026-07');
+  // The old enquiry params must NOT be carried anymore.
   assert.equal(url.searchParams.get('checkin'), null);
   assert.equal(url.searchParams.get('checkout'), null);
+  assert.equal(url.searchParams.get('offer'), null);
   assert.equal(url.searchParams.get('price'), null);
-  assert.ok(url.searchParams.get('offer').includes('The whole July'));
+});
+
+test('BG locale: prefixes /bg/ before stay/ and keeps ?offerMonth', () => {
+  htmlLang = 'bg';
+  const url = new URL(buildStayUrl(offer()));
+  assert.equal(url.pathname, '/bg/stay/');
+  assert.equal(url.searchParams.get('offerMonth'), '2026-07');
+});
+
+test('start-only offer: ?offerMonth still derived from the start ISO', () => {
+  htmlLang = 'en';
+  const url = new URL(buildStayUrl({ ...offer(), endDate: null, endRaw: null }));
+  assert.equal(url.pathname, '/stay/');
+  assert.equal(url.searchParams.get('offerMonth'), '2026-07');
+});
+
+test('freehand-dates offer (no real start ISO): plain /stay/, no ?offerMonth', () => {
+  htmlLang = 'en';
+  const url = new URL(buildStayUrl(
+    { ...offer(), startDate: null, endDate: null, startRaw: 'The whole July', endRaw: null },
+  ));
+  assert.equal(url.pathname, '/stay/');
+  assert.equal(url.searchParams.get('offerMonth'), null);
+  assert.equal(url.search, ''); // no query at all
 });
 
 test('openOfferModal populates dates/hero/nights slots; struck/save stay hidden', () => {
@@ -151,8 +126,11 @@ test('openOfferModal populates dates/hero/nights slots; struck/save stay hidden'
   // Callout shows the formatted dates when a date range is present.
   assert.equal(currentModal._slots['callout-dates'].textContent, '1 Jul 2026 – 15 Jul 2026');
   assert.equal(currentModal._slots.callout.hidden, false);
-  // Take anchor got a prefilled href.
-  assert.ok(currentModal._take.getAttribute('href').includes('/enquiries/'));
+  // Take anchor points at /stay/ (with the offer's month) — not the enquiry.
+  const takeHref = currentModal._take.getAttribute('href');
+  assert.ok(takeHref.includes('/stay/'), `take href → /stay/: ${takeHref}`);
+  assert.ok(takeHref.includes('offerMonth=2026-07'), `carries offerMonth: ${takeHref}`);
+  assert.ok(!takeHref.includes('/enquiries/'), 'no longer links to the enquiry');
 });
 
 test('openOfferModal renders Type-1 discount framing in the nights slot', () => {
