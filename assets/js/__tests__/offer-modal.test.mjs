@@ -26,7 +26,7 @@ function makeModal() {
     save: makeSlot('save'), nights: makeSlot('nights'), message: makeSlot('message'),
     callout: makeSlot('callout'), 'callout-dates': makeSlot('callout-dates'),
   };
-  const take = { _attrs: { }, dataset: { takeMessage: "I'm taking the offer" }, setAttribute(k, v) { this._attrs[k] = v; }, getAttribute(k) { return this._attrs[k] ?? null; } };
+  const take = { _attrs: { }, dataset: { }, setAttribute(k, v) { this._attrs[k] = v; }, getAttribute(k) { return this._attrs[k] ?? null; } };
   const closeBtn = { focus() {} };
   return {
     hidden: true, dataset: {}, _slots: slots, _take: take,
