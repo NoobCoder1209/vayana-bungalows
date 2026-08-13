@@ -25,7 +25,7 @@ import { isOffSeason, seasonMaxDate, attachYearDropdown } from './season.js';
  * @param {string|Date} [opts.minDate='today']
  * @param {Date}   [opts.maxDate=seasonMaxDate()]
  * @param {string} opts.dateFormat            — caller's flatpickr dateFormat
- * @param {object} [opts.locale]              — flatpickr locale object/code
+ * @param {string|object} [opts.locale]        — flatpickr locale code ('default') or l10n object (e.g. Bulgarian); firstDayOfWeek:1 is merged in for a Monday start
  * @param {Array}  [opts.disable=[]]          — EXTRA disable entries; isOffSeason is prepended
  * @param {boolean}[opts.disableMobile=false]
  * @param {Function}[opts.onReady=attachYearDropdown]
