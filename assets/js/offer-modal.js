@@ -40,6 +40,10 @@ export function buildStayUrl(offer) {
   // only (offerPrefillDates omits freehand/blank sides). A freehand-only or
   // dateless offer yields no hint → a plain /stay/ link (lands at the top).
   const pf = offerPrefillDates(offer);
+  // offerPrefillDates already guarantees `checkin` is a strict, real ISO date
+  // (or absent), so this regex is defense-in-depth — it makes buildStayUrl
+  // self-guarding if the util's contract ever loosens, and documents that only
+  // a YYYY-MM-DD checkin yields a YYYY-MM hint.
   if (pf.checkin && /^\d{4}-\d{2}-\d{2}$/.test(pf.checkin)) {
     url.searchParams.set('offerMonth', pf.checkin.slice(0, 7)); // YYYY-MM
   }
