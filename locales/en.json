@@ -412,28 +412,27 @@
   },
   "contacts": {
     "meta": {
-      "title": "Code 340· Contacts — Vayana Bungalows",
-      "description": "Code 341· Get in touch with Vayana Bungalows in Tsarevo, Bulgaria — phone, email, address, and a map. Or send a detailed enquiry online.",
-      "og_description": "Code 342· Phone, email, address, and map for Vayana Bungalows in Tsarevo, Bulgaria."
+      "title": "Contacts — Vayana Bungalows",
+      "description": "Get in touch with Vayana Bungalows in Arapya, Bulgaria — phone, email, address, and a map. Or send a detailed enquiry online.",
+      "og_description": "Phone, email, address, and map for Vayana Bungalows in Arapya, Bulgaria."
     },
     "hero": {
-      "title": "Code 343· Get in touch",
-      "sub": "Code 344· Three ways to reach us — a phone call, an email, or a detailed enquiry."
+      "title": "Get in touch with us",
+      "sub": "Three ways to reach us — a phone call, an email, or a detailed enquiry."
     },
     "details": {
-      "sr_title": "Code 345· Contact details",
-      "phone_label": "Code 346· Phone",
-      "email_label": "Code 347· Email",
-      "address_label": "Code 348· Address",
-      "reply_note": "Code 349· We reply within 24-48 hours."
+      "sr_title": "Contact details",
+      "phone_label": "Phone",
+      "email_label": "Email",
+      "address_label": "Address"
     },
     "map": {
-      "eyebrow": "Code 350· Find us",
-      "title": "Code 351· On the map",
-      "fallback": "Code 352· Map unavailable — see address below.",
-      "iframe_title": "Code 353· Map showing Vayana Bungalows in Tsarevo, Bulgaria",
-      "directions_button": "Code 354· Open in Google Maps",
-      "directions_sr": "Code 355· (opens Google Maps in a new tab)"
+      "eyebrow": "Find us",
+      "title": "On the map",
+      "fallback": "Map unavailable — see address below.",
+      "iframe_title": "Map showing Vayana Bungalows in Arapya, Bulgaria",
+      "directions_button": "Open in Google Maps",
+      "directions_sr": "(opens Google Maps in a new tab)"
     },
     "cta": {
       "eyebrow": "Already have a plan?",
@@ -444,95 +443,95 @@
   },
   "enquiries": {
     "meta": {
-      "title": "Code 360· Enquiries — Vayana Bungalows",
-      "description": "Code 361· Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests — we reply within 24-48 hours."
+      "title": "Enquiries — Vayana Bungalows",
+      "description": "Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests — we will reach out to you shortly"
     },
     "hero": {
-      "eyebrow": "Code 362· Already have a plan",
-      "title": "Code 363· Send us an enquiry",
-      "lede": "Code 364· Leave your contact information and we will reach out to you shortly."
+      "eyebrow": "Already have a plan",
+      "title": "Send us an enquiry",
+      "lede": "Leave your contact information and we will reach out to you shortly."
     },
     "form": {
-      "name_placeholder": "Code 365· FULL NAME*",
-      "checkin_placeholder": "Code 366· CHECK-IN*",
-      "checkout_placeholder": "Code 367· CHECK-OUT*",
-      "adults_placeholder": "Code 368· ADULTS*",
-      "children_placeholder": "Code 369· CHILDREN",
-      "infants_placeholder": "Code 370· INFANTS",
-      "email_placeholder": "Code 371· EMAIL*",
-      "phone_placeholder": "Code 372· TELEPHONE*",
-      "message_placeholder": "Code 373· MESSAGE",
-      "submit_label": "Code 374· Send enquiry",
-      "submit_busy_label": "Code 375· Sending…"
+      "name_placeholder": "FULL NAME*",
+      "checkin_placeholder": "CHECK-IN*",
+      "checkout_placeholder": "CHECK-OUT*",
+      "adults_placeholder": "ADULTS*",
+      "children_placeholder": "CHILDREN",
+      "infants_placeholder": "INFANTS",
+      "email_placeholder": "EMAIL*",
+      "phone_placeholder": "TELEPHONE*",
+      "message_placeholder": "MESSAGE",
+      "submit_label": "Send enquiry",
+      "submit_busy_label": "Sending…"
     },
     "a11y": {
-      "name_label": "Code 376· Full name (required)",
-      "checkin_label": "Code 377· Check-in date (required)",
-      "checkout_label": "Code 378· Check-out date (required)",
-      "adults_label": "Code 379· Adults (required)",
-      "children_label": "Code 380· Children (optional)",
-      "infants_label": "Code 381· Infants (optional)",
-      "email_label": "Code 382· Email (required)",
-      "phone_label": "Code 383· Telephone (required)",
-      "message_label": "Code 384· Message",
-      "honeypot_label": "Code 385· Website",
+      "name_label": "Full name (required)",
+      "checkin_label": "Check-in date (required)",
+      "checkout_label": "Check-out date (required)",
+      "adults_label": "Adults (required)",
+      "children_label": "Children (optional)",
+      "infants_label": "Infants (optional)",
+      "email_label": "Email (required)",
+      "phone_label": "Telephone (required)",
+      "message_label": "Message",
+      "honeypot_label": "Website",
       "honeypot_aria": "Leave this field empty"
     },
     "consent": {
-      "prefix": "Code 386· I accept the",
-      "link_label": "Code 387· Privacy Policy",
-      "suffix": "Code 388· and consent to being contacted by Vayana Bungalows regarding my enquiry."
+      "prefix": "I accept the",
+      "link_label": "Privacy Policy",
+      "suffix": "and consent to being contacted by Vayana Bungalows regarding my enquiry."
     },
     "noscript": {
-      "prefix": "Code 389· JavaScript is disabled in your browser. To send an enquiry, email us at",
-      "suffix": "Code 390· with your dates and a short note."
+      "prefix": "JavaScript is disabled in your browser. To send an enquiry, email us at",
+      "suffix": "with your dates and a short note."
     },
     "modal": {
       "close_aria": "Close",
-      "close_button": "Code 391· Close",
-      "eyebrow": "Code 392· Enquiry received",
-      "title": "Code 393· Thank you — we'll be in touch.",
-      "body": "Code 394· A member of the Vayana team will reply within 24-48 hours with availability and a tailored proposal for your stay."
+      "close_button": "Close",
+      "eyebrow": "Enquiry received",
+      "title": "Thank you — we'll be in touch.",
+      "body": "We will reach out to you shortly with availability and a tailored proposal for your stay."
     },
     "errors": {
-      "validation": "Code 395· Please check the highlighted fields and try again.",
-      "captcha": "Code 396· The anti-spam check failed. Please tick the box if shown, or refresh the page.",
-      "rate_limit": "Code 397· Too many enquiries from this connection. Please try again in a few minutes.",
-      "content_type": "Code 398· Sorry, something went wrong sending your enquiry. Please refresh and try again.",
-      "too_large": "Code 399· Your message is too long. Please shorten it and try again.",
-      "method": "Code 400· Sorry, something went wrong sending your enquiry. Please refresh and try again.",
-      "downstream": "Code 401· Sorry, we couldn’t save your enquiry. Please try again, or email us at the address in the footer.",
-      "network": "Code 402· Network error — please check your connection and try again.",
-      "default": "Code 403· Sorry, something went wrong. Please try again or email us directly."
+      "validation": "Please check the highlighted fields and try again.",
+      "captcha": "The anti-spam check failed. Please tick the box if shown, or refresh the page.",
+      "rate_limit": "Too many enquiries from this connection. Please try again in a few minutes.",
+      "content_type": "Sorry, something went wrong sending your enquiry. Please refresh and try again.",
+      "too_large": "Your message is too long. Please shorten it and try again.",
+      "method": "Sorry, something went wrong sending your enquiry. Please refresh and try again.",
+      "downstream": "Sorry, we couldn’t save your enquiry. Please try again, or email us at the address in the footer.",
+      "network": "Network error — please check your connection and try again.",
+      "default": "Sorry, something went wrong. Please try again or email us directly."
     },
     "field_errors": {
-      "name": "Code 404· Please enter your full name.",
-      "date": "Code 405· Please pick check-in and check-out dates.",
-      "date_order": "Code 406· Check-out must be after check-in.",
-      "past_date": "Code 407· Check-in cannot be in the past.",
-      "email": "Code 408· Please enter a valid email address.",
-      "phone": "Code 409· Please enter a valid phone number."
+      "name": "Please enter your full name.",
+      "date": "Please pick check-in and check-out dates.",
+      "date_order": "Check-out must be after check-in.",
+      "past_date": "Check-in cannot be in the past.",
+      "email": "Please enter a valid email address.",
+      "phone": "Please enter a valid phone number."
     }
   },
   "enquiries_thanks": {
     "meta": {
-      "title": "Code 410· Thank you — Vayana Bungalows",
-      "description": "Code 411· Your enquiry was received. We will reply within 24-48 hours."
+      "title": "Thank you — Vayana Bungalows",
+      "description": "Your enquiry was received."
     },
     "hero": {
-      "eyebrow": "Code 412· Enquiry sent",
-      "title": "Code 413· Thank you for your enquiry",
-      "lede": "Code 414· We've received your message and a member of the team will reply within 24-48 hours with availability and a tailored proposal."
+      "eyebrow": "Enquiry sent",
+      "title": "Thank you for your enquiry",
+      "lede": "We've received your message. We will reach out to you shortly with availability and a tailored proposal for your stay."
     },
     "next": {
-      "title": "Code 415· What happens next",
-      "body": "Code 416· Our reply will arrive at the email address you provided. If you don't see it within 48 hours, please check your spam folder, or get in touch directly using the details below.",
-      "phone_label": "Code 417· Phone:",
-      "email_label": "Code 418· Email:"
+      "title": "What happens next",
+      "body": "Our reply will arrive at the email address you provided. If you don't see it within 48 hours, please check your spam folder, or get in touch directly using the details below.",
+      "phone_label": "Phone:",
+      "email_label": "Email:"
     },
     "back": {
-      "home": "Code 419· ← Back to home",
-      "another": "Code 420· Send another enquiry"
+      "home": "← Back to home",
+      "another": "Send another enquiry"
     }
   },
   "privacy": {

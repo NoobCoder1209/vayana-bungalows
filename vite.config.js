@@ -63,7 +63,7 @@ const i18nContext = {
     // with assets/js/site-config.js — update both if the values change.
     brand: 'Vayana Bungalows',
   license: 'Ц2-0ТИ-В2Т-С0',
-    address_street: 'Arapya, Camping Joy',
+    address_street: 'Arapya, Bulgaria',
     address_country: 'Bulgaria',
     // Runtime-interpolated tokens: the offers nights-deal template
     // (home.offers.nights_deal) carries {min}/{free}, which offers.js /
@@ -94,7 +94,7 @@ const i18nContext = {
     // licence / physical address are not translated.
     brand: 'Vayana Bungalows',
   license: 'Ц2-0ТИ-В2Т-С0',
-    address_street: 'Arapya, Camping Joy',
+    address_street: 'Arapya, Bulgaria',
     address_country: 'Bulgaria',
     // See EN note above — {min}/{free} in home.offers.nights_deal are
     // runtime tokens; resolve them to the literal token so the plugin

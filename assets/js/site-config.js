@@ -36,8 +36,8 @@ export const SITE_CONFIG = {
     directionsUrl: 'https://maps.app.goo.gl/szcFXV6f5Pgx2iFt5',
   },
   social: {
-    facebook: 'https://www.youtube.com/',
-    instagram: 'https://www.youtube.com/',
+    facebook: 'https://www.facebook.com/profile.php?id=61573811610794/',
+    instagram: 'https://www.instagram.com/vayana.joy.arapya/',
   },
   // Policy paths are RELATIVE TO THE SITE BASE. The inject helper prepends
   // import.meta.env.BASE_URL via [data-site-config-path] so that these resolve
