@@ -1,7 +1,7 @@
 {
   "meta": {
     "brand": "Vayana Bungalows",
-    "brand_credit": "Code 101· Vayana di Mare",
+    "brand_credit": "Vayana di Mare",
     "tagline": "Code 102· Boutique Bungalows in Tsarevo, Bulgaria"
   },
   "common": {
@@ -21,26 +21,26 @@
       "_note_DO_NOT_TRANSLATE_lang_aria_keys": "The four lang_*_aria keys above (lang_en_current_aria, lang_bg_current_aria, lang_switch_to_en_aria, lang_switch_to_bg_aria) are referenced by index.html's .site-header__lang segments via data-i18n-attr (data-aria-current / data-aria-switch). The i18n plugin bakes both strings onto each segment; assets/js/lang.js promotes the correct one to aria-label based on the segment's is-active state. If you delete a segment's data-i18n-attr marker these will orphan — leave them keyed. This _note key itself is orphan by design; leave it here as future-editor guidance. This note key's value is kept identical across all locales — do NOT translate it, or a future dev reading a translated identifier list will not be able to grep for the identifiers in code."
     },
     "drawer": {
-      "nav_home": "Code 107· Home",
-      "nav_stay": "Code 108· Stay",
-      "nav_destination": "Code 109· Destination",
-      "nav_contacts": "Code 110· Contacts",
-      "nav_enquiries": "Code 111· Enquiries",
+      "nav_home": "Home",
+      "nav_stay": "Stay",
+      "nav_destination": "Destination",
+      "nav_contacts": "Contacts",
+      "nav_enquiries": "Enquiries",
       "primary_aria": "Primary",
       "noscript_aria": "Primary (no JavaScript)"
     },
     "footer": {
-      "brand_eyebrow": "Code 112· Vayana Bungalows",
-      "follow_eyebrow": "Code 113· Follow us",
+      "brand_eyebrow": "Vayana Bungalows",
+      "follow_eyebrow": "Follow us",
       "follow_facebook_aria": "Facebook",
       "follow_instagram_aria": "Instagram",
-      "policies_eyebrow": "Code 114· Policies",
+      "policies_eyebrow": "Policies",
       "policies_aria": "Policies",
-      "terms": "Code 115· Terms & Conditions",
-      "cancellation": "Code 116· Cancellation Policy",
-      "privacy": "Code 117· Privacy Policy",
-      "copyright": "Code 118· © 2026 Made with ❤️ by {credit}",
-      "license_prefix": "Code 119· License number:"
+      "terms": "Terms & Conditions",
+      "cancellation": "Cancellation Policy",
+      "privacy": "Privacy Policy",
+      "copyright": "© 2026 Made with ❤️ by {credit}",
+      "license_prefix": "License number:"
     },
     "close_aria": "Close"
   },

@@ -48,11 +48,11 @@ const INPUTS = {
 // build-time value, so KEEP THESE IN SYNC when SITE_CONFIG changes.
 const i18nContext = {
   en: {
-    phone: '+359 88 888 8888',
+    phone: '+359 899 873 990',
     credit: 'Vayana di Mare',
     privacy_url: `${BASE}privacy/`,
-    email_href: 'mailto:contact@vayanabungalows.com',
-    email_display: 'contact@vayanabungalows.com',
+    email_href: 'mailto:vayanamare@gmail.com',
+    email_display: 'vayanamare@gmail.com',
     // Build-time SSOT tokens for the legal pages (terms/privacy/cancellation),
     // where brand / licence / address appear mid-sentence inside translatable
     // paragraphs. The data-i18n-html sanitizer allows only <a>/<strong>/<em>/
