@@ -11,8 +11,8 @@
 export const SITE_CONFIG = {
   brand: 'Vayana Bungalows',
   license: '1327673',
-  phone: { display: '+359 88 888 8888', href: 'tel:+359888888888' },
-  email: { display: 'contact@vayanabungalows.com', href: 'mailto:contact@vayanabungalows.com' },
+  phone: { display: '+359 899 873 990', href: 'tel:+359899873990' },
+  email: { display: 'vayanamare@gmail.com', href: 'mailto:vayanamare@gmail.com' },
   // Address has two display levels:
   //   - short:  used in the compact footer column ("Tsarevo, Bulgaria")
   //   - full:   used by the contacts / destination / privacy / terms /
