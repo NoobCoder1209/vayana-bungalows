@@ -62,9 +62,9 @@ const i18nContext = {
     // always-English literals (identical in both locales), kept in lockstep
     // with assets/js/site-config.js — update both if the values change.
     brand: 'Vayana Bungalows',
-    license: '1327673',
-    address_street: 'ul. Kraybrezhna 1, Tsarevo',
-    address_country: 'Bulgaria',
+    license: 'Ц2-0ТИ-В2Т-С0',
+    address_street: '',
+    address_country: '',
     // Runtime-interpolated tokens: the offers nights-deal template
     // (home.offers.nights_deal) carries {min}/{free}, which offers.js /
     // offer-modal.js fill from offer.minimumToBook / offer.freeNights at

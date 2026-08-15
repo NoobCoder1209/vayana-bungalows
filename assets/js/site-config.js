@@ -10,7 +10,7 @@
 // number and brand name are real and must not be touched without legal review.
 export const SITE_CONFIG = {
   brand: 'Vayana Bungalows',
-  license: '1327673',
+  license: 'Ц2-0ТИ-В2Т-С0',
   phone: { display: '+359 899 873 990', href: 'tel:+359899873990' },
   email: { display: 'vayanamare@gmail.com', href: 'mailto:vayanamare@gmail.com' },
   // Address has two display levels:
@@ -26,9 +26,9 @@ export const SITE_CONFIG = {
   // new embed URL is generated from Google's "Embed a map" dialog, edit
   // them here — the HTML hydrates them via [data-site-config*].
   address: {
-    line1: 'Tsarevo',
-    line2: 'Bulgaria',
-    street: 'ul. Kraybrezhna 1, Tsarevo',
+    line1: 'Arapya',
+    line2: 'Camping Joy',
+    street: '',
     country: 'Bulgaria',
     // Coordinate-anchored Google Maps query — the lat/lng pin lands exactly
     // on the property's centre. If you regenerate this from Google's
