@@ -1,6 +1,6 @@
 {
   "meta": {
-    "brand": "Code 100· Vayana Bungalows",
+    "brand": "Vayana Bungalows",
     "brand_credit": "Code 101· Vayana di Mare",
     "tagline": "Code 102· Boutique Bungalows in Tsarevo, Bulgaria"
   },
@@ -10,10 +10,10 @@
       "menu_open_aria": "Open menu",
       "menu_close_aria": "Close menu",
       "call_aria": "Call us at {phone}",
-      "enquiries_cta": "Code 104· Enquiries",
+      "enquiries_cta": "Enquiries",
       "lang_group_aria": "Language",
-      "lang_en_label": "Code 105· EN",
-      "lang_bg_label": "Code 106· BG",
+      "lang_en_label": "EN",
+      "lang_bg_label": "BG",
       "lang_en_current_aria": "English, current language",
       "lang_bg_current_aria": "Bulgarian, current language",
       "lang_switch_to_en_aria": "Switch to English",
