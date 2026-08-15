@@ -187,8 +187,8 @@
       "crib": "Baby Crib"
     },
     "gallery": {
-      "eyebrow": "Code 226· A glimpse of the bungalows",
-      "title": "Code 227· Gallery",
+      "eyebrow": "A closer look at Vayana",
+      "title": "Our Gallery",
       "prev_photo_aria": "Previous photo",
       "next_photo_aria": "Next photo",
       "prev_photos_aria": "Previous photos",
@@ -203,10 +203,10 @@
       "viewer_aria": "Photo viewer"
     },
     "cta": {
-      "eyebrow": "Code 228· Already have a plan",
-      "title": "Code 229· Have questions?",
-      "lede": "Code 230· Tell us your dates and a little about your party and we'll reply within 24-48 hours with availability and a tailored proposal.",
-      "button": "Code 231· Send an enquiry"
+      "eyebrow": "Already have a plan?",
+      "title": "Let's talk about your stay.",
+      "lede": "Leave your contact information and we will reach out to you shortly",
+      "button": "Send an enquiry"
     }
   },
   "bungalows": {
@@ -267,10 +267,10 @@
         "alt_cocktail": "Cocktail at the beach bar"
       },
       "cta": {
-        "eyebrow": "Code 263· Reserve your stay",
-        "title": "Code 264· Ready to book this villa?",
-        "lede": "Code 265· Send us your dates and we'll reply within 24-48 hours with availability and a tailored proposal.",
-        "button": "Code 266· Send an enquiry"
+        "eyebrow": "Already have a plan?",
+        "title": "Let's talk about your stay.",
+        "lede": "Leave your contact information and we will reach out to you shortly",
+        "button": "Send an enquiry"
       },
       "lightbox": {
         "viewer_aria": "Photo viewer"
@@ -404,10 +404,10 @@
       "body": "Code 335· Sinemorets and Ahtopol are short drives down the coast, each with its own character — Sinemorets quieter and built around its river-mouth beach, Ahtopol with a working harbour and a small old town on a headland. Inland, Strandzha villages keep older traditions alive, including the fire-dancing rituals that the region is known for."
     },
     "cta": {
-      "eyebrow": "Code 336· Already have a plan",
-      "title": "Code 337· Ready to visit?",
-      "lede": "Code 338· Tell us your dates and we'll reply within 24-48 hours with availability and a tailored proposal for your stay in Tsarevo.",
-      "button": "Code 339· Send an enquiry"
+      "eyebrow": "Already have a plan?",
+      "title": "Let's talk about your stay.",
+      "lede": "Leave your contact information and we will reach out to you shortly",
+      "button": "Send an enquiry"
     }
   },
   "contacts": {
@@ -436,10 +436,10 @@
       "directions_sr": "Code 355· (opens Google Maps in a new tab)"
     },
     "cta": {
-      "eyebrow": "Code 356· Already have a plan",
-      "title": "Code 357· Or send us a detailed enquiry",
-      "lede": "Code 358· If you'd like to share your dates, party size, and which bungalow you have in mind, the enquiry form keeps everything in one place and we'll come back to you with a tailored proposal.",
-      "button": "Code 359· Send an enquiry"
+      "eyebrow": "Already have a plan?",
+      "title": "Let's talk about your stay.",
+      "lede": "Leave your contact information and we will reach out to you shortly",
+      "button": "Send an enquiry"
     }
   },
   "enquiries": {
