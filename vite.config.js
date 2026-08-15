@@ -63,8 +63,6 @@ const i18nContext = {
     // with assets/js/site-config.js — update both if the values change.
     brand: 'Vayana Bungalows',
     license: 'Ц2-0ТИ-В2Т-С0',
-    address_street: '',
-    address_country: '',
     // Runtime-interpolated tokens: the offers nights-deal template
     // (home.offers.nights_deal) carries {min}/{free}, which offers.js /
     // offer-modal.js fill from offer.minimumToBook / offer.freeNights at

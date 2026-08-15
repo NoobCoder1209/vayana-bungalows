@@ -28,7 +28,6 @@ export const SITE_CONFIG = {
   address: {
     line1: 'Arapya',
     line2: 'Camping Joy',
-    street: '',
     country: 'Bulgaria',
     // Coordinate-anchored Google Maps query — the lat/lng pin lands exactly
     // on the property's centre. If you regenerate this from Google's
