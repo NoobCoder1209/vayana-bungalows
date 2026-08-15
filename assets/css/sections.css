@@ -1630,6 +1630,10 @@
   padding: var(--space-4) 0;
 }
 
+.bungalow-specs__cell {
+  text-align: center;
+}
+
 .bungalow-specs__cell .eyebrow {
   display: block;
   margin-bottom: 0.4rem;
