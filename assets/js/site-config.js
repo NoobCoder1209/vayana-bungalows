@@ -27,7 +27,7 @@ export const SITE_CONFIG = {
   // them here — the HTML hydrates them via [data-site-config*].
   address: {
     line1: 'Arapya',
-    line2: 'Camping Joy',
+    line2: 'Bulgaria',
     country: 'Bulgaria',
     // Coordinate-anchored Google Maps query — the lat/lng pin lands exactly
     // on the property's centre. If you regenerate this from Google's
