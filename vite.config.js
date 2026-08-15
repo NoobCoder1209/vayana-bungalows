@@ -62,7 +62,7 @@ const i18nContext = {
     // always-English literals (identical in both locales), kept in lockstep
     // with assets/js/site-config.js — update both if the values change.
     brand: 'Vayana Bungalows',
-    license: '1327673',
+  license: 'Ц2-0ТИ-В2Т-С0',
     address_street: 'Arapya, Camping Joy',
     address_country: 'Bulgaria',
     // Runtime-interpolated tokens: the offers nights-deal template
@@ -81,20 +81,20 @@ const i18nContext = {
     amount: '{amount}',
   },
   bg: {
-    phone: '+359 88 888 8888',
+    phone: '+359 899 873 990',
     credit: 'Vayana di Mare',
     // BG privacy path lives under /bg/privacy/. Plugin's Part 2 head-
     // injection block sets <html lang="bg"> and rewrites the canonical
     // URL; this URL is the one the locale JSON's {privacy_url} token
     // interpolates into the newsletter-consent link.
     privacy_url: `${BASE}bg/privacy/`,
-    email_href: 'mailto:contact@vayanabungalows.com',
-    email_display: 'contact@vayanabungalows.com',
+    email_href: 'mailto:vayanamare@gmail.com',
+    email_display: 'vayanamare@gmail.com',
     // Same always-English SSOT tokens as EN (see note above) — brand /
     // licence / physical address are not translated.
     brand: 'Vayana Bungalows',
-    license: '1327673',
-    address_street: 'ul. Kraybrezhna 1, Tsarevo',
+  license: 'Ц2-0ТИ-В2Т-С0',
+    address_street: 'Arapya, Camping Joy',
     address_country: 'Bulgaria',
     // See EN note above — {min}/{free} in home.offers.nights_deal are
     // runtime tokens; resolve them to the literal token so the plugin
