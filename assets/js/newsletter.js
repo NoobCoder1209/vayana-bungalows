@@ -104,7 +104,7 @@ export function initNewsletter() {
   let lastFocusBeforeModal = null;
 
   const successPath = () => {
-    openModal(modal, () => lastFocusBeforeModal);
+    openModal(modal);
     // form.reset() only resets fields INSIDE the <form> element. The
     // consent checkbox sits outside (deliberately), so reset it manually.
     // Without this, the next user on the same machine inherits the
@@ -177,7 +177,7 @@ export function initNewsletter() {
   });
 }
 
-function openModal(modal, getReturnFocusEl) {
+function openModal(modal) {
   modal.hidden = false;
   document.body.style.overflow = 'hidden';
   // Focus the close button — same convention as the booking modal: the

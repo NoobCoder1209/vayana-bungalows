@@ -62,7 +62,7 @@ const i18nContext = {
     // always-English literals (identical in both locales), kept in lockstep
     // with assets/js/site-config.js — update both if the values change.
     brand: 'Vayana Bungalows',
-  license: 'Ц2-0ТИ-В2Т-С0',
+    license: 'Ц2-0ТИ-В2Т-С0',
     address_street: 'Arapya, Bulgaria',
     address_country: 'Bulgaria',
     // Runtime-interpolated tokens: the offers nights-deal template
@@ -93,7 +93,7 @@ const i18nContext = {
     // Same always-English SSOT tokens as EN (see note above) — brand /
     // licence / physical address are not translated.
     brand: 'Vayana Bungalows',
-  license: 'Ц2-0ТИ-В2Т-С0',
+    license: 'Ц2-0ТИ-В2Т-С0',
     address_street: 'Arapya, Bulgaria',
     address_country: 'Bulgaria',
     // See EN note above — {min}/{free} in home.offers.nights_deal are

@@ -928,14 +928,14 @@ const EVENT_HANDLER_RE = /^on/i;
 const URL_BEARING_ATTRS = new Set([
   'href',
   'src',
-  // srcset + imagesrcset: comma-separated URL lists. isAllowedHref will
-  // only check the whole value against the scheme allowlist. `data:` in
-  // <link rel=preload imagesrcset=...> can still fetch and execute in
-  // some renderer paths (M1), so reject any value not starting with a
-  // safe scheme. A translator writing a legit srcset with multiple
-  // /internal urls would need `data-i18n-html` (which sanitises tags)
-  // instead — but srcset markers are rare in copy and can be added to
-  // the allowlist later with a proper comma-split check.
+  // srcset + imagesrcset: kept here as a SECURITY GUARD, not a full
+  // validator. isAllowedHref checks the whole value against the scheme
+  // allowlist, so a single malicious value (e.g. `data:`/`javascript:`
+  // in a <link rel=preload imagesrcset=...>, M1) hard-fails at build.
+  // It intentionally CANNOT validate a legit multi-URL srcset (no comma
+  // split) — that's fine: translated srcset is unsupported via
+  // data-i18n-attr; author such values in the source HTML directly.
+  // Blocking the injection matters more than passing the rare legit case.
   'srcset',
   'imagesrcset',
   'action',
