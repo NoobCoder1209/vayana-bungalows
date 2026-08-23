@@ -4,13 +4,15 @@
 
 > 🔧 **TO FIX** — findings tagged with this marker are the ones the owner selected to be worked on later (some carry a note). Untagged findings remain in the report for reference only. Marking only — still no code changed.
 
+> 🕓 **Later** — selected but deliberately deferred (e.g. a Cloudflare-dashboard/config action to do at public launch, not repo code). Kept open on the table so they aren't forgotten.
+
 _Source links pinned to commit `2402fef`._
 
 ---
 
 ## Issue index
 
-**38 of 53** findings are marked to fix (owner-selected); **24 are ✅ done** and **14 remain 🔧 To fix** (S-01/S-02/S-03 are pending Cloudflare-dashboard/config actions, not repo code). The rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
+**38 of 53** findings are marked to fix (owner-selected); **24 are ✅ done**, **11 remain 🔧 To fix**, and **3 are 🕓 Later** (S-01/S-02/S-03 — Cloudflare dashboard/config actions to do at public launch, not repo code). The rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
 
 | Issue | Status |
 |---|---|
@@ -58,9 +60,9 @@ _Source links pinned to commit `2402fef`._
 | **W-04** · `worker/src/offers.js:224-245` · security · low | Reference only |
 | ~~**W-06** · `worker/src/rate-limit.js:34-38` · dead-code · nit~~ | ✅ **Done** (comment fix) |
 | **W-09** · `worker/src/lib/response.js:99` · config · low | Reference only |
-| **S-01** · `worker/src/index.js:74-195` · security · med | 🔧 **To fix** |
-| **S-02** · `worker/src/rate-limit.js:17-40` · security · med | 🔧 **To fix** |
-| **S-03** · `worker/src/index.js:265-273` · security · low | 🔧 **To fix** |
+| **S-01** · `worker/src/index.js:74-195` · security · med | 🕓 **Later** (Cloudflare dashboard rate-limit rule at launch) |
+| **S-02** · `worker/src/rate-limit.js:17-40` · security · med | 🕓 **Later** (Cloudflare dashboard rate-limit rule at launch) |
+| **S-03** · `worker/src/index.js:265-273` · security · low | 🕓 **Later** (ensure edge-only reachability — Cloudflare config) |
 | ~~**S-04** · `package.json:16-19` · security · med~~ | ✅ **Done** |
 | **S-05** · `.github/workflows/deploy.yml:49-51` · bug · med | Reference only |
 | ~~**S-06** · `.github/workflows/deploy.yml:24` · security · low~~ | ✅ **Done** |
