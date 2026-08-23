@@ -134,14 +134,6 @@ export async function appendEnquiry(env, row) {
   //   - Task #167 added Locale; Task (bungalow) put the bungalow label in B,
   //     replacing the opaque `ref` (which is still generated and returned in the
   //     success response, index.js — it just no longer occupies a cell).
-  //
-  // ⚠️ PRE-DEPLOY ACTION FOR THIS CHANGE — Column L now carries the end PRICE of
-  // the enquiry (a bare number) from the /stay/ pill or the Offers modal; blank
-  // when the enquiry came from neither. Inserting price at L shifts the three
-  // trailing columns one right: consent → M, source_ip_hash → N, locale → O, and
-  // the range widened A:N → A:O. BEFORE DEPLOYING: insert a new column L in the
-  // sheet with header "Price" so consent / source_ip_hash / locale move to
-  // M / N / O and stay aligned with their data — otherwise the schema drifts.
   const values = [[
     row.timestamp,
     row.bungalow,
