@@ -1,8 +1,10 @@
 // Offer detail modal — opened from the home-page offer cards' CTA.
 //
 // The card CTA used to link to /stay/; now it opens this modal, which shows
-// the FULL offer (dates, prices, savings, nights, message) plus a templated
-// rules/terms block that is identical for every offer. Only the per-offer
+// the offer's dates, per-night price, and nights, plus a templated
+// rules/terms block that is identical for every offer. (The savings and
+// message slots exist in the template but are DORMANT in the current
+// schema — see setSlot('save'/'message') below.) Only the per-offer
 // dynamic values differ — they're injected into the static #offer-modal
 // template's [data-offer-slot] placeholders (all boilerplate copy is
 // localized at build time via data-i18n markers; there is no runtime dict).

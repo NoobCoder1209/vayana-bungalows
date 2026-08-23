@@ -69,12 +69,17 @@
 // --------------------
 // Locale values may embed `{name}` tokens; they resolve from the
 // `context` map passed at plugin registration (see vite.config.js's
-// i18nContext block). Tokens supported today:
-//   {phone}          — SITE_CONFIG.phone.display
-//   {credit}         — brand credit line
-//   {privacy_url}    — locale-aware path to /privacy/
-//   {email_href}     — mailto:...
-//   {email_display}  — plain email address (for visible text)
+// i18nContext block, which is the source of truth). Tokens supported today:
+//   {brand}           — brand name
+//   {license}         — licence number
+//   {address_street}  — street address line
+//   {address_country} — country
+//   {phone}           — SITE_CONFIG.phone.display
+//   {credit}          — brand credit line
+//   {privacy_url}     — locale-aware path to /privacy/
+//   {email_href}      — mailto:...
+//   {email_display}   — plain email address (for visible text)
+//   {min} {free} {pct} {amount} — offer/pricing template values
 //
 // Every EN token must appear in the same BG key (and vice-versa) —
 // enforced by loadDictionaries() at plugin-init time.

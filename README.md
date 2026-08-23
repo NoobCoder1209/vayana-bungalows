@@ -39,6 +39,17 @@ npm test               # run all node:test suites (i18n plugin, lang.js, worker)
 npm run i18n:lint      # verify all data-i18n markers have keys + no orphans
 ```
 
+> **Running `npm test` on a fresh clone:** the suite includes the Worker's
+> tests, and the Worker is a separate package with its own dependencies (e.g.
+> `jose`). Install them once first, or the worker tests fail with
+> `ERR_MODULE_NOT_FOUND`:
+>
+> ```bash
+> cd worker && npm ci && cd ..
+> ```
+>
+> CI does this automatically before `npm test`.
+
 ## Deployment
 
 The static site auto-deploys on push to `main` (GitHub Pages, base path

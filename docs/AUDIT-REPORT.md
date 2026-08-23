@@ -12,7 +12,7 @@ _Source links pinned to commit `2402fef`._
 
 ## Issue index
 
-**38 of 53** findings are marked to fix (owner-selected); **24 are ✅ done**, **11 remain 🔧 To fix**, and **3 are 🕓 Later** (S-01/S-02/S-03 — Cloudflare dashboard/config actions to do at public launch, not repo code). The rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
+**Progress:** **31 ✅ done**, **8 remain 🔧 To fix**, and **3 are 🕓 Later** (S-01/S-02/S-03 — Cloudflare dashboard/config actions to do at public launch, not repo code). The rest are **Reference only** (kept for context, not scheduled). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
 
 | Issue | Status |
 |---|---|
@@ -27,30 +27,30 @@ _Source links pinned to commit `2402fef`._
 | ~~**C-03** · `assets/js/booking.js:158` · dead-code · nit~~ | ✅ **Done** (comment fix) |
 | ~~**C-08** · `assets/js/enquiry.js:443-452` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
 | ~~**C-17** · `assets/js/hero-carousel.js:63` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
-| **C-18** · `assets/js/parallax.js:32-33` · perf · nit | 🔧 **To fix** |
+| ~~**C-18** · `assets/js/parallax.js:32-33` · perf · nit~~ | ✅ **Done** (comment fix) |
 | **T-01** · `package.json:10` · test-gap · med | Reference only |
-| **D-03** · `README.md:13-18` · dx · med | 🔧 **To fix** |
+| ~~**D-03** · `README.md:13-18` · dx · med~~ | ✅ **Done** (comment fix) |
 | ~~**D-01** · `README.md:134-139` · doc-stale · low~~ | ✅ **Done** (comment fix) |
 | ~~**D-02** · `SITEMAP.md:5` · doc-stale · low~~ | ✅ **Done** (comment fix) |
 | **C-02** · `assets/js/booking.js:346-356` | 🔧 **To fix** |
 | **C-04** · `assets/js/enquiry.js:353-355` | 🔧 **To fix** |
 | **C-14** · `assets/js/availability-calendar.js:271-296` | 🔧 **To fix** |
-| **C-15** · `assets/js/offer-modal.js:1-6` · comment-stale · med | Reference only |
+| ~~**C-15** · `assets/js/offer-modal.js:1-6` · comment-stale · med~~ | ✅ **Done** |
 | **C-07** · `assets/js/enquiry.js:428` · bug · low | Reference only |
 | ~~**C-19** · `assets/js/bookings-data.js:76-83` · dead-code · low~~ | ✅ **Done** (comment fix) |
-| **C-20** · `assets/js/site-config.js:8-15` · comment-stale · low | Reference only |
+| ~~**C-20** · `assets/js/site-config.js:8-15` · comment-stale · low~~ | ✅ **Done** |
 | **C-21** · `assets/js/util/offer-dates.js:35-65` · bug · low | 🔧 **To fix** |
 | **B-07** · `scripts/i18n-plugin.js:1650-1669` · bug · low | 🔧 **To fix** |
 | ~~**B-01** · `scripts/i18n-plugin.js:55-102` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | ~~**B-02** · `scripts/i18n-plugin.js:17` · comment-stale · low~~ | ✅ **Done** (comment fix) |
-| **B-03** · `scripts/i18n-plugin.js:71-78` · comment-stale · low | Reference only |
+| ~~**B-03** · `scripts/i18n-plugin.js:71-78` · comment-stale · low~~ | ✅ **Done** |
 | ~~**B-05** · `scripts/i18n-plugin.js:936-947` · dead-end · low~~ | ✅ **Done** |
-| **B-08** · `scripts/fetch-bookings.mjs:284-289` · comment-stale · low | Reference only |
+| ~~**B-08** · `scripts/fetch-bookings.mjs:284-289` · comment-stale · low~~ | ✅ **Done** |
 | **B-09** · `vite.config.js:66-98` · bug · low | 🔧 **To fix** |
 | ~~**B-04** · `scripts/i18n-plugin.js:403-416` · dead-code · nit~~ | ✅ **Done** (comment fix) |
 | **B-06** · `scripts/i18n-plugin.js:673-678` · dead-code · nit | Reference only |
 | ~~**B-10** · `vite.config.js:65-96` · nit · nit~~ | ✅ **Done** |
-| **T-02** · `scripts/__tests__/fetch-bookings.test.mjs:3` · test-gap · low | 🔧 **To fix** |
+| ~~**T-02** · `scripts/__tests__/fetch-bookings.test.mjs:3` · test-gap · low~~ | ✅ **Done** (comment fix) |
 | **W-07** · `worker/src/pricing.js:190-193` · bug · med | Reference only |
 | **W-05** · `worker/src/offers.js:322-334` · perf · med | Reference only |
 | ~~**W-08** · `worker/src/sheets.js:138-161` · comment-stale · med~~ | ✅ **Done** (comment fix) |
@@ -319,7 +319,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Change “8→1” to “last→first”.
 
 - [ ] **C-18** · [`assets/js/parallax.js:32-33`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/parallax.js#L32-L33) · perf · **nit** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The scroll listener is marked “passive” (a small perf hint) but the resize listener isn’t — just an inconsistency, negligible impact.
   - **The issue:** Resize listener omits `{passive:true}` while the scroll listener has it; both funnel to a rAF-throttled handler.
 
@@ -343,7 +343,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add the offer-dates test, or switch to a glob so new test files can’t be silently dropped.
 
 - [ ] **D-03** · [`README.md:13-18`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/README.md#L13-L18) · dx · **med** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** If a new developer clones the repo and follows the README, 3 tests fail — because the README never tells them to install the worker’s dependencies (CI does this, the docs don’t).
   - **The issue:** `jose` lives in worker/node_modules; a root-only `npm ci && npm test` hits `ERR_MODULE_NOT_FOUND`. The README omits `cd worker && npm ci`; CI performs it.
 
@@ -437,6 +437,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Route the calendar template strings through the i18n layer.
 
 - **C-15** · [`assets/js/offer-modal.js:1-6`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/offer-modal.js#L1-L6) · comment-stale · **med** · CONFIRMED (3/3)
+  - > ✅ **DONE** — corrected the offer-modal header comment (savings/message are dormant, not shown);
   - **In plain terms:** The offer popup’s header comment claims it shows “savings” and “message,” but those parts are turned off in the current design.
   - **The issue:** Header comment enumerates savings/message as shown, but both slots are permanently dormant.
 
@@ -495,6 +496,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Keep as a defensive guard, or remove if the legacy shape is confirmed unreachable in prod.
 
 - **C-20** · [`assets/js/site-config.js:8-15`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/site-config.js#L8-L15) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** — updated the site-config comment — phone/email/social are finalized live values, not stubs;
   - **In plain terms:** A comment calls the phone/email/social values “placeholders to swap before launch,” but they look like the real, final values now.
   - **The issue:** The “stub” comment is partially stale — phone, email, social and license appear finalized.
 
@@ -567,6 +569,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Update to 586×2, or drop the hard count in favor of “the exact same key set”.
 
 - **B-03** · [`scripts/i18n-plugin.js:71-78`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L71-L78) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** — completed the i18n-plugin token list (added brand/license/address_*/min/free/pct/amount);
   - **In plain terms:** A comment lists the interpolation tokens the plugin supports but is missing 8 that were added later.
   - **The issue:** The “tokens supported today” list omits brand, license, address_street, address_country, min, free, pct, amount.
 
@@ -608,6 +611,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add a comma-split srcset check, or drop srcset from URL_BEARING_ATTRS and require `data-i18n-html`.
 
 - **B-08** · [`scripts/fetch-bookings.mjs:284-289`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/fetch-bookings.mjs#L284-L289) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** — corrected the fetch-bookings rollover comment (all three next-year tabs required; partial ignored);
   - **In plain terms:** A comment promises the booking fetch “rolls over to next year automatically,” but it only does so if all three next-year tabs exist — a partial setup is silently ignored.
   - **The issue:** Next-year rollover reads year+1 tabs only if all three (B1/B2/B3) exist; the comment overstates the guarantee.
 
@@ -687,7 +691,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Re-indent `license` to 4 spaces.
 
 - **T-02** · [`scripts/__tests__/fetch-bookings.test.mjs:3`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/__tests__/fetch-bookings.test.mjs#L3) · test-gap · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The booking-fetch script has tests for only one of its functions; error paths and edge cases (bad dates, missing headers, the “completed stay ending today” boundary) are untested.
   - **The issue:** Only `parseReservationTable` is tested; parseDmy errors, validateHeader throw, getSheets env, next-year rollover, and the Completed-ending-today boundary are not.
 
