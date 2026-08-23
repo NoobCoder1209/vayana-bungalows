@@ -13,9 +13,8 @@
 //
 // Locale dictionaries live under `locales/`:
 //   - locales/en.json — English content, source of truth for the key set
-//   - locales/bg.json — Bulgarian, MUST declare the exact same keys (147×2
-//                        as of Task #162; symmetry hard-fails the build if
-//                        broken)
+//   - locales/bg.json — Bulgarian, MUST declare the exact same keys
+//                        (symmetry hard-fails the build if broken)
 //
 // Marker vocabulary
 // -----------------
@@ -53,7 +52,7 @@
 //
 // BG mirror emit
 // --------------
-// The `closeBundle` hook iterates the emitted asset bundle for every
+// The `writeBundle` hook iterates the emitted asset bundle for every
 // input page and writes the BG variant to `dist/bg/<path>/index.html`.
 // The BG pass re-transforms the SOURCE HTML (not the EN-transformed
 // output) so the two locales are independent and neither can corrupt
@@ -99,7 +98,7 @@
 // -----------
 // applyLocale is a pure function of (html, locale, dict, ctx). The plugin
 // doesn't mutate the source tree. Vite invokes transformIndexHtml once
-// per input; the closeBundle hook is where the BG mirror gets emitted.
+// per input; the writeBundle hook is where the BG mirror gets emitted.
 //
 // Trust model
 // -----------
@@ -400,13 +399,6 @@ function rejectMalformedTokens(value, key, locale) {
   }
 }
 
-// Match any HTML-entity-shaped sequence a translator might write out of
-// habit: `&amp;`, `&lt;`, `&#39;`, `&#x27;`, `&copy;`, `&nbsp;`. Locale
-// values are stored raw (Unicode) — the plugin escapes on write. A
-// translator who pre-escapes creates double-escapes in the emitted HTML
-// (e.g. `&copy;` → literal `&copy;` visible in the browser instead of
-// `©`). RH3 fails loudly at load time so the failure is a build error,
-// not an unnoticed shipped bug.
 // Match any HTML-entity-shaped sequence a translator might write out of
 // habit: `&amp;`, `&lt;`, `&#39;`, `&#x27;`, `&copy;`, `&nbsp;`. Locale
 // values are stored raw (Unicode) — the plugin escapes on write. A
@@ -1798,12 +1790,14 @@ function rejectRelativeHrefs(html, pagePath) {
  *   inputs      — Vite's rollup input map (same object passed to
  *                 build.rollupOptions.input). The plugin uses this to
  *                 enumerate which pages get the BG mirror emit at
- *                 closeBundle time.
+ *                 writeBundle time.
  *
- * Registers three Vite hooks:
+ * Registers four Vite hooks:
+ *   - configResolved: captures the resolved Vite config (base, root, command)
+ *     the other hooks depend on.
  *   - transformIndexHtml: transforms each source HTML with the default
  *     locale (EN); the emitted output lands at dist/<page>/index.html.
- *   - closeBundle: re-reads each EN-emitted HTML and writes the BG
+ *   - writeBundle: re-reads each EN-emitted HTML and writes the BG
  *     mirror under dist/bg/<page>/index.html.
  *   - configureServer: dev-mode middleware serving /bg/<path> URLs on
  *     the fly, plus an HMR watcher for locale JSON + source HTML edits.
@@ -2315,7 +2309,7 @@ export function i18nPlugin(options) {
  * Derive a source-tree-relative page path from an absolute filename,
  * normalising separators to `/` and falling back to a `<unknown>`
  * marker when the filename is missing or lives outside projectRoot.
- * Shared between transformIndexHtml and closeBundle so error anchors
+ * Shared between transformIndexHtml and writeBundle so error anchors
  * are identical across both.
  */
 function relFromRoot(abs, projectRoot) {

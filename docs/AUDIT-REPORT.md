@@ -10,21 +10,21 @@ _Source links pinned to commit `2402fef`._
 
 ## Issue index
 
-**38 of 53** findings are marked **🔧 To fix** (owner-selected); the rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
+**38 of 53** findings are marked to fix (owner-selected); **12 are ✅ done** (comment cleanup) and **26 remain 🔧 To fix**. The rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
 
 | Issue | Status |
 |---|---|
-| **C-01** · `assets/js/booking.js:81-133` · comment-stale · high | 🔧 **To fix** |
+| ~~**C-01** · `assets/js/booking.js:81-133` · comment-stale · high~~ | ✅ **Done** (comment fix) |
 | **C-10** · `assets/js/newsletter.js:175` · bug · med | 🔧 **To fix** |
-| **C-09** · `assets/js/header.js:98-102` · comment-stale · med | 🔧 **To fix** |
+| ~~**C-09** · `assets/js/header.js:98-102` · comment-stale · med~~ | ✅ **Done** (comment fix) |
 | **C-13** · `assets/js/availability-calendar.js:259-266` · perf · med | Reference only |
 | **C-11** · `assets/js/newsletter.js:97-98` · bug · low | 🔧 **To fix** |
-| **C-05** · `assets/js/enquiry.js:124-219` · comment-stale · low | 🔧 **To fix** |
+| ~~**C-05** · `assets/js/enquiry.js:124-219` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | **C-06** · `assets/js/enquiry.js:723-728` · dead-code · low | 🔧 **To fix** |
 | **C-12** · `assets/js/newsletter.js:180` · dead-end · low | 🔧 **To fix** |
 | **C-03** · `assets/js/booking.js:158` · dead-code · nit | 🔧 **To fix** |
-| **C-08** · `assets/js/enquiry.js:443-452` · comment-stale · nit | 🔧 **To fix** |
-| **C-17** · `assets/js/hero-carousel.js:63` · comment-stale · nit | 🔧 **To fix** |
+| ~~**C-08** · `assets/js/enquiry.js:443-452` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
+| ~~**C-17** · `assets/js/hero-carousel.js:63` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
 | **C-18** · `assets/js/parallax.js:32-33` · perf · nit | 🔧 **To fix** |
 | **T-01** · `package.json:10` · test-gap · med | Reference only |
 | **D-03** · `README.md:13-18` · dx · med | 🔧 **To fix** |
@@ -39,21 +39,21 @@ _Source links pinned to commit `2402fef`._
 | **C-20** · `assets/js/site-config.js:8-15` · comment-stale · low | Reference only |
 | **C-21** · `assets/js/util/offer-dates.js:35-65` · bug · low | 🔧 **To fix** |
 | **B-07** · `scripts/i18n-plugin.js:1650-1669` · bug · low | 🔧 **To fix** |
-| **B-01** · `scripts/i18n-plugin.js:55-102` · comment-stale · low | 🔧 **To fix** |
-| **B-02** · `scripts/i18n-plugin.js:17` · comment-stale · low | 🔧 **To fix** |
+| ~~**B-01** · `scripts/i18n-plugin.js:55-102` · comment-stale · low~~ | ✅ **Done** (comment fix) |
+| ~~**B-02** · `scripts/i18n-plugin.js:17` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | **B-03** · `scripts/i18n-plugin.js:71-78` · comment-stale · low | Reference only |
 | **B-05** · `scripts/i18n-plugin.js:936-947` · dead-end · low | 🔧 **To fix** |
 | **B-08** · `scripts/fetch-bookings.mjs:284-289` · comment-stale · low | Reference only |
 | **B-09** · `vite.config.js:66-98` · bug · low | 🔧 **To fix** |
-| **B-04** · `scripts/i18n-plugin.js:403-416` · dead-code · nit | 🔧 **To fix** |
+| ~~**B-04** · `scripts/i18n-plugin.js:403-416` · dead-code · nit~~ | ✅ **Done** (comment fix) |
 | **B-06** · `scripts/i18n-plugin.js:673-678` · dead-code · nit | Reference only |
 | **B-10** · `vite.config.js:65-96` · nit · nit | 🔧 **To fix** |
 | **T-02** · `scripts/__tests__/fetch-bookings.test.mjs:3` · test-gap · low | 🔧 **To fix** |
 | **W-07** · `worker/src/pricing.js:190-193` · bug · med | Reference only |
 | **W-05** · `worker/src/offers.js:322-334` · perf · med | Reference only |
-| **W-08** · `worker/src/sheets.js:138-161` · comment-stale · med | 🔧 **To fix** |
+| ~~**W-08** · `worker/src/sheets.js:138-161` · comment-stale · med~~ | ✅ **Done** (comment fix) |
 | **W-01** · `worker/src/index.js:34-422` · dead-code · low | 🔧 **To fix** |
-| **W-02** · `worker/src/index.js:387-400` · comment-stale · low | 🔧 **To fix** |
+| ~~**W-02** · `worker/src/index.js:387-400` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | **W-03** · `worker/src/index.js:248` · bug · low | Reference only |
 | **W-04** · `worker/src/offers.js:224-245` · security · low | Reference only |
 | **W-06** · `worker/src/rate-limit.js:34-38` · dead-code · nit | 🔧 **To fix** |
@@ -64,8 +64,8 @@ _Source links pinned to commit `2402fef`._
 | **S-04** · `package.json:16-19` · security · med | 🔧 **To fix** |
 | **S-05** · `.github/workflows/deploy.yml:49-51` · bug · med | Reference only |
 | **S-06** · `.github/workflows/deploy.yml:24` · security · low | 🔧 **To fix** |
-| **S-07** · `worker/wrangler.toml:29` · comment-stale · low | 🔧 **To fix** |
-| **S-08** · `worker/wrangler.toml:1-15` · comment-stale · low | 🔧 **To fix** |
+| ~~**S-07** · `worker/wrangler.toml:29` · comment-stale · low~~ | ✅ **Done** (comment fix) |
+| ~~**S-08** · `worker/wrangler.toml:1-15` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | **L-01** · `locales/en.json:5` · consistency · high | Reference only |
 | **C-16** · `assets/js/offers.js:93-102` | Refuted (not a finding) |
 | **R-01** · `worker/package.json:15-17` | Refuted (not a finding) |
@@ -96,7 +96,7 @@ _Source links pinned to commit `2402fef`._
 ## Fixable-now
 
 - [ ] **C-01** · [`assets/js/booking.js:81-133`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/booking.js#L81-L133) · comment-stale · **high** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** Comments describe a search bar on the enquiries page that was never built — they point future readers at a page that has nothing to do with this code.
   - **The issue:** `setupLinkForm`’s comments claim it powers an `/enquiries/` bar and forwards there, but the only caller sends it to `stay/`, and no `data-booking-mode` element exists on the enquiries page.
 
@@ -138,7 +138,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Scope the keydown listener to `modal` as enquiry.js does.
 
 - [ ] **C-09** · [`assets/js/header.js:98-102`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/header.js#L98-L102) · comment-stale · **med** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A comment lists “4 ways to close the menu” but the code actually has 5 — the comment just wasn’t updated when the × button was added.
   - **The issue:** The drawer doc comment enumerates 4 close paths; the code wires a fifth (the explicit × button, self-labelled “close path #5”).
 
@@ -207,7 +207,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add `clearError();` to the newsletter consent-change handler.
 
 - [ ] **C-05** · [`assets/js/enquiry.js:124-219`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/enquiry.js#L124-L219) · comment-stale · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** Some variables are written a certain way “for a future live language switch,” but the site never switches language live — changing language reloads the page — so the reason given no longer holds.
   - **The issue:** Module-scope `let` bindings are justified by comments citing a runtime language swap (issue #47), contradicted by lang.js which states a language change is a full navigation.
 
@@ -285,7 +285,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Inline `new Date()` into the `tomorrow` computation.
 
 - [ ] **C-08** · [`assets/js/enquiry.js:443-452`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/enquiry.js#L443-L452) · comment-stale · **nit** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX** — Drop the whole comment (not just the lead sentence).
+  - > ✅ **DONE** (comment fix applied) — Drop the whole comment (not just the lead sentence).
   - **In plain terms:** A comment says three dropdowns are left out of a list, but one of them (Adults) was later added — the opening sentence contradicts the code until you read a later note.
   - **The issue:** The lead sentence says the 3 selects are omitted from `allFields`, but a POST-#41 addendum and the array itself include `adults`.
 
@@ -305,7 +305,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Rewrite the lead sentence: only children/infants are omitted; adults is required and included.
 
 - [ ] **C-17** · [`assets/js/hero-carousel.js:63`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/hero-carousel.js#L63) · comment-stale · **nit** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A comment hardcodes “8 slides” but the carousel counts slides dynamically — the number is just an old assumption.
   - **The issue:** The comment says “most visible at the 8→1 wrap” implying 8 slides; slide count is data-driven (`slides.length`).
 
@@ -539,7 +539,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Require `charset=` in the content attribute before treating the tag as the charset anchor.
 
 - **B-01** · [`scripts/i18n-plugin.js:55-102`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L55-L102) · comment-stale · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** Several comments say the plugin emits the Bulgarian pages in a hook called `closeBundle`, but the real hook is `writeBundle`.
   - **The issue:** Doc comments reference a `closeBundle` hook; the implemented hook is `writeBundle` (README agrees).
 
@@ -553,7 +553,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Replace `closeBundle` with `writeBundle` in the doc comments.
 
 - **B-02** · [`scripts/i18n-plugin.js:17`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L17) · comment-stale · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX** — Remove the whole comment.
+  - > ✅ **DONE** (comment fix applied) — Remove the whole comment.
   - **In plain terms:** A comment states a fixed key count (“147×2”) that’s long out of date — there are ~586 per locale.
   - **The issue:** Docblock hard-codes “147×2 as of Task #162”; actual leaf-key count is ~586 per locale.
 
@@ -633,7 +633,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Drop “Bulgaria” from `address_street` (make it “Arapya”) or omit `address_country` in the combined sentence.
 
 - **B-04** · [`scripts/i18n-plugin.js:403-416`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L403-L416) · dead-code · **nit** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The same ~7-line explanatory comment is pasted twice, back to back.
   - **The issue:** The `HTML_ENTITY_RE` rationale comment block is duplicated verbatim.
 
@@ -734,7 +734,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Cache even the empty-bands result (short TTL), or add a lock so `/offers` doesn’t re-read Sheets per request.
 
 - **W-08** · [`worker/src/sheets.js:138-161`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/sheets.js#L138-L161) · comment-stale · **med** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX** — Remove the comment (move the pre-deploy step to a runbook).
+  - > ✅ **DONE** (comment fix applied) — Remove the comment (move the pre-deploy step to a runbook).
   - **In plain terms:** A big “DO THIS BEFORE DEPLOYING” note is still sitting in the code: a Price column must be inserted in the live spreadsheet, or the saved data columns shift and misalign. It should be a runbook step, and someone must confirm the sheet actually has that column.
   - **The issue:** An un-actioned “insert Price column L” warning remains in shipped code; a RAW append on A:O misaligns consent/hash/locale if the column is absent.
 
@@ -767,7 +767,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Drop the returned ref, or wire it back into the sheet/client if still intended.
 
 - **W-02** · [`worker/src/index.js:387-400`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/index.js#L387-L400) · comment-stale · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX** — Drop the comment.
+  - > ✅ **DONE** (comment fix applied) — Drop the comment.
   - **In plain terms:** A comment claims the anti-bot honeypot makes a fake submission take the same time as a real one, but a real submission also writes to the sheet (extra time) — so timing can still distinguish them.
   - **The issue:** The honeypot-trip path skips the Sheets append the success path performs, so it only matches the captcha-FAILED timing, not accepted+written.
 
@@ -955,7 +955,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** SHA-pin actions across all workflows for a consistent posture.
 
 - **S-07** · [`worker/wrangler.toml:29`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/wrangler.toml#L29) · comment-stale · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A config comment says the offers spreadsheet range is B3:H8, but the code reads A3:N8 (14 columns).
   - **The issue:** wrangler.toml comment says range B3:H8; offers.js reads A3:N8.
 
@@ -971,7 +971,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Update the comment to A3:N8 (14 columns).
 
 - **S-08** · [`worker/wrangler.toml:1-15`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/wrangler.toml#L1-L15) · comment-stale · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The worker’s deployed name is “vayana-enquiries,” but the header comment, package.json, and README all call it “vayana-enquiries-worker.”
   - **The issue:** wrangler.toml `name` is “vayana-enquiries”; comment/package.json/README say “vayana-enquiries-worker”.
 

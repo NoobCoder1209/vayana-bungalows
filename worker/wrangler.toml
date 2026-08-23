@@ -1,4 +1,5 @@
-# Cloudflare Worker — vayana-enquiries-worker
+# Cloudflare Worker — vayana-enquiries (deployed name; the npm package is
+# "vayana-enquiries-worker")
 #
 # Deploy via `wrangler deploy` (locally) or the `deploy-worker.yml`
 # GitHub Actions workflow (on push to main when `worker/**` changes).
@@ -26,7 +27,7 @@ ALLOWED_ORIGINS = "https://noobcoder1209.github.io,http://localhost:5173,http://
 # on the no-JS path; GitHub Pages serves the site under /vayana-bungalows/).
 SITE_BASE = "/vayana-bungalows"
 
-# Tab name within GSHEETS_SHEET_ID holding the offers table (range B3:H8).
+# Tab name within GSHEETS_SHEET_ID holding the offers table (range A3:N8).
 # Same spreadsheet file as the Enquires tab — the service account already
 # has read access, so no new secret/permission is needed.
 # A plain [vars] value (not a secret): a tab name is not sensitive. The
