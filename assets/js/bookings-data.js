@@ -69,18 +69,11 @@ export const parseIso = (iso) => {
 // Extract one bungalow's availability from the loaded bookings payload.
 // Returns { unavailable:Set<iso>, checkIn:Set<iso> } — empty sets when the
 // entry is missing or malformed, so consumers FAIL SAFE (booking widget marks
-// nothing disabled; availability calendar renders everything available). The
-// legacy array shape (a schema regression) is warned once and treated as
-// empty. Both the booking widget (uses both sets) and the read-only calendar
+// nothing disabled; availability calendar renders everything available).
+// Both the booking widget (uses both sets) and the read-only calendar
 // (uses `unavailable` only) call this — one parse + guard, one place.
 export function availabilityFor(bookings, key) {
   const entry = bookings?.bungalows?.[key];
-  if (Array.isArray(entry)) {
-    console.warn(
-      `[bookings] ${key}: bookings.json is in the legacy array shape; treating as empty.`,
-    );
-    return { unavailable: new Set(), checkIn: new Set() };
-  }
   if (!entry) {
     return { unavailable: new Set(), checkIn: new Set() };
   }

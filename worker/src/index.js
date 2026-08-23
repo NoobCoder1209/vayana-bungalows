@@ -15,7 +15,7 @@
 //  11. Append to Google Sheet → 502 on downstream failure
 //  12. Success → 200 (JSON) / 303 (form-urlencoded)
 //
-// JSON callers get { ok, ref?, error?, fields? }. Form callers get a 303
+// JSON callers get { ok, error?, fields? }. Form callers get a 303
 // redirect back to the public site — to /enquiries/thanks/ on success or
 // /enquiries/?err=<code> on failure so the form page can surface a message.
 
@@ -31,7 +31,6 @@ import {
   redirectResponse,
   corsHeaders,
 } from './lib/response.js';
-import { generateRef } from './lib/ref.js';
 import { hashIp } from './lib/ip-hash.js';
 
 // Locale sniff for the pre-validation error paths (rate-limit, body-parse
@@ -384,9 +383,8 @@ export default {
         env.TURNSTILE_SECRET,
         ip,
       ).catch(() => null);
-      const ref = generateRef();
       return isJson
-        ? jsonResponse({ ok: true, ref }, 200, request, env)
+        ? jsonResponse({ ok: true }, 200, request, env)
         : redirectResponse('/enquiries/thanks/', request, env, locale);
     }
 
@@ -410,11 +408,9 @@ export default {
     }
 
     // 9. Append to sheet
-    const ref = generateRef();
     try {
       await appendEnquiry(env, {
         timestamp: new Date().toISOString(),
-        ref,
         ...validation.cleaned,
         source_ip_hash: ipHash,
       });
@@ -434,7 +430,7 @@ export default {
 
     // 10. Success
     return isJson
-      ? jsonResponse({ ok: true, ref }, 200, request, env)
+      ? jsonResponse({ ok: true }, 200, request, env)
       : redirectResponse('/enquiries/thanks/', request, env, locale);
   },
 };

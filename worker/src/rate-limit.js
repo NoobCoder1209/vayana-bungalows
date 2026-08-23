@@ -28,14 +28,7 @@ export function checkRateLimit(ipHash) {
     return false;
   }
   recent.push(now);
-  // Empty bucket → delete the key entirely so the Map doesn't grow
-  // unboundedly over isolate lifetime. (Can't actually hit this branch
-  // because we just pushed `now`; kept for symmetry / future-proofing.)
-  if (recent.length === 0) {
-    buckets.delete(ipHash);
-  } else {
-    buckets.set(ipHash, recent);
-  }
+  buckets.set(ipHash, recent);
   return true;
 }
 

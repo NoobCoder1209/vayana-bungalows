@@ -2,7 +2,7 @@
 
 A bird's-eye view of every page on the [Vayana Bungalows site](https://noobcoder1209.github.io/vayana-bungalows/) and how they connect.
 
-> **Status:** All eight pages below are **built** and live. New pages (privacy, terms, cancellation) are tracked as roadmap items.
+> **Status:** All 12 pages below are **built** and live, including the footer policy pages (privacy, terms, cancellation).
 
 ---
 
@@ -32,7 +32,7 @@ graph TD
     classDef built fill:#b99d75,stroke:#8a7551,color:#fff,stroke-width:2px
 ```
 
-> **Gold = built.** White (roadmap) = footer policy pages not yet shipped.
+> **Gold = built.** All pages, including the footer policy pages, are shipped.
 
 The plain-text version:
 
@@ -143,9 +143,9 @@ The enquiry form (v1 stub). Full UI + client-side validation + flatpickr date ra
 
 ---
 
-## Footer pages (roadmap)
+## Footer pages
 
-Linked from the footer policies column on every page; today the hrefs 404. Tracked separately:
+Linked from the footer policies column on every page; all built and live:
 
 | Page | Issue | Purpose |
 |---|---|---|

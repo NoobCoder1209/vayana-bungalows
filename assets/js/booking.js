@@ -154,9 +154,8 @@ function setupBookingForm(form, modal) {
 
   if (!checkin || !checkout) return;
 
-  const today = new Date();
   const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
   // Initialise flatpickr immediately with no disabled dates so the inputs
   // are interactive from first paint. The disable lists get patched in
