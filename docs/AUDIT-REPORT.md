@@ -8,6 +8,71 @@ _Source links pinned to commit `2402fef`._
 
 ---
 
+## Issue index
+
+**38 of 53** findings are marked **🔧 To fix** (owner-selected); the rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
+
+| Issue | Status |
+|---|---|
+| **C-01** · `assets/js/booking.js:81-133` · comment-stale · high | 🔧 **To fix** |
+| **C-10** · `assets/js/newsletter.js:175` · bug · med | 🔧 **To fix** |
+| **C-09** · `assets/js/header.js:98-102` · comment-stale · med | 🔧 **To fix** |
+| **C-13** · `assets/js/availability-calendar.js:259-266` · perf · med | Reference only |
+| **C-11** · `assets/js/newsletter.js:97-98` · bug · low | 🔧 **To fix** |
+| **C-05** · `assets/js/enquiry.js:124-219` · comment-stale · low | 🔧 **To fix** |
+| **C-06** · `assets/js/enquiry.js:723-728` · dead-code · low | 🔧 **To fix** |
+| **C-12** · `assets/js/newsletter.js:180` · dead-end · low | 🔧 **To fix** |
+| **C-03** · `assets/js/booking.js:158` · dead-code · nit | 🔧 **To fix** |
+| **C-08** · `assets/js/enquiry.js:443-452` · comment-stale · nit | 🔧 **To fix** |
+| **C-17** · `assets/js/hero-carousel.js:63` · comment-stale · nit | 🔧 **To fix** |
+| **C-18** · `assets/js/parallax.js:32-33` · perf · nit | 🔧 **To fix** |
+| **T-01** · `package.json:10` · test-gap · med | Reference only |
+| **D-03** · `README.md:13-18` · dx · med | 🔧 **To fix** |
+| **D-01** · `README.md:134-139` · doc-stale · low | 🔧 **To fix** |
+| **D-02** · `SITEMAP.md:5` · doc-stale · low | 🔧 **To fix** |
+| **C-02** · `assets/js/booking.js:346-356` | 🔧 **To fix** |
+| **C-04** · `assets/js/enquiry.js:353-355` | 🔧 **To fix** |
+| **C-14** · `assets/js/availability-calendar.js:271-296` | 🔧 **To fix** |
+| **C-15** · `assets/js/offer-modal.js:1-6` · comment-stale · med | Reference only |
+| **C-07** · `assets/js/enquiry.js:428` · bug · low | Reference only |
+| **C-19** · `assets/js/bookings-data.js:76-83` · dead-code · low | 🔧 **To fix** |
+| **C-20** · `assets/js/site-config.js:8-15` · comment-stale · low | Reference only |
+| **C-21** · `assets/js/util/offer-dates.js:35-65` · bug · low | 🔧 **To fix** |
+| **B-07** · `scripts/i18n-plugin.js:1650-1669` · bug · low | 🔧 **To fix** |
+| **B-01** · `scripts/i18n-plugin.js:55-102` · comment-stale · low | 🔧 **To fix** |
+| **B-02** · `scripts/i18n-plugin.js:17` · comment-stale · low | 🔧 **To fix** |
+| **B-03** · `scripts/i18n-plugin.js:71-78` · comment-stale · low | Reference only |
+| **B-05** · `scripts/i18n-plugin.js:936-947` · dead-end · low | 🔧 **To fix** |
+| **B-08** · `scripts/fetch-bookings.mjs:284-289` · comment-stale · low | Reference only |
+| **B-09** · `vite.config.js:66-98` · bug · low | 🔧 **To fix** |
+| **B-04** · `scripts/i18n-plugin.js:403-416` · dead-code · nit | 🔧 **To fix** |
+| **B-06** · `scripts/i18n-plugin.js:673-678` · dead-code · nit | Reference only |
+| **B-10** · `vite.config.js:65-96` · nit · nit | 🔧 **To fix** |
+| **T-02** · `scripts/__tests__/fetch-bookings.test.mjs:3` · test-gap · low | 🔧 **To fix** |
+| **W-07** · `worker/src/pricing.js:190-193` · bug · med | Reference only |
+| **W-05** · `worker/src/offers.js:322-334` · perf · med | Reference only |
+| **W-08** · `worker/src/sheets.js:138-161` · comment-stale · med | 🔧 **To fix** |
+| **W-01** · `worker/src/index.js:34-422` · dead-code · low | 🔧 **To fix** |
+| **W-02** · `worker/src/index.js:387-400` · comment-stale · low | 🔧 **To fix** |
+| **W-03** · `worker/src/index.js:248` · bug · low | Reference only |
+| **W-04** · `worker/src/offers.js:224-245` · security · low | Reference only |
+| **W-06** · `worker/src/rate-limit.js:34-38` · dead-code · nit | 🔧 **To fix** |
+| **W-09** · `worker/src/lib/response.js:99` · config · low | Reference only |
+| **S-01** · `worker/src/index.js:74-195` · security · med | 🔧 **To fix** |
+| **S-02** · `worker/src/rate-limit.js:17-40` · security · med | 🔧 **To fix** |
+| **S-03** · `worker/src/index.js:265-273` · security · low | 🔧 **To fix** |
+| **S-04** · `package.json:16-19` · security · med | 🔧 **To fix** |
+| **S-05** · `.github/workflows/deploy.yml:49-51` · bug · med | Reference only |
+| **S-06** · `.github/workflows/deploy.yml:24` · security · low | 🔧 **To fix** |
+| **S-07** · `worker/wrangler.toml:29` · comment-stale · low | 🔧 **To fix** |
+| **S-08** · `worker/wrangler.toml:1-15` · comment-stale · low | 🔧 **To fix** |
+| **L-01** · `locales/en.json:5` · consistency · high | Reference only |
+| **C-16** · `assets/js/offers.js:93-102` | Refuted (not a finding) |
+| **R-01** · `worker/package.json:15-17` | Refuted (not a finding) |
+| **R-02** · `assets/js/booking.js:140-142` | Refuted (not a finding) |
+
+---
+
 ## Summary
 
 **Counts** — 56 items checked: **53 CONFIRMED, 3 REFUTED**, 0 needs-runtime.
