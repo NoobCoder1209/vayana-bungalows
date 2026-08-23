@@ -5,9 +5,9 @@
 // site degrades gracefully with JS disabled (#9 acceptance test, Negative
 // case 7) — JS just keeps things in sync if these values ever change.
 //
-// Placeholder values: phone / email / social URLs are stubs to be swapped
-// before launch via a separate "Contact data finalize" issue. The license
-// number and brand name are real and must not be touched without legal review.
+// Contact values: phone / email / social URLs are the finalized live
+// values. The license number and brand name are real and must not be
+// touched without legal review.
 export const SITE_CONFIG = {
   brand: 'Vayana Bungalows',
   license: 'Ц2-0ТИ-В2Т-С0',

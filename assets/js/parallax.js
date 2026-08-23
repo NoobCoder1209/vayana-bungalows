@@ -29,6 +29,6 @@ export function initParallax() {
   };
 
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
+  window.addEventListener('resize', onScroll, { passive: true });
   update();
 }

@@ -280,8 +280,10 @@ async function main() {
   }
   const allTabs = new Set(allTabsList);
 
-  // Always read current-year tabs. Read next-year tabs too if they exist,
-  // so December → January rolls over without operator intervention.
+  // Always read current-year tabs. Read next-year tabs too — but only if
+  // ALL THREE (B1/B2/B3 {year+1}) exist; a partial set is ignored (no
+  // rollover) rather than read piecemeal. So around December, create all
+  // three next-year tabs together for the January rollover to take effect.
   const yearsToRead = [CURRENT_YEAR];
   if (TAB_KEYS.every((k) => allTabs.has(`${k} ${CURRENT_YEAR + 1}`))) {
     yearsToRead.push(CURRENT_YEAR + 1);
