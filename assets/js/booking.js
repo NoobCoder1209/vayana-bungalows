@@ -81,9 +81,8 @@ export function initBooking() {
 // Wire a link-mode booking bar: plain season-aware date pickers (no
 // bookings.json blocking), and on submit navigate to `targetPath` (relative to
 // the Vite base) carrying the chosen check-in/check-out as ?checkin=&checkout=.
-// Used by the /enquiries/ bar (legacy detail pages) and the home floating dock
-// (→ /stay/). The Rooms/Guests selects are decorative here — only the dates
-// are forwarded.
+// Used by the home floating dock (→ /stay/). The Rooms/Guests selects are
+// decorative here — only the dates are forwarded.
 function setupLinkForm(form, targetPath) {
   const checkin = form.querySelector('[name="checkin"]');
   const checkout = form.querySelector('[name="checkout"]');
@@ -109,7 +108,7 @@ function setupLinkForm(form, targetPath) {
         // If a check-out was already picked and now sits on/before the new
         // check-in, clear it — set('minDate') moves the picker floor but does
         // NOT drop an out-of-range selection, so without this the bar would
-        // still display (and forward to /enquiries/) a reversed date pair.
+        // still display (and forward to /stay/) a reversed date pair.
         const out = fpOut.selectedDates[0];
         if (out && out <= selected[0]) {
           fpOut.clear();
@@ -125,7 +124,7 @@ function setupLinkForm(form, targetPath) {
     disableMobile: true,
   });
 
-  // Resolve the target (enquiries/ or stay/) via the Vite base path so it
+  // Resolve the target (stay/) via the Vite base path so it
   // works from ANY page depth under the GitHub Pages base (/vayana-bungalows/)
   // and in dev (/). Keep the LOCALE: on a /bg/ page, target /bg/<path> so a
   // Bulgarian visitor stays in Bulgarian (matches how the plugin rewrites the
@@ -155,9 +154,8 @@ function setupBookingForm(form, modal) {
 
   if (!checkin || !checkout) return;
 
-  const today = new Date();
   const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
   // Initialise flatpickr immediately with no disabled dates so the inputs
   // are interactive from first paint. The disable lists get patched in

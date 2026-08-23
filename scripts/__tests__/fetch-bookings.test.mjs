@@ -82,3 +82,79 @@ test('a stay spanning today keeps only the future nights', () => {
   );
   assert.deepEqual(r.unavailable, ['2026-08-01', '2026-08-02']);
 });
+
+// ── T-02: coverage for the previously-untested paths ──────────────────────
+
+test('validateHeader throws when the AK/AL header labels have moved', () => {
+  // Header row present but the CHECK IN / CHECK OUT columns are wrong — the
+  // reservation table layout changed and we must fail loudly, not silently
+  // mis-read every row.
+  const rows = [];
+  rows[9] = []; // header row with no CHECK IN / CHECK OUT labels
+  assert.throws(
+    () => parseReservationTable(rows, 'B1 2026', TODAY),
+    /reservation table layout has changed/i,
+  );
+});
+
+test('parseDmy rejects a malformed date string', () => {
+  assert.throws(
+    () => parseReservationTable(
+      grid([{ status: 'Confirmed', checkin: '2026/09/05', checkout: '08-09-2026' }]),
+      'B1 2026', TODAY,
+    ),
+    /expected DD-MM-YYYY/i,
+  );
+});
+
+test('parseDmy rejects an impossible calendar date (31-02-2026)', () => {
+  assert.throws(
+    () => parseReservationTable(
+      grid([{ status: 'Confirmed', checkin: '31-02-2026', checkout: '05-03-2026' }]),
+      'B1 2026', TODAY,
+    ),
+    /not a real calendar date/i,
+  );
+});
+
+test('a blocking row missing one date throws (CHECK IN or CHECK OUT blank)', () => {
+  assert.throws(
+    () => parseReservationTable(
+      grid([{ status: 'Confirmed', checkin: '05-09-2026', checkout: '' }]),
+      'B1 2026', TODAY,
+    ),
+    /missing CHECK IN or CHECK OUT/i,
+  );
+});
+
+test('checkout not after checkin throws (reversed / equal dates)', () => {
+  assert.throws(
+    () => parseReservationTable(
+      grid([{ status: 'Confirmed', checkin: '08-09-2026', checkout: '05-09-2026' }]),
+      'B1 2026', TODAY,
+    ),
+    /is not after CHECK IN/i,
+  );
+});
+
+test('Completed stay ending EXACTLY today is dropped (end <= today, boundary)', () => {
+  // Checkout on TODAY (01-08-2026). end.dt <= todayUtc → fully filtered out;
+  // nothing is unavailable. Guards the exact past/future boundary.
+  const r = parseReservationTable(
+    grid([{ status: 'Completed', checkin: '28-07-2026', checkout: '01-08-2026' }]),
+    'B1 2026', TODAY,
+  );
+  assert.deepEqual(r.unavailable, []);
+  assert.equal(r.blocked, 0);
+});
+
+test('a stay checking in exactly today blocks from today (checkIn day recorded)', () => {
+  // CHECK IN on TODAY (01-08) → 04-08 checkout. start.dt >= todayUtc so the
+  // arrival day is recorded in checkIn, and 01..03 Aug are unavailable.
+  const r = parseReservationTable(
+    grid([{ status: 'Confirmed', checkin: '01-08-2026', checkout: '04-08-2026' }]),
+    'B1 2026', TODAY,
+  );
+  assert.deepEqual(r.unavailable, ['2026-08-01', '2026-08-02', '2026-08-03']);
+  assert.deepEqual(r.checkIn, ['2026-08-01']);
+});

@@ -15,7 +15,7 @@
 //  11. Append to Google Sheet → 502 on downstream failure
 //  12. Success → 200 (JSON) / 303 (form-urlencoded)
 //
-// JSON callers get { ok, ref?, error?, fields? }. Form callers get a 303
+// JSON callers get { ok, error?, fields? }. Form callers get a 303
 // redirect back to the public site — to /enquiries/thanks/ on success or
 // /enquiries/?err=<code> on failure so the form page can surface a message.
 
@@ -31,7 +31,6 @@ import {
   redirectResponse,
   corsHeaders,
 } from './lib/response.js';
-import { generateRef } from './lib/ref.js';
 import { hashIp } from './lib/ip-hash.js';
 
 // Locale sniff for the pre-validation error paths (rate-limit, body-parse
@@ -375,27 +374,17 @@ export default {
     //    distinguish trip from real success. Note this fires only AFTER
     //    validation has passed, so the success response is
     //    indistinguishable from a genuine valid submit.
-    //
-    //    Timing side-channel mitigation: the real success path takes
-    //    ~300-800 ms (Turnstile siteverify + Sheets append). Returning
-    //    immediately on honeypot trip would leak the trip via response
-    //    latency. We burn a Turnstile siteverify against the supplied
-    //    token (which is guaranteed to fail if it's a real bot token —
-    //    bots rarely have a real token — but is processed identically
-    //    by Cloudflare regardless), so the trip path takes roughly the
-    //    same wall-clock as a captcha-failed real submit.
     const honeypotVal = typeof body.alt_url === 'string' ? body.alt_url.trim() : '';
     if (honeypotVal !== '') {
-      // Burn a Turnstile round-trip to equalise timing. The result is
-      // discarded — we always return success on honeypot trip.
+      // Verify the supplied token but discard the result — we always
+      // return success on honeypot trip.
       await verifyTurnstile(
         body['cf-turnstile-response'] || '',
         env.TURNSTILE_SECRET,
         ip,
       ).catch(() => null);
-      const ref = generateRef();
       return isJson
-        ? jsonResponse({ ok: true, ref }, 200, request, env)
+        ? jsonResponse({ ok: true }, 200, request, env)
         : redirectResponse('/enquiries/thanks/', request, env, locale);
     }
 
@@ -419,11 +408,9 @@ export default {
     }
 
     // 9. Append to sheet
-    const ref = generateRef();
     try {
       await appendEnquiry(env, {
         timestamp: new Date().toISOString(),
-        ref,
         ...validation.cleaned,
         source_ip_hash: ipHash,
       });
@@ -443,7 +430,7 @@ export default {
 
     // 10. Success
     return isJson
-      ? jsonResponse({ ok: true, ref }, 200, request, env)
+      ? jsonResponse({ ok: true }, 200, request, env)
       : redirectResponse('/enquiries/thanks/', request, env, locale);
   },
 };

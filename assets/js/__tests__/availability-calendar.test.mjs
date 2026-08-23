@@ -120,20 +120,11 @@ test('availabilityFor: missing key / null bookings → empty Sets (fail safe)', 
   }
 });
 
-test('availabilityFor: legacy array shape → empty Sets + one warn', () => {
+test('availabilityFor: unexpected array shape → empty Sets (fail safe, no throw)', () => {
   const availabilityFor = loadAvailabilityFor();
-  const warnings = [];
-  const orig = console.warn;
-  console.warn = (msg) => warnings.push(msg);
-  try {
-    const r = availabilityFor({ bungalows: { B1: ['2026-08-10'] } }, 'B1');
-    assert.equal(r.unavailable.size, 0);
-    assert.equal(r.checkIn.size, 0);
-  } finally {
-    console.warn = orig;
-  }
-  assert.equal(warnings.length, 1);
-  assert.match(warnings[0], /legacy array shape/);
+  const r = availabilityFor({ bungalows: { B1: ['2026-08-10'] } }, 'B1');
+  assert.equal(r.unavailable.size, 0);
+  assert.equal(r.checkIn.size, 0);
 });
 
 test('availabilityFor: entry missing unavailable/checkIn fields → empty Sets', () => {

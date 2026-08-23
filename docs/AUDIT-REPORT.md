@@ -2,7 +2,76 @@
 
 > **How to read this.** Every finding has an **In plain terms** line (what it means, no jargon), **The issue** (the precise technical claim), a **code block** of the actual source, clickable **Where** links (pinned to the audited commit so they never drift), and a **Proposed fix**. Fixable-now items have a `[ ]` box. **This is a report — no code was changed.**
 
+> 🔧 **TO FIX** — findings tagged with this marker are the ones the owner selected to be worked on later (some carry a note). Untagged findings remain in the report for reference only. Marking only — still no code changed.
+
+> 🕓 **Later** — selected but deliberately deferred (e.g. a Cloudflare-dashboard/config action to do at public launch, not repo code). Kept open on the table so they aren't forgotten.
+
 _Source links pinned to commit `2402fef`._
+
+---
+
+## Issue index
+
+**Progress:** **31 ✅ done**, **8 remain 🔧 To fix**, and **3 are 🕓 Later** (S-01/S-02/S-03 — Cloudflare dashboard/config actions to do at public launch, not repo code). The rest are **Reference only** (kept for context, not scheduled). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
+
+| Issue | Status |
+|---|---|
+| ~~**C-01** · `assets/js/booking.js:81-133` · comment-stale · high~~ | ✅ **Done** (comment fix) |
+| **C-10** · `assets/js/newsletter.js:175` · bug · med | 🔧 **To fix** |
+| ~~**C-09** · `assets/js/header.js:98-102` · comment-stale · med~~ | ✅ **Done** (comment fix) |
+| **C-13** · `assets/js/availability-calendar.js:259-266` · perf · med | Reference only |
+| **C-11** · `assets/js/newsletter.js:97-98` · bug · low | 🔧 **To fix** |
+| ~~**C-05** · `assets/js/enquiry.js:124-219` · comment-stale · low~~ | ✅ **Done** (comment fix) |
+| ~~**C-06** · `assets/js/enquiry.js:723-728` · dead-code · low~~ | ✅ **Done** (comment fix) |
+| ~~**C-12** · `assets/js/newsletter.js:180` · dead-end · low~~ | ✅ **Done** |
+| ~~**C-03** · `assets/js/booking.js:158` · dead-code · nit~~ | ✅ **Done** (comment fix) |
+| ~~**C-08** · `assets/js/enquiry.js:443-452` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
+| ~~**C-17** · `assets/js/hero-carousel.js:63` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
+| ~~**C-18** · `assets/js/parallax.js:32-33` · perf · nit~~ | ✅ **Done** (comment fix) |
+| **T-01** · `package.json:10` · test-gap · med | Reference only |
+| ~~**D-03** · `README.md:13-18` · dx · med~~ | ✅ **Done** (comment fix) |
+| ~~**D-01** · `README.md:134-139` · doc-stale · low~~ | ✅ **Done** (comment fix) |
+| ~~**D-02** · `SITEMAP.md:5` · doc-stale · low~~ | ✅ **Done** (comment fix) |
+| **C-02** · `assets/js/booking.js:346-356` | 🔧 **To fix** |
+| **C-04** · `assets/js/enquiry.js:353-355` | 🔧 **To fix** |
+| **C-14** · `assets/js/availability-calendar.js:271-296` | 🔧 **To fix** |
+| ~~**C-15** · `assets/js/offer-modal.js:1-6` · comment-stale · med~~ | ✅ **Done** |
+| **C-07** · `assets/js/enquiry.js:428` · bug · low | Reference only |
+| ~~**C-19** · `assets/js/bookings-data.js:76-83` · dead-code · low~~ | ✅ **Done** (comment fix) |
+| ~~**C-20** · `assets/js/site-config.js:8-15` · comment-stale · low~~ | ✅ **Done** |
+| **C-21** · `assets/js/util/offer-dates.js:35-65` · bug · low | 🔧 **To fix** |
+| **B-07** · `scripts/i18n-plugin.js:1650-1669` · bug · low | 🔧 **To fix** |
+| ~~**B-01** · `scripts/i18n-plugin.js:55-102` · comment-stale · low~~ | ✅ **Done** (comment fix) |
+| ~~**B-02** · `scripts/i18n-plugin.js:17` · comment-stale · low~~ | ✅ **Done** (comment fix) |
+| ~~**B-03** · `scripts/i18n-plugin.js:71-78` · comment-stale · low~~ | ✅ **Done** |
+| ~~**B-05** · `scripts/i18n-plugin.js:936-947` · dead-end · low~~ | ✅ **Done** |
+| ~~**B-08** · `scripts/fetch-bookings.mjs:284-289` · comment-stale · low~~ | ✅ **Done** |
+| **B-09** · `vite.config.js:66-98` · bug · low | 🔧 **To fix** |
+| ~~**B-04** · `scripts/i18n-plugin.js:403-416` · dead-code · nit~~ | ✅ **Done** (comment fix) |
+| **B-06** · `scripts/i18n-plugin.js:673-678` · dead-code · nit | Reference only |
+| ~~**B-10** · `vite.config.js:65-96` · nit · nit~~ | ✅ **Done** |
+| ~~**T-02** · `scripts/__tests__/fetch-bookings.test.mjs:3` · test-gap · low~~ | ✅ **Done** (comment fix) |
+| **W-07** · `worker/src/pricing.js:190-193` · bug · med | Reference only |
+| **W-05** · `worker/src/offers.js:322-334` · perf · med | Reference only |
+| ~~**W-08** · `worker/src/sheets.js:138-161` · comment-stale · med~~ | ✅ **Done** (comment fix) |
+| ~~**W-01** · `worker/src/index.js:34-422` · dead-code · low~~ | ✅ **Done** (comment fix) |
+| ~~**W-02** · `worker/src/index.js:387-400` · comment-stale · low~~ | ✅ **Done** (comment fix) |
+| **W-03** · `worker/src/index.js:248` · bug · low | Reference only |
+| **W-04** · `worker/src/offers.js:224-245` · security · low | Reference only |
+| ~~**W-06** · `worker/src/rate-limit.js:34-38` · dead-code · nit~~ | ✅ **Done** (comment fix) |
+| **W-09** · `worker/src/lib/response.js:99` · config · low | Reference only |
+| **S-01** · `worker/src/index.js:74-195` · security · med | 🕓 **Later** (Cloudflare dashboard rate-limit rule at launch) |
+| **S-02** · `worker/src/rate-limit.js:17-40` · security · med | 🕓 **Later** (Cloudflare dashboard rate-limit rule at launch) |
+| **S-03** · `worker/src/index.js:265-273` · security · low | 🕓 **Later** (ensure edge-only reachability — Cloudflare config) |
+| ~~**S-04** · `package.json:16-19` · security · med~~ | ✅ **Done** |
+| **S-05** · `.github/workflows/deploy.yml:49-51` · bug · med | Reference only |
+| ~~**S-06** · `.github/workflows/deploy.yml:24` · security · low~~ | ✅ **Done** |
+| ~~**S-07** · `worker/wrangler.toml:29` · comment-stale · low~~ | ✅ **Done** (comment fix) |
+| ~~**S-08** · `worker/wrangler.toml:1-15` · comment-stale · low~~ | ✅ **Done** (comment fix) |
+| **L-01** · `locales/en.json:5` · consistency · high | Reference only |
+| **C-16** · `assets/js/offers.js:93-102` | Refuted (not a finding) |
+| **R-01** · `worker/package.json:15-17` | Refuted (not a finding) |
+| **R-02** · `assets/js/booking.js:140-142` | Refuted (not a finding) |
 
 ---
 
@@ -29,6 +98,7 @@ _Source links pinned to commit `2402fef`._
 ## Fixable-now
 
 - [ ] **C-01** · [`assets/js/booking.js:81-133`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/booking.js#L81-L133) · comment-stale · **high** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** Comments describe a search bar on the enquiries page that was never built — they point future readers at a page that has nothing to do with this code.
   - **The issue:** `setupLinkForm`’s comments claim it powers an `/enquiries/` bar and forwards there, but the only caller sends it to `stay/`, and no `data-booking-mode` element exists on the enquiries page.
 
@@ -46,6 +116,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Delete the `/enquiries/` references; document the single `stay/` target.
 
 - [ ] **C-10** · [`assets/js/newsletter.js:175`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/newsletter.js#L175) · bug · **med** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX**
   - **In plain terms:** The newsletter popup attaches its “press Escape to close” listener to the whole page and never removes it, so listeners pile up — the enquiry form already fixed this exact bug.
   - **The issue:** The keydown handler is bound on `document` (global, cross-page-lifecycle leak) instead of on the modal element, unlike the enquiry modal which was deliberately changed to modal-scoped.
 
@@ -69,6 +140,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Scope the keydown listener to `modal` as enquiry.js does.
 
 - [ ] **C-09** · [`assets/js/header.js:98-102`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/header.js#L98-L102) · comment-stale · **med** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A comment lists “4 ways to close the menu” but the code actually has 5 — the comment just wasn’t updated when the × button was added.
   - **The issue:** The drawer doc comment enumerates 4 close paths; the code wires a fifth (the explicit × button, self-labelled “close path #5”).
 
@@ -116,6 +188,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Hoist the locale-keyed formatters to module scope; rebuild only when `currentLocale()` changes.
 
 - [ ] **C-11** · [`assets/js/newsletter.js:97-98`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/newsletter.js#L97-L98) · bug · **low** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX**
   - **In plain terms:** If the user forgets the consent tick and gets an error, then ticks it, the red error message stays on screen instead of clearing.
   - **The issue:** The consent change handler calls `flagConsent(false)` but not `clearError()`; the enquiry form clears the error on change.
 
@@ -136,6 +209,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add `clearError();` to the newsletter consent-change handler.
 
 - [ ] **C-05** · [`assets/js/enquiry.js:124-219`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/enquiry.js#L124-L219) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** Some variables are written a certain way “for a future live language switch,” but the site never switches language live — changing language reloads the page — so the reason given no longer holds.
   - **The issue:** Module-scope `let` bindings are justified by comments citing a runtime language swap (issue #47), contradicted by lang.js which states a language change is a full navigation.
 
@@ -154,6 +228,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Remove the runtime-swap justification (or convert to `const`) and reference the build-time i18n architecture.
 
 - [ ] **C-06** · [`assets/js/enquiry.js:723-728`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/enquiry.js#L723-L728) · dead-code · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** This file re-writes a date helper it could just import from another file it already imports from — duplicated logic.
   - **The issue:** A local `toISO` duplicates `toIso` exported by bookings-data.js, which enquiry.js already imports (`parseIso`).
 
@@ -174,6 +249,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Import `toIso` from bookings-data.js and delete the local copy.
 
 - [ ] **C-12** · [`assets/js/newsletter.js:180`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/newsletter.js#L180) · dead-end · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** — removed the unused openModal param + discarded caller arg;
   - **In plain terms:** A function takes an argument it never uses, and the caller bothers to compute and pass it — wasted, confusing code.
   - **The issue:** `openModal(modal, getReturnFocusEl)` declares a second parameter never referenced in the body (focus restore lives in `closeModal`); the caller passes a discarded arg.
 
@@ -198,6 +274,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Drop the unused parameter and the discarded caller argument.
 
 - [ ] **C-03** · [`assets/js/booking.js:158`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/booking.js#L158) · dead-code · **nit** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A `today` variable is created just to compute “tomorrow” once — it can be inlined.
   - **The issue:** `const today = new Date()` is referenced only once (to compute `tomorrow`).
 
@@ -210,6 +287,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Inline `new Date()` into the `tomorrow` computation.
 
 - [ ] **C-08** · [`assets/js/enquiry.js:443-452`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/enquiry.js#L443-L452) · comment-stale · **nit** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied) — Drop the whole comment (not just the lead sentence).
   - **In plain terms:** A comment says three dropdowns are left out of a list, but one of them (Adults) was later added — the opening sentence contradicts the code until you read a later note.
   - **The issue:** The lead sentence says the 3 selects are omitted from `allFields`, but a POST-#41 addendum and the array itself include `adults`.
 
@@ -229,6 +307,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Rewrite the lead sentence: only children/infants are omitted; adults is required and included.
 
 - [ ] **C-17** · [`assets/js/hero-carousel.js:63`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/hero-carousel.js#L63) · comment-stale · **nit** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A comment hardcodes “8 slides” but the carousel counts slides dynamically — the number is just an old assumption.
   - **The issue:** The comment says “most visible at the 8→1 wrap” implying 8 slides; slide count is data-driven (`slides.length`).
 
@@ -240,6 +319,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Change “8→1” to “last→first”.
 
 - [ ] **C-18** · [`assets/js/parallax.js:32-33`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/parallax.js#L32-L33) · perf · **nit** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The scroll listener is marked “passive” (a small perf hint) but the resize listener isn’t — just an inconsistency, negligible impact.
   - **The issue:** Resize listener omits `{passive:true}` while the scroll listener has it; both funnel to a rAF-throttled handler.
 
@@ -263,6 +343,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add the offer-dates test, or switch to a glob so new test files can’t be silently dropped.
 
 - [ ] **D-03** · [`README.md:13-18`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/README.md#L13-L18) · dx · **med** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** If a new developer clones the repo and follows the README, 3 tests fail — because the README never tells them to install the worker’s dependencies (CI does this, the docs don’t).
   - **The issue:** `jose` lives in worker/node_modules; a root-only `npm ci && npm test` hits `ERR_MODULE_NOT_FOUND`. The README omits `cd worker && npm ci`; CI performs it.
 
@@ -275,6 +356,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add a `cd worker && npm ci` step to the README setup instructions.
 
 - [ ] **D-01** · [`README.md:134-139`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/README.md#L134-L139) · doc-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The README says the i18n plugin handles “five” marker types (there are four) and undercounts which HTML tags the sanitizer allows.
   - **The issue:** README says “five marker attributes” (only four exist) and its sanitizer description omits the allowed `<a>` and `<strong>`.
 
@@ -287,6 +369,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Correct “five”→“four” and list all four allowed tags.
 
 - [ ] **D-02** · [`SITEMAP.md:5`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/SITEMAP.md#L5) · doc-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** SITEMAP says the site has 8 pages and that the legal pages 404 — both outdated; there are 12 pages and the legal pages are built and live.
   - **The issue:** SITEMAP says “eight pages” and that privacy/terms/cancellation links “today 404,” but vite.config defines 12 entries and the policy pages build (smoke test asserts 12 EN + 12 BG).
   - **Where:** [`SITEMAP.md:5`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/SITEMAP.md#L5) · [`SITEMAP.md:35`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/SITEMAP.md#L35) · [`SITEMAP.md:148`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/SITEMAP.md#L148)
@@ -297,6 +380,7 @@ _Source links pinned to commit `2402fef`._
 ## Report-only
 
 - **C-02** · [`assets/js/booking.js:346-356`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/booking.js#L346-L356) · i18n-hardcode · **med** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX** — Also add translator Codes to the BG + EN versions so the writer can rewrite them later.
   - **In plain terms:** The booking confirmation popup’s text is hardcoded in English, so on the Bulgarian site it still shows English.
   - **The issue:** Modal success title/body copy is built in JS as English literals, bypassing the data-attribute i18n pattern.
 
@@ -317,6 +401,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Source the success copy from localized data attributes / the i18n table.
 
 - **C-04** · [`assets/js/enquiry.js:353-355`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/enquiry.js#L353-L355) · i18n-hardcode · **med** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX**
   - **In plain terms:** When a guest arrives from a specific villa, the pre-filled enquiry message is English-only — there’s a known TODO for it.
   - **The issue:** The `?villa=` prefill writes an English opener; a live (accurate) TODO already flags the i18n gap.
 
@@ -336,6 +421,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Source the opener template from an i18n table when Bulgarian copy lands.
 
 - **C-14** · [`assets/js/availability-calendar.js:271-296`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/availability-calendar.js#L271-L296) · i18n-hardcode · **med** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX** — Also add translator Codes to the BG + EN versions so the writer can rewrite them later.
   - **In plain terms:** The calendar’s labels (“Availability”, “Available/Booked/Past/Selected”, prev/next) are hardcoded English, so the Bulgarian calendar shows English.
   - **The issue:** English UI strings are baked into the calendar grid HTML with no translation call.
 
@@ -351,6 +437,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Route the calendar template strings through the i18n layer.
 
 - **C-15** · [`assets/js/offer-modal.js:1-6`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/offer-modal.js#L1-L6) · comment-stale · **med** · CONFIRMED (3/3)
+  - > ✅ **DONE** — corrected the offer-modal header comment (savings/message are dormant, not shown);
   - **In plain terms:** The offer popup’s header comment claims it shows “savings” and “message,” but those parts are turned off in the current design.
   - **The issue:** Header comment enumerates savings/message as shown, but both slots are permanently dormant.
 
@@ -391,6 +478,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Use `d >= tomorrow` (the picker floor) when no valid check-in is present.
 
 - **C-19** · [`assets/js/bookings-data.js:76-83`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/bookings-data.js#L76-L83) · dead-code · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied) — Remove it — but first double-check it is truly unreachable in prod (confirm it is genuinely dead code) before deleting.
   - **In plain terms:** There’s a safety branch handling an old data format that may never actually occur in production — possibly-dead but cheap defensive code.
   - **The issue:** The `Array.isArray(entry)` branch guards a legacy array shape (schema regression), self-documented as a guard.
 
@@ -408,6 +496,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Keep as a defensive guard, or remove if the legacy shape is confirmed unreachable in prod.
 
 - **C-20** · [`assets/js/site-config.js:8-15`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/site-config.js#L8-L15) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** — updated the site-config comment — phone/email/social are finalized live values, not stubs;
   - **In plain terms:** A comment calls the phone/email/social values “placeholders to swap before launch,” but they look like the real, final values now.
   - **The issue:** The “stub” comment is partially stale — phone, email, social and license appear finalized.
 
@@ -425,6 +514,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Update the comment to reflect that these values are finalized (drop the “stub” framing).
 
 - **C-21** · [`assets/js/util/offer-dates.js:35-65`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/util/offer-dates.js#L35-L65) · bug · **low** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX** — Prefer Sofia local time (UTC+3 / +2 winter) or just the user’s local time — align both paths to that.
   - **In plain terms:** One file works in UTC, another parses the same value in local time; today it can’t cause a visible bug (month-only granularity) but it’s an inconsistency waiting to bite.
   - **The issue:** offer-dates builds/formats in UTC while calendar-selection.parseOfferMonth parses `?offerMonth` as a local Date.
 
@@ -440,6 +530,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Make both paths use the same timezone basis (both UTC or both local).
 
 - **B-07** · [`scripts/i18n-plugin.js:1650-1669`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L1650-L1669) · bug · **low** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX**
   - **In plain terms:** The build’s charset detector treats an old-style meta tag as “the charset tag” even when it carries no charset — could misplace an inserted block in rare HTML.
   - **The issue:** The HTML4 charset regex matches `meta http-equiv="content-type"` regardless of whether `charset=` is in its content attribute.
 
@@ -452,6 +543,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Require `charset=` in the content attribute before treating the tag as the charset anchor.
 
 - **B-01** · [`scripts/i18n-plugin.js:55-102`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L55-L102) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** Several comments say the plugin emits the Bulgarian pages in a hook called `closeBundle`, but the real hook is `writeBundle`.
   - **The issue:** Doc comments reference a `closeBundle` hook; the implemented hook is `writeBundle` (README agrees).
 
@@ -465,6 +557,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Replace `closeBundle` with `writeBundle` in the doc comments.
 
 - **B-02** · [`scripts/i18n-plugin.js:17`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L17) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied) — Remove the whole comment.
   - **In plain terms:** A comment states a fixed key count (“147×2”) that’s long out of date — there are ~586 per locale.
   - **The issue:** Docblock hard-codes “147×2 as of Task #162”; actual leaf-key count is ~586 per locale.
 
@@ -476,6 +569,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Update to 586×2, or drop the hard count in favor of “the exact same key set”.
 
 - **B-03** · [`scripts/i18n-plugin.js:71-78`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L71-L78) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** — completed the i18n-plugin token list (added brand/license/address_*/min/free/pct/amount);
   - **In plain terms:** A comment lists the interpolation tokens the plugin supports but is missing 8 that were added later.
   - **The issue:** The “tokens supported today” list omits brand, license, address_street, address_country, min, free, pct, amount.
 
@@ -495,6 +589,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add the missing tokens (or reference the vite.config context as the source of truth).
 
 - **B-05** · [`scripts/i18n-plugin.js:936-947`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L936-L947) · dead-end · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** — Reclassified: srcset/imagesrcset is NOT dead — it's a security guard that hard-fails a `javascript:`/`data:` payload injected via `data-i18n-attr` (a passing test asserts this). Kept in place; comment clarified to say WHY (guard, not a multi-URL validator). Removing it would weaken the sanitizer.
   - **In plain terms:** The plugin claims to validate `srcset` URLs but its check can only ever reject a real multi-URL srcset — a guard that never passes anything legitimate.
   - **The issue:** `srcset`/`imagesrcset` are validated with `isAllowedHref` on the whole comma-separated value, which has no comma-split.
 
@@ -516,6 +611,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add a comma-split srcset check, or drop srcset from URL_BEARING_ATTRS and require `data-i18n-html`.
 
 - **B-08** · [`scripts/fetch-bookings.mjs:284-289`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/fetch-bookings.mjs#L284-L289) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** — corrected the fetch-bookings rollover comment (all three next-year tabs required; partial ignored);
   - **In plain terms:** A comment promises the booking fetch “rolls over to next year automatically,” but it only does so if all three next-year tabs exist — a partial setup is silently ignored.
   - **The issue:** Next-year rollover reads year+1 tabs only if all three (B1/B2/B3) exist; the comment overstates the guarantee.
 
@@ -531,6 +627,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Note that all three next-year tabs must exist together, or handle partial next-year tabs.
 
 - **B-09** · [`vite.config.js:66-98`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/vite.config.js#L66-L98) · bug · **low** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX**
   - **In plain terms:** The address “street” value already ends in “Bulgaria,” and there’s a separate “country” value also set to “Bulgaria” — render both together and you get “Bulgaria, Bulgaria.”
   - **The issue:** `address_street` ends in “Bulgaria” and `address_country` is also “Bulgaria”.
 
@@ -542,6 +639,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Drop “Bulgaria” from `address_street` (make it “Arapya”) or omit `address_country` in the combined sentence.
 
 - **B-04** · [`scripts/i18n-plugin.js:403-416`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L403-L416) · dead-code · **nit** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The same ~7-line explanatory comment is pasted twice, back to back.
   - **The issue:** The `HTML_ENTITY_RE` rationale comment block is duplicated verbatim.
 
@@ -580,6 +678,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Keep as a documented defensive guard, or remove.
 
 - **B-10** · [`vite.config.js:65-96`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/vite.config.js#L65-L96) · nit · **nit** · CONFIRMED (3/3)
+  - > ✅ **DONE** — re-indented the license key to 4 spaces;
   - **In plain terms:** One line is indented with 2 spaces where its neighbors use 4 — purely cosmetic.
   - **The issue:** The `license:` key is mis-indented in both the en and bg context blocks.
 
@@ -592,6 +691,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Re-indent `license` to 4 spaces.
 
 - **T-02** · [`scripts/__tests__/fetch-bookings.test.mjs:3`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/__tests__/fetch-bookings.test.mjs#L3) · test-gap · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The booking-fetch script has tests for only one of its functions; error paths and edge cases (bad dates, missing headers, the “completed stay ending today” boundary) are untested.
   - **The issue:** Only `parseReservationTable` is tested; parseDmy errors, validateHeader throw, getSheets env, next-year rollover, and the Completed-ending-today boundary are not.
 
@@ -640,6 +740,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Cache even the empty-bands result (short TTL), or add a lock so `/offers` doesn’t re-read Sheets per request.
 
 - **W-08** · [`worker/src/sheets.js:138-161`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/sheets.js#L138-L161) · comment-stale · **med** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied) — Remove the comment (move the pre-deploy step to a runbook).
   - **In plain terms:** A big “DO THIS BEFORE DEPLOYING” note is still sitting in the code: a Price column must be inserted in the live spreadsheet, or the saved data columns shift and misalign. It should be a runbook step, and someone must confirm the sheet actually has that column.
   - **The issue:** An un-actioned “insert Price column L” warning remains in shipped code; a RAW append on A:O misaligns consent/hash/locale if the column is absent.
 
@@ -658,6 +759,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Move the pre-deploy step to a runbook; leave a standing “sheet header must have Price at column L” note; verify the live sheet.
 
 - **W-01** · [`worker/src/index.js:34-422`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/index.js#L34-L422) · dead-code · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied) — Drop the ref.
   - **In plain terms:** The server still generates a reference code and returns it, but it’s no longer written to the sheet and the site no longer reads it — leftover from a removed feature.
   - **The issue:** `generateRef()` is still called/returned, but the ref no longer occupies a sheet cell and the client no longer reads `data.ref`.
 
@@ -671,6 +773,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Drop the returned ref, or wire it back into the sheet/client if still intended.
 
 - **W-02** · [`worker/src/index.js:387-400`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/index.js#L387-L400) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied) — Drop the comment.
   - **In plain terms:** A comment claims the anti-bot honeypot makes a fake submission take the same time as a real one, but a real submission also writes to the sheet (extra time) — so timing can still distinguish them.
   - **The issue:** The honeypot-trip path skips the Sheets append the success path performs, so it only matches the captcha-FAILED timing, not accepted+written.
 
@@ -723,6 +826,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Strip `label` and the redundant raw fields from the public payload.
 
 - **W-06** · [`worker/src/rate-limit.js:34-38`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/rate-limit.js#L34-L38) · dead-code · **nit** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A branch that checks for “empty list” can never run because an item was just added — self-admitted dead code.
   - **The issue:** The `recent.length === 0` branch is unreachable because `now` was just pushed.
 
@@ -756,6 +860,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Move the fallback origin to config/env and update ALLOWED_ORIGINS when the domain lands.
 
 - **S-01** · [`worker/src/index.js:74-195`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/index.js#L74-L195) · security · **med** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX** — Decision: negative-cache the empty rate-bands result in code (~30–60s, also fixes W-05) AND add a Cloudflare dashboard Rate Limiting Rule on /price + /offers.
   - **In plain terms:** The price and offers endpoints have no login, no rate limit, and no captcha, yet each fresh call reads Google Sheets — so an attacker can spam them to exhaust your Sheets quota (which could also block real bookings from being fetched).
   - **The issue:** `/price` and `/offers` are unauthenticated, un-rate-limited, not behind Turnstile; each cold-cache call triggers a Sheets read (60s per-isolate cache; empty-bands disables it).
 
@@ -774,6 +879,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add rate-limiting / caching hardening (edge cache, longer TTL, empty-bands caching) to the read routes.
 
 - **S-02** · [`worker/src/rate-limit.js:17-40`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/rate-limit.js#L17-L40) · security · **med** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX** — Decision: covered by the Cloudflare dashboard rate-limit rule (from S-01); no code rebuild — low severity, Turnstile is the real gate.
   - **In plain terms:** The “3 requests per 10 minutes” limit is stored in each server instance’s memory, and Cloudflare runs many instances — so the real limit is much higher, and spam protection actually relies on the captcha.
   - **The issue:** The rate-limiter Map is per-isolate in-memory, so the bound is per-isolate and dilutable across Cloudflare isolates.
 
@@ -790,6 +896,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Move to a Durable Object / KV for cross-isolate accuracy if stronger spam bounds are needed.
 
 - **S-03** · [`worker/src/index.js:265-273`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/index.js#L265-L273) · security · **low** · CONFIRMED (3/3)
+  - > 🔧 **TO FIX**
   - **In plain terms:** Rate limiting keys off the visitor’s IP header. On Cloudflare’s real edge this is trustworthy, but if the worker were ever reachable directly (a tunnel/preview), an attacker could fake the header to get unlimited fresh limits.
   - **The issue:** Keying trusts `cf-connecting-ip`; safe on the real edge (bails 400 if absent), but client-controlled off-edge.
 
@@ -808,6 +915,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Ensure the Worker is only reachable via the Cloudflare edge (block direct/tunnel access), or add a secondary key.
 
 - **S-04** · [`package.json:16-19`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/package.json#L16-L19) · security · **med** · CONFIRMED (3/3)
+  - > ✅ **DONE** — ran npm audit fix (non-breaking dev advisories: 5 → 2; the remaining 2 are the deferred breaking vite@8 bump);
   - **In plain terms:** `npm audit` flags 5 vulnerabilities, but all are in build-time dev tools — zero affect the shipped site (`npm audit --omit=dev` = 0). The one needing a big upgrade (esbuild via vite) is a breaking major bump.
   - **The issue:** 5 dev-toolchain advisories (vite→esbuild, postcss, nanoid, brace-expansion); `--omit=dev` reports 0.
 
@@ -837,6 +945,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Use `<<-EOF` with tab indentation, or de-indent the closing `EOF` to column 0. (Panel 2/3 — verify on the ubuntu runner.)
 
 - **S-06** · [`.github/workflows/deploy.yml:24`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/.github/workflows/deploy.yml#L24) · security · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** — SHA-pinned all GitHub Actions in ci.yml / deploy.yml / refresh-bookings.yml;
   - **In plain terms:** One workflow pins its GitHub Actions to exact commit hashes (safest), but the other three use floating version tags — an inconsistent supply-chain posture.
   - **The issue:** `deploy-worker.yml` SHA-pins actions; ci.yml/deploy.yml/refresh-bookings.yml use floating tags.
 
@@ -852,6 +961,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** SHA-pin actions across all workflows for a consistent posture.
 
 - **S-07** · [`worker/wrangler.toml:29`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/wrangler.toml#L29) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A config comment says the offers spreadsheet range is B3:H8, but the code reads A3:N8 (14 columns).
   - **The issue:** wrangler.toml comment says range B3:H8; offers.js reads A3:N8.
 
@@ -867,6 +977,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Update the comment to A3:N8 (14 columns).
 
 - **S-08** · [`worker/wrangler.toml:1-15`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/wrangler.toml#L1-L15) · comment-stale · **low** · CONFIRMED (3/3)
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The worker’s deployed name is “vayana-enquiries,” but the header comment, package.json, and README all call it “vayana-enquiries-worker.”
   - **The issue:** wrangler.toml `name` is “vayana-enquiries”; comment/package.json/README say “vayana-enquiries-worker”.
 

@@ -60,7 +60,7 @@ export function initHeroCarousel() {
     // one frame), then drop that class next frame so its transition is live
     // again for its next turn. Doing the reset with the transition still on
     // would slide it left→right across the viewport — a stray motion most
-    // visible at the 8→1 wrap. Timeout keyed to SLIDE_MS so a missed
+    // visible at the last→first wrap. Timeout keyed to SLIDE_MS so a missed
     // transitionend can't strand it mid-screen.
     window.setTimeout(() => {
       outgoing.classList.add('is-resetting');

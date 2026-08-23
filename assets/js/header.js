@@ -94,11 +94,12 @@ function initCallTwoTap() {
 
 // ────────────────────────────────────────────────────────────────────────────
 // Hamburger drawer (#8). Side panel that slides in from the left, with a
-// dimmed backdrop, body scroll-lock, focus trap and 4 close paths:
+// dimmed backdrop, body scroll-lock, focus trap and 5 close paths:
 //   1. click any link inside the drawer
 //   2. press Esc
 //   3. click the backdrop
 //   4. click the hamburger toggle a second time
+//   5. click the explicit × button
 // On close, focus returns to the hamburger toggle.
 //
 // Idempotent: dataset.drawerInit guards against double-binding under HMR /

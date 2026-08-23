@@ -39,6 +39,17 @@ npm test               # run all node:test suites (i18n plugin, lang.js, worker)
 npm run i18n:lint      # verify all data-i18n markers have keys + no orphans
 ```
 
+> **Running `npm test` on a fresh clone:** the suite includes the Worker's
+> tests, and the Worker is a separate package with its own dependencies (e.g.
+> `jose`). Install them once first, or the worker tests fail with
+> `ERR_MODULE_NOT_FOUND`:
+>
+> ```bash
+> cd worker && npm ci && cd ..
+> ```
+>
+> CI does this automatically before `npm test`.
+
 ## Deployment
 
 The static site auto-deploys on push to `main` (GitHub Pages, base path
@@ -131,12 +142,12 @@ engines (hreflang alternates emitted per page).
 `dist/<path>` (default locale, EN) and `dist/bg/<path>` (BG mirror).
 Both come from the same marker-annotated source HTML.
 
-The plugin resolves five marker attributes on source HTML elements:
+The plugin resolves four marker attributes on source HTML elements:
 
 | Marker             | Purpose                                                    | Example                                                            |
 | ------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------ |
 | `data-i18n`        | Replace the element's text content with a dict value       | `<h1 data-i18n="home.hero.title">Welcome</h1>`                     |
-| `data-i18n-html`   | Replace with a sanitized HTML fragment (`<em>`/`<br>` only) | `<p data-i18n-html="home.subtitle">Fallback</p>`                   |
+| `data-i18n-html`   | Replace with a sanitized HTML fragment (`<a>`/`<strong>`/`<em>`/`<br>` only) | `<p data-i18n-html="home.subtitle">Fallback</p>`                   |
 | `data-i18n-attr`   | Set one or more attributes from dict keys (semicolon-separated pairs) | `<a data-i18n-attr="aria-label:home.cta_aria; title:home.cta_title">CTA</a>` |
 | `data-i18n-meta`   | Shortcut for `content:<key>` on `<meta>` elements          | `<meta name="description" data-i18n-meta="home.meta.description">` |
 

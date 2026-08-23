@@ -36,7 +36,7 @@ function fpLocale() {
 }
 import { SITE_CONFIG } from './site-config.js';
 import { isOffSeason } from './season.js';
-import { parseIso } from './bookings-data.js';
+import { parseIso, toIso } from './bookings-data.js';
 import { makeSeasonPicker } from './season-picker.js';
 
 // Stricter than HTML5's `type=email` (which accepts "a@b" with no TLD).
@@ -119,8 +119,8 @@ const ERROR_MSGS = {
 // attribute on the button itself, which the i18n plugin bakes at build
 // time from the enquiries.form.submit_busy_label key. Fallback to the
 // English literal so a page that hasn't been keyed still renders
-// something readable. Assigning at init rather than module scope so a
-// runtime language swap (future work) can re-read the current DOM value.
+// something readable. Assigned at init (reads the current DOM value)
+// rather than at module scope.
 let SUBMIT_BUSY_TEXT = 'Sending…';
 
 // Bungalow allowlist for `?villa=<slug>` pre-fill. Anything not in this
@@ -213,8 +213,7 @@ export function initEnquiry() {
   // data-busy-label attribute (baked at build time by the i18n plugin
   // from enquiries.form.submit_busy_label). Falls back to the module-
   // scope default when the attribute is missing (page not built with
-  // the plugin, or test fixture). Assigned at init so a future runtime
-  // language swap (see issue #47 follow-up) can re-read the DOM value.
+  // the plugin, or test fixture). Assigned at init (reads the DOM value).
   const baked = submit.dataset.busyLabel;
   if (baked) SUBMIT_BUSY_TEXT = baked;
 
@@ -223,8 +222,7 @@ export function initEnquiry() {
   // from enquiries.errors.* / enquiries.field_errors.*). Same pattern as
   // SUBMIT_BUSY_TEXT above — fall back to the module-scope English
   // defaults when an attribute is missing (page not built with the
-  // plugin, or a test fixture). Assigned at init so a future runtime
-  // language swap can re-read the DOM.
+  // plugin, or a test fixture). Assigned at init (reads the DOM value).
   const d = form.dataset;
   if (d.errValidation) ERROR_MSGS.validation = d.errValidation;
   if (d.errCaptcha) ERROR_MSGS.captcha = d.errCaptcha;
@@ -437,18 +435,6 @@ export function initEnquiry() {
   // get no per-field cue. clearError() below clears both the message
   // and every aria-invalid marker, so the form returns to a clean
   // state as soon as the user starts fixing things.
-  //
-  // The 3 select fields (adults / children / infants) are intentionally
-  // omitted from `allFields` — they have defaults (2/0/0), every option
-  // is valid, and there is no validation branch that could fail on them.
-  // Round-2 review finding N-R2-2 (explicit comment requested).
-  //
-  // POST-#41 / placeholder-pattern update: Adults is now REQUIRED with
-  // no numeric default — the select starts on a disabled placeholder
-  // option ("ADULTS*"). It joins allFields so submit-time validation
-  // failures get the aria-invalid marker like the other required
-  // inputs. Children and Infants remain optional (placeholder or "-"
-  // are both legal) so they stay out of allFields.
   const allFields = [name, checkinEl, checkoutEl, adults, email, phone, message, consentInput];
   const showError = (msg, field) => {
     errorEl.textContent = msg;
@@ -719,19 +705,14 @@ export function initEnquiry() {
     // day the user actually clicked. Using toISOString() would convert
     // that local midnight to UTC and shift the day for any user east
     // of UTC by 1 day backwards (and west of UTC midnight-by-clock to
-    // the "next" day). Local getters preserve user intent.
-    const toISO = (d) => {
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    };
+    // the "next" day). Local getters preserve user intent. Shared
+    // `toIso` (bookings-data.js) does exactly this.
     const payload = {
       name: nameVal,
       email: emailVal,
       phone: phoneVal,
-      checkin: toISO(checkinDate),
-      checkout: toISO(checkoutDate),
+      checkin: toIso(checkinDate),
+      checkout: toIso(checkoutDate),
       adults: adults.value,
       children: children.value,
       infants: infants.value,

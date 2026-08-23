@@ -13,9 +13,8 @@
 //
 // Locale dictionaries live under `locales/`:
 //   - locales/en.json — English content, source of truth for the key set
-//   - locales/bg.json — Bulgarian, MUST declare the exact same keys (147×2
-//                        as of Task #162; symmetry hard-fails the build if
-//                        broken)
+//   - locales/bg.json — Bulgarian, MUST declare the exact same keys
+//                        (symmetry hard-fails the build if broken)
 //
 // Marker vocabulary
 // -----------------
@@ -53,7 +52,7 @@
 //
 // BG mirror emit
 // --------------
-// The `closeBundle` hook iterates the emitted asset bundle for every
+// The `writeBundle` hook iterates the emitted asset bundle for every
 // input page and writes the BG variant to `dist/bg/<path>/index.html`.
 // The BG pass re-transforms the SOURCE HTML (not the EN-transformed
 // output) so the two locales are independent and neither can corrupt
@@ -70,12 +69,17 @@
 // --------------------
 // Locale values may embed `{name}` tokens; they resolve from the
 // `context` map passed at plugin registration (see vite.config.js's
-// i18nContext block). Tokens supported today:
-//   {phone}          — SITE_CONFIG.phone.display
-//   {credit}         — brand credit line
-//   {privacy_url}    — locale-aware path to /privacy/
-//   {email_href}     — mailto:...
-//   {email_display}  — plain email address (for visible text)
+// i18nContext block, which is the source of truth). Tokens supported today:
+//   {brand}           — brand name
+//   {license}         — licence number
+//   {address_street}  — street address line
+//   {address_country} — country
+//   {phone}           — SITE_CONFIG.phone.display
+//   {credit}          — brand credit line
+//   {privacy_url}     — locale-aware path to /privacy/
+//   {email_href}      — mailto:...
+//   {email_display}   — plain email address (for visible text)
+//   {min} {free} {pct} {amount} — offer/pricing template values
 //
 // Every EN token must appear in the same BG key (and vice-versa) —
 // enforced by loadDictionaries() at plugin-init time.
@@ -99,7 +103,7 @@
 // -----------
 // applyLocale is a pure function of (html, locale, dict, ctx). The plugin
 // doesn't mutate the source tree. Vite invokes transformIndexHtml once
-// per input; the closeBundle hook is where the BG mirror gets emitted.
+// per input; the writeBundle hook is where the BG mirror gets emitted.
 //
 // Trust model
 // -----------
@@ -400,13 +404,6 @@ function rejectMalformedTokens(value, key, locale) {
   }
 }
 
-// Match any HTML-entity-shaped sequence a translator might write out of
-// habit: `&amp;`, `&lt;`, `&#39;`, `&#x27;`, `&copy;`, `&nbsp;`. Locale
-// values are stored raw (Unicode) — the plugin escapes on write. A
-// translator who pre-escapes creates double-escapes in the emitted HTML
-// (e.g. `&copy;` → literal `&copy;` visible in the browser instead of
-// `©`). RH3 fails loudly at load time so the failure is a build error,
-// not an unnoticed shipped bug.
 // Match any HTML-entity-shaped sequence a translator might write out of
 // habit: `&amp;`, `&lt;`, `&#39;`, `&#x27;`, `&copy;`, `&nbsp;`. Locale
 // values are stored raw (Unicode) — the plugin escapes on write. A
@@ -936,14 +933,14 @@ const EVENT_HANDLER_RE = /^on/i;
 const URL_BEARING_ATTRS = new Set([
   'href',
   'src',
-  // srcset + imagesrcset: comma-separated URL lists. isAllowedHref will
-  // only check the whole value against the scheme allowlist. `data:` in
-  // <link rel=preload imagesrcset=...> can still fetch and execute in
-  // some renderer paths (M1), so reject any value not starting with a
-  // safe scheme. A translator writing a legit srcset with multiple
-  // /internal urls would need `data-i18n-html` (which sanitises tags)
-  // instead — but srcset markers are rare in copy and can be added to
-  // the allowlist later with a proper comma-split check.
+  // srcset + imagesrcset: kept here as a SECURITY GUARD, not a full
+  // validator. isAllowedHref checks the whole value against the scheme
+  // allowlist, so a single malicious value (e.g. `data:`/`javascript:`
+  // in a <link rel=preload imagesrcset=...>, M1) hard-fails at build.
+  // It intentionally CANNOT validate a legit multi-URL srcset (no comma
+  // split) — that's fine: translated srcset is unsupported via
+  // data-i18n-attr; author such values in the source HTML directly.
+  // Blocking the injection matters more than passing the rare legit case.
   'srcset',
   'imagesrcset',
   'action',
@@ -1798,12 +1795,14 @@ function rejectRelativeHrefs(html, pagePath) {
  *   inputs      — Vite's rollup input map (same object passed to
  *                 build.rollupOptions.input). The plugin uses this to
  *                 enumerate which pages get the BG mirror emit at
- *                 closeBundle time.
+ *                 writeBundle time.
  *
- * Registers three Vite hooks:
+ * Registers four Vite hooks:
+ *   - configResolved: captures the resolved Vite config (base, root, command)
+ *     the other hooks depend on.
  *   - transformIndexHtml: transforms each source HTML with the default
  *     locale (EN); the emitted output lands at dist/<page>/index.html.
- *   - closeBundle: re-reads each EN-emitted HTML and writes the BG
+ *   - writeBundle: re-reads each EN-emitted HTML and writes the BG
  *     mirror under dist/bg/<page>/index.html.
  *   - configureServer: dev-mode middleware serving /bg/<path> URLs on
  *     the fly, plus an HMR watcher for locale JSON + source HTML edits.
@@ -2315,7 +2314,7 @@ export function i18nPlugin(options) {
  * Derive a source-tree-relative page path from an absolute filename,
  * normalising separators to `/` and falling back to a `<unknown>`
  * marker when the filename is missing or lives outside projectRoot.
- * Shared between transformIndexHtml and closeBundle so error anchors
+ * Shared between transformIndexHtml and writeBundle so error anchors
  * are identical across both.
  */
 function relFromRoot(abs, projectRoot) {
