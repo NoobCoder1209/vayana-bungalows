@@ -510,8 +510,9 @@
       "date_order": "Check-out must be after check-in.",
       "past_date": "Check-in cannot be in the past.",
       "email": "Please enter a valid email address.",
-    "phone": "Please enter a valid phone number."
-    },
+      "phone": "Please enter a valid phone number."
+    }
+  },
   "enquiries_thanks": {
     "meta": {
       "title": "Thank you — Vayana Bungalows",
