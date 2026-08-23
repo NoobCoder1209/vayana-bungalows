@@ -90,21 +90,21 @@
       "nights": "nights",
       "nights_deal": "stay {min} nights, get {free} free",
       "discount_pct": "{pct}% off",
-      "discount_per_day": "€{amount}/night off",
-      "discount_total": "€{amount} off",
+      "discount_per_day": "€ {amount}/night off",
+      "discount_total": "€ {amount} off",
       "discount": "Special offer",
       "cta": "View details",
       "empty": "We don't have any special offers at the moment.",
       "error": "Our offers are temporarily unavailable. Please try again later.",
       "modal_eyebrow": "Special offer",
       "modal_title": "Offer details",
-      "modal_fixed_dates": "These dates are fixed and cannot be changed or extended:<br><br>",
+      "modal_fixed_dates": "These dates are fixed and cannot be changed or extended:<br>",
       "modal_rules_title": "Offer terms",
       "modal_rule_1": "The offer is valid only for the dates shown above and cannot be moved, split, or extended.",
-      "modal_rule_2": "The price covers the full stay for the number of nights shown above; it is not a per-night rate.",
+      "modal_rule_2": "The price covers the full stay for the number of nights shown above. It is not a per-night rate.",
       "modal_rule_3": "The offer is subject to availability and confirmation and may be withdrawn before you enquire.",
       "modal_rule_4": "This offer cannot be combined with any other promotion or discount.",
-      "modal_take": "Enquire about the offer"
+      "modal_take": "Take the offer"
     },
     "services": {
       "eyebrow": "Made for comfortable stays",
@@ -145,21 +145,21 @@
       "og_description": "Code 194· Three boutique bungalows on the Black Sea coast in Tsarevo, Bulgaria. Pick the one that fits your stay."
     },
     "hero": {
-      "eyebrow": "Code 195· The bungalows",
-      "title": "Code 196· Our Bungalows",
-      "sub": "Code 197· Three handcrafted villas on the Tsarevo coast — each with its own live availability."
+      "eyebrow": "Our bungalows",
+      "title": "A place that feels like yours",
+      "sub": "Three comfortable spaces, each with its own character, outdoor area and everything you need for a relaxed stay by the sea."
     },
     "specs": {
-      "sr_title": "Code 198· Bungalow specifications",
+      "sr_title": "Details",
       "size_label": "Size",
-      "occupancy_label": "Occupancy",
+      "occupancy_label": "Sleeps",
       "occupancy_value": "4 adults",
-      "bed_label": "Bedrooms",
-      "bed_value": "2",
-      "view_label": "Beds",
-      "view_value": "2 x Queen",
-      "floor_label": "Bathroom",
-      "floor_value": "1"
+      "bedrooms_label": "Bedrooms",
+      "bedrooms_value": "2",
+      "beds_label": "Beds",
+      "beds_value": "2 × Queen",
+      "bathroom_label": "Bathroom",
+      "bathroom_value": "1"
     },
     "villas": {
       "eyebrow": "Choose Your Bungalow",
@@ -183,7 +183,7 @@
       "washing": "Washing Machine",
       "iron": "Iron",
       "hairdryer": "Hair Dryer",
-      "linens": "Premium Linens & Towels",
+      "linens": "Linens & Towels",
       "crib": "Baby Crib"
     },
     "gallery": {
@@ -427,11 +427,11 @@
       "address_label": "Address"
     },
     "map": {
-      "eyebrow": "Find us",
-      "title": "On the map",
+      "eyebrow": "Getting here",
+      "title": "Find your way to Vayana",
       "fallback": "Map unavailable — see address below.",
       "iframe_title": "Map showing Vayana Bungalows in Arapya, Bulgaria",
-      "directions_button": "Open in Google Maps",
+      "directions_button": "Get directions",
       "directions_sr": "(opens Google Maps in a new tab)"
     },
     "cta": {
@@ -491,28 +491,27 @@
       "close_button": "Close",
       "eyebrow": "Enquiry received",
       "title": "Thank you — we'll be in touch.",
-      "body": "We will reach out to you shortly with availability and a tailored proposal for your stay."
+      "body": "We'll get back to you shortly with availability and all the details for your stay."
     },
     "errors": {
       "validation": "Please check the highlighted fields and try again.",
-      "captcha": "The anti-spam check failed. Please tick the box if shown, or refresh the page.",
-      "rate_limit": "Too many enquiries from this connection. Please try again in a few minutes.",
-      "content_type": "Sorry, something went wrong sending your enquiry. Please refresh and try again.",
-      "too_large": "Your message is too long. Please shorten it and try again.",
-      "method": "Sorry, something went wrong sending your enquiry. Please refresh and try again.",
-      "downstream": "Sorry, we couldn’t save your enquiry. Please try again, or email us at the address in the footer.",
-      "network": "Network error — please check your connection and try again.",
-      "default": "Sorry, something went wrong. Please try again or email us directly."
+      "captcha": "The anti-spam check didn't go through. Please tick the box if shown, or refresh the page and try again.",
+      "rate_limit": "It looks like we've received several enquiries from this connection. Please wait a few minutes and try again.",
+      "content_type": "Something went wrong while sending your enquiry. Please refresh the page and try again.",
+      "too_large": "Your message is a little too long. Please shorten it and try again.",
+      "method": "Something went wrong while sending your enquiry. Please refresh the page and try again.",
+      "downstream": "We couldn't save your enquiry. Please try again, or email us using the address in the footer.",
+      "network": "It looks like there's a problem with your connection. Please check it and try again.",
+      "default": "Something went wrong. Please try again, or email us directly."
     },
     "field_errors": {
       "name": "Please enter your full name.",
-      "date": "Please pick check-in and check-out dates.",
+      "date": "Please select your check-in and check-out dates.",
       "date_order": "Check-out must be after check-in.",
       "past_date": "Check-in cannot be in the past.",
       "email": "Please enter a valid email address.",
-      "phone": "Please enter a valid phone number."
-    }
-  },
+    "phone": "Please enter a valid phone number."
+    },
   "enquiries_thanks": {
     "meta": {
       "title": "Thank you — Vayana Bungalows",
