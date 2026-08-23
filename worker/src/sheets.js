@@ -132,8 +132,8 @@ export async function appendEnquiry(env, row) {
   //     captcha_score column — a placeholder briefly existed during planning
   //     and was removed.
   //   - Task #167 added Locale; Task (bungalow) put the bungalow label in B,
-  //     replacing the opaque `ref` (which is still generated and returned in the
-  //     success response, index.js — it just no longer occupies a cell).
+  //     replacing the opaque `ref` (since removed entirely — no longer
+  //     generated or returned).
   const values = [[
     row.timestamp,
     row.bungalow,

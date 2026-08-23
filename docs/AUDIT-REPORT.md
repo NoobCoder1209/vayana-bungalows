@@ -10,7 +10,7 @@ _Source links pinned to commit `2402fef`._
 
 ## Issue index
 
-**38 of 53** findings are marked to fix (owner-selected); **12 are ✅ done** (comment cleanup) and **26 remain 🔧 To fix**. The rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
+**38 of 53** findings are marked to fix (owner-selected); **19 are ✅ done** and **19 remain 🔧 To fix**. The rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
 
 | Issue | Status |
 |---|---|
@@ -20,22 +20,22 @@ _Source links pinned to commit `2402fef`._
 | **C-13** · `assets/js/availability-calendar.js:259-266` · perf · med | Reference only |
 | **C-11** · `assets/js/newsletter.js:97-98` · bug · low | 🔧 **To fix** |
 | ~~**C-05** · `assets/js/enquiry.js:124-219` · comment-stale · low~~ | ✅ **Done** (comment fix) |
-| **C-06** · `assets/js/enquiry.js:723-728` · dead-code · low | 🔧 **To fix** |
+| ~~**C-06** · `assets/js/enquiry.js:723-728` · dead-code · low~~ | ✅ **Done** (comment fix) |
 | **C-12** · `assets/js/newsletter.js:180` · dead-end · low | 🔧 **To fix** |
-| **C-03** · `assets/js/booking.js:158` · dead-code · nit | 🔧 **To fix** |
+| ~~**C-03** · `assets/js/booking.js:158` · dead-code · nit~~ | ✅ **Done** (comment fix) |
 | ~~**C-08** · `assets/js/enquiry.js:443-452` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
 | ~~**C-17** · `assets/js/hero-carousel.js:63` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
 | **C-18** · `assets/js/parallax.js:32-33` · perf · nit | 🔧 **To fix** |
 | **T-01** · `package.json:10` · test-gap · med | Reference only |
 | **D-03** · `README.md:13-18` · dx · med | 🔧 **To fix** |
-| **D-01** · `README.md:134-139` · doc-stale · low | 🔧 **To fix** |
-| **D-02** · `SITEMAP.md:5` · doc-stale · low | 🔧 **To fix** |
+| ~~**D-01** · `README.md:134-139` · doc-stale · low~~ | ✅ **Done** (comment fix) |
+| ~~**D-02** · `SITEMAP.md:5` · doc-stale · low~~ | ✅ **Done** (comment fix) |
 | **C-02** · `assets/js/booking.js:346-356` | 🔧 **To fix** |
 | **C-04** · `assets/js/enquiry.js:353-355` | 🔧 **To fix** |
 | **C-14** · `assets/js/availability-calendar.js:271-296` | 🔧 **To fix** |
 | **C-15** · `assets/js/offer-modal.js:1-6` · comment-stale · med | Reference only |
 | **C-07** · `assets/js/enquiry.js:428` · bug · low | Reference only |
-| **C-19** · `assets/js/bookings-data.js:76-83` · dead-code · low | 🔧 **To fix** |
+| ~~**C-19** · `assets/js/bookings-data.js:76-83` · dead-code · low~~ | ✅ **Done** (comment fix) |
 | **C-20** · `assets/js/site-config.js:8-15` · comment-stale · low | Reference only |
 | **C-21** · `assets/js/util/offer-dates.js:35-65` · bug · low | 🔧 **To fix** |
 | **B-07** · `scripts/i18n-plugin.js:1650-1669` · bug · low | 🔧 **To fix** |
@@ -52,11 +52,11 @@ _Source links pinned to commit `2402fef`._
 | **W-07** · `worker/src/pricing.js:190-193` · bug · med | Reference only |
 | **W-05** · `worker/src/offers.js:322-334` · perf · med | Reference only |
 | ~~**W-08** · `worker/src/sheets.js:138-161` · comment-stale · med~~ | ✅ **Done** (comment fix) |
-| **W-01** · `worker/src/index.js:34-422` · dead-code · low | 🔧 **To fix** |
+| ~~**W-01** · `worker/src/index.js:34-422` · dead-code · low~~ | ✅ **Done** (comment fix) |
 | ~~**W-02** · `worker/src/index.js:387-400` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | **W-03** · `worker/src/index.js:248` · bug · low | Reference only |
 | **W-04** · `worker/src/offers.js:224-245` · security · low | Reference only |
-| **W-06** · `worker/src/rate-limit.js:34-38` · dead-code · nit | 🔧 **To fix** |
+| ~~**W-06** · `worker/src/rate-limit.js:34-38` · dead-code · nit~~ | ✅ **Done** (comment fix) |
 | **W-09** · `worker/src/lib/response.js:99` · config · low | Reference only |
 | **S-01** · `worker/src/index.js:74-195` · security · med | 🔧 **To fix** |
 | **S-02** · `worker/src/rate-limit.js:17-40` · security · med | 🔧 **To fix** |
@@ -226,7 +226,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Remove the runtime-swap justification (or convert to `const`) and reference the build-time i18n architecture.
 
 - [ ] **C-06** · [`assets/js/enquiry.js:723-728`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/enquiry.js#L723-L728) · dead-code · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** This file re-writes a date helper it could just import from another file it already imports from — duplicated logic.
   - **The issue:** A local `toISO` duplicates `toIso` exported by bookings-data.js, which enquiry.js already imports (`parseIso`).
 
@@ -272,7 +272,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Drop the unused parameter and the discarded caller argument.
 
 - [ ] **C-03** · [`assets/js/booking.js:158`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/booking.js#L158) · dead-code · **nit** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A `today` variable is created just to compute “tomorrow” once — it can be inlined.
   - **The issue:** `const today = new Date()` is referenced only once (to compute `tomorrow`).
 
@@ -354,7 +354,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add a `cd worker && npm ci` step to the README setup instructions.
 
 - [ ] **D-01** · [`README.md:134-139`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/README.md#L134-L139) · doc-stale · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** The README says the i18n plugin handles “five” marker types (there are four) and undercounts which HTML tags the sanitizer allows.
   - **The issue:** README says “five marker attributes” (only four exist) and its sanitizer description omits the allowed `<a>` and `<strong>`.
 
@@ -367,7 +367,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Correct “five”→“four” and list all four allowed tags.
 
 - [ ] **D-02** · [`SITEMAP.md:5`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/SITEMAP.md#L5) · doc-stale · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** SITEMAP says the site has 8 pages and that the legal pages 404 — both outdated; there are 12 pages and the legal pages are built and live.
   - **The issue:** SITEMAP says “eight pages” and that privacy/terms/cancellation links “today 404,” but vite.config defines 12 entries and the policy pages build (smoke test asserts 12 EN + 12 BG).
   - **Where:** [`SITEMAP.md:5`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/SITEMAP.md#L5) · [`SITEMAP.md:35`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/SITEMAP.md#L35) · [`SITEMAP.md:148`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/SITEMAP.md#L148)
@@ -475,7 +475,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Use `d >= tomorrow` (the picker floor) when no valid check-in is present.
 
 - **C-19** · [`assets/js/bookings-data.js:76-83`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/bookings-data.js#L76-L83) · dead-code · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX** — Remove it — but first double-check it is truly unreachable in prod (confirm it is genuinely dead code) before deleting.
+  - > ✅ **DONE** (comment fix applied) — Remove it — but first double-check it is truly unreachable in prod (confirm it is genuinely dead code) before deleting.
   - **In plain terms:** There’s a safety branch handling an old data format that may never actually occur in production — possibly-dead but cheap defensive code.
   - **The issue:** The `Array.isArray(entry)` branch guards a legacy array shape (schema regression), self-documented as a guard.
 
@@ -753,7 +753,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Move the pre-deploy step to a runbook; leave a standing “sheet header must have Price at column L” note; verify the live sheet.
 
 - **W-01** · [`worker/src/index.js:34-422`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/index.js#L34-L422) · dead-code · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX** — Drop the ref.
+  - > ✅ **DONE** (comment fix applied) — Drop the ref.
   - **In plain terms:** The server still generates a reference code and returns it, but it’s no longer written to the sheet and the site no longer reads it — leftover from a removed feature.
   - **The issue:** `generateRef()` is still called/returned, but the ref no longer occupies a sheet cell and the client no longer reads `data.ref`.
 
@@ -820,7 +820,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Strip `label` and the redundant raw fields from the public payload.
 
 - **W-06** · [`worker/src/rate-limit.js:34-38`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/worker/src/rate-limit.js#L34-L38) · dead-code · **nit** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** (comment fix applied)
   - **In plain terms:** A branch that checks for “empty list” can never run because an item was just added — self-admitted dead code.
   - **The issue:** The `recent.length === 0` branch is unreachable because `now` was just pushed.
 

@@ -36,7 +36,7 @@ function fpLocale() {
 }
 import { SITE_CONFIG } from './site-config.js';
 import { isOffSeason } from './season.js';
-import { parseIso } from './bookings-data.js';
+import { parseIso, toIso } from './bookings-data.js';
 import { makeSeasonPicker } from './season-picker.js';
 
 // Stricter than HTML5's `type=email` (which accepts "a@b" with no TLD).
@@ -705,19 +705,14 @@ export function initEnquiry() {
     // day the user actually clicked. Using toISOString() would convert
     // that local midnight to UTC and shift the day for any user east
     // of UTC by 1 day backwards (and west of UTC midnight-by-clock to
-    // the "next" day). Local getters preserve user intent.
-    const toISO = (d) => {
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    };
+    // the "next" day). Local getters preserve user intent. Shared
+    // `toIso` (bookings-data.js) does exactly this.
     const payload = {
       name: nameVal,
       email: emailVal,
       phone: phoneVal,
-      checkin: toISO(checkinDate),
-      checkout: toISO(checkoutDate),
+      checkin: toIso(checkinDate),
+      checkout: toIso(checkoutDate),
       adults: adults.value,
       children: children.value,
       infants: infants.value,
