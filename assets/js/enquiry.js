@@ -341,15 +341,18 @@ export function initEnquiry() {
   // typed something into it (e.g. opened the URL twice, then typed).
   // URLSearchParams + window.location are universally supported; no
   // try/catch needed here (round-1 review finding N4).
-  // TODO i18n: when Bulgarian copy lands, source the opener template
-  // from site-config.js / an i18n table rather than inline English
-  // (round-1 review finding N1).
   const params = new URLSearchParams(window.location.search);
   const villaSlug = params.get('villa');
   if (villaSlug && Object.prototype.hasOwnProperty.call(BUNGALOW_SLUGS, villaSlug)) {
     const villaName = BUNGALOW_SLUGS[villaSlug];
     if (!message.value.trim()) {
-      message.value = `Hello, I'd like to enquire about the ${villaName}.`;
+      // Localized opener template, baked onto the form's data-villa-opener at
+      // build (data-i18n-attr → enquiries.form.villa_opener). %VILLA% is a
+      // RUNTIME placeholder (not a build-time {token} — the plugin would
+      // hard-fail on {villa}); substitute the proper-noun villa name here.
+      const opener = form.dataset.villaOpener
+        || "Hello, I'd like to enquire about the %VILLA%.";
+      message.value = opener.split('%VILLA%').join(villaName);
     }
   }
 

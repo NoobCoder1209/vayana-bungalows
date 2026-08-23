@@ -95,7 +95,7 @@ export function initNewsletter() {
   // doesn't keep yelling after the problem's gone.
   email.addEventListener('input', clearError);
   consentInput.addEventListener('change', () => {
-    if (consentInput.checked) flagConsent(false);
+    if (consentInput.checked) { flagConsent(false); clearError(); }
   });
 
   // Track the element that had focus before the modal opened so we can
@@ -170,9 +170,10 @@ export function initNewsletter() {
   modal.querySelectorAll('[data-modal-close]').forEach((el) => {
     el.addEventListener('click', () => closeModal(modal, lastFocusBeforeModal));
   });
-  // Single document-level Escape handler — guarded by the idempotency
-  // check at the top of initNewsletter(), so we never stack two of them.
-  document.addEventListener('keydown', (e) => {
+  // Modal-scoped Escape handler (not document-level) so it can't leak across
+  // page lifecycles — same fix as enquiry.js (round-2 finding B-R2-3). openModal
+  // moves focus into the modal, so a keydown here fires while it's open.
+  modal.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !modal.hidden) closeModal(modal, lastFocusBeforeModal);
   });
 }
