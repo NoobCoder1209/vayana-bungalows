@@ -12,15 +12,15 @@ _Source links pinned to commit `2402fef`._
 
 ## Issue index
 
-**Progress:** **31 ✅ done**, **8 remain 🔧 To fix**, and **3 are 🕓 Later** (S-01/S-02/S-03 — Cloudflare dashboard/config actions to do at public launch, not repo code). The rest are **Reference only** (kept for context, not scheduled). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
+**Progress:** **38 ✅ done** — every owner-selected repo-code finding is complete. **0 remain 🔧 To fix.** **3 are 🕓 Later** (S-01/S-02/S-03 — Cloudflare dashboard/config actions to do at public launch, not repo code). C-21 was reviewed and needs no change (its UTC usage is correct). The rest are **Reference only** (kept for context, not scheduled). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
 
 | Issue | Status |
 |---|---|
 | ~~**C-01** · `assets/js/booking.js:81-133` · comment-stale · high~~ | ✅ **Done** (comment fix) |
-| **C-10** · `assets/js/newsletter.js:175` · bug · med | 🔧 **To fix** |
+| ~~**C-10** · `assets/js/newsletter.js:175` · bug · med~~ | ✅ **Done** |
 | ~~**C-09** · `assets/js/header.js:98-102` · comment-stale · med~~ | ✅ **Done** (comment fix) |
 | **C-13** · `assets/js/availability-calendar.js:259-266` · perf · med | Reference only |
-| **C-11** · `assets/js/newsletter.js:97-98` · bug · low | 🔧 **To fix** |
+| ~~**C-11** · `assets/js/newsletter.js:97-98` · bug · low~~ | ✅ **Done** |
 | ~~**C-05** · `assets/js/enquiry.js:124-219` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | ~~**C-06** · `assets/js/enquiry.js:723-728` · dead-code · low~~ | ✅ **Done** (comment fix) |
 | ~~**C-12** · `assets/js/newsletter.js:180` · dead-end · low~~ | ✅ **Done** |
@@ -32,21 +32,21 @@ _Source links pinned to commit `2402fef`._
 | ~~**D-03** · `README.md:13-18` · dx · med~~ | ✅ **Done** (comment fix) |
 | ~~**D-01** · `README.md:134-139` · doc-stale · low~~ | ✅ **Done** (comment fix) |
 | ~~**D-02** · `SITEMAP.md:5` · doc-stale · low~~ | ✅ **Done** (comment fix) |
-| **C-02** · `assets/js/booking.js:346-356` | 🔧 **To fix** |
-| **C-04** · `assets/js/enquiry.js:353-355` | 🔧 **To fix** |
-| **C-14** · `assets/js/availability-calendar.js:271-296` | 🔧 **To fix** |
+| ~~**C-02** · `assets/js/booking.js:346-356`~~ | ✅ **Done** |
+| ~~**C-04** · `assets/js/enquiry.js:353-355`~~ | ✅ **Done** |
+| ~~**C-14** · `assets/js/availability-calendar.js:271-296`~~ | ✅ **Done** |
 | ~~**C-15** · `assets/js/offer-modal.js:1-6` · comment-stale · med~~ | ✅ **Done** |
 | **C-07** · `assets/js/enquiry.js:428` · bug · low | Reference only |
 | ~~**C-19** · `assets/js/bookings-data.js:76-83` · dead-code · low~~ | ✅ **Done** (comment fix) |
 | ~~**C-20** · `assets/js/site-config.js:8-15` · comment-stale · low~~ | ✅ **Done** |
-| **C-21** · `assets/js/util/offer-dates.js:35-65` · bug · low | 🔧 **To fix** |
-| **B-07** · `scripts/i18n-plugin.js:1650-1669` · bug · low | 🔧 **To fix** |
+| **C-21** · `assets/js/util/offer-dates.js:35-65` · bug · low | ✅ **Reviewed** (no change — UTC use is correct) |
+| ~~**B-07** · `scripts/i18n-plugin.js:1650-1669` · bug · low~~ | ✅ **Done** |
 | ~~**B-01** · `scripts/i18n-plugin.js:55-102` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | ~~**B-02** · `scripts/i18n-plugin.js:17` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | ~~**B-03** · `scripts/i18n-plugin.js:71-78` · comment-stale · low~~ | ✅ **Done** |
 | ~~**B-05** · `scripts/i18n-plugin.js:936-947` · dead-end · low~~ | ✅ **Done** |
 | ~~**B-08** · `scripts/fetch-bookings.mjs:284-289` · comment-stale · low~~ | ✅ **Done** |
-| **B-09** · `vite.config.js:66-98` · bug · low | 🔧 **To fix** |
+| ~~**B-09** · `vite.config.js:66-98` · bug · low~~ | ✅ **Done** |
 | ~~**B-04** · `scripts/i18n-plugin.js:403-416` · dead-code · nit~~ | ✅ **Done** (comment fix) |
 | **B-06** · `scripts/i18n-plugin.js:673-678` · dead-code · nit | Reference only |
 | ~~**B-10** · `vite.config.js:65-96` · nit · nit~~ | ✅ **Done** |
@@ -116,7 +116,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Delete the `/enquiries/` references; document the single `stay/` target.
 
 - [ ] **C-10** · [`assets/js/newsletter.js:175`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/newsletter.js#L175) · bug · **med** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** — scoped the Escape listener to the modal (no more document-level leak);
   - **In plain terms:** The newsletter popup attaches its “press Escape to close” listener to the whole page and never removes it, so listeners pile up — the enquiry form already fixed this exact bug.
   - **The issue:** The keydown handler is bound on `document` (global, cross-page-lifecycle leak) instead of on the modal element, unlike the enquiry modal which was deliberately changed to modal-scoped.
 
@@ -188,7 +188,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Hoist the locale-keyed formatters to module scope; rebuild only when `currentLocale()` changes.
 
 - [ ] **C-11** · [`assets/js/newsletter.js:97-98`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/newsletter.js#L97-L98) · bug · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** — consent handler now clears the error pill too;
   - **In plain terms:** If the user forgets the consent tick and gets an error, then ticks it, the red error message stays on screen instead of clearing.
   - **The issue:** The consent change handler calls `flagConsent(false)` but not `clearError()`; the enquiry form clears the error on change.
 
@@ -380,7 +380,7 @@ _Source links pinned to commit `2402fef`._
 ## Report-only
 
 - **C-02** · [`assets/js/booking.js:346-356`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/booking.js#L346-L356) · i18n-hardcode · **med** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX** — Also add translator Codes to the BG + EN versions so the writer can rewrite them later.
+  - > ✅ **DONE** — booking modal copy localized via data-* template + %BUNGALOW% (EN+BG); Also add translator Codes to the BG + EN versions so the writer can rewrite them later.
   - **In plain terms:** The booking confirmation popup’s text is hardcoded in English, so on the Bulgarian site it still shows English.
   - **The issue:** Modal success title/body copy is built in JS as English literals, bypassing the data-attribute i18n pattern.
 
@@ -401,7 +401,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Source the success copy from localized data attributes / the i18n table.
 
 - **C-04** · [`assets/js/enquiry.js:353-355`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/enquiry.js#L353-L355) · i18n-hardcode · **med** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** — enquiry villa opener localized via data-villa-opener + %VILLA% (EN+BG);
   - **In plain terms:** When a guest arrives from a specific villa, the pre-filled enquiry message is English-only — there’s a known TODO for it.
   - **The issue:** The `?villa=` prefill writes an English opener; a live (accurate) TODO already flags the i18n gap.
 
@@ -421,7 +421,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Source the opener template from an i18n table when Bulgarian copy lands.
 
 - **C-14** · [`assets/js/availability-calendar.js:271-296`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/availability-calendar.js#L271-L296) · i18n-hardcode · **med** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX** — Also add translator Codes to the BG + EN versions so the writer can rewrite them later.
+  - > ✅ **DONE** — calendar eyebrow/nav/legend/day-aria localized via data-cal-* (EN+BG), verified in Firefox; Also add translator Codes to the BG + EN versions so the writer can rewrite them later.
   - **In plain terms:** The calendar’s labels (“Availability”, “Available/Booked/Past/Selected”, prev/next) are hardcoded English, so the Bulgarian calendar shows English.
   - **The issue:** English UI strings are baked into the calendar grid HTML with no translation call.
 
@@ -530,7 +530,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Make both paths use the same timezone basis (both UTC or both local).
 
 - **B-07** · [`scripts/i18n-plugin.js:1650-1669`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L1650-L1669) · bug · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** — charset regex requires charset= in the content attr;
   - **In plain terms:** The build’s charset detector treats an old-style meta tag as “the charset tag” even when it carries no charset — could misplace an inserted block in rare HTML.
   - **The issue:** The HTML4 charset regex matches `meta http-equiv="content-type"` regardless of whether `charset=` is in its content attribute.
 
@@ -627,7 +627,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Note that all three next-year tabs must exist together, or handle partial next-year tabs.
 
 - **B-09** · [`vite.config.js:66-98`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/vite.config.js#L66-L98) · bug · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** — address_street → Arapya (no more Bulgaria, Bulgaria);
   - **In plain terms:** The address “street” value already ends in “Bulgaria,” and there’s a separate “country” value also set to “Bulgaria” — render both together and you get “Bulgaria, Bulgaria.”
   - **The issue:** `address_street` ends in “Bulgaria” and `address_country` is also “Bulgaria”.
 

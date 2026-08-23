@@ -1645,7 +1645,11 @@ function insertAfterHead(html, block) {
   // content="describes the charset behaviour") won't match because
   // it isn't followed by `=`.
   const html5 = /<meta\b[^>]*\scharset\s*=[^>]*>/i;
-  const html4 = /<meta\b[^>]*\shttp-equiv\s*=\s*["']?content-type["']?[^>]*>/i;
+  // HTML4 form must ALSO actually declare a charset in its content — a bare
+  // `<meta http-equiv="content-type" content="text/html">` (no charset=) is
+  // NOT the charset anchor, so require `charset` after the http-equiv within
+  // the same tag.
+  const html4 = /<meta\b[^>]*\shttp-equiv\s*=\s*["']?content-type["']?[^>]*\bcharset\s*=[^>]*>/i;
   const html5Match = headBody.match(html5);
   const html4Match = headBody.match(html4);
   let charsetIdxWithinBody = -1;

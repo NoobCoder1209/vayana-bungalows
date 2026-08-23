@@ -170,6 +170,22 @@
       "cal2_aria": "Bungalow Lemon availability calendar",
       "cal3_aria": "Bungalow Olive availability calendar"
     },
+    "calendar": {
+      "eyebrow": "Availability",
+      "today": "Today",
+      "today_title": "Jump to the current month",
+      "prev_month_aria": "Previous month",
+      "next_month_aria": "Next month",
+      "legend_available": "Available",
+      "legend_booked": "Booked",
+      "legend_past": "Past",
+      "legend_selected": "Selected",
+      "state_available": "available",
+      "state_booked": "already booked",
+      "state_past": "past",
+      "state_offseason": "closed (off-season)",
+      "state_selected": "selected"
+    },
     "amenities": {
       "eyebrow": "In every bungalow",
       "title": "Amenities",
@@ -279,7 +295,9 @@
         "eyebrow": "Code 267· Reservation request received",
         "title": "Code 268· Thank you — we'll be in touch.",
         "body": "Code 269· A reservations specialist will follow up within twenty-four hours to confirm availability and tailor your stay.",
-        "close_button": "Code 270· Close"
+        "close_button": "Code 270· Close",
+        "title_template": "Thank you — your %BUNGALOW% request is in.",
+        "body_template": "A reservations specialist will follow up within twenty-four hours to confirm availability for %BUNGALOW% and tailor your stay."
       }
     },
     "villa1": {
@@ -462,7 +480,8 @@
       "phone_placeholder": "TELEPHONE*",
       "message_placeholder": "MESSAGE",
       "submit_label": "Send enquiry",
-      "submit_busy_label": "Sending…"
+      "submit_busy_label": "Sending…",
+      "villa_opener": "Hello, I'd like to enquire about the %VILLA%."
     },
     "a11y": {
       "name_label": "Full name (required)",
