@@ -10,7 +10,7 @@ _Source links pinned to commit `2402fef`._
 
 ## Issue index
 
-**38 of 53** findings are marked to fix (owner-selected); **19 are ✅ done** and **19 remain 🔧 To fix**. The rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
+**38 of 53** findings are marked to fix (owner-selected); **24 are ✅ done** and **14 remain 🔧 To fix** (S-01/S-02/S-03 are pending Cloudflare-dashboard/config actions, not repo code). The rest are **Reference only** (kept for context, not scheduled to be worked on). Refuted claims are listed for completeness. Full detail for every item is in the sections below.
 
 | Issue | Status |
 |---|---|
@@ -21,7 +21,7 @@ _Source links pinned to commit `2402fef`._
 | **C-11** · `assets/js/newsletter.js:97-98` · bug · low | 🔧 **To fix** |
 | ~~**C-05** · `assets/js/enquiry.js:124-219` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | ~~**C-06** · `assets/js/enquiry.js:723-728` · dead-code · low~~ | ✅ **Done** (comment fix) |
-| **C-12** · `assets/js/newsletter.js:180` · dead-end · low | 🔧 **To fix** |
+| ~~**C-12** · `assets/js/newsletter.js:180` · dead-end · low~~ | ✅ **Done** |
 | ~~**C-03** · `assets/js/booking.js:158` · dead-code · nit~~ | ✅ **Done** (comment fix) |
 | ~~**C-08** · `assets/js/enquiry.js:443-452` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
 | ~~**C-17** · `assets/js/hero-carousel.js:63` · comment-stale · nit~~ | ✅ **Done** (comment fix) |
@@ -42,12 +42,12 @@ _Source links pinned to commit `2402fef`._
 | ~~**B-01** · `scripts/i18n-plugin.js:55-102` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | ~~**B-02** · `scripts/i18n-plugin.js:17` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | **B-03** · `scripts/i18n-plugin.js:71-78` · comment-stale · low | Reference only |
-| **B-05** · `scripts/i18n-plugin.js:936-947` · dead-end · low | 🔧 **To fix** |
+| ~~**B-05** · `scripts/i18n-plugin.js:936-947` · dead-end · low~~ | ✅ **Done** |
 | **B-08** · `scripts/fetch-bookings.mjs:284-289` · comment-stale · low | Reference only |
 | **B-09** · `vite.config.js:66-98` · bug · low | 🔧 **To fix** |
 | ~~**B-04** · `scripts/i18n-plugin.js:403-416` · dead-code · nit~~ | ✅ **Done** (comment fix) |
 | **B-06** · `scripts/i18n-plugin.js:673-678` · dead-code · nit | Reference only |
-| **B-10** · `vite.config.js:65-96` · nit · nit | 🔧 **To fix** |
+| ~~**B-10** · `vite.config.js:65-96` · nit · nit~~ | ✅ **Done** |
 | **T-02** · `scripts/__tests__/fetch-bookings.test.mjs:3` · test-gap · low | 🔧 **To fix** |
 | **W-07** · `worker/src/pricing.js:190-193` · bug · med | Reference only |
 | **W-05** · `worker/src/offers.js:322-334` · perf · med | Reference only |
@@ -61,9 +61,9 @@ _Source links pinned to commit `2402fef`._
 | **S-01** · `worker/src/index.js:74-195` · security · med | 🔧 **To fix** |
 | **S-02** · `worker/src/rate-limit.js:17-40` · security · med | 🔧 **To fix** |
 | **S-03** · `worker/src/index.js:265-273` · security · low | 🔧 **To fix** |
-| **S-04** · `package.json:16-19` · security · med | 🔧 **To fix** |
+| ~~**S-04** · `package.json:16-19` · security · med~~ | ✅ **Done** |
 | **S-05** · `.github/workflows/deploy.yml:49-51` · bug · med | Reference only |
-| **S-06** · `.github/workflows/deploy.yml:24` · security · low | 🔧 **To fix** |
+| ~~**S-06** · `.github/workflows/deploy.yml:24` · security · low~~ | ✅ **Done** |
 | ~~**S-07** · `worker/wrangler.toml:29` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | ~~**S-08** · `worker/wrangler.toml:1-15` · comment-stale · low~~ | ✅ **Done** (comment fix) |
 | **L-01** · `locales/en.json:5` · consistency · high | Reference only |
@@ -247,7 +247,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Import `toIso` from bookings-data.js and delete the local copy.
 
 - [ ] **C-12** · [`assets/js/newsletter.js:180`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/assets/js/newsletter.js#L180) · dead-end · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** — removed the unused openModal param + discarded caller arg;
   - **In plain terms:** A function takes an argument it never uses, and the caller bothers to compute and pass it — wasted, confusing code.
   - **The issue:** `openModal(modal, getReturnFocusEl)` declares a second parameter never referenced in the body (focus restore lives in `closeModal`); the caller passes a discarded arg.
 
@@ -584,7 +584,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Add the missing tokens (or reference the vite.config context as the source of truth).
 
 - **B-05** · [`scripts/i18n-plugin.js:936-947`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/scripts/i18n-plugin.js#L936-L947) · dead-end · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX** — Decision: remove srcset/imagesrcset from URL_BEARING_ATTRS (YAGNI) and document that translated srcset is unsupported.
+  - > ✅ **DONE** — Reclassified: srcset/imagesrcset is NOT dead — it's a security guard that hard-fails a `javascript:`/`data:` payload injected via `data-i18n-attr` (a passing test asserts this). Kept in place; comment clarified to say WHY (guard, not a multi-URL validator). Removing it would weaken the sanitizer.
   - **In plain terms:** The plugin claims to validate `srcset` URLs but its check can only ever reject a real multi-URL srcset — a guard that never passes anything legitimate.
   - **The issue:** `srcset`/`imagesrcset` are validated with `isAllowedHref` on the whole comma-separated value, which has no comma-split.
 
@@ -672,7 +672,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Keep as a documented defensive guard, or remove.
 
 - **B-10** · [`vite.config.js:65-96`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/vite.config.js#L65-L96) · nit · **nit** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** — re-indented the license key to 4 spaces;
   - **In plain terms:** One line is indented with 2 spaces where its neighbors use 4 — purely cosmetic.
   - **The issue:** The `license:` key is mis-indented in both the en and bg context blocks.
 
@@ -909,7 +909,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Ensure the Worker is only reachable via the Cloudflare edge (block direct/tunnel access), or add a secondary key.
 
 - **S-04** · [`package.json:16-19`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/package.json#L16-L19) · security · **med** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** — ran npm audit fix (non-breaking dev advisories: 5 → 2; the remaining 2 are the deferred breaking vite@8 bump);
   - **In plain terms:** `npm audit` flags 5 vulnerabilities, but all are in build-time dev tools — zero affect the shipped site (`npm audit --omit=dev` = 0). The one needing a big upgrade (esbuild via vite) is a breaking major bump.
   - **The issue:** 5 dev-toolchain advisories (vite→esbuild, postcss, nanoid, brace-expansion); `--omit=dev` reports 0.
 
@@ -939,7 +939,7 @@ _Source links pinned to commit `2402fef`._
   - **Proposed fix:** Use `<<-EOF` with tab indentation, or de-indent the closing `EOF` to column 0. (Panel 2/3 — verify on the ubuntu runner.)
 
 - **S-06** · [`.github/workflows/deploy.yml:24`](https://github.com/NoobCoder1209/vayana-bungalows/blob/2402fef41215dc4076bbe0d1362190fdfea2cdb3/.github/workflows/deploy.yml#L24) · security · **low** · CONFIRMED (3/3)
-  - > 🔧 **TO FIX**
+  - > ✅ **DONE** — SHA-pinned all GitHub Actions in ci.yml / deploy.yml / refresh-bookings.yml;
   - **In plain terms:** One workflow pins its GitHub Actions to exact commit hashes (safest), but the other three use floating version tags — an inconsistent supply-chain posture.
   - **The issue:** `deploy-worker.yml` SHA-pins actions; ci.yml/deploy.yml/refresh-bookings.yml use floating tags.
 
