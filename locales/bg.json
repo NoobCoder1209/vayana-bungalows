@@ -152,14 +152,14 @@
     "specs": {
       "sr_title": "Код 198· Спецификации на бунгалото",
       "size_label": "Код 199· Площ",
-      "occupancy_label": "Код 200· Капацитет",
+      "occupancy_label": "Код 200· За",
       "occupancy_value": "Код 201· 2 възрастни",
       "bed_label": "Код 202· Легло",
       "bed_value": "Код 203· Кинг сайз",
-      "view_label": "Код 204· Изглед",
-      "view_value": "Код 205· Море",
-      "floor_label": "Код 206· Етаж",
-      "floor_value": "Код 207· Едно ниво"
+      "beds_label": "Код 204· Легла",
+      "beds_value": "Код 205· 2 × Куин",
+      "bathroom_label": "Код 206· Баня",
+      "bathroom_value": "Код 207· 1"
     },
     "villas": {
       "eyebrow": "Код 208· Трите вили",
