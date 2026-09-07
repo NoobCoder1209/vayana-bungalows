@@ -107,16 +107,23 @@ const i18nContext = {
 };
 
 // On GitHub Pages the site is served from /vayana-bungalows/, so we set the
-// base to that subpath only when building for production. In dev (npm run dev)
-// it stays at /, so localhost works without prefixing every URL.
-export default defineConfig(({ command }) => ({
+// base to that subpath when building for production. In dev (npm run dev) it
+// stays at /, so localhost works without prefixing every URL.
+//
+// `command` alone can't tell dev from preview (Vite runs *both* with
+// command='serve'), so we key off `mode` instead: dev defaults to
+// 'development', while `vite preview` resolves config with mode='production'
+// — exactly like `vite build`. That makes `npm run preview` mount the dist/
+// under /vayana-bungalows/ (matching the deployed site), so the language
+// pill's /bg/ mirrors resolve instead of falling through to an EN index.
+export default defineConfig(({ command, mode }) => ({
   root: '.',
-  base: command === 'build' ? BASE : '/',
+  base: mode === 'development' ? '/' : BASE,
   plugins: [
     i18nPlugin({
       localesDir: resolve(__dirname, 'locales'),
       contextByLocale: i18nContext,
-      basePath: command === 'build' ? BASE : '/',
+      basePath: mode === 'development' ? '/' : BASE,
       projectRoot: __dirname,
       inputs: INPUTS,
     }),

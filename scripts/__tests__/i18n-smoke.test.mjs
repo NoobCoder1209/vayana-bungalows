@@ -36,7 +36,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { parse } from 'node-html-parser';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -178,7 +178,10 @@ function collectPages(root) {
         continue;
       }
       if (entry.name.endsWith('.html')) {
-        const relPath = relative(root, full);
+        // Normalize to forward-slash relPaths: every subsequent assertion
+        // compares against '/'-separated URL templates, so on Windows the
+        // native '\' separator must be translated here once.
+        const relPath = relative(root, full).split(sep).join('/');
         const html = readFileSync(full, 'utf8');
         out.push({ relPath, html, doc: parse(html, { comment: true }) });
       }
