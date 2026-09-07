@@ -3080,7 +3080,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-8);
-  align-items: center;
+  /* Pin the photo to the TOP of the text column (level with the paragraph's
+     eyebrow/heading) rather than centering it against the whole block. */
+  align-items: start;
 }
 
 .destination-guide__row--flip {
@@ -3125,6 +3127,57 @@
 .destination-guide__text p {
   margin-bottom: 0;
   color: var(--text-dark);
+}
+
+/* ---- Per-section "See more" collapse (destination-readmore.js) ---- */
+
+/* Collapsed: clamp the whole body to ~14 lines and fade the bottom out.
+   line-height is pinned so the 14-line math (14 × 1.7em) is robust. */
+.destination-guide__body {
+  line-height: 1.7;
+}
+
+.destination-guide__body.is-collapsed {
+  max-height: calc(14 * 1.7em);   /* ~14 rendered lines */
+  overflow: hidden;
+  /* Dissolve the last couple of lines into the page instead of a hard cut. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
+}
+
+.destination-guide__body.is-expanded {
+  max-height: none;
+  -webkit-mask-image: none;
+          mask-image: none;
+}
+
+.destination-guide__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-top: var(--space-3);
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--fs-small, 0.875rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--brand, var(--text-dark));
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  transition: opacity var(--t-fast, 0.15s);
+}
+
+.destination-guide__toggle:hover {
+  opacity: 0.7;
+}
+
+.destination-guide__toggle:focus-visible {
+  outline: 2px solid var(--brand, currentColor);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 @media (max-width: 768px) {
