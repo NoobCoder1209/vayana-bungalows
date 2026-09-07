@@ -19,7 +19,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SEL_SRC = readFileSync(join(__dirname, '..', 'calendar-selection.js'), 'utf8');
+// Normalize CRLF so sliceFn's '\n}\n' column-0-brace search is portable —
+// on Windows the sources are checked out with \r\n and the LF-only marker
+// never matches.
+const SEL_SRC = readFileSync(join(__dirname, '..', 'calendar-selection.js'), 'utf8').replace(/\r\n/g, '\n');
 
 // Real season primitive (season.js has no imports of its own).
 const { isOffSeason } = await import(

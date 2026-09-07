@@ -19,8 +19,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CAL_SRC = readFileSync(join(__dirname, '..', 'availability-calendar.js'), 'utf8');
-const BOOKINGS_SRC = readFileSync(join(__dirname, '..', 'bookings-data.js'), 'utf8');
+// Normalize CRLF so sliceFn's '\n}\n' column-0-brace search is portable —
+// on Windows the sources are checked out with \r\n and the LF-only marker
+// never matches.
+const toLf = (src) => src.replace(/\r\n/g, '\n');
+const CAL_SRC = toLf(readFileSync(join(__dirname, '..', 'availability-calendar.js'), 'utf8'));
+const BOOKINGS_SRC = toLf(readFileSync(join(__dirname, '..', 'bookings-data.js'), 'utf8'));
 
 // Pull the real season primitives (season.js has no imports of its own).
 const { isOffSeason, seasonMaxDate } = await import(
