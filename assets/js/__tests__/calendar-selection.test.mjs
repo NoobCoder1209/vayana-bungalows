@@ -61,6 +61,7 @@ function loadLogic() {
   const body = [
     deps,
     sliceFn(SEL_SRC, 'nightsBetween'),
+    sliceFn(SEL_SRC, 'minNightsForRange'),
     sliceFn(SEL_SRC, 'sameSelection'),
     sliceFn(SEL_SRC, 'priceResponseIsStale'),
     sliceFn(SEL_SRC, 'isRangeContiguous'),
@@ -74,7 +75,7 @@ function loadLogic() {
     sliceFn(SEL_SRC, 'applyPillState'),
     sliceFn(SEL_SRC, 'isRetryablePriceStatus'),
     sliceFn(SEL_SRC, 'shouldRetryAttempt'),
-    'return { nightsBetween, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, parseOfferMonth, firstAvailableBungalow, dayState, reduceClick, pillPresentation, applyPillState, isRetryablePriceStatus, shouldRetryAttempt, MIN_NIGHTS, KEY_ORDER };',
+    'return { nightsBetween, minNightsForRange, sameSelection, priceResponseIsStale, isRangeContiguous, evaluateSelection, isBookableDockDate, parseOfferMonth, firstAvailableBungalow, dayState, reduceClick, pillPresentation, applyPillState, isRetryablePriceStatus, shouldRetryAttempt, MIN_NIGHTS, KEY_ORDER };',
   ].join('\n\n');
   return new Function('isOffSeason', body)(isOffSeason);
 }
@@ -566,4 +567,118 @@ test('parseOfferMonth: 2-digit year (JS 1900-mapping trap) → null', () => {
   for (const bad of ['0050-06', '0001-01', '0000-01', '0099-12']) {
     assert.equal(L.parseOfferMonth(bad), null, `${bad} should be null`);
   }
+});
+
+// ── minNightsForRange (offer-lowered minimum) ────────────────────────────────
+//
+// An offer whose window contains the range enough to satisfy its minimumToBook
+// (Sheet col K) lowers the required minimum for that range; else the default 5.
+// Mirrors the server pricing gate (inWindow >= minToBook).
+
+const OFFER_3N = { startDate: '2026-09-10', endDate: '2026-09-20', minimumToBook: 3 };
+
+test('minNightsForRange: no offers → default MIN_NIGHTS (5)', () => {
+  assert.equal(L.minNightsForRange('2026-09-12', '2026-09-15', []), 5);
+  assert.equal(L.minNightsForRange('2026-09-12', '2026-09-15', null), 5);
+});
+
+test('minNightsForRange: 3-night range fully inside a 3-night offer window → 3', () => {
+  // 12→15 Sep = 3 nights, all inside 10–20 Sep, offer min 3 → qualifies → 3.
+  assert.equal(L.minNightsForRange('2026-09-12', '2026-09-15', [OFFER_3N]), 3);
+});
+
+test('minNightsForRange: 3-night range OUTSIDE any offer window → stays 5', () => {
+  // Aug has no offer → default floor.
+  assert.equal(L.minNightsForRange('2026-08-01', '2026-08-04', [OFFER_3N]), 5);
+});
+
+test('minNightsForRange: range only partially overlapping the window (in-window < min) → stays 5', () => {
+  // 8→11 Sep: only 10–11 Sep is in-window = 1 night < offer min 3 → does NOT
+  // qualify → default 5 (matches server inWindow>=minToBook).
+  assert.equal(L.minNightsForRange('2026-09-08', '2026-09-11', [OFFER_3N]), 5);
+});
+
+test('minNightsForRange: multiple offers → the lowest qualifying minimum wins', () => {
+  const offers = [
+    { startDate: '2026-09-10', endDate: '2026-09-20', minimumToBook: 4 },
+    { startDate: '2026-09-10', endDate: '2026-09-20', minimumToBook: 3 },
+  ];
+  // 12→15 = 3 in-window nights: qualifies for the min-3 offer (>=3) but NOT the
+  // min-4 offer (3 < 4) → 3.
+  assert.equal(L.minNightsForRange('2026-09-12', '2026-09-15', offers), 3);
+});
+
+test('minNightsForRange: offer min ABOVE 5 does not raise the floor (never exceeds default)', () => {
+  const offers = [{ startDate: '2026-09-10', endDate: '2026-09-20', minimumToBook: 7 }];
+  // A 6-night in-window range doesn't meet the 7-night offer min, and we never
+  // raise above the default 5 → stays 5 (offers only ever LOWER the floor).
+  assert.equal(L.minNightsForRange('2026-09-11', '2026-09-17', offers), 5);
+});
+
+test('minNightsForRange: ignores malformed offers (missing/NaN min or dates)', () => {
+  const offers = [
+    { startDate: '2026-09-10', endDate: '2026-09-20' },           // no min
+    { startDate: 'nope', endDate: '2026-09-20', minimumToBook: 3 }, // bad date
+    { minimumToBook: 3 },                                          // no dates
+  ];
+  assert.equal(L.minNightsForRange('2026-09-12', '2026-09-15', offers), 5);
+});
+
+test('evaluateSelection: 3-night range is VALID when minNights lowered to 3', () => {
+  const v = L.evaluateSelection(
+    { key: 'B1', checkIn: '2026-09-12', checkOut: '2026-09-15' },
+    new Set(), TODAY, 3,
+  );
+  assert.equal(v.kind, 'valid');
+  assert.equal(v.nights, 3);
+  assert.equal(v.minNights, 3);
+});
+
+test('evaluateSelection: 3-night range still tooShort at default minNights (5)', () => {
+  const v = L.evaluateSelection(
+    { key: 'B1', checkIn: '2026-09-12', checkOut: '2026-09-15' },
+    new Set(), TODAY,
+  );
+  assert.equal(v.kind, 'tooShort');
+  assert.equal(v.minNights, 5);
+});
+
+test('firstAvailableBungalow: 3-night range auto-selects when minNights=3', () => {
+  const map = new Map([['B1', new Set()], ['B2', new Set()], ['B3', new Set()]]);
+  // Default min (5) → null; lowered min (3) → B1.
+  assert.equal(L.firstAvailableBungalow(map, '2026-09-12', '2026-09-15', TODAY), null);
+  assert.equal(L.firstAvailableBungalow(map, '2026-09-12', '2026-09-15', TODAY, L.KEY_ORDER, 3), 'B1');
+});
+
+// ── minNightsForRange: boundary cases (lock the exclusive-end server mirror) ──
+// These mirror worker/__tests__/pricing.test.mjs's window-boundary cases, so a
+// future overlap-math regression that diverges from the server is caught here.
+
+test('minNightsForRange: range extending PAST the window end (in-window < min) → stays 5', () => {
+  // Offer 10–20 Sep, min 3. Range 18→24 Sep = nights 18,19 in-window (2) +
+  // 20,21,22,23 outside. 2 < 3 → does NOT qualify → default 5. (A bug that
+  // counted the OUTSIDE nights toward the gate would wrongly return 3.)
+  assert.equal(L.minNightsForRange('2026-09-18', '2026-09-24', [OFFER_3N]), 5);
+});
+
+test('minNightsForRange: range STARTING before the window start (in-window < min) → stays 5', () => {
+  // Range 6→11 Sep vs window 10–20: only night 10 is in-window (1) < 3 → 5.
+  assert.equal(L.minNightsForRange('2026-09-06', '2026-09-11', [OFFER_3N]), 5);
+});
+
+test('minNightsForRange: exact-boundary — checkout ON endDate counts endDate-1 as the last in-window night', () => {
+  // Window 10–20 Sep (endDate EXCLUSIVE, so last in-window night is Sep 19).
+  // Range 17→20 Sep = nights 17,18,19 = 3 in-window (Sep 20 is checkout, NOT a
+  // night) → exactly meets min 3 → qualifies → 3. This pins the exclusive-end
+  // convention: an inclusive-end bug would count Sep 20 too and still pass here,
+  // so pair it with the next assertion.
+  assert.equal(L.minNightsForRange('2026-09-17', '2026-09-20', [OFFER_3N]), 3);
+  // Range 18→20 = nights 18,19 = 2 in-window < 3 → stays 5 (an inclusive-end
+  // bug would count Sep 20 as a 3rd in-window night and wrongly return 3).
+  assert.equal(L.minNightsForRange('2026-09-18', '2026-09-20', [OFFER_3N]), 5);
+});
+
+test('minNightsForRange: reversed offer window (startDate > endDate) never lowers the floor', () => {
+  const bad = { startDate: '2026-09-20', endDate: '2026-09-10', minimumToBook: 3 };
+  assert.equal(L.minNightsForRange('2026-09-12', '2026-09-15', [bad]), 5);
 });
