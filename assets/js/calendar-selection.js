@@ -478,7 +478,7 @@ export function initCalendarSelection() {
   // Empty until the fetch resolves; until then every range uses the default
   // MIN_NIGHTS — the safe/normal floor, matching the fail-safe posture.
   let offers = [];
-  fetch(SITE_CONFIG.endpoints.offers)
+  const offersReady = fetch(SITE_CONFIG.endpoints.offers)
     .then((r) => (r.ok ? r.json() : null))
     .then((data) => {
       if (data && data.ok === true && Array.isArray(data.offers)) {
@@ -960,8 +960,11 @@ export function initCalendarSelection() {
 
   // Populate the real unavailable sets from the shared (cached) fetch, then
   // re-evaluate any selection made before data arrived, and finally apply any
-  // home-dock deep link against the now-real availability.
-  loadBookings().then((bookings) => {
+  // home-dock deep link against the now-real availability AND the loaded offers
+  // (so an offer-length deep-link range auto-selects — offersReady is awaited
+  // alongside bookings, else the bootstrap would see offers=[] and use the
+  // default 5-night floor, silently ignoring a 3-night offer range).
+  Promise.all([loadBookings(), offersReady]).then(([bookings]) => {
     roots.forEach((root) => {
       const key = root.dataset.bungalowKey;
       unavailableByKey.set(key, availabilityFor(bookings, key).unavailable);
