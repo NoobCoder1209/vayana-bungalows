@@ -1679,6 +1679,13 @@
 .bungalow-split__head h2 {
   font-size: var(--fs-h3);
   margin: 0;
+  /* The home "Discover more" cards deep-link to stay/#bungalow-N-title. This
+     heading is the anchor target, but the global scroll-padding-top is only the
+     header height, so the jump lands the heading flush under the sticky header
+     and hides the "Choose Your Bungalow" eyebrow that sits ABOVE it. Offset the
+     landing far enough that the eyebrow and the heading both clear the header
+     with breathing room. Same technique as .legal-page h2. */
+  scroll-margin-top: calc(var(--header-height) + var(--space-8));
 }
 
 .bungalow-split__grid {
