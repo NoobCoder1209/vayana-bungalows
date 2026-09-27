@@ -99,9 +99,8 @@
       "modal_fixed_dates": "These dates are fixed and cannot be changed or extended:<br>",
       "modal_rules_title": "Offer terms",
       "modal_rule_1": "The offer is valid only for the dates shown above and cannot be moved, split, or extended.",
-      "modal_rule_2": "The price covers the full stay for the number of nights shown above. It is not a per-night rate.",
-      "modal_rule_3": "The offer is subject to availability and confirmation and may be withdrawn before you enquire.",
-      "modal_rule_4": "This offer cannot be combined with any other promotion or discount.",
+      "modal_rule_2": "The offer is subject to availability and confirmation and may be withdrawn before you enquire.",
+      "modal_rule_3": "This offer cannot be combined with any other promotion or discount.",
       "modal_take": "Take the offer"
     },
     "services": {
