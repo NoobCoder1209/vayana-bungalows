@@ -709,3 +709,18 @@ test('smoke: the enquiry form + thanks page carry robots noindex (EN + BG)', () 
     );
   }
 });
+
+// ── web app manifest ─────────────────────────────────────────────────────────
+
+test('smoke: dist/site.webmanifest exists, is valid JSON, and every page links it', () => {
+  const mp = join(DIST_DIR, 'site.webmanifest');
+  assert.ok(existsSync(mp), 'dist/site.webmanifest must exist');
+  const m = JSON.parse(readFileSync(mp, 'utf8'));
+  assert.equal(m.name, 'Vayana Bungalows');
+  assert.ok(Array.isArray(m.icons) && m.icons.length > 0, 'manifest has icons');
+  // Every emitted page must carry <link rel="manifest"> (module-scope `pages`
+  // is populated by the before() fixture).
+  for (const { relPath, html } of pages) {
+    assert.match(html, /<link[^>]*rel="manifest"/, `${relPath}: must link the manifest`);
+  }
+});

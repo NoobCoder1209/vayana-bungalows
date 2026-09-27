@@ -1,0 +1,30 @@
+{
+  "name": "Vayana Bungalows",
+  "short_name": "Vayana",
+  "description": "Boutique bungalows on the Black Sea coast in Tsarevo, Bulgaria.",
+  "start_url": "/vayana-bungalows/",
+  "scope": "/vayana-bungalows/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0e0d0a",
+  "icons": [
+    {
+      "src": "/vayana-bungalows/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/vayana-bungalows/favicon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/vayana-bungalows/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180",
+      "purpose": "maskable"
+    }
+  ]
+}

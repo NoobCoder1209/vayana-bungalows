@@ -11,6 +11,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <!-- Swap no-js → js-on synchronously, before any stylesheet loads, so
          the JS-on hamburger doesn't flash invisible during the deferred
          module's load window. CSS uses html.no-js for the no-JS fallback. -->
@@ -22,6 +23,29 @@
          which lists indexable URLs only). The success/thank-you page carries
          the same directive. -->
     <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://noobcoder1209.github.io/vayana-bungalows/enquiries/" />
+
+    <!-- Open Graph / Twitter — the page is noindex (kept out of search), but a
+         directly-shared enquiry link still gets a proper preview card. og:url
+         + canonical are rewritten per-locale by the i18n plugin; the share
+         image reuses og-home.jpg. og:locale flips to bg_BG on the BG mirror. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="bg_BG" />
+    <meta property="og:title" data-i18n-meta="enquiries.meta.title" content="Enquiries – Vayana Bungalows" />
+    <meta property="og:description" data-i18n-meta="enquiries.meta.description" content="Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests – we will reach out to you shortly" />
+    <meta property="og:url" content="https://noobcoder1209.github.io/vayana-bungalows/enquiries/" />
+    <meta property="og:image" content="https://noobcoder1209.github.io/vayana-bungalows/og-home.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Vayana Bungalows – a set dining table inside a bungalow, by the Black Sea in Tsarevo, Bulgaria" />
+    <meta property="og:site_name" content="Vayana Bungalows" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" data-i18n-meta="enquiries.meta.title" content="Enquiries – Vayana Bungalows" />
+    <meta name="twitter:description" data-i18n-meta="enquiries.meta.description" content="Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests – we will reach out to you shortly" />
+    <meta name="twitter:image" content="https://noobcoder1209.github.io/vayana-bungalows/og-home.jpg" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />
