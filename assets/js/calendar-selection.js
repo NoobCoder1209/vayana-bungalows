@@ -19,10 +19,10 @@
 //     range shows the gold pill. On selection the pill appears in a LOADING
 //     state — a spinner + "Pricing your stay…", non-clickable — while the
 //     Worker's POST /price (the SINGLE price source; no client-side per-night
-//     fallback) computes the total. It then resolves to "Stay with us only for
-//     X€" (clickable, href carries ?price), or, if /price fails or a safety
-//     timeout elapses, falls back to a clickable "Continue to enquire" with no
-//     price (so a slow/failed lookup never traps the guest). See
+//     fallback) computes the total. It then resolves to "Stay with us for N
+//     nights, only for X€" (clickable, href carries ?price), or, if /price fails
+//     or a safety timeout elapses, falls back to a clickable "Continue to
+//     enquire" with no price (so a slow/failed lookup never traps the guest). See
 //     pillPresentation / applyPillState / fetchPrice.
 //   - ONE selection at a time across all three bungalows: starting/among one
 //     clears any selection on the others, so only one pill is ever visible.
@@ -83,20 +83,29 @@ export function shouldRetryAttempt(attemptNo, maxAttempts) {
 }
 
 // Pure presentation resolver for the /stay/ pill: given a state and (for the
-// priced state) a total, return the label, whether the pill is `disabled`
-// (non-clickable while pricing), and whether it's `priced` (carries a real
-// total → the href should append ?price). Split out so ALL of the copy /
+// priced state) a total + nights, return the label, whether the pill is
+// `disabled` (non-clickable while pricing), and whether it's `priced` (carries a
+// real total → the href should append ?price). Split out so ALL of the copy /
 // clickability / price-ness logic lives in one testable place; applyPillState
 // (the DOM writer) drives its branches purely off these fields — it does not
 // re-derive the state itself.
-//   'loading'  → spinner + "Pricing your stay…", disabled, not priced
-//   'priced'   → "Stay with us only for X€",      enabled,  priced
-//   'fallback' → "Continue to enquire",           enabled,  not priced
-// A 'priced' state whose total isn't a finite number degrades to the neutral
-// fallback (enabled, not priced) — never renders "…for €NaN".
-export function pillPresentation(state, total) {
-  if (state === 'priced' && typeof total === 'number' && Number.isFinite(total)) {
-    return { label: `Stay with us only for ${total}€`, disabled: false, priced: true };
+//   'loading'  → spinner + "Pricing your stay…",                     disabled, not priced
+//   'priced'   → "Stay with us for N nights, only for X€",           enabled,  priced
+//   'fallback' → "Continue to enquire",                              enabled,  not priced
+// A 'priced' state whose total OR nights isn't a finite positive number degrades
+// to the neutral fallback (enabled, not priced) — never renders "…for €NaN" or
+// "for NaN nights".
+export function pillPresentation(state, total, nights) {
+  const finitePos = (v) => typeof v === 'number' && Number.isFinite(v) && v > 0;
+  if (state === 'priced' && Number.isFinite(total) && finitePos(nights)) {
+    // Pluralize: an offer window can lower the minimum below 5 (down to
+    // minimumToBook >= 1), so a 1-night priced stay is reachable — "1 night".
+    const nightsWord = nights === 1 ? 'night' : 'nights';
+    return {
+      label: `Stay with us for ${nights} ${nightsWord}, only for ${total}€`,
+      disabled: false,
+      priced: true,
+    };
   }
   if (state === 'loading') {
     return { label: 'Pricing your stay…', disabled: true, priced: false };
@@ -111,10 +120,10 @@ export function pillPresentation(state, total) {
 // pricing. `enquiryHref` is injected (the caller's link builder) so this stays
 // a thin, testable DOM writer with no closure captures.
 //   loading  → spinner + "Pricing your stay…", NO href, aria-disabled/busy, --loading
-//   priced   → "Stay with us only for X€", href with ?price, enabled
+//   priced   → "Stay with us for N nights, only for X€", href with ?price, enabled
 //   fallback → "Continue to enquire", href without price, enabled
-export function applyPillState(pill, state, snapshot, total, enquiryHref) {
-  const { label, disabled, priced } = pillPresentation(state, total);
+export function applyPillState(pill, state, snapshot, total, nights, enquiryHref) {
+  const { label, disabled, priced } = pillPresentation(state, total, nights);
   if (disabled) {
     // Loading: spinner + label, non-clickable (no href, aria-disabled/busy;
     // CSS adds pointer-events:none via --loading).
@@ -548,31 +557,6 @@ export function initCalendarSelection() {
   };
   const hideAllPills = () => pillByKey.forEach((p) => { p.hidden = true; });
 
-  // ── Per-bungalow "Selected X nights" caption ───────────────────────────────
-  // A plain italic text line (no pill/button styling), shown to the LEFT,
-  // alongside the pill and under the same conditions (valid >=5-night range).
-  // Also a sibling of the calendar root so the renderer's innerHTML rewrite
-  // can't destroy it. Inserted BEFORE the pill so it reads left-of it.
-  const countByKey = new Map();
-  const countFor = (root, key, pill) => {
-    let el = countByKey.get(key);
-    if (el && el.isConnected) return el;
-    el = document.createElement('span');
-    el.className = 'stay-select__count';
-    el.hidden = true;
-    // Place it right BEFORE the pill so DOM/visual order is
-    // calendar → count → pill (caption on the left, pill on the right).
-    // Falls back to after-root if the pill isn't mounted yet.
-    if (pill && pill.isConnected) {
-      pill.insertAdjacentElement('beforebegin', el);
-    } else {
-      root.insertAdjacentElement('afterend', el);
-    }
-    countByKey.set(key, el);
-    return el;
-  };
-  const hideAllCounts = () => countByKey.forEach((el) => { el.hidden = true; });
-
   // Build the enquiry link the pill points at. Dates plus the bungalow the pill
   // belongs to (?bungalow=1|2|3) — each pill's href is set for its OWN bungalow,
   // so the clicked pill inherently carries the right one. The stay's total price
@@ -640,7 +624,7 @@ export function initCalendarSelection() {
     // leave the pill clickable with the neutral no-price label so a slow/failed
     // /price never traps the guest behind a permanent spinner.
     const toFallback = () => settle((pill) => {
-      applyPillState(pill, 'fallback', snapshot, undefined, enquiryHref);
+      applyPillState(pill, 'fallback', snapshot, undefined, undefined, enquiryHref);
       announce('');
       announce('Continue to enquire.');
     });
@@ -710,12 +694,16 @@ export function initCalendarSelection() {
             return;
           }
           const total = data.total;
+          // Nights for the priced label, derived from the snapshot the fetch
+          // was fired for (not the live selection) so it always matches `total`.
+          const nights = nightsBetween(snapshot.checkIn, snapshot.checkOut);
+          const nightsWord = nights === 1 ? 'night' : 'nights';
           settle((pill) => {
-            applyPillState(pill, 'priced', snapshot, total, enquiryHref);
+            applyPillState(pill, 'priced', snapshot, total, nights, enquiryHref);
             // Reset the live region before re-announcing so screen readers still
-            // read an identical euro total when the guest re-selects the same range.
+            // read an identical announcement when the guest re-selects the same range.
             announce('');
-            announce(`Stay with us for ${total} euros.`);
+            announce(`Stay with us for ${nights} ${nightsWord}, only for ${total} euros.`);
           });
         })
         .catch((err) => {
@@ -751,7 +739,6 @@ export function initCalendarSelection() {
     const today = todayMidnight();
     hideDock();
     hideAllPills();
-    hideAllCounts();
     rerenderCalendars();
 
     if (!selection) { announce(''); return; }
@@ -794,15 +781,12 @@ export function initCalendarSelection() {
       // state ("…for X€", clickable) or, on failure/timeout, to the neutral
       // clickable "Continue to enquire" fallback (see fetchPrice). The loading
       // pill carries NO href.
-      applyPillState(pill, 'loading', selection, undefined, enquiryHref);
+      applyPillState(pill, 'loading', selection, undefined, undefined, enquiryHref);
       pill.hidden = false;
-      // Italic "Selected X nights" caption, to the left of the pill.
-      const count = countFor(root, selection.key, pill);
-      count.textContent = `Selected ${verdict.nights} ${verdict.nights === 1 ? 'night' : 'nights'}`;
-      count.hidden = false;
-      // Announce the selection + that pricing is underway; the price (or the
-      // fallback) announcement follows when /price settles.
-      announce(`Selected ${verdict.nights} nights. Pricing your stay…`);
+      // Announce that pricing is underway; the price (or the fallback)
+      // announcement follows when /price settles.
+      const selWord = verdict.nights === 1 ? 'night' : 'nights';
+      announce(`Selected ${verdict.nights} ${selWord}. Pricing your stay…`);
       // Fetch the real total (async, debounced, race-guarded).
       schedulePrice(selection);
     } else {
@@ -866,7 +850,7 @@ export function initCalendarSelection() {
   // calendars, the dock does NOT enforce the 5-night minimum. On arrival we:
   //   - find the FIRST bungalow (B1→B2→B3) that is free for the whole range AND
   //     the range is >=5 nights → auto-select it (same visuals as a manual
-  //     pick: gold circles, "Selected N nights", price pill), scroll to that
+  //     pick: gold circles, price pill), scroll to that
   //     bungalow, and focus its check-in cell; then strip the params.
   //   - otherwise (no bungalow free, range <5 nights, or junk params) → leave
   //     the page at the top so the guest can scroll and browse.
