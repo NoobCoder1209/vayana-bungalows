@@ -18,7 +18,7 @@
       "lang_bg_current_aria": "Bulgarian, current language",
       "lang_switch_to_en_aria": "Switch to English",
       "lang_switch_to_bg_aria": "Switch to Bulgarian",
-      "_note_DO_NOT_TRANSLATE_lang_aria_keys": "The four lang_*_aria keys above (lang_en_current_aria, lang_bg_current_aria, lang_switch_to_en_aria, lang_switch_to_bg_aria) are referenced by index.html's .site-header__lang segments via data-i18n-attr (data-aria-current / data-aria-switch). The i18n plugin bakes both strings onto each segment; assets/js/lang.js promotes the correct one to aria-label based on the segment's is-active state. If you delete a segment's data-i18n-attr marker these will orphan — leave them keyed. This _note key itself is orphan by design; leave it here as future-editor guidance. This note key's value is kept identical across all locales — do NOT translate it, or a future dev reading a translated identifier list will not be able to grep for the identifiers in code."
+      "_note_DO_NOT_TRANSLATE_lang_aria_keys": "The four lang_*_aria keys above (lang_en_current_aria, lang_bg_current_aria, lang_switch_to_en_aria, lang_switch_to_bg_aria) are referenced by index.html's .site-header__lang segments via data-i18n-attr (data-aria-current / data-aria-switch). The i18n plugin bakes both strings onto each segment; assets/js/lang.js promotes the correct one to aria-label based on the segment's is-active state. If you delete a segment's data-i18n-attr marker these will orphan – leave them keyed. This _note key itself is orphan by design; leave it here as future-editor guidance. This note key's value is kept identical across all locales – do NOT translate it, or a future dev reading a translated identifier list will not be able to grep for the identifiers in code."
     },
     "drawer": {
       "nav_home": "Home",
@@ -46,9 +46,9 @@
   },
   "home": {
     "meta": {
-      "title": "Code 120· Vayana Bungalows — Boutique Bungalows in Tsarevo, Bulgaria",
-      "description": "Code 121· Vayana Bungalows: a boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days.",
-      "og_description": "Code 122· A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria — handcrafted hospitality, garden views, and quiet days."
+      "title": "Code 120· Vayana Bungalows – Boutique Bungalows in Tsarevo, Bulgaria",
+      "description": "Code 121· Vayana Bungalows: a boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria – handcrafted hospitality, garden views, and quiet days.",
+      "og_description": "Code 122· A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria – handcrafted hospitality, garden views, and quiet days."
     },
     "hero": {
       "title_html": "Welcome to Vayana Bungalows",
@@ -57,7 +57,7 @@
     "intro": {
       "eyebrow": "The coast we love to explore",
       "title": "On the Black Sea coast, at the foot of the Strandzha mountains.",
-      "body_para1": "A little seaside escape made for slow mornings, long lunches and time well spent together. Our cosy, thoughtfully designed bungalows are just a few steps from the sea in Arapya Bay — a place to switch off, breathe deeper and enjoy the simple pleasures of being by the coast.",
+      "body_para1": "A little seaside escape made for slow mornings, long lunches and time well spent together. Our cosy, thoughtfully designed bungalows are just a few steps from the sea in Arapya Bay – a place to switch off, breathe deeper and enjoy the simple pleasures of being by the coast.",
       "body_para2": "And when you're ready to explore, there is plenty waiting beyond the bay. Discover our favourite beaches, quiet villages, wild corners of Strandzha and the local places we return to ourselves.",
       "cta": "See What’s Around",
       "img_alt": "Wooden bungalow terrace at sunset"
@@ -122,7 +122,7 @@
     "newsletter": {
       "eyebrow": "Notes from the bay",
       "title": "Stay with us",
-      "lede": "Quiet notes from the coast — three or four a year, never more.",
+      "lede": "Quiet notes from the coast – three or four a year, never more.",
       "email_label": "Email address",
       "email_placeholder": "Your email address",
       "hp_label": "Website",
@@ -130,15 +130,15 @@
       "consent_html": "I agree to the <a href=\"{privacy_url}\">Privacy Policy</a> and consent to receiving occasional emails from Vayana Bungalows.",
       "noscript_html": "Subscribe by emailing <a href=\"{email_href}\">{email_display}</a> with the subject \"Subscribe\".",
       "modal_eyebrow": "Subscribed",
-      "modal_title": "Thank you — you’re on the list.",
+      "modal_title": "Thank you – you’re on the list.",
       "modal_body": "We’ll send a quiet note when there’s something worth sharing.",
       "modal_close": "Close"
     }
   },
   "stay": {
     "meta": {
-      "title": "Code 192· Stay — Vayana Bungalows",
-      "description": "Code 193· The Vayana bungalows in Tsarevo, Bulgaria: three boutique villas on the Black Sea coast — oceanview, hilltop, and beachfront. Pick the one that fits your stay.",
+      "title": "Code 192· Stay – Vayana Bungalows",
+      "description": "Code 193· The Vayana bungalows in Tsarevo, Bulgaria: three boutique villas on the Black Sea coast – oceanview, hilltop, and beachfront. Pick the one that fits your stay.",
       "og_description": "Code 194· Three boutique bungalows on the Black Sea coast in Tsarevo, Bulgaria. Pick the one that fits your stay."
     },
     "hero": {
@@ -224,47 +224,47 @@
   },
   "destination": {
     "meta": {
-      "title": "Code 313· Destination — Vayana Bungalows",
-      "description": "Code 314· Tsarevo on the Black Sea coast of Bulgaria — what to do, what to eat, where to walk, and how to find us. The home base of the Vayana bungalows.",
-      "og_description": "Code 315· Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows — beach, food, hiking, nearby villages, and directions.",
+      "title": "Code 313· Destination – Vayana Bungalows",
+      "description": "Code 314· Tsarevo on the Black Sea coast of Bulgaria – what to do, what to eat, where to walk, and how to find us. The home base of the Vayana bungalows.",
+      "og_description": "Code 315· Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows – beach, food, hiking, nearby villages, and directions.",
       "twitter_description": "Code 316· Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows."
     },
     "hero": {
       "eyebrow": "Arapya · Bulgaria",
       "title": "The coast we love to explore",
-      "sub": "Stay close to the sea, then wander a little further — to quiet beaches, good local food, small coastal towns, Strandzha villages and the unexpected things happening along the way."
+      "sub": "Stay close to the sea, then wander a little further – to quiet beaches, good local food, small coastal towns, Strandzha villages and the unexpected things happening along the way."
     },
     "guide": {
       "sr_title": "About Aparya Bay",
       "lede": "Arapya is a good place to slow down, but it's an even better place to explore from. Within half an hour you can go from a quiet morning by the sea to a forest walk in Strandzha, a fishing village or a long lunch somewhere by the water.",
       "intro_para1": "Arapya is a small bay tucked between Tsarevo and Lozenets, surrounded by pine forest and rocky headlands. There are two beaches here: the larger main beach is the easiest place for swimming and spending the day, while the smaller beach around the corner feels quieter, with rocks, clear water and a more secluded feel. The bay is also a good place for water activities, with surfing, windsurfing, kayaking, diving and sea fishing available depending on the conditions. You'll find a few restaurants, small shops and places for coffee or a cold drink, so it's easy to spend the whole day without going anywhere else.",
-      "intro_para2": "Arapya has a little history behind it too. It became one of Bulgaria's early camping destinations in the 1960s, long before this part of the coast was developed as it is today. Some of that old camping character is still here—the pine trees, caravans, small beach places and people who return to the same bay year after year. If you feel like exploring, follow the rocky coastline around the cape for different views back towards the bay, and keep an eye out for Bird Island, a small rocky outcrop where seabirds gather.",
+      "intro_para2": "Arapya has a little history behind it too. It became one of Bulgaria's early camping destinations in the 1960s, long before this part of the coast was developed as it is today. Some of that old camping character is still here–the pine trees, caravans, small beach places and people who return to the same bay year after year. If you feel like exploring, follow the rocky coastline around the cape for different views back towards the bay, and keep an eye out for Bird Island, a small rocky outcrop where seabirds gather.",
       "see_more": "See more",
       "see_less": "See less"
     },
     "beach": {
-      "img_alt": "A wide stretch of soft sand running into the Black Sea — characteristic of the long, quiet beaches around Tsarevo",
+      "img_alt": "A wide stretch of soft sand running into the Black Sea – characteristic of the long, quiet beaches around Tsarevo",
       "eyebrow": "The shoreline",
       "title": "Beaches and coves",
-      "body": "Every now and then, we like to leave our own beach behind. When we're in the mood for a long walk, we head north to <strong>Coral Beach</strong>, where the coastline opens up and the surroundings feel wonderfully natural. In May, June or late September, it's especially nice to walk the length of the beach without much of a plan, find a quiet spot and stay until you're ready to leave.<br><br>Further south, <strong>Lipite</strong> feels like a completely different kind of beach. You leave the car and follow a short forest path before the bay slowly appears through the trees. There are no beach bars or rows of sunbeds here, just a small stretch of sand surrounded by forest. Bring some water and something to eat and give yourself a few hours—there's really no reason to hurry.<br><br><strong>Veleka</strong> is probably the one we send people to when they want to see something they won't find on most Bulgarian beaches. From the viewpoint above Sinemorets, you can see the river winding through the landscape before reaching the sea. We like to start there early, walk down towards the beach and then spend some time by the river. In spring and autumn, keep an eye on the wetlands too—the area is an important stop along the <strong>Via Pontica bird migration route</strong>.<br><br>If you're looking for an easier beach day, <strong>Butamyata</strong> in Sinemorets is a good choice. It's easier to reach and has more facilities in season, but we still like combining it with a walk around the rocky coast afterwards. Outside July and August, the beach feels much more relaxed and the surrounding cliffs are worth exploring.<br><br>For something different, spend an afternoon around <strong>Ahtopol</strong> rather than heading straight to another sandy beach. The rocky peninsula has small coves and places where you can sit close to the water, and the walk around the old town and harbour is part of the experience. It's especially pleasant in September, when the coast is quiet and you can stay for dinner afterwards.<br><br>For a full day out, we'd drive further south to <strong>Silistar</strong>. The journey takes a little longer, but the combination of forest, clear water and a feeling of being properly away from the developed coast makes it worth it. <strong>Late September is probably our favourite time to go</strong>, when the summer crowds have thinned out and the beach feels much closer to the place we remember."
+      "body": "Every now and then, we like to leave our own beach behind. When we're in the mood for a long walk, we head north to <strong>Coral Beach</strong>, where the coastline opens up and the surroundings feel wonderfully natural. In May, June or late September, it's especially nice to walk the length of the beach without much of a plan, find a quiet spot and stay until you're ready to leave.<br><br>Further south, <strong>Lipite</strong> feels like a completely different kind of beach. You leave the car and follow a short forest path before the bay slowly appears through the trees. There are no beach bars or rows of sunbeds here, just a small stretch of sand surrounded by forest. Bring some water and something to eat and give yourself a few hours–there's really no reason to hurry.<br><br><strong>Veleka</strong> is probably the one we send people to when they want to see something they won't find on most Bulgarian beaches. From the viewpoint above Sinemorets, you can see the river winding through the landscape before reaching the sea. We like to start there early, walk down towards the beach and then spend some time by the river. In spring and autumn, keep an eye on the wetlands too–the area is an important stop along the <strong>Via Pontica bird migration route</strong>.<br><br>If you're looking for an easier beach day, <strong>Butamyata</strong> in Sinemorets is a good choice. It's easier to reach and has more facilities in season, but we still like combining it with a walk around the rocky coast afterwards. Outside July and August, the beach feels much more relaxed and the surrounding cliffs are worth exploring.<br><br>For something different, spend an afternoon around <strong>Ahtopol</strong> rather than heading straight to another sandy beach. The rocky peninsula has small coves and places where you can sit close to the water, and the walk around the old town and harbour is part of the experience. It's especially pleasant in September, when the coast is quiet and you can stay for dinner afterwards.<br><br>For a full day out, we'd drive further south to <strong>Silistar</strong>. The journey takes a little longer, but the combination of forest, clear water and a feeling of being properly away from the developed coast makes it worth it. <strong>Late September is probably our favourite time to go</strong>, when the summer crowds have thinned out and the beach feels much closer to the place we remember."
     },
     "food": {
       "img_alt": "An aerial view of clear turquoise water meeting a palm-fringed white sand beach",
       "eyebrow": "On the table",
       "title": "Restaurants and local food",
-      "body": "We don't really have a “top 10” around here. Some places are worth driving to for the food, others for the atmosphere, and sometimes you just want a good pizza after a day in the sea. These are the places we'd mention to friends staying with us — a mix of proper dinners, seafood, local food and a few casual spots that are worth knowing about.<br><br>Right here in <strong>Arapya</strong>, we'd start with <strong>di Rossi Pizza e Pane</strong>. It's a small, personal place making Italian-style pizza and bread, and one of those little discoveries we're happy to share. For something more substantial, <strong>Restaurant Arapya (Bay G)</strong> is the easy local choice — right in the bay and ideal when you want a relaxed lunch or dinner without getting in the car. <strong>Robinson</strong> is another casual option for something simple, a drink and an easy evening close to the beach.<br><br>When we feel like going out, <strong>Varvara</strong> is where we'd head first. <strong>Old Outlaws (Starci Razboynitsi)</strong> is one of those places where the setting and atmosphere are almost as much a part of the experience as the food. <strong>Boatswain</strong> is another favourite for fish, seafood and a relaxed dinner.<br><br>In <strong>Tsarevo</strong>, we'd keep it simple: <strong>La Playa</strong> for a more polished Mediterranean and seafood dinner, or <strong>Strandzha Tavern</strong> when we'd rather have something traditional and hearty.<br><br>In <strong>Ahtopol</strong>, <strong>La Vita Club</strong> is our choice for an evening by the sea, especially around sunset, while <strong>St. George</strong> is a dependable favourite when good food is the main reason for going.<br><br>And if you're heading all the way to <strong>Sinemorets</strong>, make a day of it. <strong>The Reeds (Trastikite)</strong> is worth staying for dinner if you're after fish and seafood, while <strong>The Crippled Jellyfish (Kutsata Meduza)</strong> at Butamyata is a completely different experience: casual food and pizza after swimming, preferably with a little sand still on your feet."    
+      "body": "We don't really have a “top 10” around here. Some places are worth driving to for the food, others for the atmosphere, and sometimes you just want a good pizza after a day in the sea. These are the places we'd mention to friends staying with us – a mix of proper dinners, seafood, local food and a few casual spots that are worth knowing about.<br><br>Right here in <strong>Arapya</strong>, we'd start with <strong>di Rossi Pizza e Pane</strong>. It's a small, personal place making Italian-style pizza and bread, and one of those little discoveries we're happy to share. For something more substantial, <strong>Restaurant Arapya (Bay G)</strong> is the easy local choice – right in the bay and ideal when you want a relaxed lunch or dinner without getting in the car. <strong>Robinson</strong> is another casual option for something simple, a drink and an easy evening close to the beach.<br><br>When we feel like going out, <strong>Varvara</strong> is where we'd head first. <strong>Old Outlaws (Starci Razboynitsi)</strong> is one of those places where the setting and atmosphere are almost as much a part of the experience as the food. <strong>Boatswain</strong> is another favourite for fish, seafood and a relaxed dinner.<br><br>In <strong>Tsarevo</strong>, we'd keep it simple: <strong>La Playa</strong> for a more polished Mediterranean and seafood dinner, or <strong>Strandzha Tavern</strong> when we'd rather have something traditional and hearty.<br><br>In <strong>Ahtopol</strong>, <strong>La Vita Club</strong> is our choice for an evening by the sea, especially around sunset, while <strong>St. George</strong> is a dependable favourite when good food is the main reason for going.<br><br>And if you're heading all the way to <strong>Sinemorets</strong>, make a day of it. <strong>The Reeds (Trastikite)</strong> is worth staying for dinner if you're after fish and seafood, while <strong>The Crippled Jellyfish (Kutsata Meduza)</strong> at Butamyata is a completely different experience: casual food and pizza after swimming, preferably with a little sand still on your feet."    
     },
     "hiking": {
       "img_alt": "A warm sunrise over a calm sea, with soft pink and gold light on the shoreline",
       "eyebrow": "Inland",
-      "title": "Strandzha — Beyond the Coast",
-      "body": "Most people come here because of the sea. We stay because of the mountain.<br><br>If you only spend your holiday on the beach, you'll miss half of what makes this part of Bulgaria special. Strandzha isn't dramatic like Rila or Pirin. It reveals itself slowly—in old oak and beech forests, tiny villages, forgotten chapels, quiet rivers and roads where you can drive for twenty minutes without seeing another car. More than 130 caves have been identified in the western part of the mountain, while closer to the coast you'll find the unusual landscapes around the Veleka and Silistar.<br><br>Spring and autumn are some of our favourite times to explore Strandzha. The forests stay green much longer thanks to the Black Sea climate, May brings the flowering <em>zelenika</em>, and mornings can be wrapped in mist. In September and October, the cooler air makes walking much more enjoyable, while the first autumn colours begin to appear deeper in the mountain.<br><br><strong>Brashlyan</strong> deserves its reputation, but don't expect an open-air museum. It's simply a village that has never been in a hurry—wooden houses, stone walls, old fountains and quiet gardens where an hour disappears without you noticing. We recommend coming on a weekday morning if possible, taking a walk through the village and then following one of the forest trails.<br><br>If you ask us where we'd go instead of another crowded beach, <strong>Kondolovo</strong> would be high on the list. It's smaller and quieter, surrounded by oak and beech forest, with the <em>Kingdom of Periwinkle</em> trail offering a lovely short walk. Come in May or early June and look for <em>zelenika</em>, the rare evergreen rhododendron that is one of the characteristic plants of Strandzha.<br><br><strong>Mladezhko</strong> is another favourite, especially for those who enjoy places that feel slightly off the map. The road winds through dense forest before reaching the Mladezhka River, with caves, rocky formations and the remains of the old Kaleto fortress nearby. After rain can be a particularly good time to visit—the forest becomes intensely green and the streams come alive.<br><br>And don't stop at the three best-known villages. If you have a full day, continue towards <strong>Bulgari, Kosti, Stoilovo or Zabernovo</strong> and take your time. Bulgari is home to the traditional <strong>Nestinari</strong> fire-dancing ritual, with the main celebration held around 21 May. The smaller villages are often more rewarding precisely because there isn't a checklist of things to see.<br><br>Our advice is simple: pick a direction, leave some time for the road, and let Strandzha set the pace."
+      "title": "Strandzha – Beyond the Coast",
+      "body": "Most people come here because of the sea. We stay because of the mountain.<br><br>If you only spend your holiday on the beach, you'll miss half of what makes this part of Bulgaria special. Strandzha isn't dramatic like Rila or Pirin. It reveals itself slowly–in old oak and beech forests, tiny villages, forgotten chapels, quiet rivers and roads where you can drive for twenty minutes without seeing another car. More than 130 caves have been identified in the western part of the mountain, while closer to the coast you'll find the unusual landscapes around the Veleka and Silistar.<br><br>Spring and autumn are some of our favourite times to explore Strandzha. The forests stay green much longer thanks to the Black Sea climate, May brings the flowering <em>zelenika</em>, and mornings can be wrapped in mist. In September and October, the cooler air makes walking much more enjoyable, while the first autumn colours begin to appear deeper in the mountain.<br><br><strong>Brashlyan</strong> deserves its reputation, but don't expect an open-air museum. It's simply a village that has never been in a hurry–wooden houses, stone walls, old fountains and quiet gardens where an hour disappears without you noticing. We recommend coming on a weekday morning if possible, taking a walk through the village and then following one of the forest trails.<br><br>If you ask us where we'd go instead of another crowded beach, <strong>Kondolovo</strong> would be high on the list. It's smaller and quieter, surrounded by oak and beech forest, with the <em>Kingdom of Periwinkle</em> trail offering a lovely short walk. Come in May or early June and look for <em>zelenika</em>, the rare evergreen rhododendron that is one of the characteristic plants of Strandzha.<br><br><strong>Mladezhko</strong> is another favourite, especially for those who enjoy places that feel slightly off the map. The road winds through dense forest before reaching the Mladezhka River, with caves, rocky formations and the remains of the old Kaleto fortress nearby. After rain can be a particularly good time to visit–the forest becomes intensely green and the streams come alive.<br><br>And don't stop at the three best-known villages. If you have a full day, continue towards <strong>Bulgari, Kosti, Stoilovo or Zabernovo</strong> and take your time. Bulgari is home to the traditional <strong>Nestinari</strong> fire-dancing ritual, with the main celebration held around 21 May. The smaller villages are often more rewarding precisely because there isn't a checklist of things to see.<br><br>Our advice is simple: pick a direction, leave some time for the road, and let Strandzha set the pace."
     },
     "villages": {
       "img_alt": "A jagged mountain peak rising above a sea of clouds at sunset, washed in pink and gold light",
       "eyebrow": "After the beach",
       "title": "Culture and arts",
-      "body": "In summer, we like that the evenings around here don't always end when the sun goes down. From June through September, <strong>Tsarevo, Lozenets, Varvara, Ahtopol and Sinemorets</strong> become little stages of their own — sometimes for a proper concert, sometimes for something much smaller that you simply happen to come across. <strong>Lozenets</strong> has its relaxed jazz and live-music evenings, while <strong>Tales of Sinemoria</strong> brings a more alternative mix of Bulgarian and European musicians to the village. In Tsarevo, <strong>Art Potok</strong> is worth looking out for, not because you need to attend the whole festival, but because you can pick an evening that sounds like you: a play, a book or art event, an exhibition, a concert or a small performance before dinner.<br><br>Some of the events are surprisingly ambitious for a seaside town. You might find a <strong>touring theatre production with familiar Bulgarian actors</strong>, an orchestra playing film music, a concert-spectacle combining live music, dance and folklore, or even <strong>opera and ballet performed outdoors by the Burgas Opera</strong>. <strong>Zarzuela – Fire and Passion</strong>, for example, has brought singers, orchestra and ballet together on the open-air stage by the sea. At the other end of the scale are the things we often find more charming: puppet and street theatre taking over the squares of Tsarevo, Ahtopol and Sinemorets, a little live band after dinner, or an evening where you sit down for a drink and discover that a concert is happening right in front of you.<br><br>And then there are the evenings that are simply <strong>different</strong>. In August, <strong>LUNAR: Sea of Lights</strong> turns the coastline from Tsarevo to Sinemorets into an open-air trail of light installations, with art appearing among the streets, waterfront and natural surroundings. <strong>Tsarevo Art Fest</strong> brings artists, craftspeople, workshops, exhibitions, circus and live music together in the centre of town, while things like <strong>Varvara Kite Fest</strong>, fish and sea festivals and village folk gatherings give the summer a much more local character. For a completely different experience, drive into <strong>Strandzha</strong> and see one of the summer village gatherings in Brodilovo or Gramatikovo, or, if your timing happens to be right, experience <strong>Nestinarstvo in Bulgari</strong> in early June. We wouldn't plan the whole holiday around any of these — we'd simply check what's happening while you're here and leave one evening free. Those are often the evenings that become the stories you take home."
+      "body": "In summer, we like that the evenings around here don't always end when the sun goes down. From June through September, <strong>Tsarevo, Lozenets, Varvara, Ahtopol and Sinemorets</strong> become little stages of their own – sometimes for a proper concert, sometimes for something much smaller that you simply happen to come across. <strong>Lozenets</strong> has its relaxed jazz and live-music evenings, while <strong>Tales of Sinemoria</strong> brings a more alternative mix of Bulgarian and European musicians to the village. In Tsarevo, <strong>Art Potok</strong> is worth looking out for, not because you need to attend the whole festival, but because you can pick an evening that sounds like you: a play, a book or art event, an exhibition, a concert or a small performance before dinner.<br><br>Some of the events are surprisingly ambitious for a seaside town. You might find a <strong>touring theatre production with familiar Bulgarian actors</strong>, an orchestra playing film music, a concert-spectacle combining live music, dance and folklore, or even <strong>opera and ballet performed outdoors by the Burgas Opera</strong>. <strong>Zarzuela – Fire and Passion</strong>, for example, has brought singers, orchestra and ballet together on the open-air stage by the sea. At the other end of the scale are the things we often find more charming: puppet and street theatre taking over the squares of Tsarevo, Ahtopol and Sinemorets, a little live band after dinner, or an evening where you sit down for a drink and discover that a concert is happening right in front of you.<br><br>And then there are the evenings that are simply <strong>different</strong>. In August, <strong>LUNAR: Sea of Lights</strong> turns the coastline from Tsarevo to Sinemorets into an open-air trail of light installations, with art appearing among the streets, waterfront and natural surroundings. <strong>Tsarevo Art Fest</strong> brings artists, craftspeople, workshops, exhibitions, circus and live music together in the centre of town, while things like <strong>Varvara Kite Fest</strong>, fish and sea festivals and village folk gatherings give the summer a much more local character. For a completely different experience, drive into <strong>Strandzha</strong> and see one of the summer village gatherings in Brodilovo or Gramatikovo, or, if your timing happens to be right, experience <strong>Nestinarstvo in Bulgari</strong> in early June. We wouldn't plan the whole holiday around any of these – we'd simply check what's happening while you're here and leave one evening free. Those are often the evenings that become the stories you take home."
 },
     "cta": {
       "eyebrow": "Already have a plan?",
@@ -275,13 +275,13 @@
   },
   "contacts": {
     "meta": {
-      "title": "Contacts — Vayana Bungalows",
-      "description": "Get in touch with Vayana Bungalows in Arapya, Bulgaria — phone, email, address, and a map. Or send a detailed enquiry online.",
+      "title": "Contacts – Vayana Bungalows",
+      "description": "Get in touch with Vayana Bungalows in Arapya, Bulgaria – phone, email, address, and a map. Or send a detailed enquiry online.",
       "og_description": "Phone, email, address, and map for Vayana Bungalows in Arapya, Bulgaria."
     },
     "hero": {
       "title": "Get in touch with us",
-      "sub": "Three ways to reach us — a phone call, an email, or a detailed enquiry."
+      "sub": "Three ways to reach us – a phone call, an email, or a detailed enquiry."
     },
     "details": {
       "sr_title": "Contact details",
@@ -292,7 +292,7 @@
     "map": {
       "eyebrow": "Getting here",
       "title": "Find your way to Vayana",
-      "fallback": "Map unavailable — see address below.",
+      "fallback": "Map unavailable – see address below.",
       "iframe_title": "Map showing Vayana Bungalows in Arapya, Bulgaria",
       "directions_button": "Get directions",
       "directions_sr": "(opens Google Maps in a new tab)"
@@ -306,8 +306,8 @@
   },
   "enquiries": {
     "meta": {
-      "title": "Enquiries — Vayana Bungalows",
-      "description": "Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests — we will reach out to you shortly"
+      "title": "Enquiries – Vayana Bungalows",
+      "description": "Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests – we will reach out to you shortly"
     },
     "hero": {
       "eyebrow": "Already have a plan?",
@@ -354,7 +354,7 @@
       "close_aria": "Close",
       "close_button": "Close",
       "eyebrow": "Enquiry received",
-      "title": "Thank you — we'll be in touch.",
+      "title": "Thank you – we'll be in touch.",
       "body": "We'll get back to you shortly with availability and all the details for your stay."
     },
     "errors": {
@@ -379,7 +379,7 @@
   },
   "enquiries_thanks": {
     "meta": {
-      "title": "Thank you — Vayana Bungalows",
+      "title": "Thank you – Vayana Bungalows",
       "description": "Your enquiry was received."
     },
     "hero": {
@@ -400,8 +400,8 @@
   },
   "privacy": {
     "meta": {
-      "title": "Code 421· Privacy Policy — Vayana Bungalows",
-      "description": "Code 422· Privacy Policy for Vayana Bungalows — what we collect, why, how long we keep it, and your rights under GDPR.",
+      "title": "Code 421· Privacy Policy – Vayana Bungalows",
+      "description": "Code 422· Privacy Policy for Vayana Bungalows – what we collect, why, how long we keep it, and your rights under GDPR.",
       "og_description": "Code 423· What we collect, why, how long we keep it, and your rights under GDPR."
     },
     "head": {
@@ -433,24 +433,24 @@
       "form_field_dates": "Code 443· Preferred check-in and check-out dates",
       "form_field_guests": "Code 444· Number of guests (adults, children, infants)",
       "form_field_message": "Code 445· A free-text message describing your enquiry",
-      "form_field_consent": "Code 446· A consent checkbox confirming you agree to be contacted (this is logged together with the submission, so we have a record of your consent — see <a href=\"#why\">§4</a>)",
+      "form_field_consent": "Code 446· A consent checkbox confirming you agree to be contacted (this is logged together with the submission, so we have a record of your consent – see <a href=\"#why\">§4</a>)",
       "form_flow": "Code 447· When you submit the form, your data is sent to a <strong>Cloudflare Worker</strong> running on Cloudflare's global edge network, which validates the submission and appends a row to a Google Sheet held in Google Workspace (EU region). See <a href=\"#sharing\">§6 Who we share data with</a> and <a href=\"#storage\">§7 Where data is stored</a> for the processors involved, and <a href=\"#retention\">§8 How long we keep data</a> for the retention period.",
       "captcha_title": "Code 448· 3.2 Technical data via Cloudflare Turnstile (anti-spam)",
       "captcha_intro": "Code 449· The enquiry form is protected against bots by <strong>Cloudflare Turnstile</strong> in managed mode. When you submit the form, Turnstile collects, on Cloudflare's behalf:",
-      "captcha_ip_before": "Code 450· Your IP address — sent by your browser directly to Cloudflare's",
+      "captcha_ip_before": "Code 450· Your IP address – sent by your browser directly to Cloudflare's",
       "captcha_ip_after": "Code 451· endpoint together with the challenge token",
       "captcha_browser": "Code 452· Browser characteristics (user agent, screen size, plug-in list)",
       "captcha_signals": "Code 453· Interaction signals on the form page (mouse / keyboard movement timing)",
-      "captcha_note_before": "Code 454· The captcha data above does not pass through our servers in clear form — it goes directly from your browser to Cloudflare, which returns only a success / failure result to our Worker. Our Worker logs only a salted SHA-256 <strong>hash</strong> of your IP address (not the raw address) into the Google Sheet, as",
+      "captcha_note_before": "Code 454· The captcha data above does not pass through our servers in clear form – it goes directly from your browser to Cloudflare, which returns only a success / failure result to our Worker. Our Worker logs only a salted SHA-256 <strong>hash</strong> of your IP address (not the raw address) into the Google Sheet, as",
       "captcha_note_after": "Code 455· , so we can correlate repeat enquiries without storing identifying data. We rotate the salt periodically; rotation makes earlier hashes uncorrelatable with any future submission, which is the intended privacy property.",
       "maps_title": "Code 456· 3.3 Cookies and tracking from embedded Google Maps",
-      "maps_body": "Code 457· The map on the <a href=\"/\">homepage</a> and on <a href=\"/contacts/\">Contacts</a> / <a href=\"/destination/\">Destination</a> embeds a Google Maps iframe. When the page loads the iframe, Google may set cookies in your browser and receive your IP address — this happens automatically as soon as the page is rendered, whether or not you interact with the map. We have no control over what Google collects in that context — please see Google's own privacy policy.",
+      "maps_body": "Code 457· The map on the <a href=\"/\">homepage</a> and on <a href=\"/contacts/\">Contacts</a> / <a href=\"/destination/\">Destination</a> embeds a Google Maps iframe. When the page loads the iframe, Google may set cookies in your browser and receive your IP address – this happens automatically as soon as the page is rendered, whether or not you interact with the map. We have no control over what Google collects in that context – please see Google's own privacy policy.",
       "newsletter_title": "Code 458· 3.4 Newsletter signup",
-      "newsletter_body": "Code 459· The newsletter signup form on the homepage accepts an email address into an input field but, in version 1, that email is <strong>not stored anywhere and is not transmitted off your device</strong> — submitting the form opens a \"thank you\" modal and discards what you typed. When a real email-service-provider integration ships, this section will be updated in the same release to list the provider and what they receive."
+      "newsletter_body": "Code 459· The newsletter signup form on the homepage accepts an email address into an input field but, in version 1, that email is <strong>not stored anywhere and is not transmitted off your device</strong> – submitting the form opens a \"thank you\" modal and discards what you typed. When a real email-service-provider integration ships, this section will be updated in the same release to list the provider and what they receive."
     },
     "why": {
       "title": "Code 460· 4. Why we collect it (legal basis)",
-      "consent": "Code 461· <strong>Your consent (GDPR Art. 6(1)(a)).</strong> The enquiry form processes your data on the basis of the consent you give by ticking the checkbox above the submit button. You can withdraw that consent at any time — see <a href=\"#your-rights\">§9</a>.",
+      "consent": "Code 461· <strong>Your consent (GDPR Art. 6(1)(a)).</strong> The enquiry form processes your data on the basis of the consent you give by ticking the checkbox above the submit button. You can withdraw that consent at any time – see <a href=\"#your-rights\">§9</a>.",
       "legitimate": "Code 462· <strong>Our legitimate interest (GDPR Art. 6(1)(f)).</strong> The captcha service that runs alongside the form processes the technical data listed in §3.2 to protect our site from automated spam submissions. We have weighed this interest against your rights and consider it proportionate, since the data captured is the minimum required to score a request as bot-or-human."
     },
     "use": {
@@ -464,17 +464,17 @@
     "third": {
       "title": "Code 469· 6. Third parties",
       "intro": "Code 470· When you use this site, the following third parties may process some of your personal data on our behalf:",
-      "google": "Code 471· <strong>Google LLC</strong> — for the embedded Google Maps iframe (§3.3) and for storing enquiry submissions in a Google Sheet held in Google Workspace (EU region, §7). Google's processing is governed by its own <a href=\"https://policies.google.com/privacy\" rel=\"noopener noreferrer\">privacy policy</a> and the <a href=\"https://workspace.google.com/terms/dpa_terms.html\" rel=\"noopener noreferrer\">Google Workspace Data Processing Addendum</a>.",
-      "cloudflare": "Code 472· <strong>Cloudflare, Inc.</strong> — for hosting the <strong>Cloudflare Worker</strong> that accepts your enquiry submission (§3.1) and for the <strong>Cloudflare Turnstile</strong> anti-spam check that runs before submission (§3.2). Cloudflare's processing is governed by its own <a href=\"https://www.cloudflare.com/privacypolicy/\" rel=\"noopener noreferrer\">privacy policy</a> and its <a href=\"https://www.cloudflare.com/cloudflare-customer-dpa/\" rel=\"noopener noreferrer\">customer Data Processing Addendum</a>.",
-      "github": "Code 473· <strong>GitHub, Inc.</strong> — this website is served as a static site through GitHub Pages. GitHub receives your IP address and basic request metadata in the course of serving the page. GitHub's processing is governed by its own <a href=\"https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement\" rel=\"noopener noreferrer\">privacy statement</a>."
+      "google": "Code 471· <strong>Google LLC</strong> – for the embedded Google Maps iframe (§3.3) and for storing enquiry submissions in a Google Sheet held in Google Workspace (EU region, §7). Google's processing is governed by its own <a href=\"https://policies.google.com/privacy\" rel=\"noopener noreferrer\">privacy policy</a> and the <a href=\"https://workspace.google.com/terms/dpa_terms.html\" rel=\"noopener noreferrer\">Google Workspace Data Processing Addendum</a>.",
+      "cloudflare": "Code 472· <strong>Cloudflare, Inc.</strong> – for hosting the <strong>Cloudflare Worker</strong> that accepts your enquiry submission (§3.1) and for the <strong>Cloudflare Turnstile</strong> anti-spam check that runs before submission (§3.2). Cloudflare's processing is governed by its own <a href=\"https://www.cloudflare.com/privacypolicy/\" rel=\"noopener noreferrer\">privacy policy</a> and its <a href=\"https://www.cloudflare.com/cloudflare-customer-dpa/\" rel=\"noopener noreferrer\">customer Data Processing Addendum</a>.",
+      "github": "Code 473· <strong>GitHub, Inc.</strong> – this website is served as a static site through GitHub Pages. GitHub receives your IP address and basic request metadata in the course of serving the page. GitHub's processing is governed by its own <a href=\"https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement\" rel=\"noopener noreferrer\">privacy statement</a>."
     },
     "storage": {
       "title": "Code 474· 7. Where data is stored",
       "intro": "Code 475· The static website itself contains no stored personal data. When you submit the enquiry form:",
-      "item_edge": "Code 476· Your submission passes through Cloudflare's globally distributed edge network — the Worker that processes it runs on Cloudflare's edge close to your location, then writes only to the destinations below.",
+      "item_edge": "Code 476· Your submission passes through Cloudflare's globally distributed edge network – the Worker that processes it runs on Cloudflare's edge close to your location, then writes only to the destinations below.",
       "item_sheet": "Code 477· The validated submission is appended as a row to a Google Sheet held in Google Workspace, with the storage region set to the European Union.",
       "item_hash_before": "Code 478· Only a salted SHA-256 hash of your IP address is written to the sheet (in the",
-      "item_hash_after": "Code 479· column) — the raw IP is never stored at rest on our side.",
+      "item_hash_after": "Code 479· column) – the raw IP is never stored at rest on our side.",
       "encryption": "Code 480· In-flight TLS encryption is provided by Cloudflare (between your browser and the Worker) and by Google (between the Worker and the Sheets API). At-rest encryption on Google Workspace is provided by Google."
     },
     "retention": {
@@ -487,26 +487,26 @@
       "title": "Code 485· 9. Your rights",
       "intro_before": "Code 486· Under GDPR, you have the following rights over the data we hold about you. To exercise any of them, email us at",
       "intro_after": "Code 487· and we will respond within one calendar month.",
-      "access": "Code 488· <strong>Access</strong> (Art. 15) — ask us for a copy of what we hold about you.",
-      "rectification": "Code 489· <strong>Rectification</strong> (Art. 16) — ask us to correct inaccurate or incomplete data.",
-      "erasure": "Code 490· <strong>Erasure</strong> (Art. 17) — ask us to delete your data, where one of the grounds in Art. 17(1) applies.",
-      "restriction": "Code 491· <strong>Restriction</strong> (Art. 18) — ask us to pause processing while we investigate a dispute.",
-      "portability": "Code 492· <strong>Portability</strong> (Art. 20) — ask us to send you (or another controller) a machine-readable copy.",
-      "object": "Code 493· <strong>Object</strong> (Art. 21) — object to processing carried out on the basis of legitimate interest (§4).",
-      "withdraw": "Code 494· <strong>Withdraw consent</strong> (Art. 7(3)) — withdraw the consent you gave on the enquiry form at any time, by emailing us. Withdrawing consent does not affect the lawfulness of any processing carried out before the withdrawal.",
+      "access": "Code 488· <strong>Access</strong> (Art. 15) – ask us for a copy of what we hold about you.",
+      "rectification": "Code 489· <strong>Rectification</strong> (Art. 16) – ask us to correct inaccurate or incomplete data.",
+      "erasure": "Code 490· <strong>Erasure</strong> (Art. 17) – ask us to delete your data, where one of the grounds in Art. 17(1) applies.",
+      "restriction": "Code 491· <strong>Restriction</strong> (Art. 18) – ask us to pause processing while we investigate a dispute.",
+      "portability": "Code 492· <strong>Portability</strong> (Art. 20) – ask us to send you (or another controller) a machine-readable copy.",
+      "object": "Code 493· <strong>Object</strong> (Art. 21) – object to processing carried out on the basis of legitimate interest (§4).",
+      "withdraw": "Code 494· <strong>Withdraw consent</strong> (Art. 7(3)) – withdraw the consent you gave on the enquiry form at any time, by emailing us. Withdrawing consent does not affect the lawfulness of any processing carried out before the withdrawal.",
       "complaint": "Code 495· You also have the right to lodge a complaint with the Bulgarian Commission for Personal Data Protection (<a href=\"https://www.cpdp.bg/en/\" rel=\"noopener noreferrer\">CPDP</a>) if you believe we have mishandled your data."
     },
     "cookies": {
       "title": "Code 496· 10. Cookies",
       "intro": "Code 497· We do not set any first-party cookies on this site. Cookies are only set by embedded third-party content:",
-      "maps": "Code 498· <strong>Google Maps</strong> — sets cookies and receives your IP address when the embedded map iframe loads on the <a href=\"/\">homepage</a>, the <a href=\"/contacts/\">Contacts</a> page, and the <a href=\"/destination/\">Destination</a> page; see Google's own cookie disclosures",
-      "turnstile_before": "Code 499· <strong>Cloudflare Turnstile</strong> — in managed mode, Turnstile does not set cookies for most visitors. If a visitor is challenged for pre-clearance (rare; happens for traffic that looks abusive), Cloudflare may set a",
+      "maps": "Code 498· <strong>Google Maps</strong> – sets cookies and receives your IP address when the embedded map iframe loads on the <a href=\"/\">homepage</a>, the <a href=\"/contacts/\">Contacts</a> page, and the <a href=\"/destination/\">Destination</a> page; see Google's own cookie disclosures",
+      "turnstile_before": "Code 499· <strong>Cloudflare Turnstile</strong> – in managed mode, Turnstile does not set cookies for most visitors. If a visitor is challenged for pre-clearance (rare; happens for traffic that looks abusive), Cloudflare may set a",
       "turnstile_after": "Code 500· cookie scoped to the Turnstile challenge domain. See <a href=\"https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/\" rel=\"noopener noreferrer\">Cloudflare's cookie reference</a>.",
-      "outro": "Code 501· We do not run any analytics, advertising, or behavioural-tracking cookies. If that changes — for example if we add a newsletter analytics tool — we will add a cookie banner before doing so and update this section."
+      "outro": "Code 501· We do not run any analytics, advertising, or behavioural-tracking cookies. If that changes – for example if we add a newsletter analytics tool – we will add a cookie banner before doing so and update this section."
     },
     "contact": {
       "title": "Code 502· 11. How to contact us about data",
-      "intro": "Code 503· For anything related to your data — access requests, corrections, deletions, complaints, or just questions about this policy — please email us:",
+      "intro": "Code 503· For anything related to your data – access requests, corrections, deletions, complaints, or just questions about this policy – please email us:",
       "email_label": "Code 504· Email:",
       "postal_label": "Code 505· Postal address:",
       "postal_value": "Code 506· {address_street}, {address_country}",
@@ -514,14 +514,14 @@
     },
     "changes": {
       "title": "Code 508· 12. Changes to this policy",
-      "para1": "Code 509· We may update this policy from time to time — for example when we add a new third-party service, change our retention schedule, or in response to a regulatory update. Whenever we update it, we change the \"last updated\" date at the top.",
+      "para1": "Code 509· We may update this policy from time to time – for example when we add a new third-party service, change our retention schedule, or in response to a regulatory update. Whenever we update it, we change the \"last updated\" date at the top.",
       "para2": "Code 510· For material changes (anything that affects what we collect, why we collect it, or how long we keep it), we will additionally announce the change on the <a href=\"/\">homepage</a> for a reasonable period of time so that returning visitors notice."
     }
   },
   "terms": {
     "meta": {
-      "title": "Code 511· Terms & Conditions — Vayana Bungalows",
-      "description": "Code 512· Terms and Conditions for Vayana Bungalows — booking process, payment, cancellation, house rules, liability, and governing law.",
+      "title": "Code 511· Terms & Conditions – Vayana Bungalows",
+      "description": "Code 512· Terms and Conditions for Vayana Bungalows – booking process, payment, cancellation, house rules, liability, and governing law.",
       "og_description": "Code 513· Booking process, payment, cancellation, house rules, liability, and governing law."
     },
     "head": {
@@ -581,11 +581,11 @@
     "house": {
       "title": "Code 552· 8. House rules",
       "intro": "Code 553· When you stay with us, we ask you to:",
-      "rule_quiet": "Code 554· <em>[placeholder: respect quiet hours between 22:00 and 08:00 — Tsarevo is a small coastal town and noise carries between bungalows]</em>.",
+      "rule_quiet": "Code 554· <em>[placeholder: respect quiet hours between 22:00 and 08:00 – Tsarevo is a small coastal town and noise carries between bungalows]</em>.",
       "rule_smoking": "Code 555· <em>[placeholder: not smoke indoors; smoking is allowed only on the outdoor terrace away from the door]</em>.",
-      "rule_pets": "Code 556· <em>[placeholder: keep pets to the bungalows that allow them; the policy per bungalow is shown on the Stay page]</em> — see <a href=\"/stay/\">Stay</a>.",
+      "rule_pets": "Code 556· <em>[placeholder: keep pets to the bungalows that allow them; the policy per bungalow is shown on the Stay page]</em> – see <a href=\"/stay/\">Stay</a>.",
       "rule_occupancy": "Code 557· <em>[placeholder: not exceed the maximum occupancy printed on the bungalow listing; additional guests require prior approval and an extra-bed fee]</em>.",
-      "rule_checkout_state": "Code 558· <em>[placeholder: leave the bungalow in a reasonable state on check-out — the cleaning fee is included in the rate, but excessive damage may be charged separately under §9]</em>."
+      "rule_checkout_state": "Code 558· <em>[placeholder: leave the bungalow in a reasonable state on check-out – the cleaning fee is included in the rate, but excessive damage may be charged separately under §9]</em>."
     },
     "liability": {
       "title": "Code 559· 9. Liability",
@@ -595,7 +595,7 @@
     },
     "force": {
       "title": "Code 563· 10. Force majeure",
-      "body": "Code 564· <em>[placeholder: Neither party is liable for failure to perform these Terms where the failure is caused by events outside that party's reasonable control — for example natural disasters, war, civil unrest, pandemic-related public-health measures, or government action. In such cases we will work with you in good faith to reschedule your booking or, where rescheduling is not practical, issue a refund as set out in the cancellation policy]</em>. When the dedicated",
+      "body": "Code 564· <em>[placeholder: Neither party is liable for failure to perform these Terms where the failure is caused by events outside that party's reasonable control – for example natural disasters, war, civil unrest, pandemic-related public-health measures, or government action. In such cases we will work with you in good faith to reschedule your booking or, where rescheduling is not practical, issue a refund as set out in the cancellation policy]</em>. When the dedicated",
       "link_label": "Code 565· Cancellation Policy",
       "body_after": "Code 566· is published (#18), it will set out the refund schedule for force-majeure cancellations."
     },
@@ -616,8 +616,8 @@
   },
   "cancellation": {
     "meta": {
-      "title": "Code 577· Cancellation Policy — Vayana Bungalows",
-      "description": "Code 578· Cancellation Policy for Vayana Bungalows — refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes.",
+      "title": "Code 577· Cancellation Policy – Vayana Bungalows",
+      "description": "Code 578· Cancellation Policy for Vayana Bungalows – refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes.",
       "og_description": "Code 579· Refund tiers by lead time, modifications, no-shows, force majeure, refund processing, and disputes."
     },
     "head": {
@@ -636,14 +636,14 @@
       "title": "Code 588· 2. Cancellation tiers",
       "intro": "Code 589· If you need to cancel a confirmed reservation, the refund you receive depends on how many days before your check-in date we receive the written cancellation request:",
       "tier1_a": "Code 590· More than",
-      "tier1_b": "Code 591· before check-in — we refund",
+      "tier1_b": "Code 591· before check-in – we refund",
       "tier1_c": "Code 592· of any amount you have paid. <strong>Free cancellation tier.</strong>",
       "tier2_a": "Code 593· Between",
       "tier2_b": "Code 594· and",
-      "tier2_c": "Code 595· before check-in — we refund",
+      "tier2_c": "Code 595· before check-in – we refund",
       "tier2_d": "Code 596· of any amount you have paid. <strong>Partial-refund tier.</strong>",
       "tier3_a": "Code 597· Less than",
-      "tier3_b": "Code 598· before check-in — we refund",
+      "tier3_b": "Code 598· before check-in – we refund",
       "tier3_c": "Code 599· . <strong>No-refund tier.</strong>",
       "lead_time": "Code 600· The lead time is counted from the date and time we <em>receive</em> your written cancellation (see §3), not the date you sent it. Tiers apply to the total amount you have paid us toward the reservation, including any deposit described in §5 of the <a href=\"/terms/\">Terms & Conditions</a>."
     },
@@ -666,11 +666,11 @@
       "title": "Code 612· 5. No-shows",
       "body_a": "Code 613· If you do not arrive on your check-in date and have not cancelled in writing before the check-in time, the reservation is treated as a no-show. The default refund for a no-show is",
       "body_b": "Code 614· .",
-      "exceptions": "Code 615· If circumstances beyond your control prevent you from arriving, please contact us as soon as you can — see §6 Force majeure for how we handle exceptions."
+      "exceptions": "Code 615· If circumstances beyond your control prevent you from arriving, please contact us as soon as you can – see §6 Force majeure for how we handle exceptions."
     },
     "force_majeure": {
       "title": "Code 616· 6. Force majeure",
-      "body": "Code 617· Sometimes events beyond either party's control — natural disasters, sudden travel restrictions, or regional emergencies — make a stay impossible. In those cases we will work with you in good faith to find a fair outcome, which may include moving the dates free of charge, holding the amount you have paid as credit toward a future stay, or issuing a refund outside the standard tiers in §2.",
+      "body": "Code 617· Sometimes events beyond either party's control – natural disasters, sudden travel restrictions, or regional emergencies – make a stay impossible. In those cases we will work with you in good faith to find a fair outcome, which may include moving the dates free of charge, holding the amount you have paid as credit toward a future stay, or issuing a refund outside the standard tiers in §2.",
       "legal_basis": "Code 618· The legal basis for force majeure (what qualifies, who bears which costs, and how the refund is calculated) is set out in §10 of the <a href=\"/terms/#force-majeure\">Terms & Conditions</a>. This Policy and those Terms should be read together."
     },
     "refund_processing": {
