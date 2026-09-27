@@ -15,6 +15,7 @@ import {
   buildSitemapEntries,
   buildSitemapXml,
   buildRobotsTxt,
+  collapseDisallowPaths,
   gitLastmod,
 } from '../sitemap.js';
 import { pageUrl } from '../i18n-plugin.js';
@@ -171,6 +172,33 @@ test('buildRobotsTxt: allows all, disallows given paths, advertises sitemap', ()
 test('buildRobotsTxt: no Disallow lines when none given', () => {
   const txt = buildRobotsTxt({ sitemapUrl: 'https://x.test/sitemap.xml' });
   assert.ok(!/Disallow:/.test(txt));
+});
+
+test('buildRobotsTxt: collapses a subpath already covered by a shorter prefix', () => {
+  // Both enquiry paths in → only the top-level /enquiries/ is emitted
+  // (the /enquiries/thanks/ subtree is already covered by prefix matching).
+  const txt = buildRobotsTxt({
+    sitemapUrl: 'https://x.test/sitemap.xml',
+    disallowPaths: ['/vayana-bungalows/enquiries/thanks/', '/vayana-bungalows/enquiries/'],
+  });
+  const disallows = txt.split('\n').filter((l) => l.startsWith('Disallow:'));
+  assert.deepEqual(disallows, ['Disallow: /vayana-bungalows/enquiries/']);
+});
+
+// ── collapseDisallowPaths ────────────────────────────────────────────────────
+
+test('collapseDisallowPaths: drops subpaths covered by a shorter prefix', () => {
+  assert.deepEqual(
+    collapseDisallowPaths(['/a/', '/a/b/', '/a/b/c/']),
+    ['/a/'],
+  );
+});
+
+test('collapseDisallowPaths: keeps unrelated paths, sorted + de-duped', () => {
+  assert.deepEqual(
+    collapseDisallowPaths(['/b/', '/a/', '/a/', '/c/x/']),
+    ['/a/', '/b/', '/c/x/'],
+  );
 });
 
 // ── gitLastmod ───────────────────────────────────────────────────────────────

@@ -97,8 +97,9 @@ export function buildSitemapXml({ entries, defaultLocale }) {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
     + 'xmlns:xhtml="http://www.w3.org/1999/xhtml">',
   );
-  // Sort locales for deterministic output; default first is not required by
-  // the spec but keeps diffs stable.
+  // Sort locales alphabetically for deterministic, diff-stable output. The
+  // sitemaps/hreflang spec is order-agnostic, so the alphabetical order (bg
+  // before en) is purely for reproducible builds.
   for (const entry of entries) {
     const locales = Object.keys(entry.byLocale).sort();
     for (const locale of locales) {
@@ -124,13 +125,30 @@ export function buildSitemapXml({ entries, defaultLocale }) {
 }
 
 /**
+ * Collapse a list of site-absolute Disallow paths, dropping any path that is
+ * already covered by a shorter prefix path in the same list (robots.txt
+ * Disallow matches by prefix, so `/enquiries/thanks/` is redundant when
+ * `/enquiries/` is present). Deterministic (sorted) output; de-dupes exact
+ * duplicates too. A path never removes itself.
+ */
+export function collapseDisallowPaths(paths) {
+  const unique = [...new Set(paths)].sort();
+  return unique.filter((p) => {
+    // Keep p unless some OTHER kept-candidate is a strict prefix of it.
+    return !unique.some((q) => q !== p && p.startsWith(q));
+  });
+}
+
+/**
  * robots.txt: allow everything, disallow the non-indexable enquiry paths, and
  * advertise the sitemap. `sitemapUrl` is the absolute URL of the emitted
- * sitemap. `disallowPaths` are site-absolute path prefixes to block.
+ * sitemap. `disallowPaths` are site-absolute path prefixes to block; they are
+ * collapsed so a subpath already covered by a shorter prefix isn't listed
+ * redundantly.
  */
 export function buildRobotsTxt({ sitemapUrl, disallowPaths = [] }) {
   const lines = ['User-agent: *', 'Allow: /'];
-  for (const p of disallowPaths) lines.push(`Disallow: ${p}`);
+  for (const p of collapseDisallowPaths(disallowPaths)) lines.push(`Disallow: ${p}`);
   lines.push('');
   lines.push(`Sitemap: ${sitemapUrl}`);
   return `${lines.join('\n')}\n`;
