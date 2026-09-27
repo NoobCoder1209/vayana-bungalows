@@ -17,6 +17,11 @@
     <script>document.documentElement.classList.replace('no-js','js-on');</script>
     <title data-i18n="enquiries.meta.title">Enquiries &mdash; Vayana Bungalows</title>
     <meta name="description" content="Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests – we reply within 24-48 hours." data-i18n-meta="enquiries.meta.description" />
+    <!-- noindex,nofollow — the enquiry FORM is a functional page, not a search
+         landing page. Keep it out of search results (and out of sitemap.xml,
+         which lists indexable URLs only). The success/thank-you page carries
+         the same directive. -->
+    <meta name="robots" content="noindex, nofollow" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600;700&family=La+Belle+Aurore&display=swap" rel="stylesheet" />

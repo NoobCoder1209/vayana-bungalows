@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import { i18nPlugin } from './scripts/i18n-plugin.js';
+import { sitemapPlugin } from './scripts/sitemap-plugin.js';
 
 // The GitHub Pages sub-path — the site is served from
 // noobcoder1209.github.io/vayana-bungalows/, so every asset URL needs
@@ -8,6 +9,14 @@ import { i18nPlugin } from './scripts/i18n-plugin.js';
 // build config share the exact same value; a mismatch here would emit
 // mixed-prefix URLs across the two locales.
 const BASE = '/vayana-bungalows/';
+
+// The absolute deployment origin (scheme + host, NO trailing slash). Combined
+// with BASE it forms the full public URL prefix
+// (https://noobcoder1209.github.io/vayana-bungalows/). Centralised here as the
+// single source of truth: canonical/og:url tags in the page HTML use this same
+// origin, and the sitemap generator needs absolute URLs. If a custom domain
+// ever ships, changing this one line (and BASE) moves every generated URL.
+const ORIGIN = 'https://noobcoder1209.github.io';
 
 // Multi-page build: one entry per HTML page. Vite emits each as its own
 // index.html under the matching folder, so the URLs stay /<page>/.
@@ -130,6 +139,20 @@ export default defineConfig(({ command, mode }) => ({
       projectRoot: __dirname,
       inputs: INPUTS,
     }),
+    // Emit sitemap.xml + robots.txt at build. Only in a real (non-dev) build:
+    // the sitemap carries ABSOLUTE URLs (ORIGIN + BASE), which only make sense
+    // for the deployed site — a dev build with base '/' would bake wrong URLs.
+    // `command === 'build'` gates it (the plugin also sets apply:'build').
+    ...(command === 'build'
+      ? [sitemapPlugin({
+          inputs: INPUTS,
+          projectRoot: __dirname,
+          basePath: BASE,
+          origin: ORIGIN,
+          defaultLocale: 'en',
+          locales: ['en', 'bg'],
+        })]
+      : []),
   ],
   server: {
     port: 5173,
