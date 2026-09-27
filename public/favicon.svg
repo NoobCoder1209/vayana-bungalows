@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Vayana Bungalows">
+  <!-- White rounded square with a bold black border. Stroke is drawn inside
+       the viewBox: a 6px stroke centred on the rect edge means insetting the
+       rect by 3px so the whole stroke stays visible (no clipping at the edges). -->
+  <rect x="3" y="3" width="58" height="58" rx="12" ry="12" fill="#ffffff" stroke="#0e0d0a" stroke-width="6"/>
+  <!-- Bold geometric V: a filled chevron/wedge. Outer V from the top corners
+       down to the bottom point, then back up the inner edges — a thick stroke
+       that stays legible at 16px. -->
+  <path d="M17 19 L32 45 L47 19 L38.5 19 L32 32 L25.5 19 Z" fill="#0e0d0a"/>
+</svg>
