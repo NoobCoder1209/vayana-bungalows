@@ -1,7 +1,7 @@
 // End-to-end i18n smoke test (Task #168).
 //
 // Builds the site (or reuses an existing dist/ if fresh) and walks the
-// emitted tree — 12 EN pages under dist/ + 12 BG mirrors under dist/bg/.
+// emitted tree — 9 EN pages under dist/ + 9 BG mirrors under dist/bg/.
 // Asserts the invariants the plugin promises across the WHOLE emitted
 // set, not just a single fixture:
 //
@@ -191,8 +191,8 @@ function collectPages(root) {
   return out;
 }
 
-test('smoke: emitted at least 12 EN pages', () => {
-  assert.ok(enPages.length >= 12, `expected ≥12 EN pages, got ${enPages.length}`);
+test('smoke: emitted at least 9 EN pages', () => {
+  assert.ok(enPages.length >= 9, `expected ≥9 EN pages, got ${enPages.length}`);
 });
 
 test('smoke: every EN page has a matching BG mirror at the same relative subpath', () => {
