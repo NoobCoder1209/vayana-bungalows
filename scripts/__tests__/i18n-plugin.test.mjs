@@ -2002,3 +2002,44 @@ test('i18nPlugin: writeBundle fs errors chain the original error via err.cause (
     'R3-L4: err.cause.code preserves the underlying fs error code (ENOENT here)',
   );
 });
+
+// ---------------------------------------------------------------------------
+// og:locale rewrite (rewriteCanonicalUrls, via applyLocale)
+// ---------------------------------------------------------------------------
+// The source authors the EN pair (og:locale=en_US + alternate=bg_BG). On the
+// BG mirror the plugin must flip og:locale→bg_BG and the alternate→en_US.
+
+const OG_LOCALE_HTML =
+  '<html><head>'
+  + '<meta property="og:locale" content="en_US" />'
+  + '<meta property="og:locale:alternate" content="bg_BG" />'
+  + '</head><body></body></html>';
+
+test('og:locale: default (en) locale keeps en_US + alternate bg_BG', () => {
+  const out = applyLocale(OG_LOCALE_HTML, opts({
+    locale: 'en', isDefault: true, basePath: '/vayana-bungalows/', pagePath: 'index.html',
+    allLocales: ['bg', 'en'], defaultLocale: 'en',
+  }));
+  assert.match(out, /<meta property="og:locale" content="en_US"/);
+  assert.match(out, /<meta property="og:locale:alternate" content="bg_BG"/);
+});
+
+test('og:locale: bg mirror flips to bg_BG + alternate en_US', () => {
+  const out = applyLocale(OG_LOCALE_HTML, opts({
+    locale: 'bg', isDefault: false, basePath: '/vayana-bungalows/', pagePath: 'index.html',
+    allLocales: ['bg', 'en'], defaultLocale: 'en',
+  }));
+  assert.match(out, /<meta property="og:locale" content="bg_BG"/);
+  assert.match(out, /<meta property="og:locale:alternate" content="en_US"/);
+});
+
+test('og:locale: a page with no og:locale is left untouched (no crash)', () => {
+  const out = applyLocale(
+    '<html><head><title>x</title></head><body></body></html>',
+    opts({
+      locale: 'bg', isDefault: false, basePath: '/vayana-bungalows/', pagePath: 'index.html',
+      allLocales: ['bg', 'en'], defaultLocale: 'en',
+    }),
+  );
+  assert.doesNotMatch(out, /og:locale/);
+});
