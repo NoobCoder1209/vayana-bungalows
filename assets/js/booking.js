@@ -299,6 +299,14 @@ function setupBookingForm(form, modal) {
   const defaultBody = modalBody?.textContent ?? '';
   const defaultTitle = modalTitle?.textContent ?? '';
 
+  // Localized bungalow-specific templates, baked onto #booking-modal's data-*
+  // attributes at build (data-i18n-attr → bungalows.common.modal.*_template).
+  // Same pattern as enquiry.js reading data-err-*. %BUNGALOW% is a RUNTIME
+  // placeholder (NOT a build-time {token} — the plugin's interpolate() would
+  // hard-fail on {bungalow}); we substitute it below.
+  const titleTemplate = modal.dataset.modalTitleTemplate ?? '';
+  const bodyTemplate = modal.dataset.modalBodyTemplate ?? '';
+
   // Open modal on submit
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -343,13 +351,13 @@ function setupBookingForm(form, modal) {
 
     const bungalow = form.querySelector('input[name="bungalow"]')?.value?.trim();
     if (modalBody) {
-      modalBody.textContent = bungalow
-        ? `A reservations specialist will follow up within twenty-four hours to confirm availability for ${bungalow} and tailor your stay.`
+      modalBody.textContent = bungalow && bodyTemplate
+        ? bodyTemplate.split('%BUNGALOW%').join(bungalow)
         : defaultBody;
     }
     if (modalTitle) {
-      modalTitle.textContent = bungalow
-        ? `Thank you — your ${bungalow} request is in.`
+      modalTitle.textContent = bungalow && titleTemplate
+        ? titleTemplate.split('%BUNGALOW%').join(bungalow)
         : defaultTitle;
     }
     openModal(modal);

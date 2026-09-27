@@ -76,6 +76,11 @@ only the wrapper `<svg>` width/height/stroke-width differ per context.
    grid block is byte-identical across all 4 pages today (verified md5), so the
    same 12-chip block is dropped into all four.
 
+   > **Note (later change):** these three standalone bungalow pages were
+   > subsequently removed from the site; each bungalow now lives as a section
+   > inside `stay/`. This spec is retained as a historical record of the
+   > amenity-icon work as it was at the time.
+
 4. **`locales/en.json`** — replace the 6 old `home.services.*_title/_body` pairs
    with 6 new ones (`wifi/aircon/kitchen/parking/tv/bbq`). Keep `eyebrow`+`title`.
 

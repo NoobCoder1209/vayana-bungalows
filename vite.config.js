@@ -15,9 +15,6 @@ const BASE = '/vayana-bungalows/';
 // emission (Part 2 of Task #163) rather than duplicating the list.
 const INPUTS = {
   home: resolve(__dirname, 'index.html'),
-  premierOceanviewVilla: resolve(__dirname, 'premier-oceanview-villa/index.html'),
-  deluxeHilltopResidence: resolve(__dirname, 'deluxe-hilltop-residence/index.html'),
-  premierBeachfrontSuite: resolve(__dirname, 'premier-beachfront-suite/index.html'),
   enquiries: resolve(__dirname, 'enquiries/index.html'),
   enquiriesThanks: resolve(__dirname, 'enquiries/thanks/index.html'),
   stay: resolve(__dirname, 'stay/index.html'),
@@ -63,7 +60,7 @@ const i18nContext = {
     // with assets/js/site-config.js — update both if the values change.
     brand: 'Vayana Bungalows',
     license: 'Ц2-0ТИ-В2Т-С0',
-    address_street: 'Arapya, Bulgaria',
+    address_street: 'Arapya',
     address_country: 'Bulgaria',
     // Runtime-interpolated tokens: the offers nights-deal template
     // (home.offers.nights_deal) carries {min}/{free}, which offers.js /
@@ -94,7 +91,7 @@ const i18nContext = {
     // licence / physical address are not translated.
     brand: 'Vayana Bungalows',
     license: 'Ц2-0ТИ-В2Т-С0',
-    address_street: 'Arapya, Bulgaria',
+    address_street: 'Arapya',
     address_country: 'Bulgaria',
     // See EN note above — {min}/{free} in home.offers.nights_deal are
     // runtime tokens; resolve them to the literal token so the plugin
@@ -107,16 +104,23 @@ const i18nContext = {
 };
 
 // On GitHub Pages the site is served from /vayana-bungalows/, so we set the
-// base to that subpath only when building for production. In dev (npm run dev)
-// it stays at /, so localhost works without prefixing every URL.
-export default defineConfig(({ command }) => ({
+// base to that subpath when building for production. In dev (npm run dev) it
+// stays at /, so localhost works without prefixing every URL.
+//
+// `command` alone can't tell dev from preview (Vite runs *both* with
+// command='serve'), so we key off `mode` instead: dev defaults to
+// 'development', while `vite preview` resolves config with mode='production'
+// — exactly like `vite build`. That makes `npm run preview` mount the dist/
+// under /vayana-bungalows/ (matching the deployed site), so the language
+// pill's /bg/ mirrors resolve instead of falling through to an EN index.
+export default defineConfig(({ command, mode }) => ({
   root: '.',
-  base: command === 'build' ? BASE : '/',
+  base: mode === 'development' ? '/' : BASE,
   plugins: [
     i18nPlugin({
       localesDir: resolve(__dirname, 'locales'),
       contextByLocale: i18nContext,
-      basePath: command === 'build' ? BASE : '/',
+      basePath: mode === 'development' ? '/' : BASE,
       projectRoot: __dirname,
       inputs: INPUTS,
     }),

@@ -159,7 +159,7 @@ export function goToMonth(date) {
 // for the given month + availability. Returns { label, gridHtml }. Off-season
 // days (outside the open Apr–Sep season) render greyed/non-selectable; past
 // days muted; booked red; available green.
-function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungalowKey) {
+function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungalowKey, labels) {
   const daysInMonth = new Date(
     monthStart.getFullYear(),
     monthStart.getMonth() + 1,
@@ -176,7 +176,7 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungal
     const date = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
     const iso = toIso(date);
     const classes = ['avail-cal__day'];
-    let stateLabel = 'available';
+    let state = 'available'; // logic key: 'available'|'past'|'offseason'|'booked'
     let selState = ''; // '' | 'start' | 'end' | 'mid' — only set for available
 
     // Precedence: past → off-season → booked → available. Off-season is a
@@ -184,14 +184,14 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungal
     // (the open season is Apr–Sep; isOffSeason() covers Oct–Mar).
     if (date < today) {
       classes.push('is-past');
-      stateLabel = 'past';
+      state = 'past';
     } else if (isOffSeason(date)) {
       classes.push('is-offseason');
-      stateLabel = 'closed (off-season)';
+      state = 'offseason';
     } else if (avail.unavailable.has(iso)) {
       // Simple binary: any unavailable night is "booked" (red).
       classes.push('is-booked');
-      stateLabel = 'already booked';
+      state = 'booked';
     } else {
       classes.push('is-available');
       // Only available cells can carry a selection state. The selection layer
@@ -204,7 +204,10 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungal
       else if (selState === 'mid') classes.push('is-sel-mid');
     }
 
-    const isAvailable = stateLabel === 'available';
+    const isAvailable = state === 'available';
+    // Localized state word for the day's aria-label (labels.state* baked onto
+    // the calendar root; English fallback keeps this working un-built).
+    const stateLabel = labels[state] || state;
     // Available cells are the page's interactive booking control: make them
     // focusable (tabindex=0) with button semantics + aria-selected so keyboard
     // and screen-reader users can select a range, not just mouse users. Blocked
@@ -263,21 +266,45 @@ function renderInstance(inst) {
     year: 'numeric',
   });
 
-  const g1 = buildMonthGrid(left, avail, today, dayFormatter, weekdays, key);
-  const g2 = buildMonthGrid(right, avail, today, dayFormatter, weekdays, key);
+  // Localized UI strings, baked onto the calendar root's data-cal-* attributes
+  // at build (data-i18n-attr → stay.calendar.*). English fallbacks keep the
+  // calendar working if the i18n build didn't run (dev / un-built). The state*
+  // keys are keyed by buildMonthGrid's logic `state` values.
+  const ds = root.dataset;
+  const labels = {
+    available: ds.calStateAvailable || 'available',
+    past: ds.calStatePast || 'past',
+    offseason: ds.calStateOffseason || 'closed (off-season)',
+    booked: ds.calStateBooked || 'already booked',
+  };
+  // Escape for the attribute contexts below (title / aria-label).
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const eyebrow = ds.calEyebrow || 'Availability';
+  const todayText = ds.calToday || 'Today';
+  const todayTitle = ds.calTodayTitle || 'Jump to the current month';
+  const prevAria = ds.calPrevAria || 'Previous month';
+  const nextAria = ds.calNextAria || 'Next month';
+  const legAvail = ds.calLegendAvailable || 'Available';
+  const legBooked = ds.calLegendBooked || 'Booked';
+  const legPast = ds.calLegendPast || 'Past';
+  const legSelected = ds.calLegendSelected || 'Selected';
+
+  const g1 = buildMonthGrid(left, avail, today, dayFormatter, weekdays, key, labels);
+  const g2 = buildMonthGrid(right, avail, today, dayFormatter, weekdays, key, labels);
 
   root.innerHTML = `
     <div class="avail-cal__header">
-      <span class="avail-cal__eyebrow">Availability</span>
+      <span class="avail-cal__eyebrow">${eyebrow}</span>
       <span class="avail-cal__nav-group">
         <button class="avail-cal__today" type="button"
-                title="Jump to the current month"${atFloor ? ' disabled' : ''}>Today</button>
+                title="${esc(todayTitle)}"${atFloor ? ' disabled' : ''}>${todayText}</button>
         <button class="avail-cal__nav avail-cal__nav--prev" type="button"
-                aria-label="Previous month"${atFloor ? ' disabled' : ''}>
+                aria-label="${esc(prevAria)}"${atFloor ? ' disabled' : ''}>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <button class="avail-cal__nav avail-cal__nav--next" type="button"
-                aria-label="Next month"${atCeil ? ' disabled' : ''}>
+                aria-label="${esc(nextAria)}"${atCeil ? ' disabled' : ''}>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
         </button>
       </span>
@@ -290,10 +317,10 @@ function renderInstance(inst) {
       ${g2.gridHtml}
     </div>
     <div class="avail-cal__key" aria-hidden="true">
-      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--free"></span>Available</span>
-      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--booked"></span>Booked</span>
-      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--past"></span>Past</span>
-      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--selected"></span>Selected</span>
+      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--free"></span>${legAvail}</span>
+      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--booked"></span>${legBooked}</span>
+      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--past"></span>${legPast}</span>
+      <span class="avail-cal__key-item"><span class="avail-cal__key-dot avail-cal__key-dot--selected"></span>${legSelected}</span>
     </div>
   `;
 

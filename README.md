@@ -107,9 +107,6 @@ stay/                               # bungalows index
 destination/                        # area guide + map
 contacts/                           # contact details
 enquiries/                          # enquiry form
-premier-oceanview-villa/            # bungalow 1
-deluxe-hilltop-residence/           # bungalow 2
-premier-beachfront-suite/           # bungalow 3
 assets/
   css/                  # tokens, base, layout, sections
   js/                   # header, parallax, slider, booking, reveal, lang, ...

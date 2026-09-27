@@ -170,6 +170,22 @@
       "cal2_aria": "Bungalow Lemon availability calendar",
       "cal3_aria": "Bungalow Olive availability calendar"
     },
+    "calendar": {
+      "eyebrow": "Availability",
+      "today": "Today",
+      "today_title": "Jump to the current month",
+      "prev_month_aria": "Previous month",
+      "next_month_aria": "Next month",
+      "legend_available": "Available",
+      "legend_booked": "Booked",
+      "legend_past": "Past",
+      "legend_selected": "Selected",
+      "state_available": "available",
+      "state_booked": "already booked",
+      "state_past": "past",
+      "state_offseason": "closed (off-season)",
+      "state_selected": "selected"
+    },
     "amenities": {
       "eyebrow": "In every bungalow",
       "title": "Amenities",
@@ -279,7 +295,9 @@
         "eyebrow": "Code 267· Reservation request received",
         "title": "Code 268· Thank you — we'll be in touch.",
         "body": "Code 269· A reservations specialist will follow up within twenty-four hours to confirm availability and tailor your stay.",
-        "close_button": "Code 270· Close"
+        "close_button": "Code 270· Close",
+        "title_template": "Thank you — your %BUNGALOW% request is in.",
+        "body_template": "A reservations specialist will follow up within twenty-four hours to confirm availability for %BUNGALOW% and tailor your stay."
       }
     },
     "villa1": {
@@ -377,7 +395,9 @@
       "sr_title": "About Aparya Bay",
       "lede": "Arapya is a good place to slow down, but it's an even better place to explore from. Within half an hour you can go from a quiet morning by the sea to a forest walk in Strandzha, a fishing village or a long lunch somewhere by the water.",
       "intro_para1": "Arapya is a small bay tucked between Tsarevo and Lozenets, surrounded by pine forest and rocky headlands. There are two beaches here: the larger main beach is the easiest place for swimming and spending the day, while the smaller beach around the corner feels quieter, with rocks, clear water and a more secluded feel. The bay is also a good place for water activities, with surfing, windsurfing, kayaking, diving and sea fishing available depending on the conditions. You'll find a few restaurants, small shops and places for coffee or a cold drink, so it's easy to spend the whole day without going anywhere else.",
-      "intro_para2": "Arapya has a little history behind it too. It became one of Bulgaria's early camping destinations in the 1960s, long before this part of the coast was developed as it is today. Some of that old camping character is still here—the pine trees, caravans, small beach places and people who return to the same bay year after year. If you feel like exploring, follow the rocky coastline around the cape for different views back towards the bay, and keep an eye out for Bird Island, a small rocky outcrop where seabirds gather."
+      "intro_para2": "Arapya has a little history behind it too. It became one of Bulgaria's early camping destinations in the 1960s, long before this part of the coast was developed as it is today. Some of that old camping character is still here—the pine trees, caravans, small beach places and people who return to the same bay year after year. If you feel like exploring, follow the rocky coastline around the cape for different views back towards the bay, and keep an eye out for Bird Island, a small rocky outcrop where seabirds gather.",
+      "see_more": "See more",
+      "see_less": "See less"
     },
     "beach": {
       "img_alt": "A wide stretch of soft sand running into the Black Sea — characteristic of the long, quiet beaches around Tsarevo",
@@ -462,7 +482,8 @@
       "phone_placeholder": "TELEPHONE*",
       "message_placeholder": "MESSAGE",
       "submit_label": "Send enquiry",
-      "submit_busy_label": "Sending…"
+      "submit_busy_label": "Sending…",
+      "villa_opener": "Hello, I'd like to enquire about the %VILLA%."
     },
     "a11y": {
       "name_label": "Full name (required)",

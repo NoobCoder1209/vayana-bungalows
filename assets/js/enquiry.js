@@ -123,18 +123,6 @@ const ERROR_MSGS = {
 // rather than at module scope.
 let SUBMIT_BUSY_TEXT = 'Sending…';
 
-// Bungalow allowlist for `?villa=<slug>` pre-fill. Anything not in this
-// set is silently ignored so an attacker can't craft a link that injects
-// arbitrary text into the message field via the URL. The display name
-// comes from this lookup, NOT from the raw query string — so even if
-// somebody figures out a slug that bypasses the URL check, the message
-// text is still pinned to one of these three values.
-const BUNGALOW_SLUGS = {
-  'premier-oceanview-villa': 'Premier Oceanview Villa',
-  'deluxe-hilltop-residence': 'Deluxe Hilltop Residence',
-  'premier-beachfront-suite': 'Premier Beachfront Suite',
-};
-
 export function initEnquiry() {
   const form = document.querySelector('[data-enquiry-form]');
   if (!form) return;
@@ -332,36 +320,16 @@ export function initEnquiry() {
     locale: fpLocale(),
   });
 
-  // URL-param pre-fill: `?villa=<slug>` populates the message textarea
-  // with a friendly opener that names the villa. The slug is validated
-  // against an allowlist; anything else is silently ignored. We use the
-  // looked-up display name (NOT the raw query value) so an attacker
-  // who manages to slip a value past the allowlist still can't inject
-  // text. We also leave the textarea blank if the user has already
-  // typed something into it (e.g. opened the URL twice, then typed).
-  // URLSearchParams + window.location are universally supported; no
-  // try/catch needed here (round-1 review finding N4).
-  // TODO i18n: when Bulgarian copy lands, source the opener template
-  // from site-config.js / an i18n table rather than inline English
-  // (round-1 review finding N1).
   const params = new URLSearchParams(window.location.search);
-  const villaSlug = params.get('villa');
-  if (villaSlug && Object.prototype.hasOwnProperty.call(BUNGALOW_SLUGS, villaSlug)) {
-    const villaName = BUNGALOW_SLUGS[villaSlug];
-    if (!message.value.trim()) {
-      message.value = `Hello, I'd like to enquire about the ${villaName}.`;
-    }
-  }
 
   // URL-param pre-fill: `?offer=<text>` populates the message textarea when a
-  // visitor clicks "Take the offer" in the home-page offer modal. Unlike
-  // `?villa` (allowlist → fixed sentence), this IS free text composed from OUR
-  // OWN offers sheet, so we accept the value — but defensively: assigning to
-  // textarea.value is XSS-safe (it becomes a text node, never parsed as HTML),
-  // and we still (a) strip control chars, (b) cap length at MAX_MESSAGE_LEN so
+  // visitor clicks "Take the offer" in the home-page offer modal. This IS free
+  // text composed from OUR OWN offers sheet, so we accept the value — but
+  // defensively: assigning to textarea.value is XSS-safe (it becomes a text
+  // node, never parsed as HTML), and we still (a) strip control chars,
+  // (b) cap length at MAX_MESSAGE_LEN so
   // a tampered/overlong URL can't blow past the server guard, and (c)
-  // empty-only-fill (never clobber text the guest already typed), mirroring the
-  // villa block's fail-safe posture. URLSearchParams.get already percent-decodes.
+  // empty-only-fill (never clobber text the guest already typed). URLSearchParams.get already percent-decodes.
   const offerParam = params.get('offer');
   if (offerParam && !message.value.trim()) {
     message.value = offerParam
@@ -397,8 +365,7 @@ export function initEnquiry() {
   // dates the visitor chose there. We validate defensively — a value only
   // pre-fills if it parses to a real date that also passes the SAME guards
   // the pickers enforce (not in the past, in the open season). Junk, past,
-  // or off-season values are silently ignored (mirrors the villa-slug
-  // allowlist's fail-safe posture). Check-out additionally must be after
+  // or off-season values are silently ignored (fail-safe posture). Check-out additionally must be after
   // check-in. Dates are set as Date objects (not strings) so flatpickr's
   // format parser isn't involved, and with triggerChange=false so we drive
   // fpCheckout's minDate explicitly rather than via the onChange cascade.

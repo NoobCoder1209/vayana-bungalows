@@ -168,6 +168,57 @@ export function nightsBetween(checkInIso, checkOutIso) {
 }
 
 /**
+ * The minimum nights required to book a given range, given the current offers.
+ *
+ * Normally a stay must be >= MIN_NIGHTS (5). But an offer can lower that: if
+ * the selected range falls inside an offer's window enough to satisfy that
+ * offer's own `minimumToBook` (Sheet column K), the range is allowed down to
+ * that offer's minimum. This mirrors the server pricing gate EXACTLY
+ * (worker/src/pricing.js: an offer applies when in-window nights >= minToBook),
+ * so the calendar never allows a pick the /price route would then refuse the
+ * offer on.
+ *
+ * We return the SMALLEST minimum this range qualifies for: for each offer whose
+ * in-window overlap with [checkIn, checkOut) is >= its minimumToBook, that
+ * offer's minimumToBook is a candidate; the lowest candidate wins, else the
+ * default MIN_NIGHTS. `offers` is the public /offers payload (array of
+ * { startDate, endDate, minimumToBook, ... }); a missing/empty list → MIN_NIGHTS.
+ *
+ * Pure (no DOM / no fetch) so it's unit-testable.
+ *
+ * @param {string} checkInIso   YYYY-MM-DD
+ * @param {string} checkOutIso  YYYY-MM-DD (after check-in)
+ * @param {Array<{startDate:string,endDate:string,minimumToBook:number}>} offers
+ * @returns {number} required minimum nights for this range
+ */
+export function minNightsForRange(checkInIso, checkOutIso, offers) {
+  const nights = nightsBetween(checkInIso, checkOutIso);
+  if (nights < 1 || !Array.isArray(offers) || offers.length === 0) return MIN_NIGHTS;
+
+  const ci = parseIso(checkInIso).getTime();
+  const co = parseIso(checkOutIso).getTime();
+
+  let best = MIN_NIGHTS;
+  for (const offer of offers) {
+    const min = offer && offer.minimumToBook;
+    if (typeof min !== 'number' || !Number.isFinite(min) || min < 1) continue;
+    if (min >= best) continue; // can't improve on the current best
+    if (typeof offer.startDate !== 'string' || typeof offer.endDate !== 'string') continue;
+    const ws = parseIso(offer.startDate);
+    const we = parseIso(offer.endDate);
+    if (!ws || !we || Number.isNaN(ws.getTime()) || Number.isNaN(we.getTime())) continue;
+    // In-window overlap of [ci, co) with [startDate, endDate) in whole nights.
+    const overlapStart = Math.max(ci, ws.getTime());
+    const overlapEnd = Math.min(co, we.getTime());
+    const inWindow = Math.max(0, Math.round((overlapEnd - overlapStart) / ONE_DAY_MS));
+    // The range qualifies for this offer only if its in-window nights already
+    // meet the offer's own minimum (same test the server pricing uses).
+    if (inWindow >= min) best = min;
+  }
+  return best;
+}
+
+/**
  * Two selections are the "same" when key + both ISO endpoints match. Used by
  * the async /price flow to tell whether a response still belongs to the live
  * selection. Null-safe.
@@ -229,14 +280,14 @@ export function isRangeContiguous(checkInIso, checkOutIso, unavailable, today) {
  * POST /price (fetched asynchronously by the UI layer), never from a client
  * computation.
  */
-export function evaluateSelection(sel, unavailable, today) {
+export function evaluateSelection(sel, unavailable, today, minNights = MIN_NIGHTS) {
   if (!sel || !sel.checkIn || !sel.checkOut) return { kind: 'incomplete' };
   if (!isRangeContiguous(sel.checkIn, sel.checkOut, unavailable, today)) {
     return { kind: 'invalid' };
   }
   const nights = nightsBetween(sel.checkIn, sel.checkOut);
-  if (nights < MIN_NIGHTS) return { kind: 'tooShort', nights };
-  return { kind: 'valid', nights };
+  if (nights < minNights) return { kind: 'tooShort', nights, minNights };
+  return { kind: 'valid', nights, minNights };
 }
 
 // Shape-only ISO gate (YYYY-MM-DD). Shape does NOT imply validity — see
@@ -322,8 +373,9 @@ export function firstAvailableBungalow(
   checkOutIso,
   today,
   keyOrder = KEY_ORDER,
+  minNights = MIN_NIGHTS,
 ) {
-  if (nightsBetween(checkInIso, checkOutIso) < MIN_NIGHTS) return null;
+  if (nightsBetween(checkInIso, checkOutIso) < minNights) return null;
   for (const key of keyOrder) {
     const unavailable = unavailableByKey.get(key) || new Set();
     if (isRangeContiguous(checkInIso, checkOutIso, unavailable, today)) {
@@ -420,6 +472,24 @@ export function initCalendarSelection() {
   // fail-safe posture.
   const unavailableByKey = new Map();
   roots.forEach((r) => unavailableByKey.set(r.dataset.bungalowKey, new Set()));
+
+  // Current offers (public /offers payload), used to lower the min-nights
+  // requirement for ranges inside an offer window (see minNightsForRange).
+  // Empty until the fetch resolves; until then every range uses the default
+  // MIN_NIGHTS — the safe/normal floor, matching the fail-safe posture.
+  let offers = [];
+  const offersReady = fetch(SITE_CONFIG.endpoints.offers)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (data && data.ok === true && Array.isArray(data.offers)) {
+        offers = data.offers;
+        // Re-evaluate any in-progress selection now that offers are known — a
+        // range that read "too short" against the default 5 may now qualify
+        // for an offer's lower minimum.
+        if (selection) refreshUI();
+      }
+    })
+    .catch(() => { /* offers unavailable → keep default MIN_NIGHTS everywhere */ });
 
   // Register the per-day state lookup the renderer consults while painting.
   setSelectionLookup((key, iso) => {
@@ -686,7 +756,9 @@ export function initCalendarSelection() {
 
     if (!selection) { announce(''); return; }
     const unavailable = unavailableByKey.get(selection.key) || new Set();
-    let verdict = evaluateSelection(selection, unavailable, today);
+    // Offers can lower the minimum for ranges inside their window (Sheet col K).
+    const minNights = minNightsForRange(selection.checkIn, selection.checkOut, offers);
+    let verdict = evaluateSelection(selection, unavailable, today, minNights);
 
     if (verdict.kind === 'invalid') {
       // A range that was contiguous when clicked can become gap-crossing once
@@ -702,13 +774,17 @@ export function initCalendarSelection() {
       return;
     }
 
-    // Reset the dock text to the default min-nights message (it may have been
-    // overwritten by the invalidation branch on a previous refresh).
-    dock.textContent = 'At least 5 nights required for a reservation';
+    // Reset the dock text to the min-nights message (it may have been
+    // overwritten by the invalidation branch on a previous refresh). The
+    // required count is dynamic: an offer window can lower it below 5.
+    const reqNights = verdict.minNights ?? minNights;
+    const nightsWord = reqNights === 1 ? 'night' : 'nights';
+    const minMsg = `At least ${reqNights} ${nightsWord} required for a reservation`;
+    dock.textContent = minMsg;
 
     if (verdict.kind === 'tooShort') {
       showDock();
-      announce('At least 5 nights required for a reservation.');
+      announce(`${minMsg}.`);
     } else if (verdict.kind === 'valid') {
       const root = roots.find((r) => r.dataset.bungalowKey === selection.key);
       const pill = pillFor(root, selection.key);
@@ -844,10 +920,11 @@ export function initCalendarSelection() {
     const checkInIso = toIso(ci);
     const checkOutIso = toIso(co);
 
+    const bootstrapMin = minNightsForRange(checkInIso, checkOutIso, offers);
     const key = firstAvailableBungalow(
-      unavailableByKey, checkInIso, checkOutIso, today, KEY_ORDER,
+      unavailableByKey, checkInIso, checkOutIso, today, KEY_ORDER, bootstrapMin,
     );
-    if (!key) return; // none free, or <5 nights → top of page
+    if (!key) return; // none free, or below the required minimum → top of page
 
     // Resolve the target calendar's root BEFORE committing any state. firstAvailable
     // Bungalow works off KEY_ORDER + the unavailable map, which could in principle
@@ -883,8 +960,11 @@ export function initCalendarSelection() {
 
   // Populate the real unavailable sets from the shared (cached) fetch, then
   // re-evaluate any selection made before data arrived, and finally apply any
-  // home-dock deep link against the now-real availability.
-  loadBookings().then((bookings) => {
+  // home-dock deep link against the now-real availability AND the loaded offers
+  // (so an offer-length deep-link range auto-selects — offersReady is awaited
+  // alongside bookings, else the bootstrap would see offers=[] and use the
+  // default 5-night floor, silently ignoring a 3-night offer range).
+  Promise.all([loadBookings(), offersReady]).then(([bookings]) => {
     roots.forEach((root) => {
       const key = root.dataset.bungalowKey;
       unavailableByKey.set(key, availabilityFor(bookings, key).unavailable);

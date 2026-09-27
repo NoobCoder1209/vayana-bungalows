@@ -1645,7 +1645,11 @@ function insertAfterHead(html, block) {
   // content="describes the charset behaviour") won't match because
   // it isn't followed by `=`.
   const html5 = /<meta\b[^>]*\scharset\s*=[^>]*>/i;
-  const html4 = /<meta\b[^>]*\shttp-equiv\s*=\s*["']?content-type["']?[^>]*>/i;
+  // HTML4 form must ALSO actually declare a charset in its content — a bare
+  // `<meta http-equiv="content-type" content="text/html">` (no charset=) is
+  // NOT the charset anchor, so require `charset` after the http-equiv within
+  // the same tag.
+  const html4 = /<meta\b[^>]*\shttp-equiv\s*=\s*["']?content-type["']?[^>]*\bcharset\s*=[^>]*>/i;
   const html5Match = headBody.match(html5);
   const html4Match = headBody.match(html4);
   let charsetIdxWithinBody = -1;
@@ -2129,22 +2133,22 @@ export function i18nPlugin(options) {
      * watcher that reloads locale JSON edits into memory and pushes
      * a full-reload to BG tabs.
      *
-     * Returns a function (post-hook style) so the middleware is
-     * inserted AFTER Vite's built-in middlewares (F5) — that way
-     * Vite's config.base / decodeURI middleware normalises req.url
-     * before we see it, and the /bg/ prefix comparison lands on the
-     * post-base-strip path.
+     * The middleware is registered in the hook BODY (pre-hook) so it is
+     * inserted BEFORE Vite's internal middlewares (F5). In Vite 5 the
+     * SPA `htmlFallbackMiddleware` is mounted after the configureServer
+     * phase and — for a browser-like Accept header — responds to ANY
+     * extensionless path by serving the (EN) index. A POST-hook return
+     * (`return () => { … }`) lands after that fallback, so `/bg/*`
+     * requests were swallowed by the EN index and the BG middleware
+     * never ran, breaking the language pill in dev (endless /bg/ loop).
+     *
+     * Pre-hook downside: Vite's own base/decodeURI middleware hasn't run
+     * by the time we see req.url, so for a non-'/' dev base we must strip
+     * config.base ourselves — the manual cfgBase strip below (previously
+     * "defensive only", now load-bearing for that edge) handles it.
      */
     configureServer(server) {
-      // F5 fix — LOAD-BEARING: returning a function here tells Vite to
-      // install our middleware AFTER its own base/decodeURI middlewares.
-      // If this `return` is deleted, our middleware runs BEFORE Vite
-      // strips the base, and req.url still carries the '/vayana-bungalows/'
-      // prefix — the '/bg/' startsWith check misses and BG dev URLs 404.
-      // The manual cfgBase strip below is DEFENSIVE only (belt-and-braces
-      // for older Vite versions or edge cases where the post-hook order
-      // isn't respected). Keep BOTH.
-      return () => {
+      (() => {
         // Defensive base-strip (see comment above). server.config.base
         // is e.g. '/vayana-bungalows/'; trailing slash normalised to
         // '/vayana-bungalows' so a request to exactly '/vayana-bungalows'
@@ -2305,7 +2309,7 @@ export function i18nPlugin(options) {
             '[i18n] middleware-mode Vite (no httpServer) — watcher-cleanup on restart not wired; expect one extra locale-reload listener per config restart.',
           );
         }
-      };
+      })();
     },
   };
 }

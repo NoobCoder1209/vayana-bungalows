@@ -14,6 +14,7 @@ import { initLocation } from './location.js';
 import { initEnquiry } from './enquiry.js';
 import { initOffers } from './offers.js';
 import { initOfferModal } from './offer-modal.js';
+import { initDestinationReadMore } from './destination-readmore.js';
 
 // The JS-on / JS-off CSS gate is set by an inline <head> script before any
 // stylesheet loads (each HTML page renders class="no-js" on <html> and the
@@ -37,6 +38,7 @@ const run = () => {
   initEnquiry();
   initOffers();
   initOfferModal();
+  initDestinationReadMore();
 };
 
 if (document.readyState === 'loading') {

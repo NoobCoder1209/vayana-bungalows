@@ -1,7 +1,7 @@
 // End-to-end i18n smoke test (Task #168).
 //
 // Builds the site (or reuses an existing dist/ if fresh) and walks the
-// emitted tree — 12 EN pages under dist/ + 12 BG mirrors under dist/bg/.
+// emitted tree — 9 EN pages under dist/ + 9 BG mirrors under dist/bg/.
 // Asserts the invariants the plugin promises across the WHOLE emitted
 // set, not just a single fixture:
 //
@@ -36,7 +36,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { parse } from 'node-html-parser';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -178,7 +178,10 @@ function collectPages(root) {
         continue;
       }
       if (entry.name.endsWith('.html')) {
-        const relPath = relative(root, full);
+        // Normalize to forward-slash relPaths: every subsequent assertion
+        // compares against '/'-separated URL templates, so on Windows the
+        // native '\' separator must be translated here once.
+        const relPath = relative(root, full).split(sep).join('/');
         const html = readFileSync(full, 'utf8');
         out.push({ relPath, html, doc: parse(html, { comment: true }) });
       }
@@ -188,8 +191,8 @@ function collectPages(root) {
   return out;
 }
 
-test('smoke: emitted at least 12 EN pages', () => {
-  assert.ok(enPages.length >= 12, `expected ≥12 EN pages, got ${enPages.length}`);
+test('smoke: emitted at least 9 EN pages', () => {
+  assert.ok(enPages.length >= 9, `expected ≥9 EN pages, got ${enPages.length}`);
 });
 
 test('smoke: every EN page has a matching BG mirror at the same relative subpath', () => {

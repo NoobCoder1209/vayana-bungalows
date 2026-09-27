@@ -53,7 +53,7 @@ two.
 flowchart TD
     Root["vayana-bungalows/"]
 
-    Root --> Pages["index.html + page folders<br/>stay/ · enquiries/ · contacts/ …<br/>+ 3 bungalow pages (see below)"]
+    Root --> Pages["index.html + page folders<br/>stay/ · enquiries/ · contacts/ …"]
     Root --> Assets["assets/ (source)"]
     Root --> Worker["worker/"]
     Root --> Locales["locales/<br/>en.json · bg.json"]
@@ -61,7 +61,6 @@ flowchart TD
     Root --> WF[".github/workflows/<br/>4 pipelines"]
     Root --> Docs["docs/<br/>ARCHITECTURE.md · superpowers/ (specs)"]
 
-    Pages --> Bungalows["premier-oceanview-villa/<br/>deluxe-hilltop-residence/<br/>premier-beachfront-suite/"]
 
     Assets --> CSS["css/ — hand-written styles"]
     Assets --> JS["js/ — vanilla ES modules"]
