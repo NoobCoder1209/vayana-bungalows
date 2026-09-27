@@ -930,6 +930,15 @@
 .offer-card__nights {
   font-size: 0.85rem;
   color: var(--text-dark);
+  /* Always reserve two lines of height so a one-line deal (e.g. "€10/night
+     off") occupies the same vertical space as a two-line one ("stay minimum 9
+     nights get 3 free"). This keeps the CTA pill below it aligned across cards.
+     min-height (not height) so a rare 3-line deal on a narrow card can still
+     grow rather than clip. A single line is centred in the reserved box. */
+  min-height: calc(1em * 1.7 * 2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .offer-card__msg {
   margin-top: 0.6rem;
