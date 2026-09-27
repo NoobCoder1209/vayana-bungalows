@@ -481,18 +481,43 @@
     display: none;
   }
 
-  /* Below the 540px breakpoint the header CTA cluster loses the
-     Enquiries pill (above) to make room. The lang pill stays with
-     LABELS PRESERVED — 'EN'/'BG' are 2ch, so a tighter font + padding
-     collapse is enough to share the row with the phone icon at 320px
-     without pushing the brand under the hamburger. No sr-only trick
-     needed; the labels ARE the icons. */
-  /* The lang switcher is now a single collapsed circle (one glyph), so the
-     old "shrink both segments to share the row" tightening is unneeded —
-     just nudge the font down a touch. The circle-grows-to-pill reveal is
-     unchanged; the base collapsed/reveal rules above still apply. */
-  .site-header__lang {
+  /* One-tap language switch. There is no room in the phone header for the
+     circle to grow into a two-segment pill (it overflowed the viewport), and
+     tap-to-reveal made switching a two-tap gesture. So below 540px the
+     circle never expands: the ACTIVE segment is hidden and the circle's
+     face is the OTHER language — 'BG' on EN pages, 'EN' on BG pages — as a
+     direct link. lang.js already persists the choice on that click, and the
+     segment's aria-label is its "Switch to …" string. The hover/focus-within
+     selectors are repeated so these rules outrank the base reveal rules. */
+  .site-header__lang,
+  .site-header__lang:hover,
+  .site-header__lang:focus-within {
+    width: 44px;
     font-size: 0.8rem;
+  }
+
+  .site-header__lang .site-header__lang-seg:is(.is-active, [aria-current="true"]) {
+    display: none;
+  }
+
+  .site-header__lang .site-header__lang-seg:not(:is(.is-active, [aria-current="true"])),
+  .site-header__lang:hover .site-header__lang-seg:not(:is(.is-active, [aria-current="true"])),
+  .site-header__lang:focus-within .site-header__lang-seg:not(:is(.is-active, [aria-current="true"])) {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    padding: 0;
+    opacity: 1;
+    border-left: 0;
+    background: #6f5e40;
+    color: var(--bg-light);
+  }
+
+  /* The base focus style is a fill change, which is invisible here because
+     the face is always filled — ring the circle instead. */
+  .site-header__lang:has(:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
   }
 
   /* Tighten the header row itself so the 3-column grid (hamburger, brand,
