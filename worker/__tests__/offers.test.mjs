@@ -573,6 +573,11 @@ test('minBandRate: ignores malformed rates but still finds the min of valid ones
   assert.equal(minBandRate(bands), 90);
 });
 
+test('minBandRate: tolerates null/undefined elements without throwing', () => {
+  assert.equal(minBandRate([null, { rate: 120 }, undefined, { rate: 95 }]), 95);
+  assert.equal(minBandRate([null, undefined]), null);
+});
+
 test('/offers response includes fromPrice (null when the band range is empty)', async () => {
   await withMockedSheets(
     [validRow],

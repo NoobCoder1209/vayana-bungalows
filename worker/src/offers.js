@@ -221,6 +221,7 @@ export function minBandRate(bands) {
   if (!Array.isArray(bands) || bands.length === 0) return null;
   let min = Infinity;
   for (const b of bands) {
+    if (!b) continue; // defensive: a null/undefined element can't be dereferenced
     if (typeof b.rate === 'number' && Number.isFinite(b.rate) && b.rate > 0 && b.rate < min) {
       min = b.rate;
     }
@@ -341,11 +342,12 @@ async function getCachedData(env) {
   // the very next request re-read and self-heal. Offers CAN legitimately be
   // empty (all promotions expired), so only `bands` gates caching.
   //
-  // Side effect: while bands are empty, /offers (which reads only .offers via
-  // getCachedOffers → getCachedData) also won't cache, so it re-reads Sheets
-  // per request during that window. Benign: empty bands are transient (short
-  // window), and even a sustained outage just degrades /offers to the
-  // pre-cache "read every request" behavior — it never breaks /offers.
+  // Side effect: while bands are empty, /offers (which reads .offers AND
+  // .bands via getCachedSheetData → getCachedData) also won't cache, so it
+  // re-reads Sheets per request during that window. Benign: empty bands are
+  // transient (short window), and even a sustained outage just degrades
+  // /offers to the pre-cache "read every request" behavior — it never breaks
+  // /offers.
   if (Array.isArray(data.bands) && data.bands.length > 0) {
     cachedData = data;
     cachedExpiry = now + OFFERS_CACHE_TTL_MS;
@@ -354,20 +356,12 @@ async function getCachedData(env) {
 }
 
 /**
- * Return the parsed INTERNAL offers, served from the 60s module cache when warm.
- * Throws (like fetchSheetData) on a cold-cache read failure so the route 502s.
- */
-export async function getCachedOffers(env) {
-  return (await getCachedData(env)).offers;
-}
-
-/**
  * Return BOTH parsed offers and rate bands from the single 60s cache entry in
- * ONE call. This is the accessor /price uses: reading offers and bands through
- * two separate getCachedData calls would trigger a redundant second Sheets
- * read within the same request on any not-cached state (cold cache, or the
- * empty-bands case that deliberately isn't cached). This reads once. Throws on
- * a read failure (route → 502), same as getCachedOffers.
+ * ONE call. This is the accessor both /offers and /price use: reading offers
+ * and bands through two separate getCachedData calls would trigger a redundant
+ * second Sheets read within the same request on any not-cached state (cold
+ * cache, or the empty-bands case that deliberately isn't cached). This reads
+ * once. Throws on a read failure (route → 502).
  */
 export async function getCachedSheetData(env) {
   const { offers, bands } = await getCachedData(env);
