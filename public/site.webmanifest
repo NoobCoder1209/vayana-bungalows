@@ -24,7 +24,7 @@
       "src": "/vayana-bungalows/apple-touch-icon.png",
       "type": "image/png",
       "sizes": "180x180",
-      "purpose": "maskable"
+      "purpose": "any"
     }
   ]
 }
