@@ -3,6 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Favicons. Files live in public/ (copied verbatim to the dist root by
+         Vite, so no content hashing). Vite prefixes these root-absolute hrefs
+         with the build base (/vayana-bungalows/ in prod, / in dev). SVG is the
+         primary icon for modern browsers; .ico is the legacy fallback; the
+         apple-touch-icon is the iOS home-screen tile (opaque white ground). -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <!-- Swap no-js → js-on synchronously, before any stylesheet loads, so
          the JS-on hamburger doesn't flash invisible during the deferred
          module's load window. CSS uses html.no-js for the no-JS fallback. -->
