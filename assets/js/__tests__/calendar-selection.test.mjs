@@ -389,6 +389,14 @@ test('pillPresentation: priced → "…for N nights, only for X€", enabled, pr
   });
 });
 
+test('pillPresentation: priced with nights === 1 → singular "night" (offer can lower the min below 5)', () => {
+  // An offer window can lower the booking minimum to minimumToBook >= 1, so a
+  // 1-night priced stay is reachable and must read "1 night", not "1 nights".
+  assert.deepEqual(L.pillPresentation('priced', 90, 1), {
+    label: 'Stay with us for 1 night, only for 90€', disabled: false, priced: true,
+  });
+});
+
 test('pillPresentation: fallback → neutral clickable label, not priced', () => {
   assert.deepEqual(L.pillPresentation('fallback'), {
     label: 'Continue to enquire', disabled: false, priced: false,

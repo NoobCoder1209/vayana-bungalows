@@ -98,8 +98,11 @@ export function shouldRetryAttempt(attemptNo, maxAttempts) {
 export function pillPresentation(state, total, nights) {
   const finitePos = (v) => typeof v === 'number' && Number.isFinite(v) && v > 0;
   if (state === 'priced' && Number.isFinite(total) && finitePos(nights)) {
+    // Pluralize: an offer window can lower the minimum below 5 (down to
+    // minimumToBook >= 1), so a 1-night priced stay is reachable — "1 night".
+    const nightsWord = nights === 1 ? 'night' : 'nights';
     return {
-      label: `Stay with us for ${nights} nights, only for ${total}€`,
+      label: `Stay with us for ${nights} ${nightsWord}, only for ${total}€`,
       disabled: false,
       priced: true,
     };
@@ -694,12 +697,13 @@ export function initCalendarSelection() {
           // Nights for the priced label, derived from the snapshot the fetch
           // was fired for (not the live selection) so it always matches `total`.
           const nights = nightsBetween(snapshot.checkIn, snapshot.checkOut);
+          const nightsWord = nights === 1 ? 'night' : 'nights';
           settle((pill) => {
             applyPillState(pill, 'priced', snapshot, total, nights, enquiryHref);
             // Reset the live region before re-announcing so screen readers still
             // read an identical announcement when the guest re-selects the same range.
             announce('');
-            announce(`Stay with us for ${nights} nights, only for ${total} euros.`);
+            announce(`Stay with us for ${nights} ${nightsWord}, only for ${total} euros.`);
           });
         })
         .catch((err) => {
@@ -781,7 +785,8 @@ export function initCalendarSelection() {
       pill.hidden = false;
       // Announce that pricing is underway; the price (or the fallback)
       // announcement follows when /price settles.
-      announce(`Selected ${verdict.nights} nights. Pricing your stay…`);
+      const selWord = verdict.nights === 1 ? 'night' : 'nights';
+      announce(`Selected ${verdict.nights} ${selWord}. Pricing your stay…`);
       // Fetch the real total (async, debounced, race-guarded).
       schedulePrice(selection);
     } else {
@@ -845,7 +850,7 @@ export function initCalendarSelection() {
   // calendars, the dock does NOT enforce the 5-night minimum. On arrival we:
   //   - find the FIRST bungalow (B1→B2→B3) that is free for the whole range AND
   //     the range is >=5 nights → auto-select it (same visuals as a manual
-  //     pick: gold circles, "Selected N nights", price pill), scroll to that
+  //     pick: gold circles, price pill), scroll to that
   //     bungalow, and focus its check-in cell; then strip the params.
   //   - otherwise (no bungalow free, range <5 nights, or junk params) → leave
   //     the page at the top so the guest can scroll and browse.
