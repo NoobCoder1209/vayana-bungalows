@@ -1762,9 +1762,8 @@
   .bungalow-split__grid {
     grid-template-columns: 1fr;
   }
-  /* Single column now — the pill + caption can't live in column 2. */
-  .bungalow-split__grid > .stay-select__pill,
-  .bungalow-split__grid > .stay-select__count {
+  /* Single column now — the pill can't live in column 2. */
+  .bungalow-split__grid > .stay-select__pill {
     grid-column: 1;
   }
 }
@@ -2151,24 +2150,6 @@
   border-radius: 50%;
   vertical-align: -0.15em;
   animation: stay-spin 0.7s linear infinite;
-}
-
-/* ── "Selected X nights" caption ───────────────────────────────────────────
-   Plain italic text (no pill/button styling). Per the owner it sits on its own
-   line, left-aligned under the calendar column (above the pill) — a bare grid
-   sibling in column 2. On the mobile single-column breakpoint the grid becomes
-   one column, so it (like the pill) moves to column 1 (see the media query
-   below, kept in sync with .stay-select__pill). */
-.bungalow-split__grid > .stay-select__count {
-  grid-column: 2;
-  justify-self: start;
-  font-style: italic;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-}
-.stay-select__count[hidden] {
-  display: none !important;
 }
 
 /* Screen-reader-only live region (announces min-nights / valid-range / dates-

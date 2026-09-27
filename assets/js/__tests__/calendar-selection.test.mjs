@@ -383,9 +383,9 @@ test('pillPresentation: loading → spinner label, disabled (guest waits)', () =
   });
 });
 
-test('pillPresentation: priced → "…for X€", enabled, priced', () => {
-  assert.deepEqual(L.pillPresentation('priced', 375), {
-    label: 'Stay with us only for 375€', disabled: false, priced: true,
+test('pillPresentation: priced → "…for N nights, only for X€", enabled, priced', () => {
+  assert.deepEqual(L.pillPresentation('priced', 375, 6), {
+    label: 'Stay with us for 6 nights, only for 375€', disabled: false, priced: true,
   });
 });
 
@@ -398,9 +398,21 @@ test('pillPresentation: fallback → neutral clickable label, not priced', () =>
 test('pillPresentation: priced with a non-finite/absent total degrades to fallback copy', () => {
   // A "priced" state that somehow lacks a real number must NOT render "…for X€"
   // with a blank/NaN — it falls through to the neutral clickable label, and is
-  // NOT marked priced (so the href won't append ?price).
+  // NOT marked priced (so the href won't append ?price). Nights is valid here so
+  // only the bad total triggers the degrade.
   for (const bad of [undefined, NaN, Infinity, '375', null]) {
-    assert.deepEqual(L.pillPresentation('priced', bad), {
+    assert.deepEqual(L.pillPresentation('priced', bad, 6), {
+      label: 'Continue to enquire', disabled: false, priced: false,
+    });
+  }
+});
+
+test('pillPresentation: priced with a non-positive/absent nights degrades to fallback copy', () => {
+  // Mirror of the total guard: a "priced" state with a missing/zero/negative/
+  // non-finite nights count must NOT render "for NaN nights" — it degrades to
+  // the neutral clickable fallback, not marked priced.
+  for (const bad of [undefined, NaN, 0, -1, Infinity, '6', null]) {
+    assert.deepEqual(L.pillPresentation('priced', 375, bad), {
       label: 'Continue to enquire', disabled: false, priced: false,
     });
   }
@@ -484,23 +496,23 @@ test('applyPillState loading: --loading class, aria-disabled/busy, spinner span,
   });
 });
 
-test('applyPillState priced: enabled, "…only for X€", href carries ?price', () => {
+test('applyPillState priced: enabled, "…for N nights, only for X€", href carries ?price', () => {
   const pill = makePill();
   // Pre-set the loading flags to confirm they get cleared.
   pill.classList.add('stay-select__pill--loading');
   pill.setAttribute('aria-disabled', 'true');
   pill.setAttribute('aria-busy', 'true');
-  L.applyPillState(pill, 'priced', SNAPSHOT, 375, stubHref);
+  L.applyPillState(pill, 'priced', SNAPSHOT, 375, 6, stubHref);
   assert.equal(pill.hasClass('stay-select__pill--loading'), false);
   assert.equal(pill.getAttribute('aria-disabled'), null);
   assert.equal(pill.getAttribute('aria-busy'), null);
-  assert.equal(pill.textContent, 'Stay with us only for 375€');
+  assert.equal(pill.textContent, 'Stay with us for 6 nights, only for 375€');
   assert.match(pill.href, /&price=375\b/);
 });
 
 test('applyPillState fallback: enabled, "Continue to enquire", href WITHOUT ?price', () => {
   const pill = makePill();
-  L.applyPillState(pill, 'fallback', SNAPSHOT, undefined, stubHref);
+  L.applyPillState(pill, 'fallback', SNAPSHOT, undefined, undefined, stubHref);
   assert.equal(pill.hasClass('stay-select__pill--loading'), false);
   assert.equal(pill.getAttribute('aria-disabled'), null);
   assert.equal(pill.textContent, 'Continue to enquire');
@@ -509,7 +521,7 @@ test('applyPillState fallback: enabled, "Continue to enquire", href WITHOUT ?pri
 
 test('applyPillState priced with a non-finite total: degrades to fallback, no ?price', () => {
   const pill = makePill();
-  L.applyPillState(pill, 'priced', SNAPSHOT, NaN, stubHref);
+  L.applyPillState(pill, 'priced', SNAPSHOT, NaN, 6, stubHref);
   assert.equal(pill.textContent, 'Continue to enquire');
   assert.ok(!/price=/.test(pill.href), `no NaN price leaked: ${pill.href}`);
 });
