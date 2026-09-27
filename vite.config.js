@@ -15,9 +15,6 @@ const BASE = '/vayana-bungalows/';
 // emission (Part 2 of Task #163) rather than duplicating the list.
 const INPUTS = {
   home: resolve(__dirname, 'index.html'),
-  premierOceanviewVilla: resolve(__dirname, 'premier-oceanview-villa/index.html'),
-  deluxeHilltopResidence: resolve(__dirname, 'deluxe-hilltop-residence/index.html'),
-  premierBeachfrontSuite: resolve(__dirname, 'premier-beachfront-suite/index.html'),
   enquiries: resolve(__dirname, 'enquiries/index.html'),
   enquiriesThanks: resolve(__dirname, 'enquiries/thanks/index.html'),
   stay: resolve(__dirname, 'stay/index.html'),

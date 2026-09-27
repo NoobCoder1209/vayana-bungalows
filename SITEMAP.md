@@ -17,13 +17,7 @@ graph TD
     Home --> Contacts["Contacts<br/><i>/contacts/</i>"]:::built
     Home --> Enq["Enquiries<br/><i>/enquiries/</i>"]:::built
 
-    Stay --> B1["Bungalow 1<br/><i>premier-oceanview-villa/</i>"]:::built
-    Stay --> B2["Bungalow 2<br/><i>deluxe-hilltop-residence/</i>"]:::built
-    Stay --> B3["Bungalow 3<br/><i>premier-beachfront-suite/</i>"]:::built
-
-    B1 --> Enq
-    B2 --> Enq
-    B3 --> Enq
+    Stay --> Cal["Three per-bungalow availability calendars<br/><i>#bungalow-1-title / #bungalow-2-title / #bungalow-3-title</i>"]:::built
 
     Home -.-> Privacy["Privacy<br/><i>roadmap</i>"]
     Home -.-> Terms["Terms<br/><i>roadmap</i>"]
@@ -43,10 +37,9 @@ Vayana Bungalows
 │                             landing page, full storytelling scroll
 │
 ├── Stay  ──────────────────  /stay/
-│   │                         the three-bungalow index
-│   ├── Bungalow 1  ────────  /premier-oceanview-villa/
-│   ├── Bungalow 2  ────────  /deluxe-hilltop-residence/
-│   └── Bungalow 3  ────────  /premier-beachfront-suite/
+│                             the three-bungalow index, one live
+│                             availability calendar per bungalow
+│                             (#bungalow-1-title / -2- / -3-title)
 │
 ├── Destination  ──────────  /destination/
 │                             area guide + map + directions
@@ -102,17 +95,13 @@ Index of the three Vayana bungalows. Hero photo (intro-villa.jpg) + short intro 
 
 ---
 
-### Bungalow detail pages — `/<bungalow-slug>/`
+### Bungalow detail pages — removed
 
-Three detail pages, one per villa. Same template, different content. Each ships a hero, an overview block, a feature grid, a gallery, and a "Book this villa" CTA that links to `/enquiries/?villa=<slug>` (pre-fills the message textarea).
-
-| Slug | Built |
-|---|---|
-| `/premier-oceanview-villa/` | yes |
-| `/deluxe-hilltop-residence/` | yes |
-| `/premier-beachfront-suite/` | yes |
-
-Slugs are intentionally stable from the original room-card hrefs on the homepage (pre-existing inbound links must keep working).
+The three standalone bungalow detail pages (`/premier-oceanview-villa/`,
+`/deluxe-hilltop-residence/`, `/premier-beachfront-suite/`) were removed. Each bungalow now
+lives as a section inside `/stay/`, with its own live availability calendar. The homepage
+room cards ("Cherry Blossom", "Lemon", "Olive") link straight to the matching `/stay/`
+section anchor (`#bungalow-1-title` / `#bungalow-2-title` / `#bungalow-3-title`).
 
 ---
 
@@ -165,10 +154,7 @@ vite.config.js inputs
 ├── stay                       → stay/index.html
 ├── destination                → destination/index.html
 ├── contacts                   → contacts/index.html
-├── enquiries                  → enquiries/index.html
-├── premierOceanviewVilla      → premier-oceanview-villa/index.html
-├── deluxeHilltopResidence     → deluxe-hilltop-residence/index.html
-└── premierBeachfrontSuite     → premier-beachfront-suite/index.html
+└── enquiries                  → enquiries/index.html
 ```
 
 ---
