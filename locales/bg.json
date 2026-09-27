@@ -5,7 +5,7 @@
     "tagline": "Код 102· Бутик бунгала в Царево, България"
   },
   "common": {
-    "skip_link": "Код 103· Към съдържанието",
+    "skip_link": "Към съдържанието",
     "header": {
       "menu_open_aria": "Отваряне на менюто",
       "menu_close_aria": "Затваряне на менюто",
@@ -21,26 +21,26 @@
       "_note_DO_NOT_TRANSLATE_lang_aria_keys": "The four lang_*_aria keys above (lang_en_current_aria, lang_bg_current_aria, lang_switch_to_en_aria, lang_switch_to_bg_aria) are referenced by index.html's .site-header__lang segments via data-i18n-attr (data-aria-current / data-aria-switch). The i18n plugin bakes both strings onto each segment; assets/js/lang.js promotes the correct one to aria-label based on the segment's is-active state. If you delete a segment's data-i18n-attr marker these will orphan — leave them keyed. This _note key itself is orphan by design; leave it here as future-editor guidance. This note key's value is kept identical across all locales — do NOT translate it, or a future dev reading a translated identifier list will not be able to grep for the identifiers in code."
     },
     "drawer": {
-      "nav_home": "Код 107· Начало",
-      "nav_stay": "Код 108· Настаняване",
-      "nav_destination": "Код 109· Дестинация",
-      "nav_contacts": "Код 110· Контакти",
-      "nav_enquiries": "Код 111· Запитване",
+      "nav_home": "Начало",
+      "nav_stay": "Настаняване",
+      "nav_destination": "Дестинация",
+      "nav_contacts": "Контакти",
+      "nav_enquiries": "Запитване",
       "primary_aria": "Основна навигация",
       "noscript_aria": "Основна навигация (без JavaScript)"
     },
     "footer": {
-      "brand_eyebrow": "Код 112· Vayana Bungalows",
-      "follow_eyebrow": "Код 113· Последвайте ни",
+      "brand_eyebrow": "Vayana Bungalows",
+      "follow_eyebrow": "Последвайте ни",
       "follow_facebook_aria": "Facebook",
       "follow_instagram_aria": "Instagram",
-      "policies_eyebrow": "Код 114· Правила",
-      "policies_aria": "Правила",
-      "terms": "Код 115· Общи условия",
-      "cancellation": "Код 116· Условия за отказ",
-      "privacy": "Код 117· Политика за поверителност",
-      "copyright": "Код 118· © 2026 Създадено с ❤️ от {credit}",
-      "license_prefix": "Код 119· Лицензен номер:"
+      "policies_eyebrow": "Информация",
+      "policies_aria": "Информация за политики и условия",
+      "terms": "Общи условия",
+      "cancellation": "Условия за резервация",
+      "privacy": "Политика за поверителност",
+      "copyright": "© 2026 Създадено с ❤️ от {credit}",
+      "license_prefix": "Регистрация:"
     },
     "close_aria": "Затваряне"
   },
@@ -51,14 +51,14 @@
       "og_description": "Код 122· Бутиков комплекс от бунгала на българското Черноморие в Царево — грижовно гостоприемство, градински гледки и спокойни дни."
     },
     "hero": {
-      "title_html": "Код 124· Бутик бунгала<br />на Черноморието",
-      "subtitle": "Код 125· Където боровете срещат брега, а дните текат в ритъма на прилива и апетита."
+      "title_html": "Добре дошли във Vayana Bungalows",
+      "subtitle": "На крачки от морето, в подножието на Странджа планина."
     },
     "intro": {
-      "eyebrow": "Код 126· Добре дошли във Vayana Bungalows",
+      "eyebrow": "Брегът, който обичаме да откриваме",
       "title": "Код 127· На брега на Черно море, в подножието на Странджа.",
-      "body_para1": "Код 128· Vayana Bungalows е малък семеен комплекс в Царево, България — шепа дървени бунгала, сгушени между боровете и морето, построени и стопанисвани със същата грижа, която бихме отделили на собствения си дом.",
-      "body_para2": "Код 129· Гостите ни идват за тишината, за сутрешните плувания и за неприбързаното гостоприемство, което остава дълго след като са потеглили обратно.",
+      "body_para1": "Морско място за бавни утрини, дълги обеди и повече време заедно. Създадохме уютни бунгала, в които сме помислили за всичко необходимо за един спокоен престой, само на няколко крачки от морето в залива Арапя — място, където да забавите ритъма, да поемете дълбоко въздух и да се насладите на простите удоволствия край морето.",
+      "body_para2": "А когато поискате да разгледате наоколо, отвъд залива ви очакват още много места. Открийте любимите ни плажове, тихите селца, дивите кътчета на Странджа и местата, към които самите ние обичаме да се връщаме.",
       "cta": "Код 130· Разгледайте комплекса",
       "img_alt": "Тераса на дървено бунгало по залез"
     },
