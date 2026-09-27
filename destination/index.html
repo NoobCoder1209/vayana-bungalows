@@ -3,27 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Favicons. Files live in public/ (copied verbatim to the dist root by
+         Vite, so no content hashing). Vite prefixes these root-absolute hrefs
+         with the build base (/vayana-bungalows/ in prod, / in dev). SVG is the
+         primary icon for modern browsers; .ico is the legacy fallback; the
+         apple-touch-icon is the iOS home-screen tile (opaque white ground). -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <!-- Swap no-js → js-on synchronously, before any stylesheet loads, so
          the JS-on hamburger doesn't flash invisible during the deferred
          module's load window. CSS uses html.no-js for the no-JS fallback. -->
     <script>document.documentElement.classList.replace('no-js','js-on');</script>
     <title data-i18n="destination.meta.title">Destination &mdash; Vayana Bungalows</title>
-    <meta name="description" data-i18n-meta="destination.meta.description" content="Tsarevo on the Black Sea coast of Bulgaria — what to do, what to eat, where to walk, and how to find us. The home base of the Vayana bungalows." />
+    <meta name="description" data-i18n-meta="destination.meta.description" content="Tsarevo on the Black Sea coast of Bulgaria – what to do, what to eat, where to walk, and how to find us. The home base of the Vayana bungalows." />
     <link rel="canonical" href="https://noobcoder1209.github.io/vayana-bungalows/destination/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" data-i18n-meta="destination.meta.title" content="Destination — Vayana Bungalows" />
-    <meta property="og:description" data-i18n-meta="destination.meta.og_description" content="Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows — beach, food, hiking, nearby villages, and directions." />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="bg_BG" />
+    <meta property="og:title" data-i18n-meta="destination.meta.title" content="Destination – Vayana Bungalows" />
+    <meta property="og:description" data-i18n-meta="destination.meta.og_description" content="Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows – beach, food, hiking, nearby villages, and directions." />
     <meta property="og:url" content="https://noobcoder1209.github.io/vayana-bungalows/destination/" />
-    <meta property="og:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
+    <meta property="og:image" content="https://noobcoder1209.github.io/vayana-bungalows/og-home.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Vayana Bungalows – a set dining table inside a bungalow, by the Black Sea in Tsarevo, Bulgaria" />
     <meta property="og:site_name" content="Vayana Bungalows" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" data-i18n-meta="destination.meta.title" content="Destination — Vayana Bungalows" />
+    <meta name="twitter:title" data-i18n-meta="destination.meta.title" content="Destination – Vayana Bungalows" />
     <meta name="twitter:description" data-i18n-meta="destination.meta.twitter_description" content="Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows." />
-    <meta name="twitter:image" content="https://noobcoder1209.github.io/vayana-bungalows/assets/img/hero-beach.jpg" />
+    <meta name="twitter:image" content="https://noobcoder1209.github.io/vayana-bungalows/og-home.jpg" />
 
     <meta name="theme-color" content="#0e0d0a" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -222,7 +236,7 @@
           <!-- Row 1 — Beach -->
           <article class="destination-guide__row reveal">
             <div class="destination-guide__photo">
-              <img src="/assets/img/hero-beach.jpg" data-i18n-attr="alt:destination.beach.img_alt" alt="A wide stretch of soft sand running into the Black Sea — characteristic of the long, quiet beaches around Tsarevo" loading="lazy" />
+              <img src="/assets/img/hero-beach.jpg" data-i18n-attr="alt:destination.beach.img_alt" alt="A wide stretch of soft sand running into the Black Sea – characteristic of the long, quiet beaches around Tsarevo" loading="lazy" />
             </div>
             <div class="destination-guide__text" data-see-more="See more" data-see-less="See less" data-i18n-attr="data-see-more:destination.guide.see_more; data-see-less:destination.guide.see_less">
               <span class="eyebrow" data-i18n="destination.beach.eyebrow">The shoreline</span>

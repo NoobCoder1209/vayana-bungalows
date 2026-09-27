@@ -168,3 +168,27 @@ Three blocks must round-trip identically across all 8 entry pages because there'
 3. **Footer** — contact column, social column, policies column (with Enquire link), copyright bar.
 
 Each page carries a `KEEP IN SYNC` HTML comment listing the other 7 entries so future edits propagate everywhere.
+
+---
+
+## Machine sitemap & robots (auto-generated)
+
+Two crawler-facing files are **generated at build** (not hand-maintained) and
+land in the site root:
+
+- **`/sitemap.xml`** — one `<url>` per indexable page × locale (EN root + BG
+  under `/bg/`), each carrying `<xhtml:link rel="alternate" hreflang="…">`
+  entries (en / bg / x-default) and a git-derived `<lastmod>`. The URL set is
+  derived from the same page `inputs` + `pageUrl()` the i18n plugin uses for
+  canonical/hreflang, so it can never drift from what actually builds.
+- **`/robots.txt`** — allows all, disallows the enquiry paths, and advertises
+  the sitemap URL.
+
+The enquiry form (`/enquiries/`) and its thank-you page (`/enquiries/thanks/`)
+are **excluded** from the sitemap and carry a `robots: noindex, nofollow`
+meta — they're functional pages, not search landing pages.
+
+Implementation: `scripts/sitemap.js` (pure generator, unit-tested in
+`scripts/__tests__/sitemap.test.mjs`) + `scripts/sitemap-plugin.js` (thin Vite
+plugin, emits in `writeBundle`). The deployment origin lives in `ORIGIN` in
+`vite.config.js` — change it (with `BASE`) if a custom domain ships.

@@ -1690,7 +1690,7 @@ function insertAfterHead(html, block) {
  * hard-fails at build time rather than silently emitting a URL with
  * backslashes or a filename suffix.
  */
-function pageUrl({ basePath, pagePath, locale, defaultLocale }) {
+export function pageUrl({ basePath, pagePath, locale, defaultLocale }) {
   if (pagePath.includes('\\')) {
     throw new Error(
       `[i18n] pageUrl: pagePath must use forward-slash separators, got "${pagePath}"`,
@@ -1724,6 +1724,24 @@ function rewriteCanonicalUrls(headEl, opts) {
 
   const tw = headEl.querySelector('meta[name="twitter:url"]');
   if (tw) safeSetAttribute(tw, 'content', url);
+
+  // og:locale — flip to the current locale, and set the alternate to the
+  // OTHER locale. Source HTML authors the EN pair (en_US + alternate bg_BG);
+  // on the BG mirror these become bg_BG + alternate en_US. Skips silently if
+  // the page ships no og:locale (not every page has an OG block).
+  const ogLocaleTag = { en: 'en_US', bg: 'bg_BG' };
+  const current = ogLocaleTag[opts.locale];
+  if (current) {
+    const ogLocale = headEl.querySelector('meta[property="og:locale"]');
+    if (ogLocale) safeSetAttribute(ogLocale, 'content', current);
+    const ogAlt = headEl.querySelector('meta[property="og:locale:alternate"]');
+    if (ogAlt) {
+      // The alternate is the first known locale tag that isn't the current one.
+      const other = Object.entries(ogLocaleTag)
+        .find(([loc]) => loc !== opts.locale);
+      if (other) safeSetAttribute(ogAlt, 'content', other[1]);
+    }
+  }
 }
 
 // ============================================================================
