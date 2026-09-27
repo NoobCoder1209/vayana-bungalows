@@ -268,6 +268,7 @@
 .booking-dock__field {
   display: flex;
   align-items: center;
+  justify-content: center;
   /* Single line per field now (no stacked caption), so the vertical padding
      drives the pill height — kept tight for a short pill. */
   padding: 0.6rem 1.25rem;
@@ -279,35 +280,26 @@
   border-left: 0;
 }
 
-.booking-dock__field input,
-.booking-dock__field select {
+.booking-dock__field input {
   border: 0;
   padding: 0;
   min-height: 0;
+  text-align: center;
   font-size: 0.95rem;
   font-family: var(--font-heading);
   background: transparent;
   color: var(--text-dark);
   cursor: pointer;
 }
-/* The empty state (input placeholder / the disabled first <option>) is the
-   field's caption. Muting it keeps a chosen value reading as the "filled"
-   state, and keeps the four fields' empty states visually uniform. Same
-   font-size as a value so the row height doesn't shift between empty and picked. */
+/* The empty state (input placeholder) is the field's caption. Muting it keeps
+   a chosen value reading as the "filled" state, and keeps the two fields'
+   empty states visually uniform. Same font-size as a value so the row height
+   doesn't shift between empty and picked. */
 .booking-dock__field input::placeholder {
   color: var(--text-muted);
   opacity: 1; /* Firefox lowers placeholder opacity by default */
 }
-/* Selects carry `required` + a value="" placeholder option, so while unpicked
-   they match :invalid — mute them to match the date inputs' placeholder. Once a
-   real option is chosen the select is :valid and shows --text-dark. (The form
-   is novalidate + JS preventDefault, so `required` never blocks submit; it's
-   purely the styling hook.) */
-.booking-dock__field select:invalid {
-  color: var(--text-muted);
-}
-.booking-dock__field input:focus,
-.booking-dock__field select:focus {
+.booking-dock__field input:focus {
   outline: none;
 }
 
