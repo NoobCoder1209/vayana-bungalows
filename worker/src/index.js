@@ -22,7 +22,7 @@
 import { verifyTurnstile } from './turnstile.js';
 import { validateBody } from './validation.js';
 import { appendEnquiry } from './sheets.js';
-import { toPublicOffer, getCachedOffers, getCachedSheetData } from './offers.js';
+import { toPublicOffer, getCachedSheetData, minBandRate } from './offers.js';
 import { computeOfferPrice, standardPrice } from './pricing.js';
 import { checkRateLimit } from './rate-limit.js';
 import {
@@ -75,11 +75,22 @@ export default {
         return jsonResponse({ ok: false, error: 'method' }, 405, request, env);
       }
       try {
-        const offers = await getCachedOffers(env);
+        // One cached read gives BOTH offers and the seasonal rate bands. The
+        // bands feed the home room cards' "From €X / night" (their minimum),
+        // exposed here as `fromPrice`; the tier structure stays hidden via
+        // toPublicOffer. Same 60s cache as /price — no extra Sheets round-trip.
+        const { offers, bands } = await getCachedSheetData(env);
         // Project to the PUBLIC shape before sending — hides the tier name and
         // the High/Mid/Low structure; exposes only a generic per-night `price`.
         const publicOffers = offers.map(toPublicOffer);
-        return jsonCacheableResponse({ ok: true, offers: publicOffers }, 200, request, env, 60);
+        const fromPrice = minBandRate(bands); // whole euro, or null if no bands
+        return jsonCacheableResponse(
+          { ok: true, offers: publicOffers, fromPrice },
+          200,
+          request,
+          env,
+          60
+        );
       } catch {
         // Generic log only — never echo err.message (could leak SA key fragments).
         console.error('offers.fetch failed');

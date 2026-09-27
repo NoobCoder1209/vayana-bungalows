@@ -210,6 +210,25 @@ export function parseRateBands(rows) {
 }
 
 /**
+ * The lowest seasonal nightly rate across the parsed rate bands — the "from"
+ * price shown on the home room cards ("From €X / night"). parseRateBands has
+ * already dropped non-positive / malformed rates, so a min over the survivors
+ * is the true floor. Returns a whole euro (Math.round; the site shows integer
+ * euros) or null when there are no valid bands, so the caller can omit the
+ * field rather than send a bogus 0 / NaN.
+ */
+export function minBandRate(bands) {
+  if (!Array.isArray(bands) || bands.length === 0) return null;
+  let min = Infinity;
+  for (const b of bands) {
+    if (typeof b.rate === 'number' && Number.isFinite(b.rate) && b.rate > 0 && b.rate < min) {
+      min = b.rate;
+    }
+  }
+  return min === Infinity ? null : Math.round(min);
+}
+
+/**
  * Project an INTERNAL offer object to the PUBLIC shape sent to the browser via
  * /offers. Hides the tier STRUCTURE — the tier name ('Mid') and the fact that
  * three tiers (High/Mid/Low) exist and how they're derived. The resolved

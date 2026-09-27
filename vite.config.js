@@ -72,10 +72,14 @@ const i18nContext = {
     // baked data-nights-deal-label attribute. Keep in both locales.
     // pct/amount are the same for the Type-1 discount templates
     // (discount_pct/{pct}, discount_per_day/{amount}, discount_total/{amount}).
+    // price is the home room-card "From €{price} / night" template
+    // (home.rooms.price_from_tmpl), filled by offers.js from the Worker's
+    // fromPrice (min seasonal rate) at runtime — same self-referential no-op.
     min: '{min}',
     free: '{free}',
     pct: '{pct}',
     amount: '{amount}',
+    price: '{price}',
   },
   bg: {
     phone: '+359 899 873 990',
@@ -95,11 +99,13 @@ const i18nContext = {
     address_country: 'Bulgaria',
     // See EN note above — {min}/{free} in home.offers.nights_deal are
     // runtime tokens; resolve them to the literal token so the plugin
-    // leaves them intact for the client-side interpolation.
+    // leaves them intact for the client-side interpolation. {price} is the
+    // room-card "From €{price} / night" template, same treatment.
     min: '{min}',
     free: '{free}',
     pct: '{pct}',
     amount: '{amount}',
+    price: '{price}',
   },
 };
 

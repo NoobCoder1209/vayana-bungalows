@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseOffers, serialToISO, toPublicOffer, parseRateBands } from '../src/offers.js';
+import { parseOffers, serialToISO, toPublicOffer, parseRateBands, minBandRate } from '../src/offers.js';
 import { jsonCacheableResponse, corsHeaders } from '../src/lib/response.js';
 
 const req = (origin = 'http://localhost:5173') =>
@@ -542,4 +542,48 @@ test('GET /submit is rejected (405) — submit stays POST-only', async () => {
 test('GET on an unknown path is 404', async () => {
   const res = await worker.fetch(getReq('/nope'), offersEnv, {});
   assert.equal(res.status, 404);
+});
+
+// ---------------------------------------------------------------------------
+// minBandRate — the "From €X / night" value for the home room cards.
+// ---------------------------------------------------------------------------
+
+test('minBandRate: returns the lowest rate across bands, rounded to a whole euro', () => {
+  const bands = [
+    { startISO: '2026-04-01', endISO: '2026-05-31', rate: 140 },
+    { startISO: '2026-06-01', endISO: '2026-06-30', rate: 100.4 },
+    { startISO: '2026-07-01', endISO: '2026-08-31', rate: 210 },
+  ];
+  assert.equal(minBandRate(bands), 100); // 100.4 → 100
+});
+
+test('minBandRate: rounds .5 up', () => {
+  assert.equal(minBandRate([{ rate: 99.5 }, { rate: 120 }]), 100);
+});
+
+test('minBandRate: null on empty / non-array / no positive rates', () => {
+  assert.equal(minBandRate([]), null);
+  assert.equal(minBandRate(null), null);
+  assert.equal(minBandRate(undefined), null);
+  assert.equal(minBandRate([{ rate: 0 }, { rate: -5 }, { rate: NaN }]), null);
+});
+
+test('minBandRate: ignores malformed rates but still finds the min of valid ones', () => {
+  const bands = [{ rate: NaN }, { rate: 130 }, { rate: 'x' }, { rate: 90 }];
+  assert.equal(minBandRate(bands), 90);
+});
+
+test('/offers response includes fromPrice (null when the band range is empty)', async () => {
+  await withMockedSheets(
+    [validRow],
+    async () => {
+      const res = await worker.fetch(getReq(), offersEnv, {});
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      assert.equal(body.ok, true);
+      assert.ok('fromPrice' in body, 'response must include fromPrice');
+      // withMockedSheets seeds an EMPTY band range → minBandRate → null.
+      assert.equal(body.fromPrice, null);
+    },
+  );
 });
