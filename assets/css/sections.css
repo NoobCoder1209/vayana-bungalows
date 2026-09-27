@@ -934,8 +934,10 @@
      off") occupies the same vertical space as a two-line one ("stay minimum 9
      nights get 3 free"). This keeps the CTA pill below it aligned across cards.
      min-height (not height) so a rare 3-line deal on a narrow card can still
-     grow rather than clip. A single line is centred in the reserved box. */
-  min-height: calc(1em * 1.7 * 2);
+     grow rather than clip. A single line is centred in the reserved box.
+     2lh = two of this element's own line-heights, so the floor tracks the text
+     automatically (no coupling to the body line-height). */
+  min-height: 2lh;
   display: flex;
   align-items: center;
   justify-content: center;
