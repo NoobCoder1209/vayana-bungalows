@@ -1690,7 +1690,7 @@ function insertAfterHead(html, block) {
  * hard-fails at build time rather than silently emitting a URL with
  * backslashes or a filename suffix.
  */
-function pageUrl({ basePath, pagePath, locale, defaultLocale }) {
+export function pageUrl({ basePath, pagePath, locale, defaultLocale }) {
   if (pagePath.includes('\\')) {
     throw new Error(
       `[i18n] pageUrl: pagePath must use forward-slash separators, got "${pagePath}"`,
