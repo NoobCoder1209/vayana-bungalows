@@ -188,9 +188,46 @@ export function initOffers() {
         throw new Error('bad-shape');
       }
       renderOffers(container, data.offers);
+      // Same payload carries the min seasonal nightly rate → the room cards'
+      // "From €X / night". Independent of the offers list; failure here must
+      // not disturb the offers render, so it runs after and guards its own DOM.
+      fillRoomCardPrices(data.fromPrice);
     })
     .catch((err) => {
       console.warn('[offers] could not load offers:', err.message);
       renderError(container);
+      // Leave the room-card price lines hidden (their default) — never show a
+      // stale number when the live rate is unavailable.
     });
+}
+
+/**
+ * Fill the three home room cards' "From €X / night" lines from the live
+ * minimum seasonal rate (`fromPrice`, a whole euro from the Worker). Each
+ * `[data-room-price]` element starts `hidden` with an empty body and a
+ * localized `data-price-tmpl` (e.g. "From €{price} / night"). Only reveal a
+ * card's price when we have a valid positive number; otherwise leave it hidden
+ * so a failed/absent rate shows nothing rather than a wrong value. The number
+ * is wrapped in <strong> built as a text node (no innerHTML → no injection),
+ * matching the old emphasised styling.
+ */
+export function fillRoomCardPrices(fromPrice) {
+  const els = document.querySelectorAll('[data-room-price]');
+  if (els.length === 0) return;
+  const valid = typeof fromPrice === 'number' && Number.isFinite(fromPrice) && fromPrice > 0;
+  els.forEach((el) => {
+    if (!valid) {
+      el.hidden = true;
+      return;
+    }
+    const tmpl = el.dataset.priceTmpl || 'From €{price} / night';
+    const [before, after = ''] = tmpl.split('{price}');
+    el.replaceChildren();
+    if (before) el.append(document.createTextNode(before));
+    const strong = document.createElement('strong');
+    strong.textContent = String(fromPrice);
+    el.append(strong);
+    if (after) el.append(document.createTextNode(after));
+    el.hidden = false;
+  });
 }
