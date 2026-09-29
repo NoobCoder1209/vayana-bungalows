@@ -21,12 +21,13 @@ const BUSINESS = {
   email: 'vayanamare@gmail.com',
   streetAddress: 'Arapya',
   addressLocality: 'Tsarevo',
+  addressRegion: 'Burgas Province',
   addressCountry: 'BG',
   latitude: 42.1885867,
   longitude: 27.8350773,
   image: 'https://noobcoder1209.github.io/vayana-bungalows/og-home.jpg',
   sameAs: [
-    'https://www.facebook.com/profile.php?id=61573811610794/',
+    'https://www.facebook.com/profile.php?id=61573811610794',
     'https://www.instagram.com/vayana.joy.arapya/',
   ],
 };
@@ -59,6 +60,7 @@ test('build: contact + address + geo populated correctly', () => {
   assert.equal(o.address['@type'], 'PostalAddress');
   assert.equal(o.address.streetAddress, 'Arapya');
   assert.equal(o.address.addressLocality, 'Tsarevo');
+  assert.equal(o.address.addressRegion, 'Burgas Province');
   assert.equal(o.address.addressCountry, 'BG');
   assert.equal(o.geo['@type'], 'GeoCoordinates');
   assert.equal(o.geo.latitude, 42.1885867);

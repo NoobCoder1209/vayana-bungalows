@@ -36,12 +36,13 @@ const BUSINESS = {
   email: 'vayanamare@gmail.com',
   streetAddress: 'Arapya',
   addressLocality: 'Tsarevo',
+  addressRegion: 'Burgas Province',
   addressCountry: 'BG',
   latitude: 42.1885867,
   longitude: 27.8350773,
   image: `${ORIGIN}/vayana-bungalows/og-home.jpg`,
   sameAs: [
-    'https://www.facebook.com/profile.php?id=61573811610794/',
+    'https://www.facebook.com/profile.php?id=61573811610794',
     'https://www.instagram.com/vayana.joy.arapya/',
   ],
 };
