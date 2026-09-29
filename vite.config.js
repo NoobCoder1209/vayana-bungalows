@@ -18,6 +18,34 @@ const BASE = '/vayana-bungalows/';
 // ever ships, changing this one line (and BASE) moves every generated URL.
 const ORIGIN = 'https://noobcoder1209.github.io';
 
+// LodgingBusiness JSON-LD ("business card") data — schema.org structured data
+// the i18n plugin injects into the home + contacts pages so Google can build a
+// rich result / knowledge panel. Co-located with ORIGIN here (build-time
+// constants), matching how this config already mirrors assets/js/site-config.js
+// values into i18nContext — the build-time and runtime worlds don't share a
+// module system, so these are duplicated by convention. KEEP IN SYNC with
+// SITE_CONFIG (brand / phone / email / address / social) if those change.
+// Deliberately PREFIX-FREE: the description must NOT be pulled from the locale
+// files (they carry "Code NNN·" tracer prefixes that would poison the data).
+const BUSINESS = {
+  name: 'Vayana Bungalows',
+  description:
+    'Boutique bungalows on the Black Sea coast in Tsarevo, Bulgaria — '
+    + 'handcrafted hospitality, garden views, and quiet days by the sea.',
+  telephone: '+359 899 873 990',
+  email: 'vayanamare@gmail.com',
+  streetAddress: 'Arapya',
+  addressLocality: 'Tsarevo',
+  addressCountry: 'BG',
+  latitude: 42.1885867,
+  longitude: 27.8350773,
+  image: `${ORIGIN}/vayana-bungalows/og-home.jpg`,
+  sameAs: [
+    'https://www.facebook.com/profile.php?id=61573811610794/',
+    'https://www.instagram.com/vayana.joy.arapya/',
+  ],
+};
+
 // Multi-page build: one entry per HTML page. Vite emits each as its own
 // index.html under the matching folder, so the URLs stay /<page>/.
 // Hoisted so the i18n plugin can enumerate the same set for BG-mirror
@@ -138,6 +166,14 @@ export default defineConfig(({ command, mode }) => ({
       basePath: mode === 'development' ? '/' : BASE,
       projectRoot: __dirname,
       inputs: INPUTS,
+      // JSON-LD LodgingBusiness injection (home + contacts). Wired only for a
+      // PRODUCTION build: the block carries ABSOLUTE URLs (ORIGIN + BASE), so
+      // it must not run when base is the dev '/' (mode === 'development'),
+      // which would bake ORIGIN-without-BASE URLs. Dev server + dev build both
+      // skip it; omitting these makes the plugin skip the JSON-LD entirely.
+      ...(command === 'build' && mode !== 'development'
+        ? { jsonldBusiness: BUSINESS, origin: ORIGIN }
+        : {}),
     }),
     // Emit sitemap.xml + robots.txt at build. Only in a real (non-dev) build:
     // the sitemap carries ABSOLUTE URLs (ORIGIN + BASE), which only make sense

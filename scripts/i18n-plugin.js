@@ -119,6 +119,7 @@
 import { readFileSync, readdirSync, lstatSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, join, relative, sep, dirname, isAbsolute } from 'node:path';
 import { parse as parseHtml } from 'node-html-parser';
+import { JSONLD_PAGES, buildLodgingBusinessJsonLd, renderJsonLdScript } from './jsonld.js';
 
 // Shared parser options — threaded through EVERY parseHtml call so the
 // outer page, the sanitizer wrapper, and the noscript re-parse all
@@ -734,7 +735,7 @@ export function applyLocale(html, opts) {
     // via marker-comment substrings — see applyHead docstring. Uses the
     // precompiled *_STRIP_RE constants (L4) rather than building a fresh
     // regex per call.
-    out = out.replace(HREFLANG_STRIP_RE, '').replace(BOOT_STRIP_RE, '');
+    out = out.replace(HREFLANG_STRIP_RE, '').replace(BOOT_STRIP_RE, '').replace(JSONLD_STRIP_RE, '');
     out = insertAfterHead(out, buildHeadBlock(opts));
   }
   // Runtime-only sentinels strip (build-only). applyHead stamps
@@ -1215,6 +1216,8 @@ const HREFLANG_OPEN = 'i18n:hreflang open';
 const HREFLANG_CLOSE = 'i18n:hreflang close';
 const BOOT_OPEN = 'i18n:boot-redirect open';
 const BOOT_CLOSE = 'i18n:boot-redirect close';
+const JSONLD_OPEN = 'i18n:jsonld open';
+const JSONLD_CLOSE = 'i18n:jsonld close';
 
 // Boot-redirect script body — module-scope constant (L3). The script is
 // identical across every page × locale; per-page data (locale + per-locale
@@ -1273,6 +1276,10 @@ const HREFLANG_STRIP_RE = new RegExp(
 );
 const BOOT_STRIP_RE = new RegExp(
   `<!--${BOOT_OPEN.replace(REGEX_ESCAPE_RE, '\\$&')}-->[\\s\\S]*?<!--${BOOT_CLOSE.replace(REGEX_ESCAPE_RE, '\\$&')}-->`,
+  'g',
+);
+const JSONLD_STRIP_RE = new RegExp(
+  `<!--${JSONLD_OPEN.replace(REGEX_ESCAPE_RE, '\\$&')}-->[\\s\\S]*?<!--${JSONLD_CLOSE.replace(REGEX_ESCAPE_RE, '\\$&')}-->`,
   'g',
 );
 
@@ -1560,8 +1567,26 @@ function buildHeadBlock(opts) {
     `<!--${BOOT_CLOSE}-->`,
   ];
 
-  // Boot script FIRST (must run before any stylesheet). Hreflang after.
-  return [...bootLines, ...hreflangLines].join('\n');
+  // JSON-LD LodgingBusiness block — only on the pages in JSONLD_PAGES (home +
+  // contacts). Uses the page's own locale URL + inLanguage. Requires
+  // opts.jsonldBusiness (the BUSINESS config) and opts.origin; when either is
+  // absent (e.g. a unit test that doesn't supply them), the block is skipped.
+  const jsonldLines = [];
+  if (opts.jsonldBusiness && opts.origin && JSONLD_PAGES.has(pagePath)) {
+    const pagePathUrl = pageUrl({ basePath, pagePath, locale, defaultLocale });
+    const obj = buildLodgingBusinessJsonLd({
+      business: opts.jsonldBusiness,
+      url: `${opts.origin}${pagePathUrl}`,
+      locale,
+    });
+    jsonldLines.push(`<!--${JSONLD_OPEN}-->`);
+    jsonldLines.push(renderJsonLdScript(obj));
+    jsonldLines.push(`<!--${JSONLD_CLOSE}-->`);
+  }
+
+  // Boot script FIRST (must run before any stylesheet). Hreflang after, then
+  // the JSON-LD (order among head metadata is irrelevant to crawlers).
+  return [...bootLines, ...hreflangLines, ...jsonldLines].join('\n');
 }
 
 /**
@@ -1836,6 +1861,12 @@ export function i18nPlugin(options) {
     basePath,
     projectRoot,
     inputs,
+    // Optional: JSON-LD LodgingBusiness data + absolute origin. When both are
+    // provided, the plugin injects a schema.org structured-data block into the
+    // pages in JSONLD_PAGES (home + contacts). Omitted → no JSON-LD (existing
+    // callers/tests that don't pass them are unaffected).
+    jsonldBusiness,
+    origin,
   } = options;
 
   if (!localesDir || !contextByLocale || !basePath || !projectRoot || !inputs) {
@@ -1987,6 +2018,8 @@ export function i18nPlugin(options) {
           pagePath: rel,
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
+          jsonldBusiness,
+          origin,
         });
       },
     },
@@ -2084,6 +2117,8 @@ export function i18nPlugin(options) {
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
           stripRuntimeSentinels: true,
+          jsonldBusiness,
+          origin,
         });
         const bg = applyLocale(rawHtml, {
           locale: 'bg',
@@ -2094,6 +2129,8 @@ export function i18nPlugin(options) {
           allLocales: locales,
           defaultLocale: DEFAULT_LOCALE,
           stripRuntimeSentinels: true,
+          jsonldBusiness,
+          origin,
         });
 
         // Writes are still ordered EN then BG; if the EN write fails
@@ -2228,6 +2265,8 @@ export function i18nPlugin(options) {
               pagePath: rel,
               allLocales: locales,
               defaultLocale: DEFAULT_LOCALE,
+              jsonldBusiness,
+              origin,
             });
           } catch (err) {
             res.statusCode = 500;

@@ -724,3 +724,32 @@ test('smoke: dist/site.webmanifest exists, is valid JSON, and every page links i
     assert.match(html, /<link[^>]*rel="manifest"/, `${relPath}: must link the manifest`);
   }
 });
+
+// ── JSON-LD LodgingBusiness (home + contacts only) ───────────────────────────
+
+test('smoke: home + contacts carry a valid LodgingBusiness JSON-LD (EN + BG); no other page does', () => {
+  const shouldHave = new Set([
+    'index.html', 'contacts/index.html',
+    'bg/index.html', 'bg/contacts/index.html',
+  ]);
+  for (const { relPath, html } of pages) {
+    const m = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    if (shouldHave.has(relPath)) {
+      assert.ok(m, `${relPath}: must carry a JSON-LD block`);
+      const obj = JSON.parse(m[1].replace(/\\u003c/g, '<'));
+      assert.equal(obj['@type'], 'LodgingBusiness', `${relPath}: @type`);
+      assert.equal(obj.name, 'Vayana Bungalows', `${relPath}: name`);
+      assert.ok(obj.url.startsWith('https://'), `${relPath}: absolute url`);
+      assert.ok(obj.geo && obj.geo.latitude === 42.1885867, `${relPath}: geo`);
+      // BG page → bg url + inLanguage bg.
+      if (relPath.startsWith('bg/')) {
+        assert.match(obj.url, /\/bg\/$|\/bg\/contacts\/$/, `${relPath}: BG url`);
+        assert.equal(obj.inLanguage, 'bg', `${relPath}: inLanguage bg`);
+      } else {
+        assert.equal(obj.inLanguage, 'en', `${relPath}: inLanguage en`);
+      }
+    } else {
+      assert.ok(!m, `${relPath}: must NOT carry JSON-LD (home+contacts only)`);
+    }
+  }
+});
