@@ -45,12 +45,15 @@ function setLinksInert(body, inert) {
 // (for the overflow test), or null when the fixed CSS clamp is in effect.
 //
 // Geometry (photo and text column share the same top in an align-items:start
-// grid row): the body starts `headingStack` px below the column top (eyebrow +
-// h3 + their margins), and the toggle sits below the body with a `--space-3`
-// top margin. To make the toggle's bottom land on the photo's bottom:
+// grid row): the body starts `headingStack` px below the column top, and the
+// toggle sits below the body with a `--space-3` top margin. To make the
+// toggle's bottom land on the photo's bottom:
 //     bodyHeight = photoHeight − headingStack − (toggleMarginTop + toggleHeight)
-// headingStack is the body's top RELATIVE to the text column (not offsetTop,
-// which is measured from the offsetParent and includes the row's own offset).
+// headingStack is the body's border-box top RELATIVE to the text column (not
+// offsetTop, which is measured from the offsetParent and includes the row's own
+// page offset). It therefore captures everything above the body box — the
+// eyebrow, the h3, their margins, AND the body <p>'s own top margin (only
+// margin-bottom is reset in CSS) — which is exactly the space to subtract.
 function measureClamp(textEl, body, btn) {
   const row = textEl.closest('.destination-guide__row');
   const photo = row && row.querySelector('.destination-guide__photo');
@@ -66,15 +69,23 @@ function measureClamp(textEl, body, btn) {
 
   // Toggle stack = its top margin (--space-3) + its own rendered height. If the
   // button doesn't exist yet (first pass), estimate from its computed line box;
-  // it's re-measured once the real button is in the DOM.
+  // it's re-measured once the real button is in the DOM. Bias the estimate a
+  // touch HIGH: it feeds only the first-pass overflow gate, and a slightly-too-
+  // large toggleStack makes the estimated clamp slightly smaller, so the gate
+  // errs toward KEEPING a toggle. That's the safe direction — a spurious toggle
+  // on a barely-overflowing body is harmless, a missing one clips text with no
+  // way to reveal it.
   let toggleStack;
   if (btn) {
     const cs = getComputedStyle(btn);
     toggleStack = parseFloat(cs.marginTop) + btn.getBoundingClientRect().height;
   } else {
-    // Estimate: --space-3 (1.5rem) gap + roughly one small-font line.
+    // Estimate: --space-3 (1.5rem) top margin + one toggle line box. The toggle
+    // is `font: inherit` (so it inherits the body's line-height: 1.7) with only
+    // font-size overridden to 0.875rem, so its line box ≈ 1.7 × 0.875rem. Round
+    // the line-height factor up to 1.8 to bias the estimate high (see above).
     const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    toggleStack = 1.5 * rootPx + 1.2 * 0.875 * rootPx;
+    toggleStack = 1.5 * rootPx + 1.8 * 0.875 * rootPx;
   }
 
   const clamp = Math.max(0, Math.round(photoH - headingStack - toggleStack));
@@ -142,24 +153,44 @@ function setupSection(textEl) {
   measureClamp(textEl, body, btn);
 }
 
-// Recompute an already-wired section: refresh the desktop clamp and, if a
-// resize made the (collapsed) body fit within it, hide the toggle; if it now
-// overflows again, restore it. Never touches an expanded section's visibility.
+// Recompute an already-wired section after a resize (the desktop clamp depends
+// on the photo height, which scales with viewport width). Three collapsed-state
+// outcomes; an expanded section is never touched (don't yank it shut).
+//
+//   - fits now  → fully un-collapse: hide the toggle AND drop is-collapsed +
+//                 un-inert the links + clear the clamp, so the body isn't left
+//                 clipped/faded with unreachable links and no way to expand.
+//   - overflows → ensure the collapsed presentation is (re)applied and the
+//                 toggle shown, in case a prior resize had un-collapsed it.
 function refreshSection(textEl, body) {
   const btn = body.nextElementSibling &&
     body.nextElementSibling.classList.contains('destination-guide__toggle')
       ? body.nextElementSibling
       : null;
+  if (!btn) { measureClamp(textEl, body, null); return; }
 
+  // Don't disturb a body the user has expanded; just refresh its (unused-while-
+  // expanded) clamp so it's correct if they collapse later.
+  if (body.classList.contains('is-expanded')) { measureClamp(textEl, body, btn); return; }
+
+  // Measure overflow against a collapsed box: temporarily ensure is-collapsed so
+  // the clamp/overflow read is valid even if a prior pass un-collapsed it.
+  body.classList.add('is-collapsed');
   measureClamp(textEl, body, btn);
-  if (!btn) return;
-
-  // Only adjust while collapsed — don't yank an expanded body shut on resize.
-  if (!body.classList.contains('is-collapsed')) return;
-
   void body.offsetHeight;
   const overflows = body.scrollHeight > body.clientHeight + 1;
-  btn.hidden = !overflows; // fits now → hide the toggle; overflows → show it
+
+  if (overflows) {
+    btn.hidden = false;
+    setLinksInert(body, true); // collapsed presentation restored
+  } else {
+    // Fits within the clamp — reveal it fully and remove the collapsed state so
+    // no fade/clip/inert-link residue remains without a toggle to undo it.
+    btn.hidden = true;
+    body.classList.remove('is-collapsed');
+    body.style.removeProperty('--dg-clamp');
+    setLinksInert(body, false);
+  }
 }
 
 export function initDestinationReadMore() {
