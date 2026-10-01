@@ -3122,16 +3122,21 @@
 
 /* ---- Per-section "See more" collapse (destination-readmore.js) ---- */
 
-/* Collapsed: clamp the whole body to ~14 lines and fade the bottom out.
-   line-height is pinned so the 14-line math (14 × 1.7em) is robust. */
+/* line-height is pinned so the collapse math is robust: destination-readmore.js
+   sets --dg-clamp (desktop) so the body + toggle together equal the photo's
+   height; the mobile branch below falls back to a fixed ~14 lines. */
 .destination-guide__body {
   line-height: 1.7;
 }
 
 .destination-guide__body.is-collapsed {
-  max-height: calc(14 * 1.7em);   /* ~14 rendered lines */
+  /* Collapse to the JS-measured height (photo height minus the heading stack
+     and the toggle stack) so the "See more" toggle's bottom lands flush with
+     the photo bottom. --dg-clamp is set per-section by destination-readmore.js
+     after layout; the 14-line calc is only a pre-JS / no-JS fallback. */
+  max-height: var(--dg-clamp, calc(14 * 1.7em));
   overflow: hidden;
-  /* Dissolve the last couple of lines into the page instead of a hard cut. */
+  /* Dissolve the last line into the page instead of a hard cut. */
   -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
           mask-image: linear-gradient(to bottom, #000 80%, transparent 100%);
 }
@@ -3180,6 +3185,13 @@
        no-op so the rhythm stays consistent and the eye doesn't have
        to track sides on a narrow column. */
     direction: ltr;
+  }
+
+  /* MOBILE fallback: photo stacks ABOVE the text, so there is no side-by-side
+     height to match. Ignore the JS-measured --dg-clamp and clamp to a fixed
+     ~14 lines (the toggle then sits under the text, as before). */
+  .destination-guide__body.is-collapsed {
+    max-height: calc(14 * 1.7em);   /* ~14 rendered lines */
   }
 }
 
