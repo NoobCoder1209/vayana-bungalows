@@ -51,6 +51,7 @@ function submitBody(overrides = {}) {
     adults: '2',
     children: '0',
     infants: '0',
+    pets: '0',
     message: 'Hi',
     consent: 'true',
     locale: 'en',
@@ -107,11 +108,11 @@ test('POST /submit writes the bungalow label into Column B (row index 1)', async
     assert.ok(captured.appendBody, 'the Sheets append must have been called');
     const row = captured.appendBody.values[0];
     assert.equal(row[1], 'Bungalow 2', 'Column B (index 1) must carry the bungalow label');
-    assert.equal(row.length, 15, 'row must be 15 columns wide (range A:O)');
+    assert.equal(row.length, 16, 'row must be 16 columns wide (range A:P)');
   });
 });
 
-test('POST /submit with no bungalow leaves Column B blank (still 15 columns)', async () => {
+test('POST /submit with no bungalow leaves Column B blank (still 16 columns)', async () => {
   await withCapturedAppend(async (captured) => {
     // Omit the bungalow key entirely — the direct-/enquiries/ visit case.
     const body = submitBody();
@@ -121,7 +122,7 @@ test('POST /submit with no bungalow leaves Column B blank (still 15 columns)', a
     assert.equal(res.status, 200);
     const row = captured.appendBody.values[0];
     assert.equal(row[1], '', 'Column B must be blank when no bungalow was sent');
-    assert.equal(row.length, 15);
+    assert.equal(row.length, 16);
   });
 });
 
@@ -137,24 +138,24 @@ test('POST /submit does not put the bungalow anywhere else in the row', async ()
   });
 });
 
-// ── Price → Column L (index 11), with the trailing columns shifted right ──────
+// ── Price → Column M (index 12), with the trailing columns shifted right ──────
 
-test('POST /submit writes the price into Column L (row index 11), consent shifts to M', async () => {
+test('POST /submit writes the price into Column M (row index 12), consent shifts to N', async () => {
   await withCapturedAppend(async (captured) => {
     const res = await worker.fetch(submitReq(submitBody({ price: '500' })), submitEnv, {});
     assert.equal(res.status, 200, 'a valid submit must succeed');
     const row = captured.appendBody.values[0];
-    assert.equal(row[11], '500', 'Column L (index 11) must carry the price');
-    assert.equal(row[12], 'true', 'consent must have shifted to Column M (index 12)');
-    assert.ok(typeof row[13] === 'string' && row[13].length > 0, 'source_ip_hash present at Column N (index 13)');
-    assert.equal(row[14], 'en', 'locale must have shifted to Column O (index 14)');
-    assert.equal(row.length, 15, 'row must be 15 columns wide (range A:O)');
+    assert.equal(row[12], '500', 'Column M (index 12) must carry the price');
+    assert.equal(row[13], 'true', 'consent must have shifted to Column N (index 13)');
+    assert.ok(typeof row[14] === 'string' && row[14].length > 0, 'source_ip_hash present at Column O (index 14)');
+    assert.equal(row[15], 'en', 'locale must have shifted to Column P (index 15)');
+    assert.equal(row.length, 16, 'row must be 16 columns wide (range A:P)');
     const hits = row.filter((c) => c === '500');
     assert.equal(hits.length, 1, 'the price must occupy exactly one cell');
   });
 });
 
-test('POST /submit with no price leaves Column L blank (still 15 columns)', async () => {
+test('POST /submit with no price leaves Column M blank (still 16 columns)', async () => {
   await withCapturedAppend(async (captured) => {
     // Omit price entirely — the direct-/enquiries/ visit case.
     const parsed = JSON.parse(submitBody());
@@ -162,16 +163,16 @@ test('POST /submit with no price leaves Column L blank (still 15 columns)', asyn
     const res = await worker.fetch(submitReq(JSON.stringify(parsed)), submitEnv, {});
     assert.equal(res.status, 200);
     const row = captured.appendBody.values[0];
-    assert.equal(row[11], '', 'Column L must be blank when no price was sent');
-    assert.equal(row.length, 15);
+    assert.equal(row[12], '', 'Column M must be blank when no price was sent');
+    assert.equal(row.length, 16);
   });
 });
 
-test('POST /submit with junk price records blank Column L (never 400, never junk in the sheet)', async () => {
+test('POST /submit with junk price records blank Column M (never 400, never junk in the sheet)', async () => {
   await withCapturedAppend(async (captured) => {
     const res = await worker.fetch(submitReq(submitBody({ price: 'abc' })), submitEnv, {});
     assert.equal(res.status, 200, 'a junk price must not fail the submission');
-    assert.equal(captured.appendBody.values[0][11], '', 'junk price → blank Column L');
+    assert.equal(captured.appendBody.values[0][12], '', 'junk price → blank Column M');
   });
 });
 
@@ -180,7 +181,67 @@ test('POST /submit with price and bungalow together lands both in their own cell
     await worker.fetch(submitReq(submitBody({ bungalow: '1', price: '600' })), submitEnv, {});
     const row = captured.appendBody.values[0];
     assert.equal(row[1], 'Bungalow 1', 'bungalow stays at Column B (index 1)');
-    assert.equal(row[11], '600', 'price at Column L (index 11)');
-    assert.equal(row.length, 15);
+    assert.equal(row[12], '600', 'price at Column M (index 12)');
+    assert.equal(row.length, 16);
+  });
+});
+
+// ── Pets → Column K (index 10), inserted between infants and message ─────────
+
+test('POST /submit writes pets into Column K (index 10); message shifts to L', async () => {
+  await withCapturedAppend(async (captured) => {
+    const res = await worker.fetch(submitReq(submitBody({ pets: '2' })), submitEnv, {});
+    assert.equal(res.status, 200, 'a valid submit must succeed');
+    const row = captured.appendBody.values[0];
+    assert.equal(row[10], '2', 'Column K (index 10) must carry pets');
+    assert.equal(row[11], 'Hi', 'message must have shifted to Column L (index 11)');
+    assert.equal(row.length, 16, 'row must be 16 columns wide (range A:P)');
+  });
+});
+
+test('POST /submit with out-of-range pets rejects (400 validation)', async () => {
+  const res = await worker.fetch(submitReq(submitBody({ pets: '5' })), submitEnv, {});
+  assert.equal(res.status, 400, 'pets outside 0..2 must fail validation');
+});
+
+test('POST /submit with no pets key leaves Column K at "0" (optional, normalised)', async () => {
+  await withCapturedAppend(async (captured) => {
+    const parsed = JSON.parse(submitBody());
+    delete parsed.pets;
+    const res = await worker.fetch(submitReq(JSON.stringify(parsed)), submitEnv, {});
+    assert.equal(res.status, 200, 'omitting pets must not fail the submission');
+    assert.equal(captured.appendBody.values[0][10], '0', 'absent pets normalises to "0" in Column K');
+  });
+});
+
+// ── Server-side party-limit enforcement (parity with the client stepper) ─────
+// A hand-crafted POST bypasses the browser gate; the Worker must still reject
+// out-of-policy party sizes, not silently write them to the ops sheet.
+
+test('POST /submit with adults+children > 4 is rejected (400)', async () => {
+  const res = await worker.fetch(submitReq(submitBody({ adults: '2', children: '3' })), submitEnv, {});
+  assert.equal(res.status, 400, 'adults+children=5 must fail the combined cap');
+});
+
+test('POST /submit with adults+children == 4 is accepted', async () => {
+  await withCapturedAppend(async (captured) => {
+    const res = await worker.fetch(submitReq(submitBody({ adults: '3', children: '1' })), submitEnv, {});
+    assert.equal(res.status, 200, 'adults+children=4 is at the cap and must pass');
+    const row = captured.appendBody.values[0];
+    assert.equal(row[7], '3', 'adults in Column H');
+    assert.equal(row[8], '1', 'children in Column I');
+  });
+});
+
+test('POST /submit with infants > 2 is rejected (400)', async () => {
+  const res = await worker.fetch(submitReq(submitBody({ infants: '3' })), submitEnv, {});
+  assert.equal(res.status, 400, 'infants must be capped at 2 server-side');
+});
+
+test('POST /submit with infants == 2 is accepted', async () => {
+  await withCapturedAppend(async (captured) => {
+    const res = await worker.fetch(submitReq(submitBody({ infants: '2' })), submitEnv, {});
+    assert.equal(res.status, 200, 'infants=2 is at the cap and must pass');
+    assert.equal(captured.appendBody.values[0][9], '2', 'infants in Column J');
   });
 });

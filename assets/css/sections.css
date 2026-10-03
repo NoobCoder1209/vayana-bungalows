@@ -2639,16 +2639,117 @@
   grid-column: 1 / -1;
 }
 
-/* Guest-count trio (Adults / Children / Infants) — a nested 3-column
-   grid inside a --full row, so the three single-digit selects sit in
-   one tidy band instead of bleeding across two grid rows. Collapses
-   to a single column on mobile (handled in the responsive block
-   below). Gap matches the parent grid so visual alignment with the
-   rest of the form is exact. */
+/* Guests field — a toggle pill (matching the sibling input pills) that
+   opens an Airbnb-style stepper popover (−/count/+ per category: Adults,
+   Children, Infants, Pets). Replaces the former 3-select trio. The popover
+   is absolutely positioned under the toggle; position:relative here is its
+   containing block. Hidden inputs (adults/children/infants/pets) carry the
+   values — see assets/js/enquiry.js setupGuests(). */
 .enquiry-form__guests {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--space-3) var(--space-4);
+  position: relative;
+}
+
+.enquiry-form__guests-toggle {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-light);
+  color: var(--text-dark);
+  border-radius: var(--radius-form);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  cursor: pointer;
+  /* Match the uppercase in-pill label look of the sibling placeholders. */
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.enquiry-form__guests-caret {
+  display: inline-flex;
+  color: var(--text-muted);
+  flex: 0 0 auto;
+}
+
+.enquiry-form__guests-popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-form);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  padding: var(--space-3) var(--space-4);
+}
+
+.enquiry-form__guests-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.enquiry-form__guests-row + .enquiry-form__guests-row {
+  border-top: 1px solid var(--border);
+}
+
+.enquiry-form__guests-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.enquiry-form__guests-label {
+  color: var(--text-dark);
+  font-size: 1rem;
+}
+
+.enquiry-form__guests-caption {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.enquiry-form__guests-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.enquiry-form__guests-dec,
+.enquiry-form__guests-inc {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-dark);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.enquiry-form__guests-dec:disabled,
+.enquiry-form__guests-inc:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.enquiry-form__guests-count {
+  min-width: 1.5ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dark);
 }
 
 .enquiry-form__field label {
@@ -2896,13 +2997,6 @@
   .enquiry-form__error,
   .enquiry-form__consent {
     grid-column: 1;
-  }
-  /* On mobile the 3-up guest row would squish each select to ~30% width,
-     making the OS-rendered dropdown arrow crowd the value. Collapse to
-     a single column so each guest field gets full width — matches how
-     the other paired fields (check-in/check-out, email/phone) collapse. */
-  .enquiry-form__guests {
-    grid-template-columns: 1fr;
   }
 }
 

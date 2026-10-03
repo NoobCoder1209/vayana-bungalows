@@ -100,6 +100,151 @@ const CONSENT_ERROR_MSG = 'Please accept the Privacy Policy to continue.';
 const ALLOWED_ADULTS = new Set(['1', '2', '3', '4']);
 const ADULTS_ERROR_MSG = 'Please choose how many adults are travelling.';
 
+// Guest stepper bounds. adults+children share a combined cap of 4
+// (COMBINED_MAX); infants and pets are independent 0..2. adults has a
+// floor of 1 (required); the others floor at 0. Mirrored server-side in
+// worker/src/validation.js (pets added there; adults/children/infants
+// already bounded).
+const GUEST_MIN = { adults: 1, children: 0, infants: 0, pets: 0 };
+const GUEST_MAX = { adults: 4, children: 4, infants: 2, pets: 2 };
+const COMBINED_MAX = 4; // adults + children
+
+// Pure derivation for the Guests stepper: given raw counts (any shape)
+// and the localized summary templates, return the clamped counts, the
+// summary string ("3 Guests / 1 Pet"), and per-category button-disabled
+// flags. No DOM — unit-tested directly (enquiry-guests.test.mjs). The
+// combined adults+children cap is enforced by trimming CHILDREN (adults
+// keeps priority as the required category). %N% is the count placeholder.
+export function computeGuestsState(raw, T) {
+  const num = (v, floor) => {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? n : floor;
+  };
+  const counts = {};
+  for (const k of Object.keys(GUEST_MIN)) {
+    counts[k] = Math.max(GUEST_MIN[k], Math.min(GUEST_MAX[k], num(raw[k], GUEST_MIN[k])));
+  }
+  if (counts.adults + counts.children > COMBINED_MAX) {
+    counts.children = Math.max(0, COMBINED_MAX - counts.adults);
+  }
+  const fill = (tpl, n) => String(tpl).replaceAll('%N%', n);
+  const guests = counts.adults + counts.children + counts.infants;
+  let summary = fill(guests === 1 ? T.guest : T.guests, guests);
+  if (counts.pets >= 1) summary += T.join + fill(counts.pets === 1 ? T.pet : T.pets, counts.pets);
+  const sum = counts.adults + counts.children;
+  const buttons = {};
+  for (const k of Object.keys(GUEST_MIN)) {
+    const atMax = (k === 'adults' || k === 'children') ? sum >= COMBINED_MAX : counts[k] >= GUEST_MAX[k];
+    buttons[k] = { dec: counts[k] <= GUEST_MIN[k], inc: atMax };
+  }
+  return { counts, summary, buttons };
+}
+
+// Guests stepper popover. Replaces the former three <select>s. Writes the
+// four hidden inputs (the submit handler's source of truth) and keeps a
+// localized summary ("3 Guests / 1 Pet") on the toggle. All derivation is
+// in computeGuestsState (pure, tested); this is the DOM glue. Pluralisation
+// + summary join come from data-* strings the i18n plugin bakes onto the
+// form (English literals are the test/unbuilt fallback). Returns { reset }.
+export function setupGuests(form) {
+  const wrap = form.querySelector('[data-enquiry-guests]');
+  if (!wrap) return null;
+  const inputs = {
+    adults: form.querySelector('[data-enquiry-adults]'),
+    children: form.querySelector('[data-enquiry-children]'),
+    infants: form.querySelector('[data-enquiry-infants]'),
+    pets: form.querySelector('[data-enquiry-pets]'),
+  };
+  const toggle = wrap.querySelector('[data-enquiry-guests-toggle]');
+  const popover = wrap.querySelector('[data-enquiry-guests-popover]');
+  const summaryEl = wrap.querySelector('[data-enquiry-guests-summary]');
+  const liveEl = wrap.querySelector('[data-enquiry-guests-live]');
+
+  const d = form.dataset;
+  const T = {
+    guest: d.guestsSummaryGuest || '%N% Guest',
+    guests: d.guestsSummaryGuests || '%N% Guests',
+    pet: d.guestsSummaryPet || '%N% Pet',
+    pets: d.guestsSummaryPets || '%N% Pets',
+    join: d.guestsSummaryJoin || ' / ',
+  };
+  const LIVE_TPL = d.guestsLive || '%LABEL%, %N%';
+
+  const readRaw = () => ({
+    adults: inputs.adults.value, children: inputs.children.value,
+    infants: inputs.infants.value, pets: inputs.pets.value,
+  });
+  const render = () => {
+    const state = computeGuestsState(readRaw(), T);
+    // Write clamped values back so the payload + bfcache snapshot agree.
+    for (const k of Object.keys(state.counts)) inputs[k].value = String(state.counts[k]);
+    if (summaryEl) summaryEl.textContent = state.summary;
+    if (toggle) toggle.setAttribute('aria-label', state.summary);
+    wrap.querySelectorAll('[data-guest-row]').forEach((row) => {
+      const k = row.getAttribute('data-guest-row');
+      const dec = row.querySelector('[data-guest-dec]');
+      const inc = row.querySelector('[data-guest-inc]');
+      const out = row.querySelector('[data-guest-count]');
+      if (dec) { dec.disabled = state.buttons[k].dec; dec.setAttribute('aria-disabled', String(dec.disabled)); }
+      if (inc) { inc.disabled = state.buttons[k].inc; inc.setAttribute('aria-disabled', String(inc.disabled)); }
+      if (out) out.textContent = String(state.counts[k]);
+    });
+    return state;
+  };
+  const step = (k, delta) => {
+    const cur = parseInt(inputs[k].value, 10);
+    const base = Number.isFinite(cur) ? cur : GUEST_MIN[k];
+    inputs[k].value = String(base + delta); // computeGuestsState clamps
+    const state = render();
+    const label = k[0].toUpperCase() + k.slice(1);
+    if (liveEl) liveEl.textContent = LIVE_TPL.replaceAll('%LABEL%', label).replaceAll('%N%', state.counts[k]);
+  };
+
+  wrap.querySelectorAll('[data-guest-row]').forEach((row) => {
+    const k = row.getAttribute('data-guest-row');
+    row.querySelector('[data-guest-dec]')?.addEventListener('click', () => step(k, -1));
+    row.querySelector('[data-guest-inc]')?.addEventListener('click', () => step(k, +1));
+  });
+
+  const open = () => {
+    popover.hidden = false;
+    toggle.setAttribute('aria-expanded', 'true');
+    wrap.querySelector('[data-guest-inc]:not([disabled]), [data-guest-dec]:not([disabled])')?.focus();
+  };
+  const close = (returnFocus) => {
+    if (popover.hidden) return;
+    popover.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+    if (returnFocus) toggle.focus();
+  };
+  toggle?.addEventListener('click', () => (popover.hidden ? open() : close(false)));
+  // Outside-click close. This is the one document-level listener in the
+  // module (an inside-click test can't be done from the subtree). The
+  // enquiryInit guard prevents double-binding on the same form; the
+  // isConnected check makes the handler a no-op if `wrap` is ever detached
+  // (bfcache/future client-nav edge), so it can't act on a stale popover —
+  // matching the subtree-scoping discipline used elsewhere in this file.
+  document.addEventListener('pointerdown', (e) => {
+    if (!wrap.isConnected) return;
+    if (!popover.hidden && !wrap.contains(e.target)) close(false);
+  });
+  wrap.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !popover.hidden) { e.stopPropagation(); close(true); }
+  });
+
+  render();
+  return {
+    reset() {
+      inputs.adults.value = '1';
+      inputs.children.value = '0';
+      inputs.infants.value = '0';
+      inputs.pets.value = '0';
+      render();
+      close(false);
+    },
+  };
+}
+
 // Worker error → user-facing pill copy. Keys match the `error` strings
 // the Worker returns in worker/src/index.js — keep in lockstep when
 // either side adds a new bucket. The pill is the only surface the user
@@ -141,6 +286,8 @@ export function initEnquiry() {
   const adults = form.querySelector('[data-enquiry-adults]');
   const children = form.querySelector('[data-enquiry-children]');
   const infants = form.querySelector('[data-enquiry-infants]');
+  const pets = form.querySelector('[data-enquiry-pets]');
+  const guestsToggle = form.querySelector('[data-enquiry-guests-toggle]');
   const email = form.querySelector('[data-enquiry-email]');
   const phone = form.querySelector('[data-enquiry-phone]');
   const message = form.querySelector('[data-enquiry-message]');
@@ -171,6 +318,8 @@ export function initEnquiry() {
   if (!adults) missing.push('[data-enquiry-adults]');
   if (!children) missing.push('[data-enquiry-children]');
   if (!infants) missing.push('[data-enquiry-infants]');
+  if (!pets) missing.push('[data-enquiry-pets]');
+  if (!guestsToggle) missing.push('[data-enquiry-guests-toggle]');
   if (!email) missing.push('[data-enquiry-email]');
   if (!phone) missing.push('[data-enquiry-phone]');
   if (!message) missing.push('[data-enquiry-message]');
@@ -232,6 +381,11 @@ export function initEnquiry() {
   // The HTML ships it disabled (JS-disabled fallback: button stays
   // greyed, <noscript> mailto block is the call-to-action).
   submit.disabled = false;
+
+  // Wire the Guests stepper popover (writes the four hidden inputs above).
+  // Returns a controller whose reset() restores defaults + closes the
+  // popover; called from successPath() after a successful submit.
+  const guests = setupGuests(form);
 
   // Cloudflare Turnstile widget — rendered programmatically (not
   // declaratively via class="cf-turnstile") so the site-key stays in
@@ -396,22 +550,34 @@ export function initEnquiry() {
     }
   }
 
-  // Show an inline error and (optionally) mark a specific field as
-  // aria-invalid so screen readers announce it. Round-1 review finding
-  // I3 — without aria-invalid, AT users only hear the live region but
-  // get no per-field cue. clearError() below clears both the message
-  // and every aria-invalid marker, so the form returns to a clean
-  // state as soon as the user starts fixing things.
-  const allFields = [name, checkinEl, checkoutEl, adults, email, phone, message, consentInput];
+  // Show an inline error and (optionally) mark a specific field. We set
+  // aria-invalid AND wire the field to the error pill via aria-errormessage
+  // + aria-describedby (review finding I2): the guests control is a <button>
+  // (the hidden count inputs can't take focus), and aria-invalid support on
+  // a non-input button is spotty across screen readers — pointing the field
+  // at the pill's text means the actual message is announced regardless.
+  // The pill carries id="eq-error". clearError() unwires everything so the
+  // form returns to a clean state as soon as the user starts fixing things.
+  const allFields = [name, checkinEl, checkoutEl, guestsToggle, email, phone, message, consentInput];
+  const ERROR_PILL_ID = errorEl.id || 'eq-error';
   const showError = (msg, field) => {
     errorEl.textContent = msg;
     errorEl.hidden = false;
-    if (field) field.setAttribute('aria-invalid', 'true');
+    if (field) {
+      field.setAttribute('aria-invalid', 'true');
+      field.setAttribute('aria-errormessage', ERROR_PILL_ID);
+      field.setAttribute('aria-describedby', ERROR_PILL_ID);
+    }
   };
   const clearError = () => {
     errorEl.textContent = '';
     errorEl.hidden = true;
-    allFields.forEach((el) => el && el.removeAttribute('aria-invalid'));
+    allFields.forEach((el) => {
+      if (!el) return;
+      el.removeAttribute('aria-invalid');
+      el.removeAttribute('aria-errormessage');
+      el.removeAttribute('aria-describedby');
+    });
   };
   const flagConsent = (flag) => {
     consentLabel?.classList.toggle('is-error', flag);
@@ -446,14 +612,13 @@ export function initEnquiry() {
     form.reset();
     flagConsent(false);
     clearError();
-    // Clear the bfcache snapshot too — after a successful submit, the
-    // form is intentionally blank, and a subsequent Back navigation
-    // should land on a blank form, not on the previous user's pick.
-    try {
-      sessionStorage.removeItem(SELECT_SNAPSHOT_KEY);
-    } catch {
-      // ignore — same private-mode/quota story as pagehide above.
-    }
+    // Re-sync the Guests stepper: form.reset() restores the hidden inputs
+    // to their HTML defaults (adults=1, rest=0), but the rendered summary,
+    // counts and button-disabled states need a re-render — and the popover
+    // should close. guests.reset() does all of that. (Hidden inputs survive
+    // bfcache natively, so there's no snapshot to clear — unlike the old
+    // <select> trio this replaced.)
+    guests?.reset();
     // Reset flatpickr's internal state too — form.reset() clears the
     // <input> value, but the picker still thinks a date is selected
     // and the next open shows it highlighted. Calling .clear() syncs
@@ -468,58 +633,6 @@ export function initEnquiry() {
     tTomorrow.setDate(tNow.getDate() + 1);
     fpCheckout.set('minDate', tTomorrow);
   };
-
-  // bfcache restore: re-apply select values that the browser snapshot
-  // forgot. Firefox in particular loses the user's pick on
-  // disabled+selected+hidden first-option placeholder selects when
-  // the page is restored from bfcache (the HTML-attribute `selected`
-  // on the disabled first option wins on restore, snapping the field
-  // back to "ADULTS*" even though the user had picked e.g. 3).
-  //
-  // Strategy: snapshot the three select values to sessionStorage on
-  // pagehide (which fires before bfcache stash AND before a normal
-  // navigation), and on pageshow.persisted (bfcache restore signal),
-  // read them back and re-apply via setAttribute('selected') plus
-  // .value = ... so both the DOM-attribute state and the property
-  // state agree.
-  //
-  // We only act on event.persisted=true so a fresh navigation (no
-  // bfcache) doesn't pick up stale values from a previous session.
-  // sessionStorage is per-tab, so this doesn't leak across tabs.
-  //
-  // Scoped to the three guest-count selects only — the inputs
-  // (name/email/phone/dates/message) and the textarea all survive
-  // bfcache cleanly because their .value lives in the snapshot.
-  const SELECT_SNAPSHOT_KEY = 'vayana.enquiry.guests';
-  const guestSelects = [adults, children, infants].filter(Boolean);
-  window.addEventListener('pagehide', () => {
-    try {
-      const snap = guestSelects.reduce((acc, el) => {
-        acc[el.id] = el.value;
-        return acc;
-      }, {});
-      sessionStorage.setItem(SELECT_SNAPSHOT_KEY, JSON.stringify(snap));
-    } catch {
-      // sessionStorage may throw in private-mode Safari or with
-      // exhausted quota. Silent fallback — the user just sees the
-      // placeholder reset, same as before this handler existed.
-    }
-  });
-  window.addEventListener('pageshow', (event) => {
-    if (!event.persisted) return;
-    let snap;
-    try {
-      snap = JSON.parse(sessionStorage.getItem(SELECT_SNAPSHOT_KEY) || '{}');
-    } catch {
-      return;
-    }
-    guestSelects.forEach((el) => {
-      const saved = snap[el.id];
-      if (saved && saved !== el.value) {
-        el.value = saved;
-      }
-    });
-  });
 
   form.addEventListener('submit', async (e) => {
     // ALWAYS preventDefault first. Default submit would attempt a
@@ -600,18 +713,35 @@ export function initEnquiry() {
       return;
     }
 
-    // Adults — required. The select's default state is a disabled+
-    // selected first <option> with empty value (placeholder pattern),
-    // so an untouched form submits adults.value === ''. Reject that
-    // before sending to the Worker (the Worker rejects too — server
-    // is authoritative, this is just for instant UX feedback). The
-    // ALLOWED_ADULTS check also rejects DevTools-injected values
-    // outside 1..4. Children / Infants stay optional ('-', empty,
-    // 0..4 all accepted); the Worker normalises empty/'-' to 0.
+    // Guests — adults required (1..4), and the party must satisfy the same
+    // bounds the stepper enforces: adults+children ≤ 4, infants 0..2,
+    // pets 0..2. The stepper writes clamped values to the hidden inputs, so
+    // a legitimate submission is always in range; this re-check is the
+    // belt-and-braces gate against a DevTools-poked hidden value (the Worker
+    // is authoritative server-side, this is instant UX feedback). An error
+    // lands on the visible toggle (hidden inputs can't take focus/aria).
+    //
+    // STRICT parse (review finding I1): the Worker matches each count against
+    // an exact-string allowlist, so " 1 ", "1.9", "1abc" are server-rejects.
+    // parseInt would launder those to 1 and let the client PASS a body the
+    // Worker then 400s. intOrNull returns the integer only when the trimmed
+    // string is its own canonical decimal form — so the two gates agree.
+    const intOrNull = (v) => {
+      const t = String(v ?? '').trim();
+      const n = Number(t);
+      return (t !== '' && Number.isInteger(n) && String(n) === t) ? n : null;
+    };
     const adultsVal = (adults.value || '').trim();
-    if (!ALLOWED_ADULTS.has(adultsVal)) {
-      showError(ADULTS_ERROR_MSG, adults);
-      adults.focus();
+    const childrenN = intOrNull(children.value);
+    const infantsN = intOrNull(infants.value);
+    const petsN = intOrNull(pets.value);
+    if (!ALLOWED_ADULTS.has(adultsVal)
+        || childrenN === null || childrenN < 0 || childrenN > 4
+        || parseInt(adultsVal, 10) + childrenN > COMBINED_MAX
+        || infantsN === null || infantsN < 0 || infantsN > 2
+        || petsN === null || petsN < 0 || petsN > 2) {
+      showError(ADULTS_ERROR_MSG, guestsToggle);
+      guestsToggle.focus();
       return;
     }
 
@@ -683,6 +813,7 @@ export function initEnquiry() {
       adults: adults.value,
       children: children.value,
       infants: infants.value,
+      pets: pets.value,
       message: messageVal,
       consent: consentInput.checked ? 'true' : 'false',
       // Which bungalow this enquiry came from, as a compact key ('1'|'2'|'3'),
