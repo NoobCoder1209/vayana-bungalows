@@ -213,7 +213,13 @@
                 data-err-email="Please enter a valid email address."
                 data-err-phone="Please enter a valid phone number."
                 data-villa-opener="Hello, I'd like to enquire about the %VILLA%."
-                data-i18n-attr="data-err-validation:enquiries.errors.validation; data-err-captcha:enquiries.errors.captcha; data-err-rate-limit:enquiries.errors.rate_limit; data-err-content-type:enquiries.errors.content_type; data-err-too-large:enquiries.errors.too_large; data-err-method:enquiries.errors.method; data-err-downstream:enquiries.errors.downstream; data-err-network:enquiries.errors.network; data-err-default:enquiries.errors.default; data-err-name:enquiries.field_errors.name; data-err-date:enquiries.field_errors.date; data-err-date-order:enquiries.field_errors.date_order; data-err-past-date:enquiries.field_errors.past_date; data-err-email:enquiries.field_errors.email; data-err-phone:enquiries.field_errors.phone; data-villa-opener:enquiries.form.villa_opener">
+                data-guests-summary-guest="%N% Guest"
+                data-guests-summary-guests="%N% Guests"
+                data-guests-summary-pet="%N% Pet"
+                data-guests-summary-pets="%N% Pets"
+                data-guests-summary-join=" / "
+                data-guests-live="%LABEL%, %N%"
+                data-i18n-attr="data-err-validation:enquiries.errors.validation; data-err-captcha:enquiries.errors.captcha; data-err-rate-limit:enquiries.errors.rate_limit; data-err-content-type:enquiries.errors.content_type; data-err-too-large:enquiries.errors.too_large; data-err-method:enquiries.errors.method; data-err-downstream:enquiries.errors.downstream; data-err-network:enquiries.errors.network; data-err-default:enquiries.errors.default; data-err-name:enquiries.field_errors.name; data-err-date:enquiries.field_errors.date; data-err-date-order:enquiries.field_errors.date_order; data-err-past-date:enquiries.field_errors.past_date; data-err-email:enquiries.field_errors.email; data-err-phone:enquiries.field_errors.phone; data-villa-opener:enquiries.form.villa_opener; data-guests-summary-guest:enquiries.guests.summary_guest; data-guests-summary-guests:enquiries.guests.summary_guests; data-guests-summary-pet:enquiries.guests.summary_pet; data-guests-summary-pets:enquiries.guests.summary_pets; data-guests-summary-join:enquiries.guests.summary_join; data-guests-live:enquiries.a11y.guests_live">
             <!-- Hidden locale field. JS-mode: enquiry.js includes the same
                  value in the JSON payload directly (site-config-driven).
                  If a future revision wires this form for no-JS submission
@@ -279,65 +285,109 @@
                      data-enquiry-checkout />
             </div>
 
-            <!-- 4–6. Guest counts (Adults / Children / Infants) — laid out
-                 as a 3-column row on desktop so the trio reads as a single
-                 "party composition" block. Collapses to 1 column on mobile
-                 via the breakpoint in sections.css.
+            <!-- 4–7. Guests — one field opening an Airbnb-style stepper
+                 popover. Four hidden inputs (adults/children/infants/pets)
+                 are the single source of truth the submit handler reads;
+                 setupGuests() in assets/js/enquiry.js writes to them.
+                 Adults is required (min 1); the rest start at 0. Limits:
+                 adults+children ≤ 4, infants ≤ 2, pets ≤ 2. The old
+                 3-select trio was replaced here — the bfcache
+                 select-snapshot code in enquiry.js went with it (hidden
+                 inputs survive bfcache natively). Markup contracts
+                 (data-* attributes) are the JS module's hooks — keep in
+                 sync with assets/js/enquiry.js. -->
+            <div class="enquiry-form__field enquiry-form__field--full enquiry-form__guests"
+                 data-enquiry-guests>
+              <input type="hidden" name="adults"   value="1" data-enquiry-adults />
+              <input type="hidden" name="children" value="0" data-enquiry-children />
+              <input type="hidden" name="infants"  value="0" data-enquiry-infants />
+              <input type="hidden" name="pets"     value="0" data-enquiry-pets />
 
-                 Select label trick: HTML's <select> can't have a
-                 placeholder attribute, so we put the label text in a
-                 disabled+selected first <option>. The user sees e.g.
-                 "ADULTS*" until they open the dropdown and pick a
-                 value. After picking, the label option is unreachable
-                 (until page refresh) — matches placeholder behaviour.
+              <button type="button" class="enquiry-form__guests-toggle"
+                      data-enquiry-guests-toggle
+                      aria-haspopup="dialog" aria-expanded="false"
+                      aria-controls="eq-guests-popover">
+                <span class="enquiry-form__guests-summary"
+                      data-enquiry-guests-summary
+                      data-i18n="enquiries.guests.toggle_placeholder">GUESTS*</span>
+                <span class="enquiry-form__guests-caret" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                       stroke="currentColor" stroke-width="1.6"><path d="M6 9l6 6 6-6"/></svg>
+                </span>
+              </button>
 
-                 Adults is REQUIRED — leaving it at the label option
-                 fails server validation. Children and Infants are
-                 OPTIONAL; "-" (empty) means none. The Worker
-                 normalizes empty/"-" to 0 before writing to the
-                 sheet (see worker/src/validation.js). -->
-            <div class="enquiry-form__guests enquiry-form__field--full">
-              <!-- 4. Adults — required, 1..4. Label-option has empty
-                   value so HTML required-validation rejects submit
-                   when left untouched. -->
-              <div class="enquiry-form__field">
-                <label for="eq-adults" class="sr-only" data-i18n="enquiries.a11y.adults_label">Adults (required)</label>
-                <select id="eq-adults" name="adults" required data-enquiry-adults>
-                  <option value="" disabled selected hidden data-i18n="enquiries.form.adults_placeholder">ADULTS*</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                </select>
+              <div class="enquiry-form__guests-popover" id="eq-guests-popover"
+                   role="dialog"
+                   data-i18n-attr="aria-label:enquiries.a11y.guests_dialog_aria"
+                   aria-label="Choose guests"
+                   data-enquiry-guests-popover hidden>
+
+                <div class="enquiry-form__guests-row" data-guest-row="adults">
+                  <span class="enquiry-form__guests-meta">
+                    <span class="enquiry-form__guests-label"  data-i18n="enquiries.guests.adults_label">Adults</span>
+                    <span class="enquiry-form__guests-caption" data-i18n="enquiries.guests.adults_caption">Ages 13 or above</span>
+                  </span>
+                  <span class="enquiry-form__guests-stepper">
+                    <button type="button" class="enquiry-form__guests-dec" data-guest-dec
+                            data-i18n-attr="aria-label:enquiries.a11y.guests_dec_adults"
+                            aria-label="Decrease adults">&minus;</button>
+                    <output class="enquiry-form__guests-count" data-guest-count>1</output>
+                    <button type="button" class="enquiry-form__guests-inc" data-guest-inc
+                            data-i18n-attr="aria-label:enquiries.a11y.guests_inc_adults"
+                            aria-label="Increase adults">+</button>
+                  </span>
+                </div>
+
+                <div class="enquiry-form__guests-row" data-guest-row="children">
+                  <span class="enquiry-form__guests-meta">
+                    <span class="enquiry-form__guests-label"  data-i18n="enquiries.guests.children_label">Children</span>
+                    <span class="enquiry-form__guests-caption" data-i18n="enquiries.guests.children_caption">Ages 2 – 12</span>
+                  </span>
+                  <span class="enquiry-form__guests-stepper">
+                    <button type="button" class="enquiry-form__guests-dec" data-guest-dec
+                            data-i18n-attr="aria-label:enquiries.a11y.guests_dec_children"
+                            aria-label="Decrease children">&minus;</button>
+                    <output class="enquiry-form__guests-count" data-guest-count>0</output>
+                    <button type="button" class="enquiry-form__guests-inc" data-guest-inc
+                            data-i18n-attr="aria-label:enquiries.a11y.guests_inc_children"
+                            aria-label="Increase children">+</button>
+                  </span>
+                </div>
+
+                <div class="enquiry-form__guests-row" data-guest-row="infants">
+                  <span class="enquiry-form__guests-meta">
+                    <span class="enquiry-form__guests-label"  data-i18n="enquiries.guests.infants_label">Infants</span>
+                    <span class="enquiry-form__guests-caption" data-i18n="enquiries.guests.infants_caption">Under 2</span>
+                  </span>
+                  <span class="enquiry-form__guests-stepper">
+                    <button type="button" class="enquiry-form__guests-dec" data-guest-dec
+                            data-i18n-attr="aria-label:enquiries.a11y.guests_dec_infants"
+                            aria-label="Decrease infants">&minus;</button>
+                    <output class="enquiry-form__guests-count" data-guest-count>0</output>
+                    <button type="button" class="enquiry-form__guests-inc" data-guest-inc
+                            data-i18n-attr="aria-label:enquiries.a11y.guests_inc_infants"
+                            aria-label="Increase infants">+</button>
+                  </span>
+                </div>
+
+                <div class="enquiry-form__guests-row" data-guest-row="pets">
+                  <span class="enquiry-form__guests-meta">
+                    <span class="enquiry-form__guests-label"  data-i18n="enquiries.guests.pets_label">Pets</span>
+                    <span class="enquiry-form__guests-caption" data-i18n="enquiries.guests.pets_caption">Max 2</span>
+                  </span>
+                  <span class="enquiry-form__guests-stepper">
+                    <button type="button" class="enquiry-form__guests-dec" data-guest-dec
+                            data-i18n-attr="aria-label:enquiries.a11y.guests_dec_pets"
+                            aria-label="Decrease pets">&minus;</button>
+                    <output class="enquiry-form__guests-count" data-guest-count>0</output>
+                    <button type="button" class="enquiry-form__guests-inc" data-guest-inc
+                            data-i18n-attr="aria-label:enquiries.a11y.guests_inc_pets"
+                            aria-label="Increase pets">+</button>
+                  </span>
+                </div>
               </div>
 
-              <!-- 5. Children — optional, 0..4. "-" is a real choice
-                   meaning zero. Label-option lives separately as the
-                   default-state placeholder. -->
-              <div class="enquiry-form__field">
-                <label for="eq-children" class="sr-only" data-i18n="enquiries.a11y.children_label">Children (optional)</label>
-                <select id="eq-children" name="children" data-enquiry-children>
-                  <option value="" disabled selected hidden data-i18n="enquiries.form.children_placeholder">CHILDREN</option>
-                  <option value="-">-</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
-
-              <!-- 6. Infants — optional, 0..4. Same pattern as Children. -->
-              <div class="enquiry-form__field">
-                <label for="eq-infants" class="sr-only" data-i18n="enquiries.a11y.infants_label">Infants (optional)</label>
-                <select id="eq-infants" name="infants" data-enquiry-infants>
-                  <option value="" disabled selected hidden data-i18n="enquiries.form.infants_placeholder">INFANTS</option>
-                  <option value="-">-</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
+              <span class="sr-only" aria-live="polite" data-enquiry-guests-live></span>
             </div>
 
             <!-- 7. Email -->
