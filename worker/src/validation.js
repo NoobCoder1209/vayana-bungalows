@@ -56,10 +56,18 @@ const BUNGALOW_LABELS = { '1': 'Bungalow 1', '2': 'Bungalow 2', '3': 'Bungalow 3
 // don't get tripped up by the silent acceptance.
 const ALLOWED_OPTIONAL_COUNT = new Set(['', '-', '0', '1', '2', '3', '4']);
 
-// Pets — OPTIONAL, tighter 0..2 ceiling than the other optional counts.
+// Infants and Pets — OPTIONAL, tighter 0..2 ceiling than children's 0..4.
 // Same ''/'-'/omitted → '0' normalisation (via normaliseOptionalCount), but
-// values of 3 or 4 are rejected. The client stepper caps pets at 2.
+// values of 3 or 4 are rejected. The client stepper caps both at 2. This is
+// the server-side half of the party-size parity the stepper enforces (the
+// other half, adults+children ≤ 4, is the COMBINED_MAX check below).
+const ALLOWED_INFANTS = new Set(['', '-', '0', '1', '2']);
 const ALLOWED_PETS = new Set(['', '-', '0', '1', '2']);
+
+// adults + children must not exceed this. Enforced client-side by the guest
+// stepper (assets/js/enquiry.js) and re-checked here so a hand-crafted POST
+// can't write an out-of-policy party into the Enquires sheet.
+const COMBINED_MAX = 4;
 
 function normaliseOptionalCount(raw) {
   if (raw === '' || raw === '-') return '0';
@@ -186,7 +194,7 @@ export function validateBody(body) {
   }
 
   const infantsRaw = typeof body.infants === 'string' ? body.infants : String(body.infants ?? '');
-  if (!ALLOWED_OPTIONAL_COUNT.has(infantsRaw)) {
+  if (!ALLOWED_INFANTS.has(infantsRaw)) {
     invalid.push('infants');
   } else {
     cleaned.infants = normaliseOptionalCount(infantsRaw);
@@ -204,6 +212,16 @@ export function validateBody(body) {
     invalid.push('pets');
   } else {
     cleaned.pets = normaliseOptionalCount(petsRaw);
+  }
+
+  // Combined party cap: adults + children ≤ COMBINED_MAX. Only meaningful
+  // when both validated cleanly (otherwise their own invalid-field push
+  // already fails the submission). Mirrors the client stepper, which trims
+  // children so the sum never exceeds 4; a hand-crafted body that sends e.g.
+  // adults=2 + children=3 is rejected here rather than written to the sheet.
+  if (cleaned.adults !== undefined && cleaned.children !== undefined
+      && Number(cleaned.adults) + Number(cleaned.children) > COMBINED_MAX) {
+    invalid.push('children');
   }
 
   // Message — OPTIONAL, length-capped. Empty (after trim) is allowed so a

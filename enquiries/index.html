@@ -305,7 +305,7 @@
 
               <button type="button" class="enquiry-form__guests-toggle"
                       data-enquiry-guests-toggle
-                      aria-haspopup="dialog" aria-expanded="false"
+                      aria-expanded="false"
                       aria-controls="eq-guests-popover">
                 <span class="enquiry-form__guests-summary"
                       data-enquiry-guests-summary
@@ -316,8 +316,13 @@
                 </span>
               </button>
 
+              <!-- Non-modal inline popover: a labelled group, NOT role=dialog.
+                   It provides no focus trap / aria-modal / backdrop, so a
+                   dialog role would oversell its modality (review finding I3).
+                   The toggle's aria-expanded/aria-controls is the disclosure
+                   contract; role=group + aria-label name the stepper region. -->
               <div class="enquiry-form__guests-popover" id="eq-guests-popover"
-                   role="dialog"
+                   role="group"
                    data-i18n-attr="aria-label:enquiries.a11y.guests_dialog_aria"
                    aria-label="Choose guests"
                    data-enquiry-guests-popover hidden>

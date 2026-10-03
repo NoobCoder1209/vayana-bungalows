@@ -28,13 +28,17 @@ test('guests field: four hidden inputs with correct names and defaults', () => {
   }
 });
 
-test('guests field: toggle wired to popover via aria', () => {
+test('guests field: toggle is a disclosure (aria-expanded + aria-controls, not a dialog)', () => {
   const toggle = form.querySelector('[data-enquiry-guests-toggle]');
   const pop = form.querySelector('[data-enquiry-guests-popover]');
   assert.ok(toggle && pop, 'toggle or popover missing');
   assert.equal(toggle.getAttribute('aria-expanded'), 'false');
   assert.equal(toggle.getAttribute('aria-controls'), pop.getAttribute('id'));
   assert.ok(pop.hasAttribute('hidden'), 'popover must ship hidden');
+  // Non-modal inline popover: must NOT claim to be a modal dialog (no focus
+  // trap / aria-modal is provided, so role=dialog would oversell it — I3).
+  assert.ok(!toggle.getAttribute('aria-haspopup'), 'no aria-haspopup=dialog on a disclosure');
+  assert.notEqual(pop.getAttribute('role'), 'dialog', 'popover must not carry role=dialog');
 });
 
 test('guests field: four stepper rows each with dec/count/inc', () => {

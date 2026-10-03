@@ -218,7 +218,14 @@ export function setupGuests(form) {
     if (returnFocus) toggle.focus();
   };
   toggle?.addEventListener('click', () => (popover.hidden ? open() : close(false)));
+  // Outside-click close. This is the one document-level listener in the
+  // module (an inside-click test can't be done from the subtree). The
+  // enquiryInit guard prevents double-binding on the same form; the
+  // isConnected check makes the handler a no-op if `wrap` is ever detached
+  // (bfcache/future client-nav edge), so it can't act on a stale popover —
+  // matching the subtree-scoping discipline used elsewhere in this file.
   document.addEventListener('pointerdown', (e) => {
+    if (!wrap.isConnected) return;
     if (!popover.hidden && !wrap.contains(e.target)) close(false);
   });
   wrap.addEventListener('keydown', (e) => {
@@ -701,15 +708,26 @@ export function initEnquiry() {
     // belt-and-braces gate against a DevTools-poked hidden value (the Worker
     // is authoritative server-side, this is instant UX feedback). An error
     // lands on the visible toggle (hidden inputs can't take focus/aria).
+    //
+    // STRICT parse (review finding I1): the Worker matches each count against
+    // an exact-string allowlist, so " 1 ", "1.9", "1abc" are server-rejects.
+    // parseInt would launder those to 1 and let the client PASS a body the
+    // Worker then 400s. intOrNull returns the integer only when the trimmed
+    // string is its own canonical decimal form — so the two gates agree.
+    const intOrNull = (v) => {
+      const t = String(v ?? '').trim();
+      const n = Number(t);
+      return (t !== '' && Number.isInteger(n) && String(n) === t) ? n : null;
+    };
     const adultsVal = (adults.value || '').trim();
-    const childrenN = parseInt(children.value, 10);
-    const infantsN = parseInt(infants.value, 10);
-    const petsN = parseInt(pets.value, 10);
+    const childrenN = intOrNull(children.value);
+    const infantsN = intOrNull(infants.value);
+    const petsN = intOrNull(pets.value);
     if (!ALLOWED_ADULTS.has(adultsVal)
-        || !Number.isInteger(childrenN) || childrenN < 0 || childrenN > 4
+        || childrenN === null || childrenN < 0 || childrenN > 4
         || parseInt(adultsVal, 10) + childrenN > COMBINED_MAX
-        || !Number.isInteger(infantsN) || infantsN < 0 || infantsN > 2
-        || !Number.isInteger(petsN) || petsN < 0 || petsN > 2) {
+        || infantsN === null || infantsN < 0 || infantsN > 2
+        || petsN === null || petsN < 0 || petsN > 2) {
       showError(ADULTS_ERROR_MSG, guestsToggle);
       guestsToggle.focus();
       return;

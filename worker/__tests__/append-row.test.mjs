@@ -213,3 +213,35 @@ test('POST /submit with no pets key leaves Column K at "0" (optional, normalised
     assert.equal(captured.appendBody.values[0][10], '0', 'absent pets normalises to "0" in Column K');
   });
 });
+
+// ── Server-side party-limit enforcement (parity with the client stepper) ─────
+// A hand-crafted POST bypasses the browser gate; the Worker must still reject
+// out-of-policy party sizes, not silently write them to the ops sheet.
+
+test('POST /submit with adults+children > 4 is rejected (400)', async () => {
+  const res = await worker.fetch(submitReq(submitBody({ adults: '2', children: '3' })), submitEnv, {});
+  assert.equal(res.status, 400, 'adults+children=5 must fail the combined cap');
+});
+
+test('POST /submit with adults+children == 4 is accepted', async () => {
+  await withCapturedAppend(async (captured) => {
+    const res = await worker.fetch(submitReq(submitBody({ adults: '3', children: '1' })), submitEnv, {});
+    assert.equal(res.status, 200, 'adults+children=4 is at the cap and must pass');
+    const row = captured.appendBody.values[0];
+    assert.equal(row[7], '3', 'adults in Column H');
+    assert.equal(row[8], '1', 'children in Column I');
+  });
+});
+
+test('POST /submit with infants > 2 is rejected (400)', async () => {
+  const res = await worker.fetch(submitReq(submitBody({ infants: '3' })), submitEnv, {});
+  assert.equal(res.status, 400, 'infants must be capped at 2 server-side');
+});
+
+test('POST /submit with infants == 2 is accepted', async () => {
+  await withCapturedAppend(async (captured) => {
+    const res = await worker.fetch(submitReq(submitBody({ infants: '2' })), submitEnv, {});
+    assert.equal(res.status, 200, 'infants=2 is at the cap and must pass');
+    assert.equal(captured.appendBody.values[0][9], '2', 'infants in Column J');
+  });
+});
