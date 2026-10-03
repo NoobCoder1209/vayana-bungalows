@@ -55,6 +55,16 @@ test('guests field: the old selects are gone', () => {
   assert.equal(form.querySelectorAll('select').length, 0, 'no <select> should remain');
 });
 
+test('error pill has a stable id for aria-errormessage wiring (I2 fix)', () => {
+  // showError() points the errored field at the pill via aria-errormessage +
+  // aria-describedby; that needs a stable id on the pill. Without it the
+  // guests <button> error relies on aria-invalid-on-button, which AT support
+  // for is spotty.
+  const pill = form.querySelector('[data-enquiry-error]');
+  assert.ok(pill, 'error pill missing');
+  assert.ok(pill.getAttribute('id'), 'error pill must carry an id for aria-errormessage');
+});
+
 test('guests field: form bakes summary + live templates for the JS to read', () => {
   // The summary/live strings reach enquiry.js via data-* attributes baked
   // onto <form> (same mechanism as data-err-*). Assert the i18n-attr binding

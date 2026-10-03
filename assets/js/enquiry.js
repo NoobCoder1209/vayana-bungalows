@@ -550,22 +550,34 @@ export function initEnquiry() {
     }
   }
 
-  // Show an inline error and (optionally) mark a specific field as
-  // aria-invalid so screen readers announce it. Round-1 review finding
-  // I3 — without aria-invalid, AT users only hear the live region but
-  // get no per-field cue. clearError() below clears both the message
-  // and every aria-invalid marker, so the form returns to a clean
-  // state as soon as the user starts fixing things.
+  // Show an inline error and (optionally) mark a specific field. We set
+  // aria-invalid AND wire the field to the error pill via aria-errormessage
+  // + aria-describedby (review finding I2): the guests control is a <button>
+  // (the hidden count inputs can't take focus), and aria-invalid support on
+  // a non-input button is spotty across screen readers — pointing the field
+  // at the pill's text means the actual message is announced regardless.
+  // The pill carries id="eq-error". clearError() unwires everything so the
+  // form returns to a clean state as soon as the user starts fixing things.
   const allFields = [name, checkinEl, checkoutEl, guestsToggle, email, phone, message, consentInput];
+  const ERROR_PILL_ID = errorEl.id || 'eq-error';
   const showError = (msg, field) => {
     errorEl.textContent = msg;
     errorEl.hidden = false;
-    if (field) field.setAttribute('aria-invalid', 'true');
+    if (field) {
+      field.setAttribute('aria-invalid', 'true');
+      field.setAttribute('aria-errormessage', ERROR_PILL_ID);
+      field.setAttribute('aria-describedby', ERROR_PILL_ID);
+    }
   };
   const clearError = () => {
     errorEl.textContent = '';
     errorEl.hidden = true;
-    allFields.forEach((el) => el && el.removeAttribute('aria-invalid'));
+    allFields.forEach((el) => {
+      if (!el) return;
+      el.removeAttribute('aria-invalid');
+      el.removeAttribute('aria-errormessage');
+      el.removeAttribute('aria-describedby');
+    });
   };
   const flagConsent = (flag) => {
     consentLabel?.classList.toggle('is-error', flag);
