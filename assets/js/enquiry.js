@@ -194,7 +194,12 @@ export function setupGuests(form) {
     // "Guests" (not a phantom "1 Guest") until the guest actually picks.
     const label = touched ? state.summary : PLACEHOLDER;
     if (summaryEl) summaryEl.textContent = label;
-    if (toggle) toggle.setAttribute('aria-label', label);
+    if (toggle) {
+      toggle.setAttribute('aria-label', label);
+      // Muted (placeholder) vs dark (filled value) — mirrors a sibling field's
+      // ::placeholder going dark once typed into. CSS keys off .has-selection.
+      toggle.classList.toggle('has-selection', touched);
+    }
     wrap.querySelectorAll('[data-guest-row]').forEach((row) => {
       const k = row.getAttribute('data-guest-row');
       const dec = row.querySelector('[data-guest-dec]');
