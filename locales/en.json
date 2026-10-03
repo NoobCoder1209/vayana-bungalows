@@ -96,7 +96,7 @@
       "error": "Our offers are temporarily unavailable. Please try again later.",
       "modal_eyebrow": "Special offer",
       "modal_title": "Offer details",
-      "modal_fixed_dates": "These dates are fixed and cannot be changed or extended:<br>",
+      "modal_fixed_dates": "This offer is available only within this date range:<br>",
       "modal_rules_title": "Offer terms",
       "modal_rule_1": "The offer is valid only for the dates shown above and cannot be moved, split, or extended.",
       "modal_rule_2": "The offer is subject to availability and confirmation and may be withdrawn before you enquire.",
