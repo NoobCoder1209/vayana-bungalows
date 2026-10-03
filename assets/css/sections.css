@@ -2659,14 +2659,24 @@
   padding: 0.75rem 1rem;
   border: 1px solid var(--border);
   background: var(--bg-light);
-  color: var(--text-dark);
+  /* Placeholder state (showing "GUESTS*") is muted at the same colour/size
+     as the sibling fields' ::placeholder — see the input::placeholder rule
+     below. Once the guest makes a selection, JS adds .has-selection and the
+     summary goes to --text-dark, mirroring a typed-in value turning dark. */
+  color: var(--text-muted);
   border-radius: var(--radius-form);
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 0.95rem;
   cursor: pointer;
   /* Match the uppercase in-pill label look of the sibling placeholders. */
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
+}
+
+/* Selected state — the summary reads as a filled value, so darken it to
+   match a typed-in field (the sibling inputs go --text-dark once filled). */
+.enquiry-form__guests-toggle.has-selection {
+  color: var(--text-dark);
 }
 
 .enquiry-form__guests-caret {
