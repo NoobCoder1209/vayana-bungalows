@@ -55,6 +55,18 @@ test('guests field: the old selects are gone', () => {
   assert.equal(form.querySelectorAll('select').length, 0, 'no <select> should remain');
 });
 
+test('guests summary ships the placeholder label (toggle shows GUESTS* until first pick)', () => {
+  // setupGuests() snapshots this text into PLACEHOLDER and shows it on the
+  // toggle until the guest first steps a count. If the baked text or the
+  // i18n binding is removed, PLACEHOLDER captures '' and the toggle renders
+  // a blank accessible name — this locks that contract (review M1).
+  const summary = form.querySelector('[data-enquiry-guests-summary]');
+  assert.ok(summary, 'missing [data-enquiry-guests-summary]');
+  assert.equal(summary.getAttribute('data-i18n'), 'enquiries.guests.toggle_placeholder',
+    'summary must carry the i18n placeholder binding so BG bakes a localized label');
+  assert.ok(summary.textContent.trim().length > 0, 'summary must ship non-empty placeholder text');
+});
+
 test('error pill has a stable id for aria-errormessage wiring (I2 fix)', () => {
   // showError() points the errored field at the pill via aria-errormessage +
   // aria-describedby; that needs a stable id on the pill. Without it the

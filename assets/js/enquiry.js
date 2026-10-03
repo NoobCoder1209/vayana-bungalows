@@ -170,6 +170,17 @@ export function setupGuests(form) {
   };
   const LIVE_TPL = d.guestsLive || '%LABEL%, %N%';
 
+  // The toggle shows the placeholder ("GUESTS*") until the guest first
+  // changes a count — matching how the sibling pill inputs show their
+  // placeholder label until filled. The initial summary ("1 Guest") would
+  // otherwise read as a pre-filled value the guest never chose. `touched`
+  // flips on the first stepper interaction; reset() (post-submit) clears it.
+  // We snapshot the placeholder text now, before the first render overwrites
+  // it. The hidden inputs still carry the real defaults (adults=1) regardless
+  // of what the label shows, so the payload is unaffected.
+  const PLACEHOLDER = summaryEl ? summaryEl.textContent : '';
+  let touched = false;
+
   const readRaw = () => ({
     adults: inputs.adults.value, children: inputs.children.value,
     infants: inputs.infants.value, pets: inputs.pets.value,
@@ -178,8 +189,12 @@ export function setupGuests(form) {
     const state = computeGuestsState(readRaw(), T);
     // Write clamped values back so the payload + bfcache snapshot agree.
     for (const k of Object.keys(state.counts)) inputs[k].value = String(state.counts[k]);
-    if (summaryEl) summaryEl.textContent = state.summary;
-    if (toggle) toggle.setAttribute('aria-label', state.summary);
+    // Before the first interaction, keep the placeholder label; after, show
+    // the computed summary. aria-label follows the same text so AT hears
+    // "Guests" (not a phantom "1 Guest") until the guest actually picks.
+    const label = touched ? state.summary : PLACEHOLDER;
+    if (summaryEl) summaryEl.textContent = label;
+    if (toggle) toggle.setAttribute('aria-label', label);
     wrap.querySelectorAll('[data-guest-row]').forEach((row) => {
       const k = row.getAttribute('data-guest-row');
       const dec = row.querySelector('[data-guest-dec]');
@@ -195,6 +210,7 @@ export function setupGuests(form) {
     const cur = parseInt(inputs[k].value, 10);
     const base = Number.isFinite(cur) ? cur : GUEST_MIN[k];
     inputs[k].value = String(base + delta); // computeGuestsState clamps
+    touched = true; // first +/− turns the placeholder into the live summary
     const state = render();
     const label = k[0].toUpperCase() + k.slice(1);
     if (liveEl) liveEl.textContent = LIVE_TPL.replaceAll('%LABEL%', label).replaceAll('%N%', state.counts[k]);
@@ -239,6 +255,7 @@ export function setupGuests(form) {
       inputs.children.value = '0';
       inputs.infants.value = '0';
       inputs.pets.value = '0';
+      touched = false; // back to the "GUESTS*" placeholder after a submit
       render();
       close(false);
     },
