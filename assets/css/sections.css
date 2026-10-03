@@ -2683,7 +2683,11 @@
   right: 0;
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: var(--radius-form);
+  /* The pill --radius-form (999px) turns this tall multi-row card into an
+     oval — same problem the message textarea hits. Use the same 16px corner
+     so the popover reads as a rectangle related to the pill inputs, not a
+     lozenge. The single-line toggle above keeps --radius-form (correct there). */
+  border-radius: 16px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
   padding: var(--space-3) var(--space-4);
 }
