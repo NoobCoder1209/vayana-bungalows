@@ -112,7 +112,7 @@ export async function appendEnquiry(env, row) {
 
   const token = await getAccessToken(env);
   const range = encodeURIComponent(
-    `'${env.GSHEETS_ENQUIRES_TAB.replace(/'/g, "''")}'!A:O`,
+    `'${env.GSHEETS_ENQUIRES_TAB.replace(/'/g, "''")}'!A:P`,
   );
   const url =
     `${SHEETS_BASE}/${encodeURIComponent(env.GSHEETS_SHEET_ID)}` +
@@ -122,10 +122,10 @@ export async function appendEnquiry(env, row) {
   // Column order — keep in lockstep with the header row in the sheet.
   // Adding/moving a column? Update BOTH the sheet and this array.
   //
-  // Current layout (A:O, 15 columns):
+  // Current layout (A:P, 16 columns):
   //   A timestamp | B bungalow | C name | D email | E phone | F checkin |
-  //   G checkout | H adults | I children | J infants | K message | L price |
-  //   M consent | N source_ip_hash | O locale
+  //   G checkout | H adults | I children | J infants | K pets | L message |
+  //   M price | N consent | O source_ip_hash | P locale
   //
   // History (already shipped; no outstanding header action):
   //   - Turnstile managed mode is binary (no numeric score), so there is no
@@ -134,6 +134,8 @@ export async function appendEnquiry(env, row) {
   //   - Task #167 added Locale; Task (bungalow) put the bungalow label in B,
   //     replacing the opaque `ref` (since removed entirely — no longer
   //     generated or returned).
+  //   - Pets added as Column K (between infants J and message L), shifting
+  //     message/price/consent/ip_hash/locale each one column right (A:O→A:P).
   const values = [[
     row.timestamp,
     row.bungalow,
@@ -145,6 +147,7 @@ export async function appendEnquiry(env, row) {
     row.adults,
     row.children,
     row.infants,
+    row.pets,
     row.message,
     row.price,
     row.consent,

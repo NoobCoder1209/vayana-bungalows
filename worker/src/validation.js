@@ -56,6 +56,11 @@ const BUNGALOW_LABELS = { '1': 'Bungalow 1', '2': 'Bungalow 2', '3': 'Bungalow 3
 // don't get tripped up by the silent acceptance.
 const ALLOWED_OPTIONAL_COUNT = new Set(['', '-', '0', '1', '2', '3', '4']);
 
+// Pets — OPTIONAL, tighter 0..2 ceiling than the other optional counts.
+// Same ''/'-'/omitted → '0' normalisation (via normaliseOptionalCount), but
+// values of 3 or 4 are rejected. The client stepper caps pets at 2.
+const ALLOWED_PETS = new Set(['', '-', '0', '1', '2']);
+
 function normaliseOptionalCount(raw) {
   if (raw === '' || raw === '-') return '0';
   return raw;
@@ -185,6 +190,20 @@ export function validateBody(body) {
     invalid.push('infants');
   } else {
     cleaned.infants = normaliseOptionalCount(infantsRaw);
+  }
+
+  // Pets — OPTIONAL, 0..2. Same placeholder/dash tolerance as children/
+  // infants (normaliseOptionalCount maps ''/'-' → '0', and an omitted key
+  // coerces to '' → '0'), but a tighter ceiling of 2 enforced by its own
+  // allowlist. The client stepper caps at 2, so a real submission is always
+  // in range; an out-of-range or junk value (e.g. '5') is rejected so a
+  // hand-crafted body can't write a bad count into Column K. Written to the
+  // sheet numerically, mirroring adults/children/infants.
+  const petsRaw = typeof body.pets === 'string' ? body.pets : String(body.pets ?? '');
+  if (!ALLOWED_PETS.has(petsRaw)) {
+    invalid.push('pets');
+  } else {
+    cleaned.pets = normaliseOptionalCount(petsRaw);
   }
 
   // Message — OPTIONAL, length-capped. Empty (after trim) is allowed so a
