@@ -2,7 +2,7 @@
   "meta": {
     "brand": "Vayana Bungalows",
     "brand_credit": "Vayana di Mare",
-    "tagline": "Code 102· Boutique Bungalows in Tsarevo, Bulgaria"
+    "tagline": "Bungalows by the sea in Arapya Bay, near Tsarevo"
   },
   "common": {
     "skip_link": "Skip to content",
@@ -10,7 +10,7 @@
       "menu_open_aria": "Open menu",
       "menu_close_aria": "Close menu",
       "call_aria": "Call us at {phone}",
-      "enquiries_cta": "Enquiries",
+      "enquiries_cta": "Enquire",
       "lang_group_aria": "Language",
       "lang_en_label": "EN",
       "lang_bg_label": "BG",
@@ -23,7 +23,7 @@
     "drawer": {
       "nav_home": "Home",
       "nav_stay": "Stay",
-      "nav_destination": "Destination",
+      "nav_destination": "The area",
       "nav_contacts": "Contacts",
       "nav_enquiries": "Enquiries",
       "primary_aria": "Primary",
@@ -40,37 +40,37 @@
       "cancellation": "Cancellation Policy",
       "privacy": "Privacy Policy",
       "copyright": "© 2026 Made with ❤️ by {credit}",
-      "license_prefix": "License number:"
+      "license_prefix": "Registration no.:"
     },
     "close_aria": "Close"
   },
   "home": {
     "meta": {
-      "title": "Code 120· Vayana Bungalows – Boutique Bungalows in Tsarevo, Bulgaria",
-      "description": "Code 121· Vayana Bungalows: a boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria – handcrafted hospitality, garden views, and quiet days.",
-      "og_description": "Code 122· A boutique bungalow retreat on the Black Sea coast in Tsarevo, Bulgaria – handcrafted hospitality, garden views, and quiet days."
+      "title": "Vayana Bungalows – Steps from the Sea in Arapya",
+      "description": "Three bungalows a few steps from the sea in Arapya Bay, near Tsarevo – for slow mornings, long evenings and easy days between the Black Sea and Strandzha.",
+      "og_description": "Three cosy bungalows a few steps from the sea in Arapya, at the foot of Strandzha."
     },
     "hero": {
       "title_html": "Welcome to Vayana Bungalows",
       "subtitle": "Steps away from the sea, at the foot of the Strandzha mountains."
     },
     "intro": {
-      "eyebrow": "The coast we love to explore",
-      "title": "On the Black Sea coast, at the foot of the Strandzha mountains.",
-      "body_para1": "A little seaside escape made for slow mornings, long lunches and time well spent together. Our cosy, thoughtfully designed bungalows are just a few steps from the sea in Arapya Bay – a place to switch off, breathe deeper and enjoy the simple pleasures of being by the coast.",
+      "eyebrow": "Arapya Bay",
+      "title": "Made for doing very little, very well.",
+      "body_para1": "A little seaside escape for slow mornings, long lunches and time well spent together. Our cosy bungalows are just a few steps from the sea in Arapya Bay – a place to switch off, breathe a little deeper and enjoy the simple things.",
       "body_para2": "And when you're ready to explore, there is plenty waiting beyond the bay. Discover our favourite beaches, quiet villages, wild corners of Strandzha and the local places we return to ourselves.",
-      "cta": "See What’s Around",
+      "cta": "See what's around",
       "img_alt": "Wooden bungalow terrace at sunset"
     },
     "gallery": {
-      "eyebrow": "The Place We’ve Created",
-      "title": "Designed for Your Stay",
+      "eyebrow": "The place we've created",
+      "title": "Take a look around",
       "prev_aria": "Previous photos",
       "next_aria": "Next photos"
     },
     "rooms": {
-      "eyebrow": "Made for slow days by the sea",
-      "title": "Choose Your Bungalow",
+      "eyebrow": "For slow days by the sea",
+      "title": "Choose your bungalow",
       "card1_title": "Cherry Blossom",
       "card2_title": "Lemon",
       "card3_title": "Olive",
@@ -86,10 +86,10 @@
       "save": "Save",
       "off": "off",
       "nights": "nights",
-      "nights_deal": "stay {min} nights, get {free} free",
+      "nights_deal": "Stay {min} nights, get {free} free",
       "discount_pct": "{pct}% off",
-      "discount_per_day": "€ {amount}/night off",
-      "discount_total": "€ {amount} off",
+      "discount_per_day": "€{amount} off per night",
+      "discount_total": "€{amount} off",
       "discount": "Special offer",
       "cta": "View details",
       "empty": "We don't have any special offers at the moment.",
@@ -101,19 +101,19 @@
       "modal_rule_1": "The offer is valid only for the dates shown above and cannot be moved, split, or extended.",
       "modal_rule_2": "The offer is subject to availability and confirmation and may be withdrawn before you enquire.",
       "modal_rule_3": "This offer cannot be combined with any other promotion or discount.",
-      "modal_take": "Take the offer"
+      "modal_take": "Enquire about this offer"
     },
     "services": {
-      "eyebrow": "Made for comfortable stays",
-      "title": "All the essentials for a cozy and comfortable stay.",
-      "wifi_title": "Free WiFi",
-      "wifi_body": "Fast fibre throughout",
+      "eyebrow": "The essentials",
+      "title": "The simple things that make a stay easy.",
+      "wifi_title": "Free Wi-Fi",
+      "wifi_body": "Fast fibre throughout.",
       "aircon_title": "Air conditioning",
       "aircon_body": "Individually controlled cooling in every bedroom.",
-      "kitchen_title": "Fully Equipped Kitchen",
-      "kitchen_body": "Full cooktop, cookware, and everything to self-cater.",
+      "kitchen_title": "Fully equipped kitchen",
+      "kitchen_body": "A full hob, cookware and everything you need to cook for yourselves.",
       "parking_title": "Free parking",
-      "parking_body": "On-site parking, no charge",
+      "parking_body": "On-site parking, free of charge.",
       "tv_title": "Smart TV",
       "tv_body": "Streaming-ready smart TVs with your favourite apps.",
       "bbq_title": "BBQ",
@@ -121,8 +121,8 @@
     },
     "newsletter": {
       "eyebrow": "Notes from the bay",
-      "title": "Stay with us",
-      "lede": "Quiet notes from the coast – three or four a year, never more.",
+      "title": "Keep in touch",
+      "lede": "We write rarely – three or four times a year, and only when there's something worth sharing.",
       "email_label": "Email address",
       "email_placeholder": "Your email address",
       "hp_label": "Website",
@@ -131,15 +131,15 @@
       "noscript_html": "Subscribe by emailing <a href=\"{email_href}\">{email_display}</a> with the subject \"Subscribe\".",
       "modal_eyebrow": "Subscribed",
       "modal_title": "Thank you – you’re on the list.",
-      "modal_body": "We’ll send a quiet note when there’s something worth sharing.",
+      "modal_body": "Look out for our next note from the bay.",
       "modal_close": "Close"
     }
   },
   "stay": {
     "meta": {
-      "title": "Code 192· Stay – Vayana Bungalows",
-      "description": "Code 193· The Vayana bungalows in Tsarevo, Bulgaria: three boutique villas on the Black Sea coast – oceanview, hilltop, and beachfront. Pick the one that fits your stay.",
-      "og_description": "Code 194· Three boutique bungalows on the Black Sea coast in Tsarevo, Bulgaria. Pick the one that fits your stay."
+      "title": "Our Bungalows & Availability – Vayana Bungalows",
+      "description": "Three self-catering bungalows in Arapya Bay, near Tsarevo – each sleeps four, with two bedrooms, a kitchen, its own outdoor space and a BBQ. Check availability and send an enquiry.",
+      "og_description": "Three bungalows a few steps from the sea in Arapya Bay – each with its own character, outdoor space and room for four."
     },
     "hero": {
       "eyebrow": "Our bungalows",
@@ -154,12 +154,12 @@
       "bed_label": "Bedrooms",
       "bed_value": "2",
       "beds_label": "Beds",
-      "beds_value": "2 × Queen",
+      "beds_value": "2 queen beds (160 × 200 cm)",
       "bathroom_label": "Bathroom",
       "bathroom_value": "1"
     },
     "villas": {
-      "eyebrow": "Choose Your Bungalow",
+      "eyebrow": "Choose your bungalow",
       "card1_title": "Cherry Blossom",
       "card2_title": "Lemon",
       "card3_title": "Olive",
@@ -186,22 +186,22 @@
     "amenities": {
       "eyebrow": "In every bungalow",
       "title": "Amenities",
-      "wifi": "Free WiFi",
+      "wifi": "Free Wi-Fi",
       "aircon": "Air conditioning",
-      "kitchen": "Fully Equipped Kitchen",
+      "kitchen": "Fully equipped kitchen",
       "parking": "Free parking",
       "tv": "Smart TV",
       "bbq": "BBQ",
-      "coffee": "Coffee Machine",
-      "washing": "Washing Machine",
+      "coffee": "Coffee machine",
+      "washing": "Washing machine",
       "iron": "Iron",
-      "hairdryer": "Hair Dryer",
-      "linens": "Linens & Towels",
-      "crib": "Baby Crib"
+      "hairdryer": "Hairdryer",
+      "linens": "Bed linen & towels",
+      "crib": "Baby cot"
     },
     "gallery": {
       "eyebrow": "A closer look at Vayana",
-      "title": "Our Gallery",
+      "title": "Gallery",
       "prev_photo_aria": "Previous photo",
       "next_photo_aria": "Next photo",
       "prev_photos_aria": "Previous photos",
@@ -216,29 +216,29 @@
       "viewer_aria": "Photo viewer"
     },
     "cta": {
-      "eyebrow": "Already have a plan?",
-      "title": "Let's talk about your stay.",
-      "lede": "Leave your contact information and we will reach out to you shortly",
+      "eyebrow": "Planning a stay?",
+      "title": "Tell us what you have in mind.",
+      "lede": "Leave your contact details and we'll get back to you shortly.",
       "button": "Send an enquiry"
     }
   },
   "destination": {
     "meta": {
-      "title": "Code 313· Destination – Vayana Bungalows",
-      "description": "Code 314· Tsarevo on the Black Sea coast of Bulgaria – what to do, what to eat, where to walk, and how to find us. The home base of the Vayana bungalows.",
-      "og_description": "Code 315· Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows – beach, food, hiking, nearby villages, and directions.",
-      "twitter_description": "Code 316· Tsarevo, Black Sea, Bulgaria. The setting for the Vayana bungalows."
+      "title": "Arapya Bay & Strandzha: Local Guide – Vayana Bungalows",
+      "description": "Our guide to Arapya Bay and the south Black Sea coast – favourite beaches, where we like to eat, Strandzha villages and summer evenings worth staying out for.",
+      "og_description": "Beaches, local food, Strandzha villages and summer evenings – the coast around Vayana Bungalows, the way we know it.",
+      "twitter_description": "The coast and mountains around Vayana Bungalows in Arapya Bay, Bulgaria."
     },
     "hero": {
       "eyebrow": "Arapya · Bulgaria",
-      "title": "The coast we love to explore",
-      "sub": "Stay close to the sea, then wander a little further – to quiet beaches, good local food, small coastal towns, Strandzha villages and the unexpected things happening along the way."
+      "title": "Our corner of the coast",
+      "sub": "Start with the bay, then go a little further: quiet beaches, good local food, small coastal towns, villages in Strandzha, and whatever you find along the way."
     },
     "guide": {
-      "sr_title": "About Aparya Bay",
-      "lede": "Arapya is a good place to slow down, but it's an even better place to explore from. Within half an hour you can go from a quiet morning by the sea to a forest walk in Strandzha, a fishing village or a long lunch somewhere by the water.",
-      "intro_para1": "Arapya is a small bay tucked between Tsarevo and Lozenets, surrounded by pine forest and rocky headlands. There are two beaches here: the larger main beach is the easiest place for swimming and spending the day, while the smaller beach around the corner feels quieter, with rocks, clear water and a more secluded feel. The bay is also a good place for water activities, with surfing, windsurfing, kayaking, diving and sea fishing available depending on the conditions. You'll find a few restaurants, small shops and places for coffee or a cold drink, so it's easy to spend the whole day without going anywhere else.",
-      "intro_para2": "Arapya has a little history behind it too. It became one of Bulgaria's early camping destinations in the 1960s, long before this part of the coast was developed as it is today. Some of that old camping character is still here–the pine trees, caravans, small beach places and people who return to the same bay year after year. If you feel like exploring, follow the rocky coastline around the cape for different views back towards the bay, and keep an eye out for Bird Island, a small rocky outcrop where seabirds gather.",
+      "sr_title": "About Arapya Bay",
+      "lede": "Arapya is a good place to do nothing, and an even better place to start from. In less than half an hour, a quiet morning on the beach can turn into a walk in the Strandzha forest, a visit to a fishing village or a long lunch by the water.",
+      "intro_para1": "Arapya is a small bay between Tsarevo and Lozenets, surrounded by pine forest and rocky headlands. It has two beaches. The main one is bigger and the easiest for swimming and a long day on the sand. The smaller one, just around the corner, is quieter, with rocks, clear water and fewer people. When the conditions are right, you can surf, windsurf, kayak, dive or go sea fishing. There are a few restaurants, small shops and places for a coffee or a cold drink, so on many days you won't need to leave the bay at all.",
+      "intro_para2": "Arapya has been bringing people back for a long time. In the 1960s, long before this part of the coast was built up, it became one of the first places in Bulgaria where people came to camp by the sea. You can still feel it today: caravans under the pines, small places to eat on the beach, and families who have spent every summer in the same bay for years.",
       "see_more": "See more",
       "see_less": "See less"
     },
@@ -246,30 +246,30 @@
       "img_alt": "A wide stretch of soft sand running into the Black Sea – characteristic of the long, quiet beaches around Tsarevo",
       "eyebrow": "The shoreline",
       "title": "Beaches and coves",
-      "body": "Every now and then, we like to leave our own beach behind. When we're in the mood for a long walk, we head north to <strong>Coral Beach</strong>, where the coastline opens up and the surroundings feel wonderfully natural. In May, June or late September, it's especially nice to walk the length of the beach without much of a plan, find a quiet spot and stay until you're ready to leave.<br><br>Further south, <strong>Lipite</strong> feels like a completely different kind of beach. You leave the car and follow a short forest path before the bay slowly appears through the trees. There are no beach bars or rows of sunbeds here, just a small stretch of sand surrounded by forest. Bring some water and something to eat and give yourself a few hours–there's really no reason to hurry.<br><br><strong>Veleka</strong> is probably the one we send people to when they want to see something they won't find on most Bulgarian beaches. From the viewpoint above Sinemorets, you can see the river winding through the landscape before reaching the sea. We like to start there early, walk down towards the beach and then spend some time by the river. In spring and autumn, keep an eye on the wetlands too–the area is an important stop along the <strong>Via Pontica bird migration route</strong>.<br><br>If you're looking for an easier beach day, <strong>Butamyata</strong> in Sinemorets is a good choice. It's easier to reach and has more facilities in season, but we still like combining it with a walk around the rocky coast afterwards. Outside July and August, the beach feels much more relaxed and the surrounding cliffs are worth exploring.<br><br>For something different, spend an afternoon around <strong>Ahtopol</strong> rather than heading straight to another sandy beach. The rocky peninsula has small coves and places where you can sit close to the water, and the walk around the old town and harbour is part of the experience. It's especially pleasant in September, when the coast is quiet and you can stay for dinner afterwards.<br><br>For a full day out, we'd drive further south to <strong>Silistar</strong>. The journey takes a little longer, but the combination of forest, clear water and a feeling of being properly away from the developed coast makes it worth it. <strong>Late September is probably our favourite time to go</strong>, when the summer crowds have thinned out and the beach feels much closer to the place we remember."
+      "body": "We love the beach here in Arapya, but every now and then we like to leave it behind.<br><br>For a long walk, we head north to <strong>Coral Beach</strong>, where the coast opens up and still feels wild. In May, June or late September, walk the whole length of it with no plan, find a quiet spot and stay as long as you like.<br><br><strong>Lipite</strong>, to the south, is a different kind of beach. You park, follow a short path through the forest, and the bay slowly appears between the trees. No bars, no rows of sunbeds, just a small strip of sand with forest all around. Bring water and something to eat, and give it a few hours.<br><br><strong>Veleka</strong> is where we send people who want to see something most Bulgarian beaches don't have. From the viewpoint above Sinemorets you can watch the river wind through the landscape to the sea. We like to go early, start at the viewpoint, walk down to the beach and then spend some time by the river. In spring and autumn, watch the wetlands too: the area is an important stop on the <strong>Via Pontica bird migration route</strong>.<br><br>For an easier beach day, <strong>Butamyata</strong> in Sinemorets is simpler to reach and has more facilities in season. We still like to finish with a walk along the rocky coast nearby. Outside July and August the beach is much calmer, and the cliffs around it are worth exploring.<br><br>For a change from sand, spend an afternoon in <strong>Ahtopol</strong>. The rocky peninsula has small coves and spots where you can sit right by the water, and the walk around the old town and harbour is half the fun. It's at its best in September, when the coast is quiet and you can stay on for dinner.<br><br>If you have a whole day, drive further south to <strong>Silistar</strong>. It takes a little longer to get there, but the forest, the clear water and the feeling of being far from the built-up coast make it worth it. <strong>Late September is probably our favourite time to go</strong>, when the summer crowds have thinned out and the beach feels much closer to the place we remember."
     },
     "food": {
       "img_alt": "An aerial view of clear turquoise water meeting a palm-fringed white sand beach",
       "eyebrow": "On the table",
-      "title": "Restaurants and local food",
-      "body": "We don't really have a “top 10” around here. Some places are worth driving to for the food, others for the atmosphere, and sometimes you just want a good pizza after a day in the sea. These are the places we'd mention to friends staying with us – a mix of proper dinners, seafood, local food and a few casual spots that are worth knowing about.<br><br>Right here in <strong>Arapya</strong>, we'd start with <strong>di Rossi Pizza e Pane</strong>. It's a small, personal place making Italian-style pizza and bread, and one of those little discoveries we're happy to share. For something more substantial, <strong>Restaurant Arapya (Bay G)</strong> is the easy local choice – right in the bay and ideal when you want a relaxed lunch or dinner without getting in the car. <strong>Robinson</strong> is another casual option for something simple, a drink and an easy evening close to the beach.<br><br>When we feel like going out, <strong>Varvara</strong> is where we'd head first. <strong>Old Outlaws (Starci Razboynitsi)</strong> is one of those places where the setting and atmosphere are almost as much a part of the experience as the food. <strong>Boatswain</strong> is another favourite for fish, seafood and a relaxed dinner.<br><br>In <strong>Tsarevo</strong>, we'd keep it simple: <strong>La Playa</strong> for a more polished Mediterranean and seafood dinner, or <strong>Strandzha Tavern</strong> when we'd rather have something traditional and hearty.<br><br>In <strong>Ahtopol</strong>, <strong>La Vita Club</strong> is our choice for an evening by the sea, especially around sunset, while <strong>St. George</strong> is a dependable favourite when good food is the main reason for going.<br><br>And if you're heading all the way to <strong>Sinemorets</strong>, make a day of it. <strong>The Reeds (Trastikite)</strong> is worth staying for dinner if you're after fish and seafood, while <strong>The Crippled Jellyfish (Kutsata Meduza)</strong> at Butamyata is a completely different experience: casual food and pizza after swimming, preferably with a little sand still on your feet."    
+      "title": "Where we like to eat",
+      "body": "We don't really keep a top 10. Some places are worth the drive for the food, others for the atmosphere, and some evenings you just want a good pizza after a day in the sea. These are the places we'd tell friends about.<br><br>Here in <strong>Arapya</strong>, we'd start with <strong>di Rossi Pizza e Pane</strong> – a small, personal place making Italian-style pizza and bread, and one of those little finds we're happy to share. <strong>Restaurant Arapya (Bay G)</strong> is right in the bay and the easy choice for a relaxed lunch or dinner without getting in the car. <strong>Robinson (Robinzon)</strong> is the place for something simple and a drink close to the beach.<br><br>Just up the coast in <strong>Lozenets</strong>, <strong>Plate</strong> is all about the food – there's no sea view, but you won't miss it. <strong>Starata Kashta (The Old House)</strong> is family-run, with a garden full of flowers and genuinely warm hospitality, and it's often still open when most places have closed for the season.<br><br>In <strong>Tsarevo</strong>, it depends on the mood: <strong>La Playa</strong> for a more polished Mediterranean and seafood dinner, or <strong>Charlie Pizza Place</strong>, up on the hill in Vasiliko, for an easy evening with pizza and the best view over the bay and the old church.<br><br>When we feel like going out, we head to <strong>Varvara</strong>. At <strong>The Old Outlaws (Startsi Razboynitsi)</strong> the setting and atmosphere are almost as much of a reason to go as the food, and <strong>Boatswain (Botsmana)</strong> is another favourite for fish, seafood and an unhurried dinner.<br><br>In <strong>Ahtopol</strong>, <strong>La Vita Club</strong> is our choice for an evening by the sea, especially at sunset, and <strong>St. George (Sveti Georgi)</strong> for when good food is the main reason to go.<br><br>And if you make it all the way to <strong>Sinemorets</strong>, make a day of it. Stay for fish and seafood at <strong>The Reeds (Trastikite)</strong>, or, after a morning at Veleka, have lunch at <strong>Veleka Beach Restaurant</strong>, right where the river meets the sea. Try the balık ekmek, a simple grilled fish sandwich – ideally with a little sand still on your feet."
     },
     "hiking": {
       "img_alt": "A warm sunrise over a calm sea, with soft pink and gold light on the shoreline",
       "eyebrow": "Inland",
-      "title": "Strandzha – Beyond the Coast",
-      "body": "Most people come here because of the sea. We stay because of the mountain.<br><br>If you only spend your holiday on the beach, you'll miss half of what makes this part of Bulgaria special. Strandzha isn't dramatic like Rila or Pirin. It reveals itself slowly–in old oak and beech forests, tiny villages, forgotten chapels, quiet rivers and roads where you can drive for twenty minutes without seeing another car. More than 130 caves have been identified in the western part of the mountain, while closer to the coast you'll find the unusual landscapes around the Veleka and Silistar.<br><br>Spring and autumn are some of our favourite times to explore Strandzha. The forests stay green much longer thanks to the Black Sea climate, May brings the flowering <em>zelenika</em>, and mornings can be wrapped in mist. In September and October, the cooler air makes walking much more enjoyable, while the first autumn colours begin to appear deeper in the mountain.<br><br><strong>Brashlyan</strong> deserves its reputation, but don't expect an open-air museum. It's simply a village that has never been in a hurry–wooden houses, stone walls, old fountains and quiet gardens where an hour disappears without you noticing. We recommend coming on a weekday morning if possible, taking a walk through the village and then following one of the forest trails.<br><br>If you ask us where we'd go instead of another crowded beach, <strong>Kondolovo</strong> would be high on the list. It's smaller and quieter, surrounded by oak and beech forest, with the <em>Kingdom of Periwinkle</em> trail offering a lovely short walk. Come in May or early June and look for <em>zelenika</em>, the rare evergreen rhododendron that is one of the characteristic plants of Strandzha.<br><br><strong>Mladezhko</strong> is another favourite, especially for those who enjoy places that feel slightly off the map. The road winds through dense forest before reaching the Mladezhka River, with caves, rocky formations and the remains of the old Kaleto fortress nearby. After rain can be a particularly good time to visit–the forest becomes intensely green and the streams come alive.<br><br>And don't stop at the three best-known villages. If you have a full day, continue towards <strong>Bulgari, Kosti, Stoilovo or Zabernovo</strong> and take your time. Bulgari is home to the traditional <strong>Nestinari</strong> fire-dancing ritual, with the main celebration held around 21 May. The smaller villages are often more rewarding precisely because there isn't a checklist of things to see.<br><br>Our advice is simple: pick a direction, leave some time for the road, and let Strandzha set the pace."
+      "title": "Strandzha – beyond the coast",
+      "body": "Most people come here for the sea. We stay for the mountain.<br><br>Spend the whole holiday on the beach and you'll miss half of what makes this corner of Bulgaria special. Strandzha isn't dramatic like Rila or Pirin. It shows itself slowly: old oak and beech forests, tiny villages, forgotten chapels, quiet rivers, and roads where you can drive for twenty minutes without meeting another car. More than 130 caves have been found in the western part of the mountain, and closer to the coast are the unusual landscapes around the Veleka and Silistar.<br><br>Spring and autumn are our favourite seasons here. The Black Sea climate keeps the forests green for longer, the <em>zelenika</em> flowers in May, and mornings are often misty. In September and October the air is cooler and better for walking, and the first autumn colours appear deeper in the mountain.<br><br><strong>Brashlyan</strong> deserves its reputation, but don't expect an open-air museum. It's a village that has simply never been in a hurry: wooden houses, stone walls, old fountains and quiet gardens where an hour slips by. Come on a weekday morning if you can, walk through the village, then take one of the forest trails.<br><br>If you asked us where to go instead of another crowded beach, <strong>Kondolovo</strong> would be near the top of the list. It's smaller and quieter, surrounded by oak and beech forest, and the <em>In the Kingdom of Zelenika</em> trail is a lovely short walk. Come in May or early June and look for <em>zelenika</em>, the rare evergreen rhododendron that is one of Strandzha's signature plants.<br><br><strong>Mladezhko</strong> is for people who like places that feel slightly off the map. The road winds through thick forest before it reaches the Mladezhka River, with caves, rock formations and the remains of the old Kaleto fortress nearby. Go after rain if you can: the forest turns deep green and the streams come alive.<br><br>And don't stop at the three best-known villages. With a full day, carry on to <strong>Bulgari, Kosti, Stoilovo or Zabernovo</strong> and take your time. Bulgari keeps the old <strong>Nestinari</strong> fire-dancing ritual, with the main celebration around 3 June. The smaller villages are often the most rewarding, precisely because there's no list of sights to tick off.<br><br>Our advice is simple: pick a direction, allow time for the road, and let Strandzha set the pace."
     },
     "villages": {
       "img_alt": "A jagged mountain peak rising above a sea of clouds at sunset, washed in pink and gold light",
       "eyebrow": "After the beach",
-      "title": "Culture and arts",
-      "body": "In summer, we like that the evenings around here don't always end when the sun goes down. From June through September, <strong>Tsarevo, Lozenets, Varvara, Ahtopol and Sinemorets</strong> become little stages of their own – sometimes for a proper concert, sometimes for something much smaller that you simply happen to come across. <strong>Lozenets</strong> has its relaxed jazz and live-music evenings, while <strong>Tales of Sinemoria</strong> brings a more alternative mix of Bulgarian and European musicians to the village. In Tsarevo, <strong>Art Potok</strong> is worth looking out for, not because you need to attend the whole festival, but because you can pick an evening that sounds like you: a play, a book or art event, an exhibition, a concert or a small performance before dinner.<br><br>Some of the events are surprisingly ambitious for a seaside town. You might find a <strong>touring theatre production with familiar Bulgarian actors</strong>, an orchestra playing film music, a concert-spectacle combining live music, dance and folklore, or even <strong>opera and ballet performed outdoors by the Burgas Opera</strong>. <strong>Zarzuela – Fire and Passion</strong>, for example, has brought singers, orchestra and ballet together on the open-air stage by the sea. At the other end of the scale are the things we often find more charming: puppet and street theatre taking over the squares of Tsarevo, Ahtopol and Sinemorets, a little live band after dinner, or an evening where you sit down for a drink and discover that a concert is happening right in front of you.<br><br>And then there are the evenings that are simply <strong>different</strong>. In August, <strong>LUNAR: Sea of Lights</strong> turns the coastline from Tsarevo to Sinemorets into an open-air trail of light installations, with art appearing among the streets, waterfront and natural surroundings. <strong>Tsarevo Art Fest</strong> brings artists, craftspeople, workshops, exhibitions, circus and live music together in the centre of town, while things like <strong>Varvara Kite Fest</strong>, fish and sea festivals and village folk gatherings give the summer a much more local character. For a completely different experience, drive into <strong>Strandzha</strong> and see one of the summer village gatherings in Brodilovo or Gramatikovo, or, if your timing happens to be right, experience <strong>Nestinarstvo in Bulgari</strong> in early June. We wouldn't plan the whole holiday around any of these – we'd simply check what's happening while you're here and leave one evening free. Those are often the evenings that become the stories you take home."
-},
+      "title": "Summer evenings and festivals",
+      "body": "One thing we love about summer here is that the evening doesn't end at sunset. From June to September, <strong>Tsarevo, Lozenets, Varvara, Ahtopol and Sinemorets</strong> turn into small stages. <strong>Lozenets</strong> has relaxed jazz and live-music evenings, <strong>Tales of Sinemoria</strong> brings alternative Bulgarian and European musicians to Sinemorets, and <strong>Art Potok</strong> in Tsarevo is worth checking for a play, a concert or an exhibition before dinner.<br><br>Some events are surprisingly big for a seaside town, from touring theatre with well-known Bulgarian actors to <strong>open-air opera and ballet by the Burgas Opera</strong>. But often it's the small things we like best: street theatre on the squares, a little band after dinner, or a concert that starts right in front of your table.<br><br>In August, <strong>LUNAR: Sea of Lights</strong> turns the coast from Tsarevo to Sinemorets into a trail of light installations. There's also <strong>Tsarevo Art Fest</strong>, the <strong>Varvara Kite Fest</strong> and summer village gatherings in <strong>Strandzha</strong>, in Brodilovo and Gramatikovo. If your dates are right, don't miss <strong>Nestinarstvo in Bulgari</strong> in early June.<br><br>We wouldn't plan a holiday around any of it. Just check what's on and keep one evening free – those often become the stories you take home."
+    },
     "cta": {
-      "eyebrow": "Already have a plan?",
-      "title": "Let's talk about your stay.",
-      "lede": "Leave your contact information and we will reach out to you shortly",
+      "eyebrow": "Planning a stay?",
+      "title": "Tell us what you have in mind.",
+      "lede": "Leave your contact details and we'll get back to you shortly.",
       "button": "Send an enquiry"
     }
   },
@@ -280,7 +280,7 @@
       "og_description": "Phone, email, address, and map for Vayana Bungalows in Arapya, Bulgaria."
     },
     "hero": {
-      "title": "Get in touch with us",
+      "title": "Get in touch",
       "sub": "Three ways to reach us – a phone call, an email, or a detailed enquiry."
     },
     "details": {
@@ -298,21 +298,21 @@
       "directions_sr": "(opens Google Maps in a new tab)"
     },
     "cta": {
-      "eyebrow": "Already have a plan?",
-      "title": "Let's talk about your stay.",
-      "lede": "Leave your contact information and we will reach out to you shortly",
+      "eyebrow": "Planning a stay?",
+      "title": "Tell us what you have in mind.",
+      "lede": "Leave your contact details and we'll get back to you shortly.",
       "button": "Send an enquiry"
     }
   },
   "enquiries": {
     "meta": {
       "title": "Enquiries – Vayana Bungalows",
-      "description": "Send an enquiry to Vayana Bungalows in Tsarevo, Bulgaria. Tell us your dates, party size and any special requests – we will reach out to you shortly"
+      "description": "Send an enquiry to Vayana Bungalows in Arapya Bay, near Tsarevo. Tell us your dates, how many of you are coming and anything we should know – we'll get back to you shortly."
     },
     "hero": {
-      "eyebrow": "Already have a plan?",
-      "title": "Send us an enquiry",
-      "lede": "Leave your contact information and we will reach out to you shortly."
+      "eyebrow": "Planning a stay?",
+      "title": "Tell us about your stay",
+      "lede": "Leave your contact details and we'll get back to you shortly."
     },
     "form": {
       "name_placeholder": "FULL NAME*",
@@ -405,11 +405,11 @@
     "hero": {
       "eyebrow": "Enquiry sent",
       "title": "Thank you for your enquiry",
-      "lede": "We've received your message. We will reach out to you shortly with availability and a tailored proposal for your stay."
+      "lede": "We've received your message and will get back to you shortly with availability and an offer for your dates."
     },
     "next": {
       "title": "What happens next",
-      "body": "Our reply will arrive at the email address you provided. If you don't see it within 48 hours, please check your spam folder, or get in touch directly using the details below.",
+      "body": "Our reply will arrive at the email address you provided. If you can't find it, please check your spam folder, or get in touch directly using the details below.",
       "phone_label": "Phone:",
       "email_label": "Email:"
     },
