@@ -2742,7 +2742,7 @@
 
 /* Hero — same pull-under-the-header pattern as .stay-hero / .hero /
    .bungalow-hero (see tokens.css `--header-height` for the single
-   source of truth). Image: hero-beach.jpg, set inline on the section
+   source of truth). Image: arapya-bay.jpg, set inline on the section
    via `style="background-image: url(...)"` so Vite rewrites the URL
    at build time for the GH Pages `/vayana-bungalows/` base prefix. */
 .destination-hero {
