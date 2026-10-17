@@ -68,11 +68,9 @@
             context). Cloudflare Turnstile in managed mode does NOT set
             cookies by default; if pre-clearance is ever needed it may
             set `cf_clearance` — re-check before launch.
-         4. Whether §3 needs an explicit reference to the newsletter form
-            collecting an email address once #10 ships real submission. In
-            v1 the newsletter form opens a "thank you" modal and sends NO
-            data anywhere — see assets/js/newsletter.js. The policy
-            currently says exactly that.
+         4. ✓ Newsletter — the homepage signup form was removed, along with
+            the former §3.4. If a newsletter returns, add a §3 entry for the
+            email address it collects.
          5. ✓ Captcha choice — decided in #20: Cloudflare Turnstile. §6 +
             §3.2 + §10 all reference Turnstile concretely (no reCAPTCHA
             anywhere in this policy).
@@ -300,11 +298,6 @@
             <p data-i18n-html="privacy.collect.maps_body">
               The map on the <a href="../">homepage</a> and on <a href="../contacts/">Contacts</a> / <a href="../destination/">Destination</a> embeds a Google Maps iframe. When the page loads the iframe, Google may set cookies in your browser and receive your IP address – this happens automatically as soon as the page is rendered, whether or not you interact with the map. We have no control over what Google collects in that context – please see Google's own privacy policy.
             </p>
-
-            <h3 data-i18n="privacy.collect.newsletter_title">3.4 Newsletter signup</h3>
-            <p data-i18n-html="privacy.collect.newsletter_body">
-              The newsletter signup form on the homepage accepts an email address into an input field but, in version 1, that email is <strong>not stored anywhere and is not transmitted off your device</strong> – submitting the form opens a "thank you" modal and discards what you typed. When a real email-service-provider integration ships, this section will be updated in the same release to list the provider and what they receive.
-            </p>
           </section>
 
           <!-- 4 — Legal basis. -->
@@ -442,7 +435,7 @@
             <p data-i18n="privacy.cookies.outro">
               We do not run any analytics, advertising, or
               behavioural-tracking cookies. If that changes – for
-              example if we add a newsletter analytics tool – we will
+              example if we add an analytics tool – we will
               add a cookie banner before doing so and update this
               section.
             </p>
