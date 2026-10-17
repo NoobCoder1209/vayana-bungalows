@@ -430,6 +430,19 @@
   display: none;
 }
 
+/* Phones: centre one photo at a time (half-the-spare-space side padding +
+   centre snap) instead of starting at the left edge. Same fix as
+   .offers__grid. Scoped to the home gallery's own track so the bungalow
+   sliders on /stay/ keep their layout. */
+@media (max-width: 600px) {
+  .gallery__track[data-slider="gallery"] {
+    padding: 0 max(var(--container-pad), calc((100% - clamp(260px, 32vw, 440px)) / 2));
+  }
+  .gallery__track[data-slider="gallery"] > .gallery__item {
+    scroll-snap-align: center;
+  }
+}
+
 .gallery__item {
   flex: 0 0 auto;
   width: clamp(260px, 32vw, 440px);
@@ -703,6 +716,18 @@
   }
 }
 
+/* Phones show one card at a time: side padding = half the space beside one
+   card, and cards snap to the centre, so each card sits in the middle of the
+   screen instead of hugging the left edge. Same fix as .offers__grid. */
+@media (max-width: 600px) {
+  .rooms__track {
+    padding: 0 max(var(--container-pad), calc((100% - 80vw) / 2));
+  }
+  .room-card {
+    scroll-snap-align: center;
+  }
+}
+
 /* ========== Offers (dynamic — offers.js) ========== */
 .offers {
   background: var(--bg-cream);
@@ -717,6 +742,7 @@
    touch-laptops). One card snaps into view at a time; swipe scrolls. This
    is the SAME model as the photo galleries (see .gallery__track above). */
 .offers__grid {
+  --offer-card-w: clamp(240px, 78vw, 320px);
   display: flex;
   gap: 1.5rem;
   padding: 0 var(--container-pad);
@@ -732,9 +758,24 @@
 
 .offers__grid::-webkit-scrollbar { display: none; }
 
+/* Centre the row when every card fits (wide touch screens / tablets): auto
+   margins on the outer cards split the spare space; once the row overflows
+   they resolve to 0, so scrolling starts at the first card as before. */
+.offers__grid > .offer-card:first-child { margin-left: auto; }
+.offers__grid > .offer-card:last-child { margin-right: auto; }
+
+/* Phones show one card at a time: side padding = half the space beside one
+   card, so the first and last cards can snap to the centre of the screen
+   instead of sitting left of centre. */
+@media (max-width: 600px) {
+  .offers__grid {
+    padding: 0 max(var(--container-pad), calc((100% - var(--offer-card-w)) / 2));
+  }
+}
+
 .offer-card {
   flex: 0 0 auto;
-  width: clamp(240px, 78vw, 320px);
+  width: var(--offer-card-w, clamp(240px, 78vw, 320px));
   aspect-ratio: 3 / 4;
   scroll-snap-align: center;
   display: flex;
@@ -889,6 +930,7 @@
 @media (hover: hover) and (pointer: fine) and (not (any-pointer: coarse)) {
   .offers__grid {
     display: grid;
+    padding: 0 var(--container-pad); /* static grid: undo the carousel's centring padding */
     overflow-x: visible;
     scroll-snap-type: none;
     touch-action: auto;
@@ -898,6 +940,9 @@
     grid-template-columns: repeat(3, minmax(0, 280px));
   }
   .offers__grid .offer-card { width: auto; }
+  /* The grid centres itself; drop the carousel's auto-margin centring, which
+     would shrink the outer cards inside their grid cells. */
+  .offers__grid > .offer-card:is(:first-child, :last-child) { margin-inline: 0; }
 
   /* 1 / 2 / 3 → single centered row of exactly N columns. */
   .offers__grid[data-count="1"] { grid-template-columns: minmax(0, 280px); }
