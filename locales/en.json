@@ -154,7 +154,7 @@
       "bed_label": "Bedrooms",
       "bed_value": "2",
       "beds_label": "Beds",
-      "beds_value": "2 queen beds (160 × 200 cm)",
+      "beds_value": "2 queen beds",
       "bathroom_label": "Bathroom",
       "bathroom_value": "1"
     },
@@ -184,8 +184,8 @@
       "state_selected": "selected"
     },
     "amenities": {
-      "eyebrow": "In every bungalow",
-      "title": "Amenities",
+      "eyebrow": "The essentials",
+      "title": "The simple things that make a stay easy.",
       "wifi": "Free Wi-Fi",
       "aircon": "Air conditioning",
       "kitchen": "Fully equipped kitchen",
@@ -200,17 +200,8 @@
       "crib": "Baby cot"
     },
     "gallery": {
-      "eyebrow": "A closer look at Vayana",
-      "title": "Gallery",
       "prev_photo_aria": "Previous photo",
-      "next_photo_aria": "Next photo",
-      "prev_photos_aria": "Previous photos",
-      "next_photos_aria": "Next photos",
-      "alt_beach": "Beach at golden hour",
-      "alt_terrace": "Open-air villa terrace",
-      "alt_pool": "Pool deck overlooking the sea",
-      "alt_lagoon": "Palms over a turquoise lagoon",
-      "alt_spa": "Spa pavilion at dusk"
+      "next_photo_aria": "Next photo"
     },
     "lightbox": {
       "viewer_aria": "Photo viewer"

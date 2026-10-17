@@ -154,7 +154,7 @@
       "bed_label": "Спални",
       "bed_value": "2",
       "beds_label": "Легла",
-      "beds_value": "2 двойни легла (160 × 200 см)",
+      "beds_value": "2 двойни легла",
       "bathroom_label": "Баня",
       "bathroom_value": "1"
     },
@@ -184,8 +184,8 @@
       "state_selected": "избрано"
     },
     "amenities": {
-      "eyebrow": "Във всяко бунгало",
-      "title": "Удобства",
+      "eyebrow": "Удобства",
+      "title": "Всичко необходимо за спокоен и уютен престой.",
       "wifi": "Безплатен Wi-Fi",
       "aircon": "Климатик",
       "kitchen": "Напълно оборудвана кухня",
@@ -200,17 +200,8 @@
       "crib": "Бебешко креватче"
     },
     "gallery": {
-      "eyebrow": "Vayana отблизо",
-      "title": "Галерия",
       "prev_photo_aria": "Предишна снимка",
-      "next_photo_aria": "Следваща снимка",
-      "prev_photos_aria": "Предишни снимки",
-      "next_photos_aria": "Следващи снимки",
-      "alt_beach": "Плажът в златния час",
-      "alt_terrace": "Открита тераса на вилата",
-      "alt_pool": "Тераса край басейна с изглед към морето",
-      "alt_lagoon": "Палми над тюркоазена лагуна",
-      "alt_spa": "СПА павилион по здрач"
+      "next_photo_aria": "Следваща снимка"
     },
     "lightbox": {
       "viewer_aria": "Преглед на снимки"
