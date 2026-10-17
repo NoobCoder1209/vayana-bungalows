@@ -2678,7 +2678,7 @@
 
 .stay-hero {
   position: relative;
-  min-height: clamp(360px, 50vh, 520px);
+  min-height: var(--page-hero-height);
   display: flex;
   align-items: flex-end;
   /* Tuck under the sticky header so the photo runs to the viewport
@@ -2687,7 +2687,7 @@
      Same pattern as .hero and .bungalow-hero — see tokens.css
      `--header-height` for the single source of truth. */
   margin-top: calc(var(--header-height) * -1);
-  padding: calc(var(--section-pad-y) + var(--header-height)) 0 var(--section-pad-y);
+  padding: calc(var(--header-height) + var(--space-4)) 0 var(--section-pad-y);
   background-size: cover;
   background-position: center;
   /* Defensive parity with .bungalow-hero — at any normal viewport the
@@ -2747,13 +2747,14 @@
    at build time for the GH Pages `/vayana-bungalows/` base prefix. */
 .destination-hero {
   position: relative;
-  min-height: clamp(360px, 50vh, 520px);
+  min-height: var(--page-hero-height);
   display: flex;
   align-items: flex-end;
   margin-top: calc(var(--header-height) * -1);
-  padding: calc(var(--section-pad-y) + var(--header-height)) 0 var(--section-pad-y);
+  padding: calc(var(--header-height) + var(--space-4)) 0 var(--section-pad-y);
   background-size: cover;
-  background-position: center;
+  /* Focus above centre so the header shows the bay and sea, not just the bungalows. */
+  background-position: center 20%;
   background-repeat: no-repeat;
   overflow: hidden;
   color: var(--text-light);
@@ -2966,17 +2967,16 @@
    build time for the GH Pages /vayana-bungalows/ base prefix. */
 .contacts-hero {
   position: relative;
-  /* min-height matches .destination-hero / .stay-hero exactly so the
-     three photo heros across the site feel like a set. Round-1 review
-     finding I6 — the previous shorter (320/40vh/440) clamp was
-     intentional but read as inconsistent. */
-  min-height: clamp(360px, 50vh, 520px);
+  /* Same --page-hero-height + padding as .destination-hero / .stay-hero
+     so the three inner-page photo headers render at one height. */
+  min-height: var(--page-hero-height);
   display: flex;
   align-items: flex-end;
   margin-top: calc(var(--header-height) * -1);
-  padding: calc(var(--section-pad-y) + var(--header-height)) 0 var(--section-pad-y);
+  padding: calc(var(--header-height) + var(--space-4)) 0 var(--section-pad-y);
   background-size: cover;
-  background-position: center;
+  /* Focus above centre so the header shows the bay and sea, not just the bungalows. */
+  background-position: center 20%;
   background-repeat: no-repeat;
   overflow: hidden;
   color: var(--text-light);

@@ -71,6 +71,10 @@
      the header (.hero, .stay-hero, .bungalow-hero). Kept as a token so
      the value doesn't drift across files. */
   --header-height: 88px;
+  /* Shared height for the inner-page photo headers (/stay/, /destination/,
+     /contacts/) so they match. Tall enough to hold the longest hero copy
+     (BG) on a 375px phone without growing; the home .hero is separate. */
+  --page-hero-height: clamp(520px, 65vh, 600px);
 
   /* Shape */
   --radius-button: 20px;
