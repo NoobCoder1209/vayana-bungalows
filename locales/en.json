@@ -102,37 +102,6 @@
       "modal_rule_2": "The offer is subject to availability and confirmation and may be withdrawn before you enquire.",
       "modal_rule_3": "This offer cannot be combined with any other promotion or discount.",
       "modal_take": "Enquire about this offer"
-    },
-    "services": {
-      "eyebrow": "The essentials",
-      "title": "The simple things that make a stay easy.",
-      "wifi_title": "Free Wi-Fi",
-      "wifi_body": "Fast fibre throughout.",
-      "aircon_title": "Air conditioning",
-      "aircon_body": "Individually controlled cooling in every bedroom.",
-      "kitchen_title": "Fully equipped kitchen",
-      "kitchen_body": "A full hob, cookware and everything you need to cook for yourselves.",
-      "parking_title": "Free parking",
-      "parking_body": "On-site parking, free of charge.",
-      "tv_title": "Smart TV",
-      "tv_body": "Streaming-ready smart TVs with your favourite apps.",
-      "bbq_title": "BBQ",
-      "bbq_body": "Your own grill for long evenings under the stars."
-    },
-    "newsletter": {
-      "eyebrow": "Notes from the bay",
-      "title": "Keep in touch",
-      "lede": "We write rarely – three or four times a year, and only when there's something worth sharing.",
-      "email_label": "Email address",
-      "email_placeholder": "Your email address",
-      "hp_label": "Website",
-      "submit": "Subscribe",
-      "consent_html": "I agree to the <a href=\"{privacy_url}\">Privacy Policy</a> and consent to receiving occasional emails from Vayana Bungalows.",
-      "noscript_html": "Subscribe by emailing <a href=\"{email_href}\">{email_display}</a> with the subject \"Subscribe\".",
-      "modal_eyebrow": "Subscribed",
-      "modal_title": "Thank you – you’re on the list.",
-      "modal_body": "Look out for our next note from the bay.",
-      "modal_close": "Close"
     }
   },
   "stay": {

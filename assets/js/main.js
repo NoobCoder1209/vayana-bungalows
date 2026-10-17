@@ -9,7 +9,6 @@ import { initBooking } from './booking.js';
 import { initAvailabilityCalendars } from './availability-calendar.js';
 import { initCalendarSelection } from './calendar-selection.js';
 import { initSiteConfig } from './site-config-inject.js';
-import { initNewsletter } from './newsletter.js';
 import { initLocation } from './location.js';
 import { initEnquiry } from './enquiry.js';
 import { initOffers } from './offers.js';
@@ -33,7 +32,6 @@ const run = () => {
   initBooking();
   initAvailabilityCalendars();
   initCalendarSelection();
-  initNewsletter();
   initLocation();
   initEnquiry();
   initOffers();

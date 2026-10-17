@@ -951,110 +951,6 @@
   color: var(--text-muted);
 }
 
-/* ========== Services grid ========== */
-.services__head {
-  text-align: center;
-  margin-bottom: var(--space-6);
-  max-width: 720px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.services__grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  /* Full outer border so all four rounded corners are drawn by the container.
-     The tiles draw their right/bottom seams for the INTERNAL grid lines only;
-     the seam borders on the outer edges are dropped per column-count (see the
-     .service-tile:nth-* rules below, scoped by breakpoint) so they don't
-     double up with this container border. overflow:hidden clips the tile
-     content to the rounded box. */
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-card);
-  overflow: hidden;
-}
-
-.service-tile {
-  padding: var(--space-6) var(--space-4);
-  border-right: 1px solid var(--border-soft);
-  border-bottom: 1px solid var(--border-soft);
-  text-align: center;
-  transition: background var(--t-fast);
-}
-
-/* Drop the seam border on the outer edges so it doesn't double up with the
-   container's rounded border (the "two lines at the right corner" artifact).
-   Scoped per column-count so it stays correct across the responsive
-   breakpoints below. These default rules are scoped to min-width:769px (the
-   3-column range) — WITHOUT the media guard their (0,2,0) specificity would
-   beat the plain-`.service-tile` seam-restore in the ≤768px/≤480px blocks
-   (media queries add no specificity), leaving missing internal seams on
-   mobile. */
-@media (min-width: 769px) {
-  .service-tile:nth-child(3n) {
-    border-right: 0; /* right column — container draws the right edge */
-  }
-  .service-tile:nth-last-child(-n + 3) {
-    border-bottom: 0; /* bottom row (last 3) — container draws the bottom edge */
-  }
-}
-
-.service-tile:hover {
-  background: var(--bg-cream);
-}
-
-.service-tile svg {
-  color: var(--primary);
-  margin: 0 auto var(--space-3);
-  display: block;
-}
-
-.service-tile h5 {
-  margin-bottom: 0.5rem;
-}
-
-.service-tile p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  margin: 0;
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  .services__grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  /* Re-derive the outer-edge border resets for a 2-column layout: restore
-     all seams first, then drop the right column (2n) and bottom row (last 2).
-     Scoped with a min-width lower bound so these (0,2,0) nth rules don't bleed
-     into the 1-column range below (where they'd zero tile 5's bottom seam). */
-  .service-tile {
-    border-right: 1px solid var(--border-soft);
-    border-bottom: 1px solid var(--border-soft);
-  }
-  .service-tile:nth-child(2n) {
-    border-right: 0;
-  }
-  .service-tile:nth-last-child(-n + 2) {
-    border-bottom: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .services__grid {
-    grid-template-columns: 1fr;
-  }
-  /* Single column: no vertical seams; only the last tile drops its bottom
-     border (the container draws the bottom edge). */
-  .service-tile {
-    border-right: 0;
-    border-bottom: 1px solid var(--border-soft);
-  }
-  .service-tile:last-child {
-    border-bottom: 0;
-  }
-}
-
 /* ========== Location (map) — #10 ========== */
 .location__inner {
   text-align: center;
@@ -1153,170 +1049,6 @@
      becomes visible — just instantly. */
   .location__map iframe {
     transition: none;
-  }
-}
-
-/* ========== Newsletter ========== */
-.newsletter {
-  position: relative;
-  color: var(--text-light);
-  padding: var(--section-pad-y) 0;
-  overflow: hidden;
-  text-align: center;
-}
-
-.newsletter__bg {
-  position: absolute;
-  inset: -10% 0;
-  background-image: url('../img/newsletter-bg.jpg');
-  background-size: cover;
-  background-position: center;
-  will-change: transform;
-}
-
-.newsletter__overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(14, 13, 10, 0.7);
-}
-
-.newsletter__content {
-  position: relative;
-  z-index: 2;
-  max-width: 640px;
-}
-
-.newsletter__content h4 {
-  margin-bottom: var(--space-2);
-  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
-  line-height: 1.4;
-}
-
-.newsletter__lede {
-  margin-bottom: var(--space-4);
-  color: rgba(238, 238, 238, 0.85);
-  font-size: 0.95rem;
-}
-
-.newsletter__form {
-  display: flex;
-  gap: 0;
-  background: var(--bg-light);
-  padding: 0;
-  /* Round the whole white bar (input + Subscribe button) as one pill; overflow
-     clips the flush input/button to the rounded container. */
-  border-radius: var(--radius-card);
-  overflow: hidden;
-}
-
-.newsletter__form input[type="email"] {
-  flex: 1;
-  border: 0;
-  background: var(--bg-light);
-  color: var(--text-dark);
-  padding: 1rem 1.25rem;
-  min-height: 56px;
-}
-
-.newsletter__form input[type="email"]:invalid:not(:placeholder-shown) {
-  /* Keyboard hint: invalid email gets a red underline AFTER the user has
-     typed something. Avoids the "everything is red on page load" anti-pattern
-     of styling :invalid alone (empty == invalid for required fields). */
-  box-shadow: inset 0 -2px 0 var(--danger);
-}
-
-.newsletter__form .btn {
-  min-height: 56px;
-  padding: 0 1.75rem;
-  flex-shrink: 0;
-  /* Square the button's own corners; the rounded .newsletter__form container
-     (overflow:hidden) supplies the rounded RIGHT edge, while the LEFT edge
-     stays square where it meets the email input. */
-  border-radius: 0;
-}
-
-/* Honeypot: invisible to humans, present in the DOM for naive bots.
-   Off-screen rather than display:none so accessibility-tree-aware bots
-   that ignore display:none still see and fill it. tabindex=-1 + aria-hidden
-   keep keyboard + screen-reader users out of it. */
-.newsletter__hp {
-  position: absolute;
-  left: -9999px;
-  top: auto;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-
-.newsletter__error {
-  flex-basis: 100%;
-  margin: var(--space-2) 0 0;
-  padding: 0.5rem 0.75rem;
-  background: rgba(192, 57, 43, 0.15);
-  color: #ffd6d0;
-  font-size: 0.9rem;
-  text-align: left;
-  border-left: 2px solid var(--danger);
-}
-
-.newsletter__consent {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin-top: var(--space-3);
-  font-size: 0.85rem;
-  color: rgba(238, 238, 238, 0.75);
-  text-transform: none;
-  letter-spacing: 0.02em;
-  text-align: left;
-  max-width: 560px;
-}
-
-.newsletter__consent input {
-  width: auto;
-  min-height: 0;
-  margin: 0;
-  margin-top: 0.2em;
-  accent-color: var(--primary);
-  flex-shrink: 0;
-}
-
-.newsletter__consent a {
-  color: inherit;
-  text-decoration: underline;
-}
-
-/* Highlighted state when the user tries to submit without consent.
-   Set + cleared by newsletter.js on the consent <label>. */
-.newsletter__consent.is-error {
-  color: #ffd6d0;
-}
-
-.newsletter__consent.is-error input {
-  outline: 2px solid var(--danger);
-  outline-offset: 2px;
-}
-
-.newsletter__noscript {
-  margin-top: var(--space-3);
-  font-size: 0.9rem;
-  color: rgba(238, 238, 238, 0.85);
-}
-
-.newsletter__noscript a {
-  color: inherit;
-  text-decoration: underline;
-}
-
-@media (max-width: 560px) {
-  .newsletter__form {
-    flex-direction: column;
-    gap: 1px;
-    background: var(--border);
-  }
-  .newsletter__form input[type="email"],
-  .newsletter__form .btn {
-    width: 100%;
   }
 }
 
@@ -2817,7 +2549,7 @@
   margin-left: 0.35rem;
 }
 
-/* Honeypot — copied verbatim from .newsletter__hp. Hidden via off-screen
+/* Honeypot. Hidden via off-screen
    positioning + zero size + tabindex=-1 in markup. */
 .enquiry-form__hp {
   position: absolute;
@@ -2836,8 +2568,8 @@
   margin-top: var(--space-2);
 }
 
-/* Error pill — same red-tinted style as the newsletter error pill, but
-   adapted to the cream background (darker text since we're on light bg). */
+/* Error pill — red-tinted, adapted to the cream background
+   (darker text since we're on light bg). */
 .enquiry-form__error {
   grid-column: 1 / -1;
   margin: 0;
@@ -2849,8 +2581,8 @@
 }
 
 /* Consent checkbox row — spans full width, sits below the message
-   textarea visually but above the submit button in the source. Same
-   visual treatment as .newsletter__consent but on cream background. */
+   textarea visually but above the submit button in the source. Styled
+   for the cream background. */
 .enquiry-form__consent {
   grid-column: 1 / -1;
   display: inline-flex;
