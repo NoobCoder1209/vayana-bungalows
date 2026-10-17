@@ -2700,7 +2700,7 @@
   overflow: hidden;
   color: var(--text-light);
   /* Inline background-image url() on the section is rewritten by Vite
-     at build time, so the dev path stays /assets/img/intro-villa.jpg
+     at build time, so the dev path stays /assets/img/hero-2.jpg
      and the prod path picks up the /vayana-bungalows/ base prefix. */
 }
 
