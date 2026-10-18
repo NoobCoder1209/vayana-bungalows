@@ -807,7 +807,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url('../img/gallery-2.jpg');
+  background-image: url('../img/bungalow-olive-08-table-setting.jpg');
   background-size: cover;
   background-position: center;
   opacity: 0.15;
@@ -2714,7 +2714,7 @@
   overflow: hidden;
   color: var(--text-light);
   /* Inline background-image url() on the section is rewritten by Vite
-     at build time, so the dev path stays /assets/img/hero-2.jpg
+     at build time, so the dev path stays /assets/img/bungalow-olive-04-open-plan.jpg
      and the prod path picks up the /vayana-bungalows/ base prefix. */
 }
 
