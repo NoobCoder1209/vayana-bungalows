@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import { i18nPlugin } from './scripts/i18n-plugin.js';
 import { sitemapPlugin } from './scripts/sitemap-plugin.js';
+import { imageOptimizePlugin } from './scripts/image-optimize-plugin.js';
 
 // The GitHub Pages sub-path — the site is served from
 // noobcoder1209.github.io/vayana-bungalows/, so every asset URL needs
@@ -190,6 +191,10 @@ export default defineConfig(({ command, mode }) => ({
           locales: ['en', 'bg'],
         })]
       : []),
+    // Responsive WebP for every JPG the built pages use (srcset on <img>,
+    // image-set() on backgrounds). Build-only; works on dist/, so the source
+    // tree keeps plain JPGs.
+    imageOptimizePlugin(),
   ],
   server: {
     port: 5173,

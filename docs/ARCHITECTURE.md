@@ -57,7 +57,7 @@ flowchart TD
     Root --> Assets["assets/ (source)"]
     Root --> Worker["worker/"]
     Root --> Locales["locales/<br/>en.json · bg.json"]
-    Root --> Scripts["scripts/<br/>fetch-bookings · i18n-plugin · i18n-lint"]
+    Root --> Scripts["scripts/<br/>fetch-bookings · i18n-plugin · i18n-lint<br/>sitemap-plugin · image-optimize-plugin"]
     Root --> WF[".github/workflows/<br/>4 pipelines"]
     Root --> Docs["docs/<br/>ARCHITECTURE.md · superpowers/ (specs)"]
 
@@ -318,6 +318,7 @@ straight to `main`.
 | Change visible copy | `locales/en.json` **and** `bg.json` | PR → merge (deploys the site) |
 | Change a page's layout/look | that page's `index.html` + `assets/css` | PR → merge |
 | Change page behavior (calendar, form) | the module in `assets/js` | PR → merge; add/adjust tests |
+| Add or replace a photo | a JPG in `assets/img/` named `bungalow-<name>-<subject>.jpg` (≤1920px) + its `images.<file>` description in **both** locales | The build makes the WebP sizes (`scripts/image-optimize-plugin.js`) |
 | Change what the Worker accepts/returns | `worker/src/index.js` (+ helpers) | PR → merge (deploys the Worker) |
 | Add a Worker secret (keys, sheet id) | `wrangler secret put …` (not in git) | Redeploy the Worker |
 

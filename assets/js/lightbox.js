@@ -89,9 +89,20 @@ export function initLightbox() {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
 
+  // The viewer shows a photo full-screen, so take the WIDEST srcset candidate
+  // (the build adds WebP widths), not currentSrc — that is the size the
+  // browser picked for the small gallery card and would look soft enlarged.
+  const largestSrc = (el) => {
+    const best = (el.getAttribute('srcset') || '').split(',')
+      .map((c) => c.trim().split(/\s+/))
+      .filter(([url, w]) => url && /^\d+w$/.test(w || ''))
+      .sort((a, b) => parseInt(b[1], 10) - parseInt(a[1], 10))[0];
+    return best ? best[0] : (el.currentSrc || el.getAttribute('src'));
+  };
+
   const open = (track, startIndex) => {
     photos = Array.from(track.querySelectorAll('.gallery__item img')).map((el) => ({
-      src: el.currentSrc || el.getAttribute('src'),
+      src: largestSrc(el),
       alt: el.getAttribute('alt') || '',
     }));
     if (!photos.length) return;
