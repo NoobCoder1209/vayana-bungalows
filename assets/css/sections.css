@@ -1430,9 +1430,21 @@
   .bungalow-split__grid {
     grid-template-columns: 1fr;
   }
-  /* Single column now — the pill can't live in column 2. */
+  /* Single column now — the pill follows the calendar, centred, on one line.
+     The longest label ("Stay with us for 30 nights, only for 2250€", ~42
+     chars) is ~440px at the desktop size; scale the type with the viewport
+     and tighten tracking/padding so it fits on one line from ~340px up. On a
+     narrower screen it may wrap, but centred rather than overflowing.
+     margin-top 0: the grid gap already separates it from the calendar. */
   .bungalow-split__grid > .stay-select__pill {
     grid-column: 1;
+    justify-self: center;
+    max-width: 100%;
+    margin-top: 0;
+    padding: 0.8rem 1rem;
+    font-size: clamp(0.7rem, 3.4vw, 0.95rem);
+    letter-spacing: 0.02em;
+    text-align: center;
   }
 }
 
