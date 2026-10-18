@@ -92,10 +92,16 @@ export function buildSitemapEntries({
  */
 export function buildSitemapXml({ entries, defaultLocale }) {
   const lines = [];
+  // Google image-sitemap extension: only declared when some page lists images,
+  // so a sitemap without images is byte-identical to before.
+  const hasImages = entries.some((e) => e.imagesByLocale
+    && Object.values(e.imagesByLocale).some((list) => list && list.length));
   lines.push('<?xml version="1.0" encoding="UTF-8"?>');
   lines.push(
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
-    + 'xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    + 'xmlns:xhtml="http://www.w3.org/1999/xhtml"'
+    + (hasImages ? ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"' : '')
+    + '>',
   );
   // Sort locales alphabetically for deterministic, diff-stable output. The
   // sitemaps/hreflang spec is order-agnostic, so the alphabetical order (bg
@@ -117,11 +123,38 @@ export function buildSitemapXml({ entries, defaultLocale }) {
       if (entry.lastmod) {
         lines.push(`    <lastmod>${xmlEscape(entry.lastmod)}</lastmod>`);
       }
+      for (const img of entry.imagesByLocale?.[locale] || []) {
+        lines.push(`    <image:image><image:loc>${xmlEscape(img)}</image:loc></image:image>`);
+      }
       lines.push('  </url>');
     }
   }
   lines.push('</urlset>');
   return `${lines.join('\n')}\n`;
+}
+
+/**
+ * Absolute URLs of the content photos in a built page, for the image sitemap:
+ * every <img src> plus inline `background-image: url(...)` (the page-header
+ * photos), de-duplicated in document order. Skips empty/placeholder <img>
+ * (e.g. the lightbox stage, filled at runtime) and non-raster files. Paths in
+ * the built HTML are site-absolute (they already carry the base path), so the
+ * origin is simply prefixed.
+ *
+ * @param {string} html    emitted page HTML
+ * @param {string} origin  'https://noobcoder1209.github.io' (no trailing slash)
+ * @returns {string[]}
+ */
+export function collectPageImages(html, origin) {
+  const found = [];
+  const add = (p) => {
+    if (!p || !/\.(jpe?g|png|webp|avif)$/i.test(p)) return;
+    const abs = /^https?:\/\//.test(p) ? p : `${origin}${p.startsWith('/') ? '' : '/'}${p}`;
+    if (!found.includes(abs)) found.push(abs);
+  };
+  for (const m of html.matchAll(/<img\b[^>]*?\ssrc="([^"]+)"/g)) add(m[1]);
+  for (const m of html.matchAll(/background-image:\s*url\((['"]?)([^'")]+)\1\)/g)) add(m[2]);
+  return found;
 }
 
 /**

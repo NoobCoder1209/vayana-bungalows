@@ -72,7 +72,9 @@ export function buildLodgingBusinessJsonLd({ business, url, locale }) {
   if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
     obj.geo = { '@type': 'GeoCoordinates', latitude, longitude };
   }
-  if (image) obj.image = image;
+  // One URL or a list (Google uses several to pick per surface); copy a list
+  // like sameAs so callers can't mutate the config through the output.
+  if (image) obj.image = Array.isArray(image) ? image.slice() : image;
   if (Array.isArray(sameAs) && sameAs.length) obj.sameAs = sameAs.slice();
   if (IN_LANGUAGE[locale]) obj.inLanguage = IN_LANGUAGE[locale];
 

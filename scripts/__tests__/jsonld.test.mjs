@@ -126,3 +126,18 @@ test('render: escapes < so a value containing </script> cannot break out', () =>
   assert.ok(!body.includes('</script>'), 'no raw </script> inside the JSON body');
   assert.ok(body.includes('\\u003c/script>'), 'the < was escaped to \\u003c');
 });
+
+test('build: image accepts a list of photos (copied, order kept)', () => {
+  const images = [
+    'https://noobcoder1209.github.io/vayana-bungalows/og-home.jpg',
+    'https://noobcoder1209.github.io/vayana-bungalows/og-stay.jpg',
+  ];
+  const o = buildLodgingBusinessJsonLd({ business: { ...BUSINESS, image: images }, url: URL_EN, locale: 'en' });
+  assert.deepEqual(o.image, images);
+  assert.notEqual(o.image, images, 'should be a copy, not the same array');
+});
+
+test('build: a single image string is passed through unchanged', () => {
+  const o = buildLodgingBusinessJsonLd({ business: BUSINESS, url: URL_EN, locale: 'en' });
+  assert.equal(o.image, BUSINESS.image);
+});

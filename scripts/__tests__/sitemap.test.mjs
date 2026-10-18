@@ -14,6 +14,7 @@ import {
   NOINDEX_PAGES,
   buildSitemapEntries,
   buildSitemapXml,
+  collectPageImages,
   buildRobotsTxt,
   collapseDisallowPaths,
   gitLastmod,
@@ -213,4 +214,37 @@ test('gitLastmod: returns YYYY-MM-DD or null for a real repo file', () => {
   // untracked → null. Either way the shape contract holds.
   const v = gitLastmod(new URL(import.meta.url).pathname, process.cwd());
   assert.ok(v === null || /^\d{4}-\d{2}-\d{2}$/.test(v), `got "${v}"`);
+});
+
+// ── image sitemap ────────────────────────────────────────────────────────────
+
+const ORIGIN_T = 'https://noobcoder1209.github.io';
+
+test('collectPageImages: <img src> + inline background-image, absolute, de-duplicated', () => {
+  const html = `
+    <section class="stay-hero" style="background-image: url('/vayana-bungalows/assets/a-1.jpg');background-image:image-set(url('/vayana-bungalows/assets/a-1-1920w.webp') type('image/webp'))"></section>
+    <img src="/vayana-bungalows/assets/b-2.jpg" srcset="/vayana-bungalows/assets/b-2-480w.webp 480w" alt="x">
+    <img src="/vayana-bungalows/assets/b-2.jpg" alt="dup">
+    <img data-lightbox-img alt="">
+    <img src="/vayana-bungalows/favicon.svg" alt="">`;
+  assert.deepEqual(collectPageImages(html, ORIGIN_T), [
+    `${ORIGIN_T}/vayana-bungalows/assets/b-2.jpg`,
+    `${ORIGIN_T}/vayana-bungalows/assets/a-1.jpg`,
+  ]);
+});
+
+test('buildSitemapXml: no image namespace when no page has images', () => {
+  const xml = buildSitemapXml({ entries: entries(), defaultLocale: DEFAULT });
+  assert.doesNotMatch(xml, /xmlns:image=/);
+  assert.doesNotMatch(xml, /<image:image>/);
+});
+
+test('buildSitemapXml: image entries per locale + namespace when present', () => {
+  const es = entries();
+  const home = es.find((e) => e.pagePath === 'index.html');
+  home.imagesByLocale = { en: [`${ORIGIN_T}/a.jpg`, `${ORIGIN_T}/b&c.jpg`], bg: [`${ORIGIN_T}/a.jpg`] };
+  const xml = buildSitemapXml({ entries: es, defaultLocale: DEFAULT });
+  assert.match(xml, /xmlns:image="http:\/\/www\.google\.com\/schemas\/sitemap-image\/1\.1"/);
+  assert.equal((xml.match(/<image:image>/g) || []).length, 3);
+  assert.match(xml, /<image:loc>https:\/\/noobcoder1209\.github\.io\/b&amp;c\.jpg<\/image:loc>/, 'XML-escaped');
 });

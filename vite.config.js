@@ -41,7 +41,12 @@ const BUSINESS = {
   addressCountry: 'BG',
   latitude: 42.1885867,
   longitude: 27.8350773,
-  image: `${ORIGIN}/vayana-bungalows/og-home.jpg`,
+  // Several real photos help Google pick one for rich results. Stable public/
+  // URLs only (assets/img files get content-hashed names at build).
+  image: [
+    `${ORIGIN}/vayana-bungalows/og-home.jpg`,
+    `${ORIGIN}/vayana-bungalows/og-stay.jpg`,
+  ],
   sameAs: [
     'https://www.facebook.com/profile.php?id=61573811610794',
     'https://www.instagram.com/vayana.joy.arapya/',

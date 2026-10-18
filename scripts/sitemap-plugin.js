@@ -9,12 +9,13 @@
 // HTML — but keeping it post is tidy).
 
 import { resolve, dirname } from 'node:path';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { pageUrl } from './i18n-plugin.js';
 import {
   buildSitemapEntries,
   buildSitemapXml,
   buildRobotsTxt,
+  collectPageImages,
   gitLastmod,
   NOINDEX_PAGES,
 } from './sitemap.js';
@@ -73,6 +74,21 @@ export function sitemapPlugin(options) {
         },
       });
 
+      // Image sitemap: list the photos each emitted page shows (EN + BG are
+      // already on disk — the i18n plugin writes them in its writeBundle,
+      // which runs before this post-enforced hook). The page file is the URL
+      // path under the base, plus index.html.
+      for (const entry of entries) {
+        entry.imagesByLocale = {};
+        for (const [locale, absUrl] of Object.entries(entry.byLocale)) {
+          const rel = absUrl.slice(origin.length + basePath.length);
+          const file = resolve(outDir, rel, 'index.html');
+          entry.imagesByLocale[locale] = existsSync(file)
+            ? collectPageImages(readFileSync(file, 'utf-8'), origin)
+            : [];
+        }
+      }
+
       const xml = buildSitemapXml({ entries, defaultLocale });
 
       // robots.txt: Disallow the site-absolute path of every noindex page's
@@ -91,7 +107,8 @@ export function sitemapPlugin(options) {
 
       // eslint-disable-next-line no-console
       console.log(
-        `[sitemap] wrote sitemap.xml (${entries.length} indexable page(s) × ${locales.length} locale(s)) + robots.txt`,
+        `[sitemap] wrote sitemap.xml (${entries.length} indexable page(s) × ${locales.length} locale(s), `
+        + `${entries.reduce((n, e) => n + Object.values(e.imagesByLocale).reduce((a, l) => a + l.length, 0), 0)} image entries) + robots.txt`,
       );
     },
   };
