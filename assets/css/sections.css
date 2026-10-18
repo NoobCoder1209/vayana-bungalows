@@ -1776,12 +1776,25 @@
   background: #5a4c34;
 }
 /* The pill is a grid sibling of the calendar inside .bungalow-split__grid
-   (a 2-col gallery|calendar grid). Pin it under the calendar column and centre
-   it there so it reads as belonging to that bungalow. */
-.bungalow-split__grid > .stay-select__pill {
-  grid-column: 2;
-  justify-self: center;
-  margin-top: 0;
+   (a 2-col gallery|calendar grid). On desktop pin it directly under the
+   calendar: the gallery spans both rows and the second row takes the spare
+   height (auto 1fr), so the pill sits right below the calendar instead of
+   below the taller 4:5 photo. Desktop-only — on phones the grid is one column
+   and the pill simply follows the calendar (see the ≤768px block above). */
+@media (min-width: 769px) {
+  .bungalow-split__grid {
+    grid-template-rows: auto 1fr;
+  }
+  .bungalow-split__grid > .bungalow-split__gallery {
+    grid-row: 1 / span 2;
+  }
+  .bungalow-split__grid > .stay-select__pill {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    justify-self: center;
+    margin-top: 0;
+  }
 }
 /* The pill is shown/hidden via the `hidden` attribute from JS. Our explicit
    `display` above would otherwise override the attribute's native
