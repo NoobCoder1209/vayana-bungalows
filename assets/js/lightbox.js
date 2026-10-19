@@ -89,16 +89,12 @@ export function initLightbox() {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
 
-  // The viewer shows a photo full-screen, so take the WIDEST srcset candidate
-  // (the build adds WebP widths), not currentSrc — that is the size the
-  // browser picked for the small gallery card and would look soft enlarged.
-  const largestSrc = (el) => {
-    const best = (el.getAttribute('srcset') || '').split(',')
-      .map((c) => c.trim().split(/\s+/))
-      .filter(([url, w]) => url && /^\d+w$/.test(w || ''))
-      .sort((a, b) => parseInt(b[1], 10) - parseInt(a[1], 10))[0];
-    return best ? best[0] : (el.currentSrc || el.getAttribute('src'));
-  };
+  // The viewer is a plain <img> with no <picture> negotiation, so use the
+  // JPG `src` — the fallback every browser can decode. (The gallery images are
+  // wrapped in <picture> whose WebP <source> carries the responsive srcset;
+  // the <img> itself keeps the full-size JPG src, which is what we want
+  // full-screen anyway.) Fall back to currentSrc only if src is somehow absent.
+  const largestSrc = (el) => el.getAttribute('src') || el.currentSrc || '';
 
   const open = (track, startIndex) => {
     photos = Array.from(track.querySelectorAll('.gallery__item img')).map((el) => ({

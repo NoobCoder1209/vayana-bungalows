@@ -110,14 +110,25 @@ export function imageOptimizePlugin({ cacheDir } = {}) {
         if (f.endsWith('.html')) {
           t = t.replace(/<img\b[^>]*>/g, (tag) => {
             const m = tag.match(new RegExp(`\\ssrc="(${esc}assets/([\\w.-]+\\.jpe?g))"`));
-            if (!m || /\ssrcset=/.test(tag)) return tag;
+            if (!m || /\ssrcset=/.test(tag) || /<picture/.test(tag)) return tag;
             const v = variants.get(m[2]);
             if (!v) return tag;
             imgs++;
-            let out = tag.replace(/\s*\/?>$/, '');
-            out += ` srcset="${srcsetOf(v)}"`;
-            if (!/\sdecoding=/.test(tag)) out += ' decoding="async"';
-            return `${out}${tag.endsWith('/>') ? ' />' : '>'}`;
+            // Wrap in <picture> with a WebP <source> and keep the ORIGINAL
+            // <img> (JPG src) as the fallback. srcset has no content-type
+            // negotiation, so a bare <img srcset="…webp"> breaks on browsers
+            // that parse srcset but can't decode WebP (older Safari/iOS, some
+            // webviews). <picture> lets those browsers skip the <source> and
+            // fall back to the JPG <img>. `sizes` (if present on the <img>)
+            // moves onto the <source>; the <img> keeps class/alt/loading/etc.
+            const sizesM = tag.match(/\ssizes="([^"]*)"/);
+            const sizesAttr = sizesM ? ` sizes="${sizesM[1]}"` : '';
+            let img = tag;
+            if (!/\sdecoding=/.test(img)) {
+              img = img.replace(/\s*\/?>$/, (end) => ` decoding="async"${end}`);
+            }
+            const source = `<source type="image/webp" srcset="${srcsetOf(v)}"${sizesAttr}>`;
+            return `<picture>${source}${img}</picture>`;
           });
           t = t.replace(/<link\b[^>]*rel="preload"[^>]*>/g, (tag) => {
             const m = tag.match(new RegExp(`href="(${esc}assets/([\\w.-]+\\.jpe?g))"`));
