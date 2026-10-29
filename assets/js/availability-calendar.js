@@ -61,12 +61,17 @@ export function rerenderCalendars() {
 }
 
 // Locale-aware month + weekday names via Intl (no extra dep). Falls back to
-// the browser default if the locale is unknown.
+// the browser default if the locale is unknown. Intl returns lowercase month
+// names in some locales (e.g. Bulgarian "октомври") — capitalize the first
+// letter for the display title. Only the first character is touched (not CSS
+// text-transform: capitalize, which would also wrongly upcase the Bulgarian
+// "г." year suffix).
 function monthLabel(date) {
-  return new Intl.DateTimeFormat(currentLocale(), {
+  const label = new Intl.DateTimeFormat(currentLocale(), {
     month: 'long',
     year: 'numeric',
   }).format(date);
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 function weekdayShortNames() {
