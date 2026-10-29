@@ -145,6 +145,7 @@ export function initSliders() {
     // while in native mode and torn down on the way into stepper mode — see
     // sync() below. The `cloned` flag keeps add/remove idempotent.
     let cloned = false;
+    let lastBlockWidth = 0; // baseline for the resize no-op check
     const realItems = () => Array.from(track.children).filter((el) => !el.hasAttribute('data-clone'));
 
     // How many cards to clone on each side: enough to cover the viewport plus
@@ -169,6 +170,18 @@ export function initSliders() {
       return (last.offsetLeft + last.getBoundingClientRect().width + gap) - first.offsetLeft;
     };
 
+    // Which real card the user is currently resting on (0-based), derived from
+    // scrollLeft relative to the first real item. Used to preserve position
+    // across a resize rebuild so the gallery doesn't snap back to photo 1.
+    const currentRealIndex = () => {
+      const reals = realItems();
+      if (reals.length < 2) return 0;
+      const d = stepDistance();
+      if (!d) return 0;
+      const rel = track.scrollLeft - reals[0].offsetLeft;
+      return Math.min(reals.length - 1, Math.max(0, Math.round(rel / d)));
+    };
+
     const makeClone = (el) => {
       const c = el.cloneNode(true);
       c.setAttribute('data-clone', '');
@@ -176,6 +189,9 @@ export function initSliders() {
       c.setAttribute('tabindex', '-1');
       // A clone can scroll into view at the far edge before a lazy <img> would
       // normally load; force it eager and carry over the already-resolved src.
+      // Note: the gallery imgs sit inside <picture> whose WebP <source> is what
+      // actually renders — this <img src> rewrite is the fallback/eager-load
+      // hint, not the pixels on screen. Keep it: it eager-loads the fallback.
       c.querySelectorAll('img').forEach((im, i) => {
         im.setAttribute('loading', 'eager');
         const srcOrig = el.querySelectorAll('img')[i];
@@ -184,7 +200,7 @@ export function initSliders() {
       return c;
     };
 
-    const addClones = () => {
+    const addClones = (restoreIndex = 0) => {
       if (cloned) return;
       const reals = realItems();
       const n = cloneCount();
@@ -197,9 +213,15 @@ export function initSliders() {
         track.insertBefore(makeClone(reals[reals.length - 1 - i]), track.firstChild);
       }
       cloned = true;
-      // Rest on the first real item. Re-apply in a frame so a lazy-image/font
-      // layout shift after insert doesn't leave us parked on a leading clone.
-      const settle = () => { track.scrollLeft = realItems()[0]?.offsetLeft || 0; };
+      // Rest on the real item at restoreIndex (the first one by default; a
+      // resize rebuild passes the index the user was on so the gallery doesn't
+      // jump back to photo 1). Re-apply in a frame so a lazy-image/font layout
+      // shift after insert doesn't leave us parked on a leading clone.
+      const settle = () => {
+        if (!cloned) return; // a mode flip may have torn the buffer down meanwhile
+        const target = realItems()[restoreIndex] || realItems()[0];
+        track.scrollLeft = target ? target.offsetLeft : 0;
+      };
       settle();
       window.requestAnimationFrame(settle);
     };
@@ -286,6 +308,7 @@ export function initSliders() {
         track.style.transform = '';
         animating = false;
         addClones();
+        lastBlockWidth = realBlockWidth();
       }
     };
 
@@ -294,8 +317,11 @@ export function initSliders() {
     track.addEventListener('scroll', onScroll, { passive: true });
 
     // Rebuild the clone buffer on resize (native mode only): item width is a
-    // clamp() of the viewport, so the block width changes. Teardown+rebuild
-    // resets to the first real card, which is acceptable. rAF-throttled.
+    // clamp() of the viewport, so the block width can change. We only rebuild
+    // when the block width ACTUALLY changed — skipping the no-op case means the
+    // common phone `resize` (browser-chrome collapse on scroll, which doesn't
+    // change layout width) no longer snaps the gallery back to photo 1. When we
+    // do rebuild, the user's current card index is preserved. rAF-throttled.
     let resizeQueued = false;
     window.addEventListener('resize', () => {
       if (resizeQueued) return;
@@ -303,8 +329,12 @@ export function initSliders() {
       window.requestAnimationFrame(() => {
         resizeQueued = false;
         if (mq.matches) return;
+        const bw = realBlockWidth();
+        if (bw === lastBlockWidth) return; // width unchanged — nothing to rebuild
+        const idx = currentRealIndex();
         removeClones();
-        addClones();
+        addClones(idx);
+        lastBlockWidth = realBlockWidth();
       });
     });
 
