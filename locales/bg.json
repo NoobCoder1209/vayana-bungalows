@@ -123,9 +123,7 @@
       "bed_label": "Спални",
       "bed_value": "2",
       "beds_label": "Легла",
-      "beds_value": "2 двойни легла",
-      "bathroom_label": "Баня",
-      "bathroom_value": "1"
+      "beds_value": "2 двойни легла"
     },
     "villas": {
       "eyebrow": "Кое бунгало избирате?",
