@@ -123,9 +123,7 @@
       "bed_label": "Bedrooms",
       "bed_value": "2",
       "beds_label": "Beds",
-      "beds_value": "2 queen beds",
-      "bathroom_label": "Bathroom",
-      "bathroom_value": "1"
+      "beds_value": "2 queen beds"
     },
     "villas": {
       "eyebrow": "Choose your bungalow",
