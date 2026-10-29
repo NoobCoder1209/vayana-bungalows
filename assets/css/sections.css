@@ -1458,7 +1458,10 @@
     border-radius: 0; /* rounding moves onto each slide */
   }
   .bungalow-split__gallery .gallery__track {
-    padding: 0 2.25rem; /* = the peek width revealed each side */
+    /* Peek width revealed each side. Viewport-relative with a floor/ceiling so
+       it eases off on very narrow phones (~320px) where a fixed 2.25rem would
+       eat too much of the hero photo, while staying at 2.25rem from ~360px up. */
+    padding: 0 clamp(1.25rem, 6vw, 2.25rem);
     gap: 0.5rem;
   }
   .bungalow-split__gallery .gallery__item {
