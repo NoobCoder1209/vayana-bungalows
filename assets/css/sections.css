@@ -1439,6 +1439,37 @@
   .bungalow-split__grid {
     grid-template-columns: 1fr;
   }
+  /* Mobile: widen each bungalow carousel to (nearly) full width and let the
+     adjacent photos peek in from the left/right, so the old centred-260px
+     photo no longer leaves large empty voids beside it. The peek also signals
+     the carousel is swipeable. Desktop (≥769px) keeps the fixed-width framed
+     photo untouched.
+
+     overflow:visible lets the neighbours show beyond the frame, so the rounded
+     corners + clipping move from the wrapper onto each slide (below). The track
+     gets symmetric side padding (the peek width) + a small gap, and each slide
+     centre-snaps, so a rest lands one photo centred with a sliver of its
+     neighbours each side. This composes with the infinite-loop clone buffer in
+     slider.js — the recenter reads live offsets, so centre-snap + padding are
+     already accounted for. */
+  .bungalow-split__gallery {
+    width: min(440px, 100% - 1rem);
+    overflow: visible;
+    border-radius: 0; /* rounding moves onto each slide */
+  }
+  .bungalow-split__gallery .gallery__track {
+    /* Peek width revealed each side. Viewport-relative with a floor/ceiling so
+       it eases off on very narrow phones (~320px) where a fixed 2.25rem would
+       eat too much of the hero photo, while staying at 2.25rem from ~360px up. */
+    padding: 0 clamp(1.25rem, 6vw, 2.25rem);
+    gap: 0.5rem;
+  }
+  .bungalow-split__gallery .gallery__item {
+    scroll-snap-align: center;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
   /* Single column now — the pill follows the calendar, centred, on one line.
      The longest label ("Stay with us for 30 nights, only for 2250€", ~42
      chars) is ~440px at the desktop size; scale the type with the viewport

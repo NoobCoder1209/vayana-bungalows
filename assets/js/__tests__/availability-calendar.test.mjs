@@ -64,6 +64,17 @@ function loadAvailabilityFor() {
   return new Function(body)();
 }
 
+// Build monthLabel() with an injectable currentLocale() stub so we can assert
+// the display capitalization without a real DOM / locale switch.
+function loadMonthLabel(locale) {
+  const body = [
+    `function currentLocale() { return ${JSON.stringify(locale)}; }`,
+    sliceFn(CAL_SRC, 'monthLabel'),
+    'return monthLabel;',
+  ].join('\n\n');
+  return new Function(body)();
+}
+
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
 // ── nav bounds + off-season classification ──────────────────────────────────
@@ -97,6 +108,22 @@ test('isOffSeason: Apr–Sep are open; Oct–Mar are off-season (greyed in the g
   for (const m of [0, 1, 2, 9, 10, 11]) {
     assert.equal(isOffSeason(new Date(2026, m, 15)), true, `month ${m} should be off-season`);
   }
+});
+
+// ── month title capitalization ───────────────────────────────────────────────
+
+test('monthLabel: capitalizes the first letter (Bulgarian Intl is lowercase)', () => {
+  const label = loadMonthLabel('bg')(new Date(2026, 9, 1)); // October 2026
+  // Bulgarian Intl yields "октомври 2026 г." — first letter must be upcased,
+  // and the "г." year suffix must stay lowercase (no blanket capitalize).
+  assert.equal(label.charAt(0), label.charAt(0).toUpperCase());
+  assert.notEqual(label.charAt(0), 'о'); // was lowercase before the fix
+  assert.match(label, /г\./); // suffix untouched (still lowercase "г.")
+});
+
+test('monthLabel: English stays capitalized (no-op)', () => {
+  const label = loadMonthLabel('en')(new Date(2026, 9, 1));
+  assert.match(label, /^October\b/);
 });
 
 // ── availabilityFor shape guard ──────────────────────────────────────────────
