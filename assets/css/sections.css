@@ -322,6 +322,15 @@
 }
 
 @media (max-width: 720px) {
+  /* Mobile only: drop the Check Availability pill lower than the desktop
+     placement, and make the offset safe-area-aware so it clears the phone's
+     home-indicator / gesture bar on every device instead of a fixed pixel gap.
+     ~20px of clearance above the inset keeps it in the thumb zone without
+     hugging the system bar. Desktop placement (.booking-dock bottom:85px) is
+     untouched. */
+  .booking-dock {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  }
   .booking-dock__form {
     display: none;
   }
