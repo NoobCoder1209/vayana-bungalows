@@ -24,6 +24,31 @@
 const STEPPER_MQ = '(hover: hover) and (pointer: fine) and (not (any-pointer: coarse))';
 const SLIDE_MS = 500; // must match the inline transition duration below
 
+// Pure helper for the native-scroll infinite loop. The native track carries a
+// buffer of CLONES on each side (last-N prepended, first-N appended); the user
+// rests on the first REAL item. When a swipe (or scrollBy) carries scrollLeft
+// into a clone zone, we silently jump by exactly one real block so the clone
+// the user is looking at is replaced by the pixel-identical real item — the
+// loop is invisible and feels like a normal "next".
+//
+// Given the current scrollLeft, the resting offset of the first real item
+// (`firstRealLeft`, which already folds in the leading clones + any side
+// padding) and the width of one real block (`realBlockWidth` = sum of the real
+// items + gaps), return how far to jump:
+//   - scrolled BEFORE the first real item (into the leading clones) → +block
+//     (hop forward one block so we're on the real copy of that card);
+//   - scrolled a full block PAST the first real item (into the trailing clones)
+//     → −block;
+//   - anywhere inside the real strip → null (no jump).
+// `tol` is a half-card tolerance so snap-settling right on a boundary doesn't
+// trigger a spurious recenter. Exported for unit testing.
+export function recenterTarget(scrollLeft, firstRealLeft, realBlockWidth, tol = 0) {
+  if (!(realBlockWidth > 0)) return null;
+  if (scrollLeft < firstRealLeft - tol) return realBlockWidth;
+  if (scrollLeft > firstRealLeft + realBlockWidth - tol) return -realBlockWidth;
+  return null;
+}
+
 export function initSliders() {
   const tracks = document.querySelectorAll('[data-slider]');
   tracks.forEach((track) => {
@@ -107,38 +132,124 @@ export function initSliders() {
       window.setTimeout(() => { if (animating) done(); }, SLIDE_MS + 80);
     };
 
-    // Native-scroll arrow handlers (buckets B & C). The track is a real
-    // scroll-snap container here, so scrollBy by one card lands on a snapped
-    // slide automatically. We only WRAP (jump to the other extreme) once the
-    // track is ALREADY pinned at an edge and a further step would reveal
-    // nothing new — never mid-strip.
-    //
-    // Padding matters: the home gallery track has side padding
-    // (`padding: 0 var(--container-pad)`), so the resting scrollLeft at the
-    // FIRST card is the first child's offsetLeft (~32px), NOT 0 — and the
-    // bungalow tracks (padding:0) rest at 0. So the start edge is
-    // `firstChild.offsetLeft`, not a hardcoded 0, and the wrap-to-start target
-    // is that same value. maxScroll (scrollWidth - clientWidth) is the true
-    // right-most position and already accounts for how many cards are visible,
-    // so multi-card galleries don't wrap early. Tolerance is half a card so
-    // snap-settling near an edge is still detected.
-    const minScroll = () => track.children[0]?.offsetLeft || 0;
-    const maxScroll = () => track.scrollWidth - track.clientWidth;
+    // Live edge tolerance (half a card) + behaviour, shared by the native
+    // scroll stepping and the clone-buffer recenter below.
     const edgeTol = () => Math.max(2, stepDistance() / 2);
     const scrollBehavior = () => (reduced() ? 'auto' : 'smooth');
-    const scrollNext = () => {
-      if (track.scrollLeft >= maxScroll() - edgeTol()) {
-        track.scrollTo({ left: minScroll(), behavior: scrollBehavior() }); // wrap to start
-      } else {
-        track.scrollBy({ left: stepDistance(), behavior: scrollBehavior() });
+
+    // ---- Native-scroll infinite loop (clone buffer + silent recenter) --------
+    //
+    // Only the native-scroll buckets (touch / touch-laptop) use this. The
+    // stepper (pure-mouse) path already loops via DOM rotation and must NEVER
+    // see clones (it rotates track.children directly), so clones are added only
+    // while in native mode and torn down on the way into stepper mode — see
+    // sync() below. The `cloned` flag keeps add/remove idempotent.
+    let cloned = false;
+    const realItems = () => Array.from(track.children).filter((el) => !el.hasAttribute('data-clone'));
+
+    // How many cards to clone on each side: enough to cover the viewport plus
+    // one, capped at the real count so a short gallery can't over-clone.
+    const cloneCount = () => {
+      const d = stepDistance();
+      const reals = realItems().length;
+      if (!d || !reals) return 0;
+      return Math.min(reals, Math.ceil(track.clientWidth / d) + 1);
+    };
+
+    // Width of one full real block: first real item's left edge is the start,
+    // so the block spans up to the FIRST trailing clone (which sits one block
+    // to the right of the first real item). Measured live from offsetLeft so a
+    // clamp()-driven resize is always reflected.
+    const realBlockWidth = () => {
+      const reals = realItems();
+      if (reals.length < 2) return 0;
+      const first = reals[0];
+      const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 16;
+      const last = reals[reals.length - 1];
+      return (last.offsetLeft + last.getBoundingClientRect().width + gap) - first.offsetLeft;
+    };
+
+    const makeClone = (el) => {
+      const c = el.cloneNode(true);
+      c.setAttribute('data-clone', '');
+      c.setAttribute('aria-hidden', 'true');
+      c.setAttribute('tabindex', '-1');
+      // A clone can scroll into view at the far edge before a lazy <img> would
+      // normally load; force it eager and carry over the already-resolved src.
+      c.querySelectorAll('img').forEach((im, i) => {
+        im.setAttribute('loading', 'eager');
+        const srcOrig = el.querySelectorAll('img')[i];
+        if (srcOrig && srcOrig.currentSrc) im.setAttribute('src', srcOrig.currentSrc);
+      });
+      return c;
+    };
+
+    const addClones = () => {
+      if (cloned) return;
+      const reals = realItems();
+      const n = cloneCount();
+      if (n < 1 || reals.length < 2) return;
+      // Trailing clones: copies of the FIRST n reals, appended in order.
+      for (let i = 0; i < n; i += 1) track.appendChild(makeClone(reals[i]));
+      // Leading clones: copies of the LAST n reals, prepended so order reads
+      // real[... n-2, n-1] | real[0 ...]. Insert each before the current first.
+      for (let i = 0; i < n; i += 1) {
+        track.insertBefore(makeClone(reals[reals.length - 1 - i]), track.firstChild);
       }
+      cloned = true;
+      // Rest on the first real item. Re-apply in a frame so a lazy-image/font
+      // layout shift after insert doesn't leave us parked on a leading clone.
+      const settle = () => { track.scrollLeft = realItems()[0]?.offsetLeft || 0; };
+      settle();
+      window.requestAnimationFrame(settle);
+    };
+
+    const removeClones = () => {
+      if (!cloned) return;
+      track.querySelectorAll('[data-clone]').forEach((el) => el.remove());
+      cloned = false;
+    };
+
+    // Silent recenter: when a swipe carries scrollLeft into a clone zone, jump
+    // one real block with snap + smooth behaviour momentarily disabled so the
+    // move is instant and invisible. rAF-throttled so a fast flick fires once
+    // per frame, not per scroll event.
+    let recenterQueued = false;
+    const recenter = () => {
+      recenterQueued = false;
+      if (!cloned) return;
+      const reals = realItems();
+      if (reals.length < 2) return;
+      const firstRealLeft = reals[0].offsetLeft;
+      const jump = recenterTarget(track.scrollLeft, firstRealLeft, realBlockWidth(), edgeTol());
+      if (jump == null) return;
+      const prevSnap = track.style.scrollSnapType;
+      const prevBeh = track.style.scrollBehavior;
+      track.style.scrollSnapType = 'none';
+      track.style.scrollBehavior = 'auto';
+      track.scrollLeft += jump;
+      // Force the instant offset to commit, then restore snap/behaviour.
+      void track.offsetWidth;
+      track.style.scrollSnapType = prevSnap;
+      track.style.scrollBehavior = prevBeh;
+    };
+    const onScroll = () => {
+      if (recenterQueued || mq.matches) return; // stepper mode: not a scroller
+      recenterQueued = true;
+      window.requestAnimationFrame(recenter);
+    };
+
+    // Native-scroll arrow handlers (buckets B & C). The track is a real
+    // scroll-snap container here, so scrollBy by one card lands on a snapped
+    // slide automatically. There is no edge-wrap branch any more: the clone
+    // buffer + onScroll recenter make the ends seamless, so a step off the last
+    // real card scrolls into a trailing clone and silently recenters to the
+    // first real card — same as every other step, no visible jump.
+    const scrollNext = () => {
+      track.scrollBy({ left: stepDistance(), behavior: scrollBehavior() });
     };
     const scrollPrev = () => {
-      if (track.scrollLeft <= minScroll() + edgeTol()) {
-        track.scrollTo({ left: maxScroll(), behavior: scrollBehavior() }); // wrap to end
-      } else {
-        track.scrollBy({ left: -stepDistance(), behavior: scrollBehavior() });
-      }
+      track.scrollBy({ left: -stepDistance(), behavior: scrollBehavior() });
     };
 
     // The arrow handlers are wired ONCE and self-branch on the live mode: in
@@ -161,20 +272,41 @@ export function initSliders() {
 
     // Keep the two modes' residue from bleeding into each other on a live mode
     // flip (DevTools emulation, plugging/unplugging a mouse):
+    //   - Entering stepper ← native: tear down the clone buffer (the stepper
+    //     rotates track.children directly and must only ever see real items),
+    //     then reset scrollLeft so the stepper starts at translateX(0).
     //   - Leaving stepper → native: strip the inline transform/transition the
-    //     stepper left so the native scroll container starts pristine.
-    //   - Entering stepper ← native: the stepper assumes the track sits at
-    //     scrollLeft 0 / translateX(0). A leftover native scroll offset would
-    //     shift every stepper frame, so reset scrollLeft.
+    //     stepper left, then build the clone buffer so swipe loops endlessly.
     const sync = () => {
       if (mq.matches) {
+        removeClones();
         track.scrollLeft = 0;
       } else {
         track.style.transition = '';
         track.style.transform = '';
         animating = false;
+        addClones();
       }
     };
+
+    // The recenter listener is always attached; it no-ops in stepper mode
+    // (guarded in onScroll) and when there are no clones.
+    track.addEventListener('scroll', onScroll, { passive: true });
+
+    // Rebuild the clone buffer on resize (native mode only): item width is a
+    // clamp() of the viewport, so the block width changes. Teardown+rebuild
+    // resets to the first real card, which is acceptable. rAF-throttled.
+    let resizeQueued = false;
+    window.addEventListener('resize', () => {
+      if (resizeQueued) return;
+      resizeQueued = true;
+      window.requestAnimationFrame(() => {
+        resizeQueued = false;
+        if (mq.matches) return;
+        removeClones();
+        addClones();
+      });
+    });
 
     wire();
     sync();

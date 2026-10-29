@@ -97,7 +97,7 @@ export function initLightbox() {
   const largestSrc = (el) => el.getAttribute('src') || el.currentSrc || '';
 
   const open = (track, startIndex) => {
-    photos = Array.from(track.querySelectorAll('.gallery__item img')).map((el) => ({
+    photos = Array.from(track.querySelectorAll('.gallery__item:not([data-clone]) img')).map((el) => ({
       src: largestSrc(el),
       alt: el.getAttribute('alt') || '',
     }));
@@ -147,7 +147,10 @@ export function initLightbox() {
       const item = e.target.closest('.gallery__item');
       if (!item || !track.contains(item)) return;
       e.preventDefault(); // the anchors are href="#"
-      const list = Array.from(track.querySelectorAll('.gallery__item'));
+      // Clones (the infinite-loop buffer in slider.js) mirror a real photo but
+      // aren't part of the counted set — ignore a tap that lands on one.
+      if (item.hasAttribute('data-clone')) return;
+      const list = Array.from(track.querySelectorAll('.gallery__item:not([data-clone])'));
       open(track, list.indexOf(item));
     });
   });
