@@ -585,7 +585,61 @@ export function initEnquiry() {
   // form returns to a clean state as soon as the user starts fixing things.
   const allFields = [name, checkinEl, checkoutEl, guestsToggle, email, phone, message, consentInput];
   const ERROR_PILL_ID = errorEl.id || 'eq-error';
-  const showError = (msg, field) => {
+
+  // Auto-dismiss layer. A visible error pill tidies itself away so it never
+  // lingers as stale state: it fades out on the guest's next scroll, click,
+  // or keypress (one-shot document listeners), and — ONLY for the transient
+  // on-blur email nudge — after 5s of no interaction. Submit-blocking errors
+  // (missing dates/consent/…) pass no transient flag, so they get the
+  // dismiss-on-action listeners but NO 5s timer: a guest who just reads the
+  // pill still sees why they were blocked. Mirrors the #171 dock auto-dismiss.
+  const ERROR_AUTO_HIDE_MS = 5000;
+  let errorHideTimer = 0;
+  let dismissScroll = null;
+  let dismissPointer = null;
+  let dismissKey = null;
+  const prefersReducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const disarmDismiss = () => {
+    if (errorHideTimer) { window.clearTimeout(errorHideTimer); errorHideTimer = 0; }
+    if (dismissScroll) { document.removeEventListener('scroll', dismissScroll, { capture: true }); dismissScroll = null; }
+    if (dismissPointer) { document.removeEventListener('pointerdown', dismissPointer); dismissPointer = null; }
+    if (dismissKey) { document.removeEventListener('keydown', dismissKey); dismissKey = null; }
+  };
+
+  // Fade the pill, then fully clear it. Under reduced motion (no opacity
+  // transition) we clear immediately. The transitionend handler is one-shot;
+  // a setTimeout slightly longer than the 200ms CSS transition is the
+  // fallback in case transitionend doesn't fire (pill already at opacity 0,
+  // tab backgrounded, etc.).
+  const fadeOutError = () => {
+    if (errorEl.hidden) { disarmDismiss(); return; }
+    disarmDismiss();
+    if (prefersReducedMotion()) { clearError(); return; }
+    errorEl.classList.add('is-leaving');
+    let done = false;
+    const finish = () => { if (done) return; done = true; errorEl.removeEventListener('transitionend', finish); clearError(); };
+    errorEl.addEventListener('transitionend', finish);
+    window.setTimeout(finish, 260);
+  };
+
+  const armDismiss = (transient) => {
+    disarmDismiss();
+    dismissScroll = () => fadeOutError();
+    dismissPointer = () => fadeOutError();
+    dismissKey = () => fadeOutError();
+    document.addEventListener('scroll', dismissScroll, { capture: true, passive: true, once: true });
+    document.addEventListener('pointerdown', dismissPointer, { once: true });
+    document.addEventListener('keydown', dismissKey, { once: true });
+    if (transient) errorHideTimer = window.setTimeout(fadeOutError, ERROR_AUTO_HIDE_MS);
+  };
+
+  // clearError() unwires everything so the form returns to a clean state as
+  // soon as the user starts fixing things — it is the single full-reset path,
+  // so the auto-dismiss teardown lives here too.
+  const showError = (msg, field, opts = {}) => {
+    errorEl.classList.remove('is-leaving'); // a re-show after a fade must be visible
     errorEl.textContent = msg;
     errorEl.hidden = false;
     if (field) {
@@ -593,8 +647,11 @@ export function initEnquiry() {
       field.setAttribute('aria-errormessage', ERROR_PILL_ID);
       field.setAttribute('aria-describedby', ERROR_PILL_ID);
     }
+    armDismiss(!!opts.transient);
   };
   const clearError = () => {
+    disarmDismiss();
+    errorEl.classList.remove('is-leaving');
     errorEl.textContent = '';
     errorEl.hidden = true;
     allFields.forEach((el) => {
