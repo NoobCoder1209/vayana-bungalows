@@ -28,13 +28,16 @@
   /* Availability calendar day states (/stay/). Soft sage green = free,
      soft dusty rose = booked — deliberately muted (not saturated) so the
      month grid stays calm and on-brand rather than shouting. Text tones are
-     desaturated but still clear the AA bar against their own light tints. */
-  --avail-free: #5a7d63;          /* muted sage-green text — available */
-  --avail-free-bg: #eef3ee;       /* very light sage tint */
-  --avail-free-border: #cfe0d3;   /* soft green edge */
-  --avail-booked: #a86a63;        /* muted dusty-rose text — booked */
-  --avail-booked-bg: #f6edeb;     /* very light rose tint */
-  --avail-booked-border: #e6d0cc; /* soft rose edge */
+     desaturated but still clear the AA bar against their own light tints.
+     Deepened (2026-10) from the original near-white tints so the free/booked
+     states and the legend dots read clearly on the cream/white page — the
+     palette (sage / dusty-rose) is unchanged, only the saturation/depth. */
+  --avail-free: #2f5d3d;          /* sage-green text — available */
+  --avail-free-bg: #d9e7dc;       /* light sage tint */
+  --avail-free-border: #7fa389;   /* green edge */
+  --avail-booked: #8a3a31;        /* dusty-rose text — booked */
+  --avail-booked-bg: #f0d8d4;     /* light rose tint */
+  --avail-booked-border: #c08a82; /* rose edge */
 
   /* Typography */
   --font-heading: 'Marcellus', 'Times New Roman', serif;

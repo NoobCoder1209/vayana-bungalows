@@ -140,6 +140,8 @@
       "today_title": "Към текущия месец",
       "prev_month_aria": "Предишен месец",
       "next_month_aria": "Следващ месец",
+      "month_aria": "Месец",
+      "year_aria": "Година",
       "legend_available": "Свободно",
       "legend_booked": "Заето",
       "legend_past": "Минало",

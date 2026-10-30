@@ -262,16 +262,17 @@
   border-radius: 999px;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
   overflow: hidden;
-  padding-left: 0.5rem;
 }
 
 .booking-dock__field {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Single line per field now (no stacked caption), so the vertical padding
-     drives the pill height — kept tight for a short pill. */
-  padding: 0.6rem 1.25rem;
+  /* No wrapper padding: the input below carries it instead, so the ENTIRE
+     field box (not just the text) is the input's click target. Previously the
+     wrapper padding + the form's padding-left were dead zones that didn't open
+     the picker (the left end and the seam either side of the separator). */
+  padding: 0;
   min-width: 0;
   /* Thin separators between fields (not before the first). */
   border-left: 1px solid var(--border);
@@ -282,7 +283,14 @@
 
 .booking-dock__field input {
   border: 0;
-  padding: 0;
+  /* Padding lives on the input (was on the wrapper) so a click anywhere in the
+     field — including right next to the separator and at the far left/right —
+     lands on the input and opens flatpickr. box-sizing keeps the pill height
+     identical to the old wrapper-padding layout. */
+  padding: 0.6rem 1.25rem;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
   min-height: 0;
   text-align: center;
   font-size: 0.95rem;
@@ -1579,6 +1587,49 @@
   margin-bottom: var(--space-3);
 }
 
+/* Lead-month title that hosts the Month + Year dropdowns: a centered inline row
+   instead of a single block span. The selects inherit the serif title look so
+   they read as the title, not a form control, while staying a real <select>
+   (full keyboard + screen-reader support, structural month/year ceiling). */
+.avail-cal__month--picker {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.avail-cal__month-select,
+.avail-cal__year-select {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h6, 1.15rem);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text-dark);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-button, 6px);
+  padding: 0.1rem 1.1rem 0.1rem 0.3rem;
+  margin: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  /* Small chevron caret so the title reads as openable. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23393939' stroke-width='1.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.25rem center;
+  /* Comfortable tap target on touch without changing the visual baseline. */
+  min-height: 32px;
+}
+.avail-cal__month-select:hover,
+.avail-cal__year-select:hover {
+  color: var(--primary-deep, #5a4c34);
+}
+.avail-cal__month-select:focus-visible,
+.avail-cal__year-select:focus-visible {
+  outline: 2px solid var(--primary-deep, #5a4c34);
+  outline-offset: 2px;
+}
+
 .avail-cal__nav-group {
   display: inline-flex;
   align-items: center;
@@ -1717,7 +1768,7 @@
 /* Past day — muted, no circle. */
 .avail-cal__day.is-past {
   color: var(--text-muted);
-  opacity: 0.45;
+  opacity: 0.6;
 }
 
 /* Off-season day (outside the Apr–Sep open window) — greyed + muted, no
@@ -1769,10 +1820,10 @@
 .avail-cal__key {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: 1.4rem;
   justify-content: center;
   margin-top: var(--space-4);
-  font-size: 0.78rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
 }
 
@@ -1783,8 +1834,8 @@
 }
 
 .avail-cal__key-dot {
-  width: 10px;
-  height: 10px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   border: 1px solid transparent;
 }
@@ -1800,7 +1851,7 @@
 }
 
 .avail-cal__key-dot--past {
-  background: rgba(57, 57, 57, 0.12);
+  background: rgba(57, 57, 57, 0.28);
 }
 
 /* Selected — solid gold, matching the range endpoints. */

@@ -64,6 +64,24 @@ function loadAvailabilityFor() {
   return new Function(body)();
 }
 
+// Build pickerBounds() + isMonthPickable() over the injected nav helpers so the
+// Month/Year dropdown range logic is testable without a DOM. isMonthPickable is
+// `export function` — strip the `export ` so the sliced body is a plain decl.
+function loadPicker(today) {
+  const body = [
+    'let _navBounds = null;',
+    sliceFn(CAL_SRC, 'firstOfMonth'),
+    sliceFn(CAL_SRC, 'monthCmp'),
+    'function todayMidnight() { return INJECTED_TODAY; }',
+    sliceFn(CAL_SRC, 'navBounds'),
+    sliceFn(CAL_SRC, 'pickerBounds'),
+    sliceFn(CAL_SRC, 'isMonthPickable').replace(/^export\s+/, ''),
+    'return { pickerBounds, isMonthPickable };',
+  ].join('\n\n');
+  const factory = new Function('seasonMaxDate', 'INJECTED_TODAY', body);
+  return factory(seasonMaxDate, today);
+}
+
 // Build monthLabel() with an injectable currentLocale() stub so we can assert
 // the display capitalization without a real DOM / locale switch.
 function loadMonthLabel(locale) {
@@ -163,4 +181,35 @@ test('availabilityFor: entry missing unavailable/checkIn fields → empty Sets',
   const r = availabilityFor({ bungalows: { B1: {} } }, 'B1');
   assert.equal(r.unavailable.size, 0);
   assert.equal(r.checkIn.size, 0);
+});
+
+// ── Month/Year dropdown pickable range (isMonthPickable) ─────────────────────
+// The picker renders out-of-range <option>s disabled so a month that
+// setVisibleMonth would only clamp can't be chosen. The window is the same
+// [floor, ceilLeft] the arrows honour: floor = today's month; ceilLeft = the
+// last LEFT month that keeps the right (+1) month under the seasonMaxDate ceil.
+
+test('isMonthPickable: months before today in the floor year are not pickable', () => {
+  const { isMonthPickable } = loadPicker(new Date(2026, 6, 15)); // Jul 2026
+  assert.equal(isMonthPickable(2026, 5), false, 'June 2026 is before the floor');
+  assert.equal(isMonthPickable(2026, 6), true, 'July 2026 is the floor');
+  assert.equal(isMonthPickable(2026, 11), true, 'Dec 2026 is in range');
+});
+
+test('isMonthPickable: years outside [floor, ceilLeft] are never pickable', () => {
+  const { isMonthPickable, pickerBounds } = loadPicker(new Date(2026, 6, 15));
+  const { minYear, maxYear } = pickerBounds();
+  assert.equal(isMonthPickable(minYear - 1, 6), false);
+  assert.equal(isMonthPickable(maxYear + 1, 0), false);
+});
+
+test('isMonthPickable: in the max year, months past the ceil-left month are blocked', () => {
+  const { isMonthPickable, pickerBounds } = loadPicker(new Date(2026, 6, 15));
+  const { maxYear, ceilMonth } = pickerBounds();
+  // ceilLeft = Nov of maxYear (seasonMaxDate is Dec; the left month can be at
+  // most one before it so the right month = Dec still fits).
+  assert.equal(isMonthPickable(maxYear, ceilMonth), true, 'the ceil-left month is pickable');
+  if (ceilMonth < 11) {
+    assert.equal(isMonthPickable(maxYear, ceilMonth + 1), false, 'one past ceil-left is blocked');
+  }
 });
