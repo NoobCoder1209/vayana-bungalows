@@ -326,6 +326,11 @@ export function initSliders() {
     //   - Leaving stepper → native: strip the inline transform/transition the
     //     stepper left, then build the clone buffer so swipe loops endlessly.
     const sync = () => {
+      // A mode flip can land between a touchstart and its touchend (e.g. a
+      // DevTools device-mode toggle mid-gesture), which would otherwise leave
+      // `touching` stuck true and permanently suppress the recenter. Clear it
+      // on every sync so the latch can't stick.
+      touching = false;
       if (mq.matches) {
         removeClones();
         track.scrollLeft = 0;
