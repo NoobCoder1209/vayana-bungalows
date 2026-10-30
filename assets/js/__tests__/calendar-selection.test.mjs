@@ -100,6 +100,21 @@ test('nightsBetween: reversed order is non-positive', () => {
   assert.ok(L.nightsBetween('2026-08-15', '2026-08-10') <= 0);
 });
 
+test('nightsBetween: a missing endpoint is "not a range yet" (0), never throws', () => {
+  // A first click sets checkIn with checkOut still null; refreshUI →
+  // minNightsForRange → nightsBetween(checkIn, null) must not throw.
+  assert.equal(L.nightsBetween('2026-08-10', null), 0);
+  assert.equal(L.nightsBetween(null, '2026-08-15'), 0);
+  assert.equal(L.nightsBetween(null, null), 0);
+  assert.equal(L.nightsBetween('2026-08-10', undefined), 0);
+});
+
+test('minNightsForRange: incomplete range (null checkout) → default MIN_NIGHTS, no throw', () => {
+  // The real regression: refreshUI computes minNightsForRange on an incomplete
+  // selection before evaluateSelection short-circuits it as "incomplete".
+  assert.equal(L.minNightsForRange('2026-08-10', null, []), L.MIN_NIGHTS);
+});
+
 // ── async /price race guard (pure decision) ──────────────────────────────────
 
 const SNAP = { key: 'B1', checkIn: '2026-08-10', checkOut: '2026-08-15' };
