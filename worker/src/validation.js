@@ -8,7 +8,7 @@
 // `result.cleaned` keyed by column name in the Enquires tab.
 
 // Mirrors enquiry.js:21
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const EMAIL_RE = /^[^\s@.]+(?:\.[^\s@.]+)*@[^\s@.]+(?:\.[^\s@.]+)*\.[^\s@.]{2,}$/;
 // Mirrors enquiry.js:35
 const PHONE_RE = /^\+?(?=[\d\s\-()]*\d)[\d\s\-()]{7,}$/;
 // Mirrors enquiry.js:25,41,47,52
