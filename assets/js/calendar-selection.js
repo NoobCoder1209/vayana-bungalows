@@ -171,6 +171,12 @@ export const KEY_TO_NUM = { B1: '1', B2: '2', B3: '3' };
  * DST never shifts the count.
  */
 export function nightsBetween(checkInIso, checkOutIso) {
+  // A missing endpoint means "not a range yet" (e.g. a first click sets
+  // checkIn with checkOut still null; refreshUI computes minNightsForRange
+  // before evaluateSelection short-circuits the incomplete case). Return 0 so
+  // every caller's `< 1` / `< minNights` "not a range" guard handles it,
+  // instead of parseIso(null) throwing.
+  if (typeof checkInIso !== 'string' || typeof checkOutIso !== 'string') return 0;
   const a = parseIso(checkInIso);
   const b = parseIso(checkOutIso);
   return Math.round((b - a) / ONE_DAY_MS);
