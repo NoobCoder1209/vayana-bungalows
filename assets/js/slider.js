@@ -163,15 +163,19 @@ export function initSliders() {
     // element always rests at ~scrollLeft 0 (the hard scroll origin), so if the
     // leading runway is only `cloneCount` cards a hard back-flick slams into the
     // 0 wall and the recenter then jumps a full block FROM the origin — a
-    // full-width repaint that flashes white on iOS. An extra viewport of leading
-    // clones means even a hard flick settles on an INNER leading clone (rest well
-    // clear of 0), so the recenter jump always starts with painted content to its
-    // left. The trailing side needs no extra — the whole painted strip already
-    // sits behind it.
+    // full-width repaint that flashes white on iOS. LEAD_RUNWAY extra viewports
+    // of leading clones mean even a hard flick settles on an INNER leading clone
+    // (rest well clear of 0), so the recenter jump always starts with painted
+    // content to its left. The trailing side needs no extra — the whole painted
+    // strip already sits behind it. iOS momentum is effectively unbounded, so no
+    // finite buffer fully closes the extreme-fling case; 1 viewport covers the
+    // realistic gestures — bump only if a real-device test shows the wall is
+    // still reachable on a normal hard flick.
+    const LEAD_RUNWAY = 1;
     const leadingCloneCount = () => {
       const d = stepDistance();
       if (!d) return cloneCount();
-      return Math.min(realItems().length, cloneCount() + Math.ceil(track.clientWidth / d));
+      return Math.min(realItems().length, cloneCount() + LEAD_RUNWAY * Math.ceil(track.clientWidth / d));
     };
 
     // Width of one full real block: first real item's left edge is the start,
