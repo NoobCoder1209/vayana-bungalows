@@ -2698,6 +2698,21 @@
   color: var(--danger);
   font-size: 0.9rem;
   border-left: 2px solid var(--danger);
+  opacity: 1;
+  transition: opacity 200ms ease;
+}
+
+/* Fade-out state the JS toggles before hiding the pill (scroll / click /
+   keypress dismiss, or the 5s idle auto-fade on the live email nudge).
+   enquiry.js adds .is-leaving, waits for the transition, then sets [hidden]. */
+.enquiry-form__error.is-leaving {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enquiry-form__error {
+    transition: none;
+  }
 }
 
 /* Consent checkbox row — spans full width, sits below the message
