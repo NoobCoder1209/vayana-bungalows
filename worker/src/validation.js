@@ -7,11 +7,12 @@
 // char is one of `= + - @`). The cleaned values are returned in
 // `result.cleaned` keyed by column name in the Enquires tab.
 
-// Mirrors enquiry.js:21
+// Mirrors enquiry.js (EMAIL_RE — kept byte-identical, locked by
+// assets/js/__tests__/enquiry-email-regex.test.mjs)
 const EMAIL_RE = /^[^\s@.]+(?:\.[^\s@.]+)*@[^\s@.]+(?:\.[^\s@.]+)*\.[^\s@.]{2,}$/;
-// Mirrors enquiry.js:35
+// Mirrors enquiry.js (PHONE_RE)
 const PHONE_RE = /^\+?(?=[\d\s\-()]*\d)[\d\s\-()]{7,}$/;
-// Mirrors enquiry.js:25,41,47,52
+// Mirrors enquiry.js (MAX_* field-length caps)
 const MAX_NAME_LEN = 120;
 const MAX_EMAIL_LEN = 254;
 const MAX_PHONE_LEN = 40;
