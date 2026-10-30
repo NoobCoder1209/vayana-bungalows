@@ -608,12 +608,35 @@ export function initEnquiry() {
     consentLabel?.classList.toggle('is-error', flag);
   };
 
+  // Shared email predicate — the single source of truth for "is this a
+  // valid email", used by BOTH the submit handler and the on-blur live
+  // check so the two can never disagree. Folds the three failure modes
+  // (empty / too long / regex) the submit branch used to inline.
+  const isEmailValid = (v) => {
+    const t = (v || '').trim();
+    return t.length > 0 && t.length <= MAX_EMAIL_LEN && EMAIL_RE.test(t);
+  };
+
   // Clear errors as soon as the user starts fixing things. Bound to
   // every editable input so the form doesn't keep yelling after the
   // problem's gone. (clearError also removes aria-invalid on all
   // fields — round-1 review finding I3.)
   [name, email, phone, message].forEach((el) => {
     el.addEventListener('input', clearError);
+  });
+  // Live email validation: when focus LEAVES the email field with an
+  // invalid non-empty value, surface the error immediately (don't wait for
+  // submit). Empty-on-blur shows nothing — the guest hasn't committed to a
+  // value; the submit handler still catches a truly-empty field. We pass
+  // { transient: true } so this gentle nudge auto-fades after 5s (showError's
+  // auto-dismiss layer), unlike submit-blocking errors. We do NOT call
+  // email.focus() here: the guest is tabbing away on purpose, and yanking
+  // focus back would trap them.
+  email.addEventListener('blur', () => {
+    const v = (email.value || '').trim();
+    if (v.length > 0 && !isEmailValid(v)) {
+      showError(EMAIL_ERROR_MSG, email, { transient: true });
+    }
   });
   [checkinEl, checkoutEl].forEach((el) => {
     el.addEventListener('change', clearError);
@@ -716,11 +739,11 @@ export function initEnquiry() {
       return;
     }
 
-    // Email — generic error for empty / too long / regex fail.
+    // Email — generic error for empty / too long / regex fail. Uses the
+    // shared isEmailValid predicate (same check the on-blur live validation
+    // runs) so submit and blur can never disagree.
     const emailVal = (email.value || '').trim();
-    if (emailVal.length === 0
-        || emailVal.length > MAX_EMAIL_LEN
-        || !EMAIL_RE.test(emailVal)) {
+    if (!isEmailValid(emailVal)) {
       showError(EMAIL_ERROR_MSG, email);
       email.focus();
       return;
