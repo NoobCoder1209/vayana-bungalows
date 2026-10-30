@@ -528,8 +528,40 @@ export function initCalendarSelection() {
   host.appendChild(announcer);
   const announce = (msg) => { announcer.textContent = msg; };
 
-  const showDock = () => { dock.hidden = false; };
-  const hideDock = () => { dock.hidden = true; };
+  // The error dock is a transient notice, not a persistent state: once shown it
+  // auto-dismisses after a short delay OR as soon as the guest starts scrolling,
+  // so it never lingers on screen until an unrelated click (owner request).
+  // Centralised on show/hide so every show path (too-short, invalidation) gets
+  // the behaviour and every hide path (a new selection re-rendering) cancels a
+  // stale timer/listener. The polite live region (announce) is NOT affected —
+  // screen-reader users still receive the message; this only governs the visual
+  // dock's dwell time.
+  const DOCK_AUTO_HIDE_MS = 5000;
+  let dockHideTimer = 0;
+  let dockScrollHandler = null;
+  const disarmDockDismiss = () => {
+    if (dockHideTimer) { window.clearTimeout(dockHideTimer); dockHideTimer = 0; }
+    if (dockScrollHandler) {
+      window.removeEventListener('scroll', dockScrollHandler, { capture: true });
+      dockScrollHandler = null;
+    }
+  };
+  const showDock = () => {
+    dock.hidden = false;
+    // Re-arm from scratch each show so a fresh too-short selection restarts the
+    // full dwell rather than inheriting a nearly-elapsed timer.
+    disarmDockDismiss();
+    dockHideTimer = window.setTimeout(hideDock, DOCK_AUTO_HIDE_MS);
+    // One-shot: the first scroll after the dock appears dismisses it. Capture +
+    // passive so it fires for a scroll on any scroller; `once` consumes it, and
+    // hideDock's disarm removes it if the timer or a new selection fires first.
+    dockScrollHandler = () => hideDock();
+    window.addEventListener('scroll', dockScrollHandler, { capture: true, passive: true, once: true });
+  };
+  const hideDock = () => {
+    dock.hidden = true;
+    disarmDockDismiss();
+  };
 
   // ── Per-bungalow gold pill (created once per calendar) ─────────────────────
   // Mounted as a SIBLING immediately after the calendar root — NOT inside it.
