@@ -26,26 +26,28 @@ const SLIDE_MS = 500; // must match the inline transition duration below
 
 // Pure helper for the native-scroll infinite loop. The native track carries a
 // buffer of CLONES on each side (last-N prepended, first-N appended); the user
-// rests on the first REAL item. When a swipe (or scrollBy) carries scrollLeft
-// into a clone zone, we silently jump by exactly one real block so the clone
-// the user is looking at is replaced by the pixel-identical real item — the
-// loop is invisible and feels like a normal "next".
+// rests on the first REAL item. When a settled scroll leaves the user resting
+// on a clone, we silently jump by exactly one real block so the clone the user
+// is looking at is replaced by the pixel-identical real item — the loop is
+// invisible and feels like a normal "next".
 //
-// Given the current scrollLeft, the resting offset of the first real item
-// (`firstRealLeft`, which already folds in the leading clones + any side
-// padding) and the width of one real block (`realBlockWidth` = sum of the real
-// items + gaps), return how far to jump:
-//   - scrolled BEFORE the first real item (into the leading clones) → +block
-//     (hop forward one block so we're on the real copy of that card);
-//   - scrolled a full block PAST the first real item (into the trailing clones)
+// The trigger keys off the real strip's two EDGES, so a jump fires as soon as
+// the rest lands on the FIRST clone past either edge (not after traversing the
+// whole block). Given the current scrollLeft, the resting offsets of the first
+// and last real items (`firstRealLeft` / `lastRealLeft`, both of which already
+// fold in the leading clones + any side padding) and the width of one real
+// block (`realBlockWidth` = first real → first trailing clone), return the jump:
+//   - resting BEFORE the first real item (on a leading clone) → +block
+//     (hop forward one block onto the real copy of that card);
+//   - resting PAST the last real item (on the first trailing clone or beyond)
 //     → −block;
 //   - anywhere inside the real strip → null (no jump).
-// `tol` is a half-card tolerance so snap-settling right on a boundary doesn't
-// trigger a spurious recenter. Exported for unit testing.
-export function recenterTarget(scrollLeft, firstRealLeft, realBlockWidth, tol = 0) {
+// `tol` is a half-card tolerance so a snap settling a pixel or two shy of an
+// edge isn't yanked. Exported for unit testing.
+export function recenterTarget(scrollLeft, firstRealLeft, lastRealLeft, realBlockWidth, tol = 0) {
   if (!(realBlockWidth > 0)) return null;
   if (scrollLeft < firstRealLeft - tol) return realBlockWidth;
-  if (scrollLeft > firstRealLeft + realBlockWidth - tol) return -realBlockWidth;
+  if (scrollLeft > lastRealLeft + tol) return -realBlockWidth;
   return null;
 }
 
@@ -232,18 +234,18 @@ export function initSliders() {
       cloned = false;
     };
 
-    // Silent recenter: when a swipe carries scrollLeft into a clone zone, jump
-    // one real block with snap + smooth behaviour momentarily disabled so the
-    // move is instant and invisible. rAF-throttled so a fast flick fires once
-    // per frame, not per scroll event.
-    let recenterQueued = false;
+    // Silent recenter: when scrolling has SETTLED on a clone, jump one real
+    // block with snap + smooth behaviour momentarily disabled so the move is
+    // instant and invisible. Fired at scroll-idle (never mid-fling) — setting
+    // scrollLeft during momentum aborts the fling and repaints (a white blink
+    // on iOS), so we wait for rest, where velocity ≈ 0 and the jump is unseen.
     const recenter = () => {
-      recenterQueued = false;
       if (!cloned) return;
       const reals = realItems();
       if (reals.length < 2) return;
       const firstRealLeft = reals[0].offsetLeft;
-      const jump = recenterTarget(track.scrollLeft, firstRealLeft, realBlockWidth(), edgeTol());
+      const lastRealLeft = reals[reals.length - 1].offsetLeft;
+      const jump = recenterTarget(track.scrollLeft, firstRealLeft, lastRealLeft, realBlockWidth(), edgeTol());
       if (jump == null) return;
       const prevSnap = track.style.scrollSnapType;
       const prevBeh = track.style.scrollBehavior;
@@ -255,18 +257,42 @@ export function initSliders() {
       track.style.scrollSnapType = prevSnap;
       track.style.scrollBehavior = prevBeh;
     };
-    const onScroll = () => {
-      if (recenterQueued || mq.matches) return; // stepper mode: not a scroller
-      recenterQueued = true;
-      window.requestAnimationFrame(recenter);
+
+    // Scroll-idle detection. `scrollend` fires once the browser has fully
+    // settled (momentum done, snap landed) — the ideal moment to recenter —
+    // but it only reached iOS Safari in 26.2, so the debounced-scroll fallback
+    // is the primary path for most of the live iOS base. A touch-in-progress
+    // guard defers the jump until the finger lifts; with
+    // `-webkit-overflow-scrolling: touch` the debounce timer naturally waits
+    // out the fling (it keeps resetting until momentum stops).
+    let touching = false;
+    let idleTimer = 0;
+    const SETTLE_MS = 120;
+    const hasScrollend = 'onscrollend' in track;
+    const settle = () => {
+      if (mq.matches || !cloned || touching) return; // stepper mode / no clones / mid-gesture
+      recenter();
     };
+    const armIdle = () => {
+      window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(settle, SETTLE_MS);
+    };
+    if (hasScrollend) {
+      track.addEventListener('scrollend', settle, { passive: true });
+    } else {
+      track.addEventListener('scroll', armIdle, { passive: true });
+    }
+    track.addEventListener('touchstart', () => { touching = true; }, { passive: true });
+    const endTouch = () => { touching = false; armIdle(); };
+    track.addEventListener('touchend', endTouch, { passive: true });
+    track.addEventListener('touchcancel', endTouch, { passive: true });
 
     // Native-scroll arrow handlers (buckets B & C). The track is a real
     // scroll-snap container here, so scrollBy by one card lands on a snapped
     // slide automatically. There is no edge-wrap branch any more: the clone
-    // buffer + onScroll recenter make the ends seamless, so a step off the last
-    // real card scrolls into a trailing clone and silently recenters to the
-    // first real card — same as every other step, no visible jump.
+    // buffer + scroll-idle recenter make the ends seamless, so a step off the
+    // last real card scrolls into a trailing clone and silently recenters to
+    // the first real card — same as every other step, no visible jump.
     const scrollNext = () => {
       track.scrollBy({ left: stepDistance(), behavior: scrollBehavior() });
     };
@@ -300,6 +326,11 @@ export function initSliders() {
     //   - Leaving stepper → native: strip the inline transform/transition the
     //     stepper left, then build the clone buffer so swipe loops endlessly.
     const sync = () => {
+      // A mode flip can land between a touchstart and its touchend (e.g. a
+      // DevTools device-mode toggle mid-gesture), which would otherwise leave
+      // `touching` stuck true and permanently suppress the recenter. Clear it
+      // on every sync so the latch can't stick.
+      touching = false;
       if (mq.matches) {
         removeClones();
         track.scrollLeft = 0;
@@ -311,10 +342,6 @@ export function initSliders() {
         lastBlockWidth = realBlockWidth();
       }
     };
-
-    // The recenter listener is always attached; it no-ops in stepper mode
-    // (guarded in onScroll) and when there are no clones.
-    track.addEventListener('scroll', onScroll, { passive: true });
 
     // Rebuild the clone buffer on resize (native mode only): item width is a
     // clamp() of the viewport, so the block width can change. We only rebuild
