@@ -41,6 +41,7 @@ export function makeSeasonPicker(input, opts = {}) {
     locale,
     disable = [],
     disableMobile = false,
+    mode = 'single',
     onReady = attachYearDropdown,
     onChange,
     onDayCreate,
@@ -50,6 +51,9 @@ export function makeSeasonPicker(input, opts = {}) {
     minDate,
     maxDate,
     dateFormat,
+    // Selection mode: 'single' (default — the /stay/ per-bungalow pickers and
+    // the enquiry form) or 'range' (the home dock's one-calendar check-in/out).
+    mode,
     // isOffSeason first so the season block survives any later
     // `.set('disable', ...)` that re-uses this same "predicate + extras" shape.
     disable: [isOffSeason, ...disable],

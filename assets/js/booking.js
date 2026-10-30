@@ -83,75 +83,92 @@ export function initBooking() {
 // the Vite base) carrying the chosen check-in/check-out as ?checkin=&checkout=.
 // Used by the home floating dock (→ /stay/). The Rooms/Guests selects are
 // decorative here — only the dates are forwarded.
+//
+// ONE shared range calendar drives both the Check-in and Check-out slots: the
+// guest picks a start then an end in the SAME calendar (owner request), instead
+// of a separate single-date calendar per field. The two inputs stay as the
+// visible slots — we fill each with its own date so the dock looks identical —
+// but there is a single flatpickr (mode: 'range') behind them, bound to the
+// check-in input; clicking the check-out slot opens that same calendar. There
+// is deliberately NO minimum-nights rule here — this bar is an enquiry entry
+// point, not an availability check; /stay/ owns the 5-night gate.
 function setupLinkForm(form, targetPath) {
   const checkin = form.querySelector('[name="checkin"]');
   const checkout = form.querySelector('[name="checkout"]');
   if (!checkin || !checkout) return;
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  // The check-out input is a display slot only — it must not acquire its own
+  // picker or accept typing. Make it read-only; clicking it opens the shared
+  // range calendar (wired below).
+  checkout.readOnly = true;
 
-  // Season-only pickers (shared factory) — isOffSeason greys Oct..Mar, minDate
-  // blocks the past, maxDate caps the year, disableMobile forces the grid. NO
-  // per-bungalow booked-day disabling: this bar is an enquiry entry point, not
-  // an availability check.
-  const fpIn = makeSeasonPicker(checkin, {
+  // Keep a handle on the placeholder so we can restore the slot's empty state
+  // when a fresh range selection is started.
+  const checkoutPlaceholder = checkout.getAttribute('placeholder') || '';
+
+  // One range picker (shared factory) — isOffSeason greys Oct..Mar, minDate
+  // blocks the past, maxDate caps the year, disableMobile forces the grid.
+  // Range mode enforces start ≤ end natively, so no reversed-pair guard is
+  // needed. Bound to the check-in input; the check-out slot opens the same one.
+  const fp = makeSeasonPicker(checkin, {
     minDate: 'today',
     dateFormat: fpDateFormat(),
     locale: fpLocale(),
     disableMobile: true,
-    onChange: (selected) => {
-      if (selected[0]) {
-        const d = new Date(selected[0]);
-        d.setDate(d.getDate() + 1);
-        fpOut.set('minDate', d);
-        // If a check-out was already picked and now sits on/before the new
-        // check-in, clear it — set('minDate') moves the picker floor but does
-        // NOT drop an out-of-range selection, so without this the bar would
-        // still display (and forward to /stay/) a reversed date pair.
-        const out = fpOut.selectedDates[0];
-        if (out && out <= selected[0]) {
-          fpOut.clear();
-        }
+    mode: 'range',
+    onChange: (selected, _str, inst) => {
+      // Mirror each endpoint into its own slot so the two fields read like
+      // before (flatpickr's range default writes a combined "start to end"
+      // string into the single bound input — we override the display).
+      const fmt = (d) => inst.formatDate(d, inst.config.dateFormat);
+      if (selected.length >= 1) {
+        checkin.value = fmt(selected[0]);
+      }
+      if (selected.length === 2) {
+        checkout.value = fmt(selected[1]);
+        // Second (check-out) date chosen → auto-close.
+        inst.close();
+      } else {
+        // Only a start so far (fresh range in progress) → clear any stale
+        // check-out text back to its placeholder.
+        checkout.value = '';
       }
     },
   });
 
-  const fpOut = makeSeasonPicker(checkout, {
-    minDate: tomorrow,
-    dateFormat: fpDateFormat(),
-    locale: fpLocale(),
-    disableMobile: true,
-  });
+  // Open the SAME range calendar from the check-out slot. flatpickr binds to the
+  // check-in input only; without this, tapping Check-out would do nothing.
+  const openPicker = (ev) => {
+    ev.preventDefault();
+    fp.open(undefined, checkin); // position against the check-in input
+  };
+  checkout.addEventListener('click', openPicker);
+  checkout.addEventListener('focus', openPicker);
 
   // Close the open calendar as soon as the page scrolls. The dock is
   // position:fixed but flatpickr's popover is absolutely positioned against the
   // document (body-appended), so on scroll the dock moves while the open
   // calendar stays pinned — the two visibly drift apart. The owner's ask is the
   // simplest correct behaviour: once the guest starts scrolling, the calendar
-  // disappears (tap the field again to reopen). Scoped to THIS dock factory —
-  // the per-bungalow /stay/ widget sits in normal page flow, not a fixed dock,
-  // so it is intentionally left untouched.
+  // disappears (tap a field again to reopen). Scoped to THIS dock factory — the
+  // per-bungalow /stay/ widget sits in normal page flow, not a fixed dock, so
+  // it is intentionally left untouched.
   //
   // Listen on window with capture + passive so a scroll on any scroller fires
   // it; one-shot per open (re-armed on the next onOpen). onClose removes the
   // listener as belt-and-braces in case `once` didn't consume it (e.g. the
   // picker closed by a date pick or outside-click before any scroll).
-  const closeOnScroll = (fp) => {
-    let onScroll = null;
-    fp.config.onOpen.push(() => {
-      onScroll = () => { if (fp.isOpen) fp.close(); };
-      window.addEventListener('scroll', onScroll, { capture: true, passive: true, once: true });
-    });
-    fp.config.onClose.push(() => {
-      if (onScroll) {
-        window.removeEventListener('scroll', onScroll, { capture: true });
-        onScroll = null;
-      }
-    });
-  };
-  closeOnScroll(fpIn);
-  closeOnScroll(fpOut);
+  let onScroll = null;
+  fp.config.onOpen.push(() => {
+    onScroll = () => { if (fp.isOpen) fp.close(); };
+    window.addEventListener('scroll', onScroll, { capture: true, passive: true, once: true });
+  });
+  fp.config.onClose.push(() => {
+    if (onScroll) {
+      window.removeEventListener('scroll', onScroll, { capture: true });
+      onScroll = null;
+    }
+  });
 
   // Resolve the target (stay/) via the Vite base path so it
   // works from ANY page depth under the GitHub Pages base (/vayana-bungalows/)
@@ -164,9 +181,11 @@ function setupLinkForm(form, targetPath) {
     const localePrefix = isDefaultLocale() ? '' : `${currentLocale()}/`;
     const url = new URL(`${import.meta.env.BASE_URL}${localePrefix}${targetPath}`, window.location.origin);
     // Pass dates as unambiguous ISO (YYYY-MM-DD) regardless of the picker's
-    // locale display format; enquiry.js parses them back with parseIso.
-    if (fpIn.selectedDates[0]) url.searchParams.set('checkin', toIso(fpIn.selectedDates[0]));
-    if (fpOut.selectedDates[0]) url.searchParams.set('checkout', toIso(fpOut.selectedDates[0]));
+    // locale display format; enquiry.js parses them back with parseIso. Both
+    // endpoints come from the single range picker's selectedDates.
+    const [start, end] = fp.selectedDates;
+    if (start) url.searchParams.set('checkin', toIso(start));
+    if (end) url.searchParams.set('checkout', toIso(end));
     window.location.assign(url.toString());
   });
 }
