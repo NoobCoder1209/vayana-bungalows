@@ -41,8 +41,11 @@ import { makeSeasonPicker } from './season-picker.js';
 
 // Stricter than HTML5's `type=email` (which accepts "a@b" with no TLD).
 // The form ships with `novalidate` so HTML5 enforcement is disabled by
-// design — this regex IS the validation, not belt-and-braces.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// design — this regex IS the validation, not belt-and-braces. The dot-
+// bounded labels ([^\s@.]+ joined by literal dots) also reject malformed
+// shapes like ".x@y.com", "x.@y.com", and "x@y..com". MUST stay byte-
+// identical to worker/src/validation.js's copy (locked by a test).
+const EMAIL_RE = /^[^\s@.]+(?:\.[^\s@.]+)*@[^\s@.]+(?:\.[^\s@.]+)*\.[^\s@.]{2,}$/;
 
 // RFC 5321's hard limit on a deliverable email address. Anything longer
 // is either pasted nonsense or an attack — reject before regex evaluation.
