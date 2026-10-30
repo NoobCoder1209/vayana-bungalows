@@ -159,6 +159,25 @@ export function initSliders() {
       return Math.min(reals, Math.ceil(track.clientWidth / d) + 1);
     };
 
+    // The LEADING side gets a larger buffer than the trailing side. The leftmost
+    // element always rests at ~scrollLeft 0 (the hard scroll origin), so if the
+    // leading runway is only `cloneCount` cards a hard back-flick slams into the
+    // 0 wall and the recenter then jumps a full block FROM the origin — a
+    // full-width repaint that flashes white on iOS. LEAD_RUNWAY extra viewports
+    // of leading clones mean even a hard flick settles on an INNER leading clone
+    // (rest well clear of 0), so the recenter jump always starts with painted
+    // content to its left. The trailing side needs no extra — the whole painted
+    // strip already sits behind it. iOS momentum is effectively unbounded, so no
+    // finite buffer fully closes the extreme-fling case; 1 viewport covers the
+    // realistic gestures — bump only if a real-device test shows the wall is
+    // still reachable on a normal hard flick.
+    const LEAD_RUNWAY = 1;
+    const leadingCloneCount = () => {
+      const d = stepDistance();
+      if (!d) return cloneCount();
+      return Math.min(realItems().length, cloneCount() + LEAD_RUNWAY * Math.ceil(track.clientWidth / d));
+    };
+
     // Width of one full real block: first real item's left edge is the start,
     // so the block spans up to the FIRST trailing clone (which sits one block
     // to the right of the first real item). Measured live from offsetLeft so a
@@ -209,9 +228,13 @@ export function initSliders() {
       if (n < 1 || reals.length < 2) return;
       // Trailing clones: copies of the FIRST n reals, appended in order.
       for (let i = 0; i < n; i += 1) track.appendChild(makeClone(reals[i]));
-      // Leading clones: copies of the LAST n reals, prepended so order reads
-      // real[... n-2, n-1] | real[0 ...]. Insert each before the current first.
-      for (let i = 0; i < n; i += 1) {
+      // Leading clones: copies of the LAST reals, prepended so order reads
+      // real[... k-2, k-1] | real[0 ...]. Insert each before the current first.
+      // The leading side uses a larger count (see leadingCloneCount) so a hard
+      // back-flick can't slam the scroll origin before the recenter fires. Both
+      // counts are capped at reals.length, so the index stays in range.
+      const lead = leadingCloneCount();
+      for (let i = 0; i < lead; i += 1) {
         track.insertBefore(makeClone(reals[reals.length - 1 - i]), track.firstChild);
       }
       cloned = true;
@@ -252,10 +275,14 @@ export function initSliders() {
       track.style.scrollSnapType = 'none';
       track.style.scrollBehavior = 'auto';
       track.scrollLeft += jump;
-      // Force the instant offset to commit, then restore snap/behaviour.
-      void track.offsetWidth;
-      track.style.scrollSnapType = prevSnap;
-      track.style.scrollBehavior = prevBeh;
+      // Restore snap/behaviour on the NEXT frame, not synchronously: re-enabling
+      // scroll-snap in the same frame as the jump can trigger a second snap
+      // adjustment + repaint on top of the jump. Deferring lets the jump commit
+      // and paint first, then snap re-engages cleanly on an already-painted frame.
+      window.requestAnimationFrame(() => {
+        track.style.scrollSnapType = prevSnap;
+        track.style.scrollBehavior = prevBeh;
+      });
     };
 
     // Scroll-idle detection. `scrollend` fires once the browser has fully
