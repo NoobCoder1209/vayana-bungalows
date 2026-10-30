@@ -51,6 +51,16 @@ const EMAIL_RE = /^[^\s@.]+(?:\.[^\s@.]+)*@[^\s@.]+(?:\.[^\s@.]+)*\.[^\s@.]{2,}$
 // is either pasted nonsense or an attack — reject before regex evaluation.
 const MAX_EMAIL_LEN = 254;
 
+// Shared email predicate — the single source of truth for "is this a valid
+// email", used by BOTH the submit handler and the on-blur live check so the
+// two can never disagree. Folds the three failure modes (empty / too long /
+// regex) the submit branch used to inline. Exported so it can be unit-tested
+// directly (it's a pure string→bool function).
+export const isEmailValid = (v) => {
+  const t = (v || '').trim();
+  return t.length > 0 && t.length <= MAX_EMAIL_LEN && EMAIL_RE.test(t);
+};
+
 // Loose phone validation per user spec: allow leading `+`, digits, spaces,
 // dashes, and parens; require at least 7 characters total AND at least one
 // digit (the lookahead). Without the digit requirement, "-------" or
@@ -598,10 +608,23 @@ export function initEnquiry() {
   let dismissScroll = null;
   let dismissPointer = null;
   let dismissKey = null;
+  // The in-flight fade's teardown handles — a running fade's transitionend
+  // listener and its 260ms fallback timer. Tracked so disarmDismiss can cancel
+  // them: without this, a fade started before a re-show leaves an orphaned
+  // `finish` that fires ~260ms later and wipes the freshly-shown pill (which
+  // could be a submit-blocking error the guest still needs to see).
+  let fadeTimer = 0;
+  let fadeFinish = null;
   const prefersReducedMotion = () =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  const cancelFade = () => {
+    if (fadeTimer) { window.clearTimeout(fadeTimer); fadeTimer = 0; }
+    if (fadeFinish) { errorEl.removeEventListener('transitionend', fadeFinish); fadeFinish = null; }
+  };
+
   const disarmDismiss = () => {
+    cancelFade();
     if (errorHideTimer) { window.clearTimeout(errorHideTimer); errorHideTimer = 0; }
     if (dismissScroll) { document.removeEventListener('scroll', dismissScroll, { capture: true }); dismissScroll = null; }
     if (dismissPointer) { document.removeEventListener('pointerdown', dismissPointer); dismissPointer = null; }
@@ -612,16 +635,18 @@ export function initEnquiry() {
   // transition) we clear immediately. The transitionend handler is one-shot;
   // a setTimeout slightly longer than the 200ms CSS transition is the
   // fallback in case transitionend doesn't fire (pill already at opacity 0,
-  // tab backgrounded, etc.).
+  // tab backgrounded, etc.). Both handles are tracked (fadeFinish/fadeTimer)
+  // so a re-show mid-fade cancels this teardown via disarmDismiss.
   const fadeOutError = () => {
     if (errorEl.hidden) { disarmDismiss(); return; }
     disarmDismiss();
     if (prefersReducedMotion()) { clearError(); return; }
     errorEl.classList.add('is-leaving');
     let done = false;
-    const finish = () => { if (done) return; done = true; errorEl.removeEventListener('transitionend', finish); clearError(); };
+    const finish = () => { if (done) return; done = true; errorEl.removeEventListener('transitionend', finish); fadeFinish = null; fadeTimer = 0; clearError(); };
+    fadeFinish = finish;
     errorEl.addEventListener('transitionend', finish);
-    window.setTimeout(finish, 260);
+    fadeTimer = window.setTimeout(finish, 260);
   };
 
   const armDismiss = (transient) => {
@@ -663,15 +688,6 @@ export function initEnquiry() {
   };
   const flagConsent = (flag) => {
     consentLabel?.classList.toggle('is-error', flag);
-  };
-
-  // Shared email predicate — the single source of truth for "is this a
-  // valid email", used by BOTH the submit handler and the on-blur live
-  // check so the two can never disagree. Folds the three failure modes
-  // (empty / too long / regex) the submit branch used to inline.
-  const isEmailValid = (v) => {
-    const t = (v || '').trim();
-    return t.length > 0 && t.length <= MAX_EMAIL_LEN && EMAIL_RE.test(t);
   };
 
   // Clear errors as soon as the user starts fixing things. Bound to
