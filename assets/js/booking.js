@@ -148,6 +148,15 @@ function setupLinkForm(form, targetPath) {
   // immediately-close in one gesture. Keyboard users get Enter/Space to open
   // (handled below), so Tab-focus alone doesn't pop the calendar.
   fp.set('clickOpens', false);
+  // flatpickr is bound to the check-in input, so its document-mousedown handler
+  // treats a click on the CHECK-OUT slot as an outside-click and closes the
+  // calendar BEFORE our click-toggle runs — the toggle then sees isOpen=false
+  // and re-opens, so a 2nd check-out click never closed it (it worked for
+  // check-in only, which flatpickr counts as "inside"). Registering the
+  // check-out input in ignoredFocusElements makes flatpickr skip that pre-close
+  // (documentClick's `isIgnored` guard), so our toggle sees isOpen=true and
+  // closes it — identical behaviour on both slots.
+  fp.config.ignoredFocusElements.push(checkout);
   const togglePicker = (ev) => {
     ev.preventDefault();
     if (fp.isOpen) {
