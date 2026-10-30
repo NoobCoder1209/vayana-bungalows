@@ -102,10 +102,6 @@ function setupLinkForm(form, targetPath) {
   // range calendar (wired below).
   checkout.readOnly = true;
 
-  // Keep a handle on the placeholder so we can restore the slot's empty state
-  // when a fresh range selection is started.
-  const checkoutPlaceholder = checkout.getAttribute('placeholder') || '';
-
   // One range picker (shared factory) — isOffSeason greys Oct..Mar, minDate
   // blocks the past, maxDate caps the year, disableMobile forces the grid.
   // Range mode enforces start ≤ end natively, so no reversed-pair guard is
@@ -126,7 +122,9 @@ function setupLinkForm(form, targetPath) {
       }
       if (selected.length === 2) {
         checkout.value = fmt(selected[1]);
-        // Second (check-out) date chosen → auto-close.
+        // Second (check-out) date chosen → close. flatpickr's range mode
+        // already auto-closes on the 2nd pick (closeOnSelect defaults true), so
+        // this is belt-and-braces — explicit rather than relying on that default.
         inst.close();
       } else {
         // Only a start so far (fresh range in progress) → clear any stale
