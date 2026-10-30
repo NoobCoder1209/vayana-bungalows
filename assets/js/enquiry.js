@@ -51,6 +51,16 @@ const EMAIL_RE = /^[^\s@.]+(?:\.[^\s@.]+)*@[^\s@.]+(?:\.[^\s@.]+)*\.[^\s@.]{2,}$
 // is either pasted nonsense or an attack — reject before regex evaluation.
 const MAX_EMAIL_LEN = 254;
 
+// Shared email predicate — the single source of truth for "is this a valid
+// email", used by BOTH the submit handler and the on-blur live check so the
+// two can never disagree. Folds the three failure modes (empty / too long /
+// regex) the submit branch used to inline. Exported so it can be unit-tested
+// directly (it's a pure string→bool function).
+export const isEmailValid = (v) => {
+  const t = (v || '').trim();
+  return t.length > 0 && t.length <= MAX_EMAIL_LEN && EMAIL_RE.test(t);
+};
+
 // Loose phone validation per user spec: allow leading `+`, digits, spaces,
 // dashes, and parens; require at least 7 characters total AND at least one
 // digit (the lookahead). Without the digit requirement, "-------" or
@@ -585,7 +595,76 @@ export function initEnquiry() {
   // form returns to a clean state as soon as the user starts fixing things.
   const allFields = [name, checkinEl, checkoutEl, guestsToggle, email, phone, message, consentInput];
   const ERROR_PILL_ID = errorEl.id || 'eq-error';
-  const showError = (msg, field) => {
+
+  // Auto-dismiss layer. A visible error pill tidies itself away so it never
+  // lingers as stale state: it fades out on the guest's next scroll, click,
+  // or keypress (one-shot document listeners), and — ONLY for the transient
+  // on-blur email nudge — after 5s of no interaction. Submit-blocking errors
+  // (missing dates/consent/…) pass no transient flag, so they get the
+  // dismiss-on-action listeners but NO 5s timer: a guest who just reads the
+  // pill still sees why they were blocked. Mirrors the #171 dock auto-dismiss.
+  const ERROR_AUTO_HIDE_MS = 5000;
+  let errorHideTimer = 0;
+  let dismissScroll = null;
+  let dismissPointer = null;
+  let dismissKey = null;
+  // The in-flight fade's teardown handles — a running fade's transitionend
+  // listener and its 260ms fallback timer. Tracked so disarmDismiss can cancel
+  // them: without this, a fade started before a re-show leaves an orphaned
+  // `finish` that fires ~260ms later and wipes the freshly-shown pill (which
+  // could be a submit-blocking error the guest still needs to see).
+  let fadeTimer = 0;
+  let fadeFinish = null;
+  const prefersReducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const cancelFade = () => {
+    if (fadeTimer) { window.clearTimeout(fadeTimer); fadeTimer = 0; }
+    if (fadeFinish) { errorEl.removeEventListener('transitionend', fadeFinish); fadeFinish = null; }
+  };
+
+  const disarmDismiss = () => {
+    cancelFade();
+    if (errorHideTimer) { window.clearTimeout(errorHideTimer); errorHideTimer = 0; }
+    if (dismissScroll) { document.removeEventListener('scroll', dismissScroll, { capture: true }); dismissScroll = null; }
+    if (dismissPointer) { document.removeEventListener('pointerdown', dismissPointer); dismissPointer = null; }
+    if (dismissKey) { document.removeEventListener('keydown', dismissKey); dismissKey = null; }
+  };
+
+  // Fade the pill, then fully clear it. Under reduced motion (no opacity
+  // transition) we clear immediately. The transitionend handler is one-shot;
+  // a setTimeout slightly longer than the 200ms CSS transition is the
+  // fallback in case transitionend doesn't fire (pill already at opacity 0,
+  // tab backgrounded, etc.). Both handles are tracked (fadeFinish/fadeTimer)
+  // so a re-show mid-fade cancels this teardown via disarmDismiss.
+  const fadeOutError = () => {
+    if (errorEl.hidden) { disarmDismiss(); return; }
+    disarmDismiss();
+    if (prefersReducedMotion()) { clearError(); return; }
+    errorEl.classList.add('is-leaving');
+    let done = false;
+    const finish = () => { if (done) return; done = true; errorEl.removeEventListener('transitionend', finish); fadeFinish = null; fadeTimer = 0; clearError(); };
+    fadeFinish = finish;
+    errorEl.addEventListener('transitionend', finish);
+    fadeTimer = window.setTimeout(finish, 260);
+  };
+
+  const armDismiss = (transient) => {
+    disarmDismiss();
+    dismissScroll = () => fadeOutError();
+    dismissPointer = () => fadeOutError();
+    dismissKey = () => fadeOutError();
+    document.addEventListener('scroll', dismissScroll, { capture: true, passive: true, once: true });
+    document.addEventListener('pointerdown', dismissPointer, { once: true });
+    document.addEventListener('keydown', dismissKey, { once: true });
+    if (transient) errorHideTimer = window.setTimeout(fadeOutError, ERROR_AUTO_HIDE_MS);
+  };
+
+  // clearError() unwires everything so the form returns to a clean state as
+  // soon as the user starts fixing things — it is the single full-reset path,
+  // so the auto-dismiss teardown lives here too.
+  const showError = (msg, field, opts = {}) => {
+    errorEl.classList.remove('is-leaving'); // a re-show after a fade must be visible
     errorEl.textContent = msg;
     errorEl.hidden = false;
     if (field) {
@@ -593,8 +672,11 @@ export function initEnquiry() {
       field.setAttribute('aria-errormessage', ERROR_PILL_ID);
       field.setAttribute('aria-describedby', ERROR_PILL_ID);
     }
+    armDismiss(!!opts.transient);
   };
   const clearError = () => {
+    disarmDismiss();
+    errorEl.classList.remove('is-leaving');
     errorEl.textContent = '';
     errorEl.hidden = true;
     allFields.forEach((el) => {
@@ -614,6 +696,20 @@ export function initEnquiry() {
   // fields — round-1 review finding I3.)
   [name, email, phone, message].forEach((el) => {
     el.addEventListener('input', clearError);
+  });
+  // Live email validation: when focus LEAVES the email field with an
+  // invalid non-empty value, surface the error immediately (don't wait for
+  // submit). Empty-on-blur shows nothing — the guest hasn't committed to a
+  // value; the submit handler still catches a truly-empty field. We pass
+  // { transient: true } so this gentle nudge auto-fades after 5s (showError's
+  // auto-dismiss layer), unlike submit-blocking errors. We do NOT call
+  // email.focus() here: the guest is tabbing away on purpose, and yanking
+  // focus back would trap them.
+  email.addEventListener('blur', () => {
+    const v = (email.value || '').trim();
+    if (v.length > 0 && !isEmailValid(v)) {
+      showError(EMAIL_ERROR_MSG, email, { transient: true });
+    }
   });
   [checkinEl, checkoutEl].forEach((el) => {
     el.addEventListener('change', clearError);
@@ -716,11 +812,11 @@ export function initEnquiry() {
       return;
     }
 
-    // Email — generic error for empty / too long / regex fail.
+    // Email — generic error for empty / too long / regex fail. Uses the
+    // shared isEmailValid predicate (same check the on-blur live validation
+    // runs) so submit and blur can never disagree.
     const emailVal = (email.value || '').trim();
-    if (emailVal.length === 0
-        || emailVal.length > MAX_EMAIL_LEN
-        || !EMAIL_RE.test(emailVal)) {
+    if (!isEmailValid(emailVal)) {
       showError(EMAIL_ERROR_MSG, email);
       email.focus();
       return;
