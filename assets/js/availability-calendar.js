@@ -312,7 +312,7 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungal
       yearOpts.push(`<option value="${yr}"${sel}>${yr}</option>`);
     }
     title = `
-      <span class="avail-cal__month avail-cal__month--picker">
+      <span class="avail-cal__month avail-cal__month--picker" aria-live="polite">
         <select class="avail-cal__month-select" data-cal-month-picker aria-label="${picker.esc(picker.monthAria)}">${monthOpts}</select>
         <select class="avail-cal__year-select" data-cal-year-picker aria-label="${picker.esc(picker.yearAria)}">${yearOpts.join('')}</select>
       </span>`;
