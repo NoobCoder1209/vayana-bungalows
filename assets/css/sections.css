@@ -396,6 +396,10 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
+  /* Keep a flick at the loop edge from chaining to the page/ancestor and curb
+     the rubber-band that can momentarily expose a clone edge before the
+     scroll-idle recenter lands (see slider.js). */
+  overscroll-behavior-x: contain;
   /* iOS: declare the pan gestures this element handles, and turn on momentum
      scrolling. pan-x keeps the horizontal swipe from being handed to an
      ancestor (e.g. the bungalow carousel's overflow:hidden + -webkit-mask
