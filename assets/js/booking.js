@@ -136,12 +136,65 @@ function setupLinkForm(form, targetPath) {
 
   // Open the SAME range calendar from the check-out slot. flatpickr binds to the
   // check-in input only; without this, tapping Check-out would do nothing.
-  const openPicker = (ev) => {
+  // Take over open/close for BOTH slots so a second click on either field
+  // toggles the calendar shut (owner request). flatpickr's own click-to-open is
+  // disabled (clickOpens:false) so it can't fight our toggle or re-open the
+  // calendar we just closed; we drive open/close explicitly. A click on an
+  // input is NOT an outside-click, so flatpickr's documentClick won't close it
+  // for us — the toggle's close branch is what dismisses it.
+  //
+  // We bind the toggle to `click` only (not `focus`): a mouse click fires focus
+  // THEN click, so opening on focus and then toggling on click would open-then-
+  // immediately-close in one gesture. Keyboard users get Enter/Space to open
+  // (handled below), so Tab-focus alone doesn't pop the calendar.
+  fp.set('clickOpens', false);
+  const togglePicker = (ev) => {
     ev.preventDefault();
-    fp.open(undefined, checkin); // position against the check-in input
+    if (fp.isOpen) {
+      fp.close();
+    } else {
+      fp.open(undefined, checkin); // always anchor to the check-in field
+    }
   };
-  checkout.addEventListener('click', openPicker);
-  checkout.addEventListener('focus', openPicker);
+  const openViaKey = (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+      ev.preventDefault();
+      if (!fp.isOpen) fp.open(undefined, checkin);
+    }
+  };
+  [checkin, checkout].forEach((el) => {
+    el.addEventListener('click', togglePicker);
+    el.addEventListener('keydown', openViaKey);
+  });
+
+  // Re-center the open calendar over the TWO date slots. flatpickr anchors the
+  // popover to its bound input (the check-in field), which leaves it hugging the
+  // left half of the dock. We want it visually centered across the Check-in +
+  // Check-out span. Runs in onOpen, AFTER flatpickr's own positionCalendar, and
+  // overrides the inline `left`. The calendar is body-appended + absolutely
+  // positioned (page coordinates), so we add scrollX; the target is the midpoint
+  // between the check-in field's left edge and the check-out field's right edge.
+  // Clamped to an 8px viewport gutter so it never runs off-screen on a narrow
+  // window. Only runs where the dock form is visible — the form is CSS-hidden
+  // below 720px (a single Check Availability link shows instead), so there is no
+  // mobile case to handle here.
+  const centerCalendar = () => {
+    const cal = fp.calendarContainer;
+    if (!cal) return;
+    const first = checkin.closest('.booking-dock__field') || checkin;
+    const last = checkout.closest('.booking-dock__field') || checkout;
+    const a = first.getBoundingClientRect();
+    const b = last.getBoundingClientRect();
+    const spanCenter = (a.left + b.right) / 2; // viewport x of the two-slot center
+    const calWidth = cal.offsetWidth;
+    let left = spanCenter - calWidth / 2 + window.scrollX;
+    // Keep within an 8px gutter of the viewport on both sides.
+    const minLeft = window.scrollX + 8;
+    const maxLeft = window.scrollX + document.documentElement.clientWidth - calWidth - 8;
+    if (left < minLeft) left = minLeft;
+    if (left > maxLeft) left = Math.max(minLeft, maxLeft);
+    cal.style.left = `${Math.round(left)}px`;
+  };
 
   // Close the open calendar as soon as the page scrolls. The dock is
   // position:fixed but flatpickr's popover is absolutely positioned against the
@@ -158,6 +211,9 @@ function setupLinkForm(form, targetPath) {
   // picker closed by a date pick or outside-click before any scroll).
   let onScroll = null;
   fp.config.onOpen.push(() => {
+    // Center the calendar over the two date slots (runs after flatpickr's own
+    // positioning; a rAF lets any width/layout settle before we measure).
+    window.requestAnimationFrame(centerCalendar);
     onScroll = () => { if (fp.isOpen) fp.close(); };
     window.addEventListener('scroll', onScroll, { capture: true, passive: true, once: true });
   });
