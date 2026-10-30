@@ -85,6 +85,17 @@ function weekdayShortNames() {
   });
 }
 
+// The 12 localized long month names (January..December order), each
+// capitalized the same way monthLabel capitalizes (Intl gives lowercase in
+// some locales, e.g. BG "октомври"). Used to populate the Month <select>.
+function monthLongNames() {
+  return Array.from({ length: 12 }, (_, m) => {
+    const label = new Intl.DateTimeFormat(currentLocale(), { month: 'long' })
+      .format(new Date(2024, m, 1));
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  });
+}
+
 // First day (00:00) of the given date's month.
 function firstOfMonth(date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -147,11 +158,25 @@ function stepMonth(delta) {
  */
 export function goToMonth(date) {
   if (!currentMonth) return false; // calendars not initialised (non-/stay/ page)
+  return setVisibleMonth(date.getFullYear(), date.getMonth());
+}
+
+/**
+ * Set the visible (left) month to (year, monthIndex), clamped into the same
+ * [floor, ceilLeft] bounds the arrows honour (ceilLeft = the last left-month
+ * position where the right month still fits under the ceiling). Re-renders
+ * every calendar if the month actually moved. Returns true if it moved.
+ *
+ * This is the single month-mutation entry point shared by goToMonth (deep
+ * links) and the per-calendar Month/Year dropdowns (which move ALL three
+ * calendars, like the prev/next arrows). Pure except for the currentMonth
+ * write + renderAll; the clamp itself is covered by unit tests.
+ */
+export function setVisibleMonth(year, monthIndex) {
+  if (!currentMonth) return false;
   const { floor, ceil } = navBounds();
-  // Target the date's month as the LEFT month, but never past the last position
-  // where the RIGHT month still fits under the ceiling — i.e. left <= ceil - 1.
   const ceilLeft = new Date(ceil.getFullYear(), ceil.getMonth() - 1, 1);
-  let target = firstOfMonth(date);
+  let target = new Date(year, monthIndex, 1);
   if (monthCmp(target, floor) < 0) target = floor;
   if (monthCmp(target, ceilLeft) > 0) target = ceilLeft;
   if (monthCmp(target, currentMonth) === 0) return false; // already showing it
@@ -160,11 +185,42 @@ export function goToMonth(date) {
   return true;
 }
 
+// The selectable (year, month) bounds for the Month/Year dropdowns, as the same
+// [floor, ceilLeft] window the arrows honour (ceilLeft = last left-month that
+// keeps the right month under the ceiling). Pure. Returns the min/max YEAR and,
+// for the edge years, which month index is the first/last allowed — the picker
+// uses these to render out-of-range <option>s disabled so a month that
+// setVisibleMonth would only clamp can't be chosen in the first place.
+function pickerBounds() {
+  const { floor, ceil } = navBounds();
+  const ceilLeft = new Date(ceil.getFullYear(), ceil.getMonth() - 1, 1);
+  return {
+    minYear: floor.getFullYear(),
+    maxYear: ceilLeft.getFullYear(),
+    floorMonth: floor.getMonth(), // first allowed month in minYear
+    ceilMonth: ceilLeft.getMonth(), // last allowed month in maxYear
+  };
+}
+
+// Is (year, monthIndex) inside the pickable window? Pure; exported for tests.
+export function isMonthPickable(year, monthIndex) {
+  const { minYear, maxYear, floorMonth, ceilMonth } = pickerBounds();
+  if (year < minYear || year > maxYear) return false;
+  if (year === minYear && monthIndex < floorMonth) return false;
+  if (year === maxYear && monthIndex > ceilMonth) return false;
+  return true;
+}
+
 // Build ONE month's grid markup (weekday header row + day cells in week rows)
 // for the given month + availability. Returns { label, gridHtml }. Off-season
 // days (outside the open Apr–Sep season) render greyed/non-selectable; past
 // days muted; booked red; available green.
-function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungalowKey, labels) {
+//
+// `isLead` marks the LEFT (navigable) month: its title is an interactive
+// Month + Year <select> pair that drives setVisibleMonth (moving all three
+// calendars). The RIGHT month keeps a static serif <span> label — it's the
+// "+1" month, not independently navigable.
+function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungalowKey, labels, isLead = false, picker = null) {
   const daysInMonth = new Date(
     monthStart.getFullYear(),
     monthStart.getMonth() + 1,
@@ -238,9 +294,35 @@ function buildMonthGrid(monthStart, avail, today, dayFormatter, weekdays, bungal
     .join('');
   const label = monthLabel(monthStart);
 
+  // Lead (left) month → interactive Month + Year dropdowns; otherwise the
+  // static serif span. The selects carry data-cal-nav hooks so renderInstance
+  // can wire their change handlers after innerHTML is written.
+  let title;
+  if (isLead && picker) {
+    const y = monthStart.getFullYear();
+    const m = monthStart.getMonth();
+    const monthOpts = picker.monthNames.map((name, i) => {
+      const dis = isMonthPickable(y, i) ? '' : ' disabled';
+      const sel = i === m ? ' selected' : '';
+      return `<option value="${i}"${sel}${dis}>${picker.esc(name)}</option>`;
+    }).join('');
+    const yearOpts = [];
+    for (let yr = picker.minYear; yr <= picker.maxYear; yr += 1) {
+      const sel = yr === y ? ' selected' : '';
+      yearOpts.push(`<option value="${yr}"${sel}>${yr}</option>`);
+    }
+    title = `
+      <span class="avail-cal__month avail-cal__month--picker" aria-live="polite">
+        <select class="avail-cal__month-select" data-cal-month-picker aria-label="${picker.esc(picker.monthAria)}">${monthOpts}</select>
+        <select class="avail-cal__year-select" data-cal-year-picker aria-label="${picker.esc(picker.yearAria)}">${yearOpts.join('')}</select>
+      </span>`;
+  } else {
+    title = `<span class="avail-cal__month" aria-live="polite">${label}</span>`;
+  }
+
   const gridHtml = `
     <div class="avail-cal__month-grid">
-      <span class="avail-cal__month" aria-live="polite">${label}</span>
+      ${title}
       <div class="avail-cal__grid" role="grid" aria-label="${label} availability">
         <div class="avail-cal__weekdays" role="row">${weekdayRow}</div>
         <div class="avail-cal__days">${rows.join('')}</div>
@@ -295,8 +377,19 @@ function renderInstance(inst) {
   const legPast = ds.calLegendPast || 'Past';
   const legSelected = ds.calLegendSelected || 'Selected';
 
-  const g1 = buildMonthGrid(left, avail, today, dayFormatter, weekdays, key, labels);
-  const g2 = buildMonthGrid(right, avail, today, dayFormatter, weekdays, key, labels);
+  // Picker payload for the LEFT (lead) month's Month + Year dropdowns.
+  const { minYear, maxYear } = pickerBounds();
+  const picker = {
+    monthNames: monthLongNames(),
+    minYear,
+    maxYear,
+    monthAria: ds.calMonthAria || 'Month',
+    yearAria: ds.calYearAria || 'Year',
+    esc,
+  };
+
+  const g1 = buildMonthGrid(left, avail, today, dayFormatter, weekdays, key, labels, true, picker);
+  const g2 = buildMonthGrid(right, avail, today, dayFormatter, weekdays, key, labels, false, null);
 
   root.innerHTML = `
     <div class="avail-cal__header">
@@ -346,6 +439,21 @@ function renderInstance(inst) {
   });
   next?.addEventListener('click', () => {
     if (stepMonth(1)) renderAll();
+  });
+
+  // Month / Year dropdowns on the lead month. Each moves ALL calendars via
+  // setVisibleMonth (same as the arrows). The year change keeps the current
+  // month index and lets setVisibleMonth clamp it into range if that month is
+  // out of bounds in the new year (e.g. picking the max year when the current
+  // month sits past the ceiling month). setVisibleMonth re-renders every
+  // instance, which rebuilds these selects reflecting the new currentMonth.
+  const monthSel = root.querySelector('[data-cal-month-picker]');
+  const yearSel = root.querySelector('[data-cal-year-picker]');
+  monthSel?.addEventListener('change', (e) => {
+    setVisibleMonth(currentMonth.getFullYear(), Number(e.target.value));
+  });
+  yearSel?.addEventListener('change', (e) => {
+    setVisibleMonth(Number(e.target.value), currentMonth.getMonth());
   });
 }
 

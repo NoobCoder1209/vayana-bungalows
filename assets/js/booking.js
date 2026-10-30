@@ -124,6 +124,35 @@ function setupLinkForm(form, targetPath) {
     disableMobile: true,
   });
 
+  // Close the open calendar as soon as the page scrolls. The dock is
+  // position:fixed but flatpickr's popover is absolutely positioned against the
+  // document (body-appended), so on scroll the dock moves while the open
+  // calendar stays pinned — the two visibly drift apart. The owner's ask is the
+  // simplest correct behaviour: once the guest starts scrolling, the calendar
+  // disappears (tap the field again to reopen). Scoped to THIS dock factory —
+  // the per-bungalow /stay/ widget sits in normal page flow, not a fixed dock,
+  // so it is intentionally left untouched.
+  //
+  // Listen on window with capture + passive so a scroll on any scroller fires
+  // it; one-shot per open (re-armed on the next onOpen). onClose removes the
+  // listener as belt-and-braces in case `once` didn't consume it (e.g. the
+  // picker closed by a date pick or outside-click before any scroll).
+  const closeOnScroll = (fp) => {
+    let onScroll = null;
+    fp.config.onOpen.push(() => {
+      onScroll = () => { if (fp.isOpen) fp.close(); };
+      window.addEventListener('scroll', onScroll, { capture: true, passive: true, once: true });
+    });
+    fp.config.onClose.push(() => {
+      if (onScroll) {
+        window.removeEventListener('scroll', onScroll, { capture: true });
+        onScroll = null;
+      }
+    });
+  };
+  closeOnScroll(fpIn);
+  closeOnScroll(fpOut);
+
   // Resolve the target (stay/) via the Vite base path so it
   // works from ANY page depth under the GitHub Pages base (/vayana-bungalows/)
   // and in dev (/). Keep the LOCALE: on a /bg/ page, target /bg/<path> so a
