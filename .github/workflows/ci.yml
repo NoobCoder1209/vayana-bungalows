@@ -58,7 +58,9 @@ jobs:
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
         with:
-          node-version: 20
+          # 24.x, not 20.x: Node 20 reached EOL on 2026-04-30 and will never
+          # receive the Brotli decoder fix (CVE-2026-111497, fixed in 24.22.1).
+          node-version: 24
           cache: npm
 
       - run: npm ci
